@@ -4,15 +4,16 @@ import { getStripePriceIdForTour } from '../../server/stripe-prices';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+function checkoutMode(): 'mock' | 'stripe' {
+	const mode = import.meta.env.CHECKOUT_MODE;
 	const secret = import.meta.env.STRIPE_SECRET_KEY;
-	if (!secret) {
-		return new Response(JSON.stringify({ error: 'Payments are not configured. Add STRIPE_SECRET_KEY to your environment.' }), {
-			status: 503,
-			headers: { 'Content-Type': 'application/json' },
-		});
-	}
+	if (mode === 'mock') return 'mock';
+	if (mode === 'stripe') return 'stripe';
+	// Default: mock without keys, stripe when secret is present
+	return secret ? 'stripe' : 'mock';
+}
 
+export const POST: APIRoute = async ({ request }) => {
 	let body: { tourId?: string };
 	try {
 		body = await request.json();
@@ -31,19 +32,38 @@ export const POST: APIRoute = async ({ request }) => {
 		});
 	}
 
+	const origin = new URL(request.url).origin;
+	const mode = checkoutMode();
+
+	if (mode === 'mock') {
+		const url = new URL('/booking/success', origin);
+		url.searchParams.set('demo', '1');
+		url.searchParams.set('tourId', tourId);
+		return new Response(JSON.stringify({ url: url.href }), {
+			status: 200,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
+
+	const secret = import.meta.env.STRIPE_SECRET_KEY;
+	if (!secret) {
+		return new Response(
+			JSON.stringify({ error: 'Stripe mode requested but STRIPE_SECRET_KEY is not set.' }),
+			{ status: 503, headers: { 'Content-Type': 'application/json' } },
+		);
+	}
+
 	const priceId = getStripePriceIdForTour(tourId);
 	if (!priceId) {
 		return new Response(
 			JSON.stringify({
-				error:
-					'No Stripe Price ID for this tour. Create a Price in Stripe and set the matching STRIPE_PRICE_* env var.',
+				error: `No Stripe Price ID for this tour. Set ${import.meta.env.PROD ? 'env' : 'e.g.'} STRIPE_PRICE_* for slug "${tourId}" in .env.`,
 			}),
 			{ status: 400, headers: { 'Content-Type': 'application/json' } },
 		);
 	}
 
 	const stripe = new Stripe(secret);
-	const origin = new URL(request.url).origin;
 
 	try {
 		const session = await stripe.checkout.sessions.create({

@@ -1,8 +1,8 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
-<BaseLayout title="Checkout cancelled — Blue Cave Tours" description="You left the Stripe checkout before completing payment.">
+<SiteLayout title="Checkout cancelled — Blue Cave Tours" description="You left the Stripe checkout before completing payment.">
 	<main class="wrap" id="main">
 		<h1>Checkout cancelled</h1>
 		<p class="lead">No charge was made. You can return anytime and pick up where you left off.</p>
@@ -10,9 +10,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 			Questions? Email <a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a> or call{' '}
 			<a href="tel:+385919888838">+385 91 988 88 38</a>.
 		</p>
-		<p><a class="back" href="/#tours">Browse tours</a></p>
+		<p>
+			<a class="back" href="/tours">Browse tours</a> · <a class="back" href="/">Home</a>
+		</p>
 	</main>
-</BaseLayout>
+</SiteLayout>
 
 <style>
 	.wrap {
@@ -40,8 +42,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 	}
 
 	.back {
-		display: inline-flex;
-		margin-top: 0.5rem;
 		font-weight: 700;
 		color: var(--color-nav-elevated);
 	}

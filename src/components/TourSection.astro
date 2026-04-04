@@ -1,6 +1,9 @@
 ---
 import TourCard from './TourCard.astro';
-import { tours } from '../data/tours';
+import TourCarousel from './TourCarousel.astro';
+import { getFeaturedTours } from '../lib/tours';
+
+const featured = getFeaturedTours();
 ---
 
 <section class="section" id="tours" aria-labelledby="tours-heading">
@@ -8,13 +11,22 @@ import { tours } from '../data/tours';
 		<div class="section__head">
 			<h2 id="tours-heading" class="section__title">Featured tours</h2>
 			<p class="section__sub">
-				Pick an experience—we’ll send you to secure Stripe Checkout to complete payment. Cave tickets and extras may
-				apply; we’ll show details before you pay.
+				Five highlighted routes — see the <a href="/tours">full catalog</a> for all tours (availability, half-day and
+				full-day windows, private charter).
 			</p>
 		</div>
-		<div class="grid">
-			{tours.map((tour) => <TourCard tour={tour} />)}
-		</div>
+		<TourCarousel ariaLabel="Featured tours">
+			{
+				featured.map((tour) => (
+					<li class="tour-carousel__slide">
+						<TourCard tour={tour} />
+					</li>
+				))
+			}
+		</TourCarousel>
+		<p class="section__more">
+			<a class="section__more-link" href="/tours">Browse all tours →</a>
+		</p>
 	</div>
 </section>
 
@@ -31,7 +43,7 @@ import { tours } from '../data/tours';
 
 	.section__head {
 		max-width: 62ch;
-		margin-bottom: 2.25rem;
+		margin-bottom: 2rem;
 	}
 
 	.section__title {
@@ -49,10 +61,33 @@ import { tours } from '../data/tours';
 		line-height: 1.6;
 	}
 
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-		gap: 1.5rem;
-		align-items: stretch;
+	.section__sub a {
+		font-weight: 600;
+	}
+
+	.section__more {
+		margin: 2rem 0 0;
+		text-align: center;
+	}
+
+	.section__more-link {
+		font-weight: 700;
+		color: var(--color-nav-elevated);
+		text-decoration: none;
+		font-size: 1.0625rem;
+	}
+
+	.section__more-link:hover {
+		text-decoration: underline;
+	}
+
+	@media (max-width: 640px) {
+		.section {
+			padding: 2.75rem 1.25rem 3.25rem;
+		}
+
+		.section__head {
+			margin-bottom: 1.5rem;
+		}
 	}
 </style>

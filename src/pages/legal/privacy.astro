@@ -1,0 +1,66 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+---
+
+<SiteLayout title="Privacy Policy — Blue Cave Tours" description="How Blue Cave Tours handles personal data for bookings and enquiries.">
+	<main id="main" class="main">
+		<h1 class="title">Privacy Policy</h1>
+		<p class="meta">Placeholder — align with GDPR and your actual processors (Stripe, email, analytics) before launch.</p>
+
+		<section class="sec">
+			<h2>Data we collect</h2>
+			<p>
+				Contact details you submit (name, email, phone), message content, and optional tour interest. Checkout data is
+				processed by Stripe when that mode is enabled.
+			</p>
+		</section>
+		<section class="sec">
+			<h2>Purpose</h2>
+			<p>To respond to enquiries, operate tours, process payments, and meet legal obligations.</p>
+		</section>
+		<section class="sec">
+			<h2>Retention</h2>
+			<p>Kept only as long as needed for operations, accounting, and dispute resolution — define exact periods per system.</p>
+		</section>
+		<section class="sec">
+			<h2>Your rights</h2>
+			<p>
+				Depending on jurisdiction, you may request access, correction, deletion, or restriction — contact
+				<a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a>.
+			</p>
+		</section>
+	</main>
+</SiteLayout>
+
+<style>
+	.main {
+		max-width: 720px;
+		margin: 0 auto;
+		padding: 2.5rem 1.25rem 4rem;
+	}
+
+	.title {
+		font-family: var(--font-display);
+		font-size: clamp(1.75rem, 3vw, 2.25rem);
+		color: var(--color-nav);
+		margin: 0 0 0.5rem;
+	}
+
+	.meta {
+		font-size: 0.9rem;
+		color: var(--color-muted);
+		margin: 0 0 2rem;
+	}
+
+	.sec h2 {
+		font-size: 1.125rem;
+		margin: 1.5rem 0 0.5rem;
+		color: var(--color-nav);
+	}
+
+	.sec p {
+		margin: 0;
+		line-height: 1.65;
+		color: var(--color-muted);
+	}
+</style>

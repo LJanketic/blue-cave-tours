@@ -1,0 +1,42 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+---
+
+<SiteLayout title="Page not found — Blue Cave Tours">
+	<main id="main" class="wrap">
+		<h1>404</h1>
+		<p class="lead">That page doesn’t exist or the tour slug is wrong.</p>
+		<p class="muted">
+			<a href="/tours">Browse all tours</a> or <a href="/">return home</a>.
+		</p>
+	</main>
+</SiteLayout>
+
+<style>
+	.wrap {
+		max-width: 560px;
+		margin: 0 auto;
+		padding: 4rem 1.25rem 5rem;
+	}
+
+	h1 {
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 4vw, 2.75rem);
+		margin: 0 0 1rem;
+		color: var(--color-nav);
+	}
+
+	.lead {
+		font-size: 1.125rem;
+		margin: 0 0 1rem;
+	}
+
+	.muted {
+		margin: 0;
+		color: var(--color-muted);
+	}
+
+	.muted a {
+		font-weight: 600;
+	}
+</style>

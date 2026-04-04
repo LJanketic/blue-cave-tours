@@ -14,28 +14,36 @@ const year = new Date().getFullYear();
 				<a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a><br />
 				<a href="tel:+385919888838">+385 91 988 88 38</a>
 			</p>
-			<p class="foot__social">Connect with us on Instagram</p>
+			<p class="foot__social">
+				<a href="https://www.instagram.com/" rel="noopener noreferrer" target="_blank">Instagram</a>
+				<span class="foot__social-sep" aria-hidden="true">·</span>
+				<a href="https://www.facebook.com/" rel="noopener noreferrer" target="_blank">Facebook</a>
+			</p>
+			<p class="foot__ops">
+				Operators may include Misericordia d.o.o., Aliskaf d.o.o., Per Mare d.o.o. — named on the planning board; the
+				contracting entity appears on your confirmation.
+			</p>
 		</div>
 		<div class="foot__cols">
 			<div>
 				<h2 class="foot__heading">Quick links</h2>
 				<ul class="foot__links">
-					<li><a href="#tours">Tours</a></li>
-					<li><a href="#why-us">About the experience</a></li>
-					<li><a href="#contact">Meet-up point</a></li>
-					<li><a href="#tours">Private tour</a></li>
+					<li><a href="/tours">Tours</a></li>
+					<li><a href="/#why-us">About the experience</a></li>
+					<li><a href="/booking/details">Booking details</a></li>
+					<li><a href="/tours/create-perfect-day-private">Private tour</a></li>
 				</ul>
 			</div>
 			<div>
 				<h2 class="foot__heading">Legal</h2>
 				<ul class="foot__links">
-					<li><a href="#">Terms &amp; Conditions</a></li>
-					<li><a href="#">Privacy Policy</a></li>
+					<li><a href="/legal/terms">Terms &amp; Conditions</a></li>
+					<li><a href="/legal/privacy">Privacy Policy</a></li>
 				</ul>
 			</div>
 		</div>
 	</div>
-	<p class="foot__fine">&copy; {year} Blue Cave Tours · Demo landing — payments via Stripe Checkout</p>
+	<p class="foot__fine">&copy; {year} Blue Cave Tours · Checkout: Stripe when configured, or demo mode (see <code>CHECKOUT_MODE</code>).</p>
 </footer>
 
 <style>
@@ -64,21 +72,36 @@ const year = new Date().getFullYear();
 
 	.foot__address,
 	.foot__contact,
-	.foot__social {
+	.foot__social,
+	.foot__ops {
 		margin: 0 0 0.75rem;
 		font-size: 0.9375rem;
 		line-height: 1.55;
 	}
 
-	.foot__contact a {
+	.foot__ops {
+		font-size: 0.8125rem;
+		color: #94a3b8;
+		max-width: 52ch;
+	}
+
+	.foot__contact a,
+	.foot__social a {
 		color: #fdba74;
 		text-decoration: none;
 		font-weight: 600;
 	}
 
-	.foot__contact a:hover {
+	.foot__contact a:hover,
+	.foot__social a:hover {
 		color: #fff;
 		text-decoration: underline;
+	}
+
+	.foot__social-sep {
+		margin: 0 0.35rem;
+		color: #64748b;
+		font-weight: 400;
 	}
 
 	.foot__cols {
@@ -124,6 +147,13 @@ const year = new Date().getFullYear();
 		font-size: 0.8125rem;
 		color: #94a3b8;
 		text-align: center;
+	}
+
+	.foot__fine code {
+		font-size: 0.75em;
+		background: rgba(255, 255, 255, 0.08);
+		padding: 0.1em 0.35em;
+		border-radius: 4px;
 	}
 
 	@media (max-width: 720px) {

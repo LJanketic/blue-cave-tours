@@ -11,15 +11,15 @@
 		<div class="hero__overlay" aria-hidden="true"></div>
 	</div>
 	<div class="hero__content">
-		<p class="hero__eyebrow">Split · Adriatic · Small groups</p>
+		<p class="hero__eyebrow">Best Adriatic boat tours</p>
 		<h1 id="hero-heading" class="hero__title">Blue Cave &amp; island tours from the heart of Split</h1>
 		<p class="hero__lead">
 			Step aboard a modern speedboat, feel the sea breeze, and explore hidden bays and iconic islands with a crew that
 			prioritizes safety, comfort, and time in the water—not rushing between stops.
 		</p>
 		<div class="hero__actions">
-			<a class="btn btn--primary" href="#tours">See available tours</a>
-			<a class="btn btn--ghost" href="#contact">Meet-up &amp; contact</a>
+			<a class="btn btn--primary" href="/tours">See available tours</a>
+			<a class="btn btn--ghost" href="/contact">Message &amp; contact</a>
 		</div>
 	</div>
 </section>
@@ -129,5 +129,21 @@
 		border-color: #fff;
 		background: rgba(255, 255, 255, 0.08);
 		color: #fff;
+	}
+
+	@media (max-width: 540px) {
+		.hero__content {
+			padding: 2.25rem 1.25rem 2.75rem;
+		}
+
+		.hero__actions {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.hero__actions .btn {
+			width: 100%;
+			justify-content: center;
+		}
 	}
 </style>

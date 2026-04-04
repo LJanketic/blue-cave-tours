@@ -1,0 +1,144 @@
+---
+type Props = {
+	/** Accessible name for the region */
+	ariaLabel: string;
+};
+
+const { ariaLabel } = Astro.props;
+---
+
+<div class="tour-carousel" data-tour-carousel>
+	<div class="tour-carousel__controls" aria-hidden="false">
+		<button type="button" class="tour-carousel__btn" data-carousel-prev aria-label="Show previous tours">
+			<span aria-hidden="true">‹</span>
+		</button>
+		<button type="button" class="tour-carousel__btn" data-carousel-next aria-label="Show next tours">
+			<span aria-hidden="true">›</span>
+		</button>
+	</div>
+	<div
+		class="tour-carousel__viewport"
+		data-carousel-viewport
+		tabindex="0"
+		role="region"
+		aria-roledescription="carousel"
+		aria-label={ariaLabel}
+	>
+		<ul class="tour-carousel__track">
+			<slot />
+		</ul>
+	</div>
+	<p class="tour-carousel__hint">Scroll sideways or use the arrows to browse tours.</p>
+</div>
+
+<script is:inline>
+	document.querySelectorAll('[data-tour-carousel]').forEach((root) => {
+		const viewport = root.querySelector('[data-carousel-viewport]');
+		const prev = root.querySelector('[data-carousel-prev]');
+		const next = root.querySelector('[data-carousel-next]');
+		if (!(viewport instanceof HTMLElement)) return;
+
+		const step = () => Math.max(280, viewport.clientWidth * 0.75);
+
+		prev?.addEventListener('click', () => {
+			viewport.scrollBy({ left: -step(), behavior: 'smooth' });
+		});
+		next?.addEventListener('click', () => {
+			viewport.scrollBy({ left: step(), behavior: 'smooth' });
+		});
+	});
+</script>
+
+<style>
+	.tour-carousel {
+		position: relative;
+	}
+
+	.tour-carousel__controls {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.tour-carousel__btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: 8px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		color: var(--color-nav);
+		font-size: 1.5rem;
+		line-height: 1;
+		cursor: pointer;
+		transition:
+			background 0.15s ease,
+			border-color 0.15s ease;
+	}
+
+	.tour-carousel__btn:hover {
+		background: #f1f5f9;
+		border-color: var(--color-nav-elevated);
+	}
+
+	.tour-carousel__btn:focus-visible {
+		outline: 2px solid var(--color-cta);
+		outline-offset: 2px;
+	}
+
+	.tour-carousel__viewport {
+		overflow-x: auto;
+		overflow-y: hidden;
+		scroll-snap-type: x mandatory;
+		scroll-behavior: smooth;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-gutter: stable;
+		padding-bottom: 0.35rem;
+		margin-inline: -0.25rem;
+		overscroll-behavior-x: contain;
+		touch-action: pan-x;
+	}
+
+	.tour-carousel__viewport:focus-visible {
+		outline: 2px solid var(--color-cta);
+		outline-offset: 4px;
+	}
+
+	.tour-carousel__track {
+		display: flex;
+		gap: 1.25rem;
+		list-style: none;
+		margin: 0;
+		padding: 0.25rem 0.25rem 0.5rem;
+		width: max-content;
+	}
+
+	:global(.tour-carousel__slide) {
+		/* ~88vw shows a peek of the next card on phones (scroll affordance) */
+		flex: 0 0 min(380px, 88vw);
+		max-width: 400px;
+		scroll-snap-align: start;
+		display: flex;
+	}
+
+	:global(.tour-carousel__slide > *) {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.tour-carousel__hint {
+		margin: 0.75rem 0 0;
+		font-size: 0.8125rem;
+		color: var(--color-muted);
+	}
+
+	@media (min-width: 769px) {
+		:global(.tour-carousel__slide) {
+			flex: 0 0 min(340px, 31%);
+			max-width: 380px;
+		}
+	}
+</style>

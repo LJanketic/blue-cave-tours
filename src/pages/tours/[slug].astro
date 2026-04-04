@@ -1,0 +1,49 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import TourDetailView from '../../components/tour/TourDetailView.astro';
+import { getTourBySlug } from '../../lib/tours';
+
+const { slug } = Astro.params;
+const tour = slug ? getTourBySlug(slug) : undefined;
+
+if (!tour) {
+	Astro.response.status = 404;
+}
+---
+
+<SiteLayout
+	title={tour ? `${tour.title} — Blue Cave Tours` : 'Tour not found — Blue Cave Tours'}
+	description={tour?.shortDescription ?? 'The requested tour does not exist.'}
+>
+	<main id="main">
+		{
+			tour ? (
+				<TourDetailView tour={tour} />
+			) : (
+				<div class="nf">
+					<h1>Tour not found</h1>
+					<p>
+						<a href="/tours">View all tours</a> · <a href="/">Home</a>
+					</p>
+				</div>
+			)
+		}
+	</main>
+</SiteLayout>
+
+<style>
+	.nf {
+		max-width: 560px;
+		margin: 0 auto;
+		padding: 4rem 1.25rem;
+	}
+
+	.nf h1 {
+		font-family: var(--font-display);
+		color: var(--color-nav);
+	}
+
+	.nf a {
+		font-weight: 600;
+	}
+</style>

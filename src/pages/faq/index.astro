@@ -1,0 +1,134 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+	title="FAQ — Blue Cave Tours"
+	description="Frequently asked questions about boat tours from Split, Blue Cave visits, weather, and safety."
+>
+	<main id="main" class="main">
+		<h1 class="title">Frequently asked questions</h1>
+		<p class="intro">
+			General guest questions below — a separate <strong>FAQ — SEAYOU</strong>-style block appears on the board for
+			channel-specific copy; we can swap in partner wording when final.
+		</p>
+
+		<section class="section" aria-labelledby="g-heading">
+			<h2 id="g-heading" class="h2">General</h2>
+			<dl class="faq">
+				<div class="faq__row">
+					<dt>Is the Blue Cave ticket included?</dt>
+					<dd>
+						Cave entry is often billed separately on-site and depends on sea conditions and official opening hours. We
+						show what’s included before you pay.
+					</dd>
+				</div>
+				<div class="faq__row">
+					<dt>What if the weather is bad?</dt>
+					<dd>
+						We monitor forecasts. Routes may be shortened, reordered, or rescheduled so the day stays safe and enjoyable.
+					</dd>
+				</div>
+				<div class="faq__row">
+					<dt>Private vs group tours?</dt>
+					<dd>
+						Group tours follow a fixed timetable; private charters pick timing and pacing within operational limits — see
+						<a href="/tours/create-perfect-day-private">Create your perfect day at sea</a>.
+					</dd>
+				</div>
+				<div class="faq__row">
+					<dt>Where do we meet?</dt>
+					<dd>
+						Split’s Riva — stand 14. You’ll get the exact pin and time after booking (FigJam sticky: “Meeting point:
+						Adresa”).
+					</dd>
+				</div>
+			</dl>
+		</section>
+
+		<section class="section section--alt" aria-labelledby="s-heading">
+			<h2 id="s-heading" class="h2">FAQ — SEAYOU (placeholder)</h2>
+			<p class="muted">
+				Reserve this block for partner-specific cancellation terms, voucher redemption, or OTA handoff — content TBD with
+				stakeholders.
+			</p>
+			<ul class="bullet">
+				<li>Redemption windows and ID requirements</li>
+				<li>How to change a reservation made through a partner</li>
+				<li>Language of operation on board</li>
+			</ul>
+		</section>
+	</main>
+</SiteLayout>
+
+<style>
+	.main {
+		max-width: 720px;
+		margin: 0 auto;
+		padding: 2.5rem 1.25rem 4rem;
+	}
+
+	.title {
+		font-family: var(--font-display);
+		font-size: clamp(1.75rem, 3vw, 2.25rem);
+		color: var(--color-nav);
+		margin: 0 0 0.75rem;
+	}
+
+	.intro {
+		margin: 0 0 2rem;
+		line-height: 1.6;
+		color: var(--color-muted);
+	}
+
+	.section {
+		margin-bottom: 2.5rem;
+	}
+
+	.section--alt {
+		padding: 1.5rem;
+		background: #f8fafc;
+		border-radius: var(--radius);
+		border: 1px solid var(--color-border);
+	}
+
+	.h2 {
+		font-family: var(--font-display);
+		font-size: 1.35rem;
+		margin: 0 0 1rem;
+		color: var(--color-nav);
+	}
+
+	.faq__row {
+		padding: 1rem 0;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.faq__row:first-of-type {
+		border-top: 1px solid var(--color-border);
+	}
+
+	dt {
+		font-weight: 700;
+		color: var(--color-nav);
+		margin-bottom: 0.35rem;
+	}
+
+	dd {
+		margin: 0;
+		color: var(--color-muted);
+		line-height: 1.55;
+	}
+
+	.muted {
+		color: var(--color-muted);
+		line-height: 1.55;
+	}
+
+	.bullet {
+		margin: 0.75rem 0 0;
+		padding-left: 1.25rem;
+		color: var(--color-muted);
+		line-height: 1.55;
+	}
+</style>

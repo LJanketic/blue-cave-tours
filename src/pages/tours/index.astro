@@ -1,0 +1,59 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import TourCard from '../../components/TourCard.astro';
+import TourCarousel from '../../components/TourCarousel.astro';
+import { getAllTours } from '../../lib/tours';
+
+const all = getAllTours();
+---
+
+<SiteLayout
+	title="All tours — Blue Cave Tours"
+	description="Full catalog of boat tours and private days from Split: Blue Cave, islands, Blue Lagoon half-days, and custom private charters."
+>
+	<main id="main" class="main">
+		<header class="page-head">
+			<h1 class="page-head__title">All tours</h1>
+			<p class="page-head__lead">
+				Every named product from the webpage side of the board — schedules, meeting point on Split Riva (stand 14), and
+				booking through Stripe when enabled.
+			</p>
+		</header>
+		<TourCarousel ariaLabel="All tours">
+			{
+				all.map((tour) => (
+					<li class="tour-carousel__slide">
+						<TourCard tour={tour} />
+					</li>
+				))
+			}
+		</TourCarousel>
+	</main>
+</SiteLayout>
+
+<style>
+	.main {
+		padding: 2.5rem 1.25rem 4rem;
+		max-width: var(--content-max);
+		margin: 0 auto;
+	}
+
+	.page-head {
+		margin-bottom: 2rem;
+		max-width: 62ch;
+	}
+
+	.page-head__title {
+		margin: 0 0 0.75rem;
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 4vw, 2.5rem);
+		color: var(--color-nav);
+	}
+
+	.page-head__lead {
+		margin: 0;
+		color: var(--color-muted);
+		font-size: 1.0625rem;
+		line-height: 1.6;
+	}
+</style>

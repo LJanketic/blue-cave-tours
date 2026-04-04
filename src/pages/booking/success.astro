@@ -1,11 +1,26 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+
+const demo = Astro.url.searchParams.has('demo');
+const tourId = Astro.url.searchParams.get('tourId');
 ---
 
-<BaseLayout title="Booking confirmed — Blue Cave Tours" description="Thank you — your payment was submitted through Stripe.">
+<SiteLayout
+	title={demo ? 'Demo booking — Blue Cave Tours' : 'Booking confirmed — Blue Cave Tours'}
+	description="Thank you for your booking or demo checkout."
+>
 	<main class="wrap" id="main">
-		<h1>Thank you!</h1>
-		<p class="lead">Your payment was processed with Stripe Checkout.</p>
+		{demo && (
+			<p class="banner" role="status">
+				Demo checkout — no payment was processed{tourId ? ` (tour: ${tourId})` : ''}.
+			</p>
+		)}
+		<h1>{demo ? 'Demo complete' : 'Thank you!'}</h1>
+		<p class="lead">
+			{demo
+				? 'This run used mock checkout (no Stripe session).'
+				: 'Your payment was processed with Stripe Checkout.'}
+		</p>
 		<p class="muted">
 			We’ll follow up by email with meeting-point details and anything you still need for the day of your tour.
 		</p>
@@ -13,15 +28,28 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 			If you need help, reach us at <a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a> or{' '}
 			<a href="tel:+385919888838">+385 91 988 88 38</a>.
 		</p>
-		<p><a class="back" href="/">Back to home</a></p>
+		<p>
+			<a class="back" href="/tours">Browse tours</a> · <a class="back" href="/">Home</a>
+		</p>
 	</main>
-</BaseLayout>
+</SiteLayout>
 
 <style>
 	.wrap {
 		max-width: 560px;
 		margin: 0 auto;
 		padding: 4rem 1.25rem 5rem;
+	}
+
+	.banner {
+		margin: 0 0 1.25rem;
+		padding: 0.75rem 1rem;
+		background: #fff7ed;
+		border: 1px solid #fed7aa;
+		border-radius: 8px;
+		color: #9a3412;
+		font-weight: 600;
+		font-size: 0.9375rem;
 	}
 
 	h1 {
@@ -43,8 +71,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 	}
 
 	.back {
-		display: inline-flex;
-		margin-top: 0.5rem;
 		font-weight: 700;
 		color: var(--color-nav-elevated);
 	}

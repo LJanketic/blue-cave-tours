@@ -1,25 +1,32 @@
 ---
-import type { Tour } from '../data/tours';
+import type { TourDetail } from '../types/tour';
 
-type Props = { tour: Tour };
+type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
 ---
 
-<article class="card" id={tour.id}>
+<article class="card" id={tour.slug}>
 	<div class="card__image">
-		<img src={tour.image.src} alt={tour.image.alt} width="600" height="400" loading="lazy" decoding="async" />
+		<a href={`/tours/${tour.slug}`} class="card__image-link">
+			<img src={tour.image.src} alt={tour.image.alt} width="600" height="400" loading="lazy" decoding="async" />
+		</a>
 	</div>
 	<div class="card__body">
-		<p class="card__meta">{tour.duration} · {tour.highlight}</p>
-		<h3 class="card__title">{tour.title}</h3>
+		<p class="card__meta">{tour.scheduleLabel} · {tour.duration}</p>
+		<h3 class="card__title">
+			<a href={`/tours/${tour.slug}`}>{tour.title}</a>
+		</h3>
 		<p class="card__tagline">{tour.tagline}</p>
-		<p class="card__desc">{tour.description}</p>
+		<p class="card__desc">{tour.shortDescription}</p>
 		<div class="card__footer">
 			<span class="card__price">From <strong>{tour.fromPrice}</strong></span>
-			<form class="checkout-form" data-tour-id={tour.id}>
-				<button type="submit" class="card__cta">Book with Stripe</button>
-			</form>
+			<div class="card__actions">
+				<a class="card__secondary" href={`/tours/${tour.slug}`}>Details</a>
+				<form class="checkout-form" data-tour-id={tour.slug}>
+					<button type="submit" class="card__cta">Book now</button>
+				</form>
+			</div>
 		</div>
 	</div>
 </article>
@@ -34,6 +41,11 @@ const { tour } = Astro.props;
 		box-shadow: var(--shadow-card);
 		border: 1px solid var(--color-border);
 		height: 100%;
+	}
+
+	.card__image-link {
+		display: block;
+		text-decoration: none;
 	}
 
 	.card__image img {
@@ -63,6 +75,16 @@ const { tour } = Astro.props;
 		font-size: 1.35rem;
 		font-weight: 700;
 		line-height: 1.25;
+	}
+
+	.card__title a {
+		color: var(--color-nav);
+		text-decoration: none;
+	}
+
+	.card__title a:hover {
+		color: var(--color-nav-elevated);
+		text-decoration: underline;
 	}
 
 	.card__tagline {
@@ -99,6 +121,30 @@ const { tour } = Astro.props;
 	.card__price strong {
 		font-size: 1.125rem;
 		color: var(--color-nav);
+	}
+
+	.card__actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.card__secondary {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.6rem 0.9rem;
+		border-radius: 8px;
+		border: 1px solid var(--color-border);
+		color: var(--color-nav);
+		font-weight: 700;
+		font-size: 0.875rem;
+		text-decoration: none;
+	}
+
+	.card__secondary:hover {
+		border-color: var(--color-nav-elevated);
+		background: #f8fafc;
 	}
 
 	.checkout-form {
