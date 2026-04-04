@@ -1,9 +1,10 @@
 ---
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
 <SiteLayout
-	title="FAQ — Blue Cave Tours"
+	title={pageTitle('FAQ')}
 	description="Frequently asked questions about boat tours from Split, Blue Cave visits, weather, and safety."
 >
 	<main id="main" class="main">

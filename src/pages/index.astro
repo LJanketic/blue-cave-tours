@@ -1,4 +1,5 @@
 ---
+import { HOME_PAGE_TITLE } from '../config/site';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Hero from '../components/Hero.astro';
 import TourSection from '../components/TourSection.astro';
@@ -11,7 +12,7 @@ const heroLcpSrcset = unsplashSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
 const heroLcpHref = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 ---
 
-<SiteLayout title="Blue Cave Tours — Split boat tours &amp; private charters">
+<SiteLayout title={HOME_PAGE_TITLE}>
 	<link
 		slot="head"
 		rel="preload"

@@ -1,4 +1,5 @@
 ---
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import TourCard from '../../components/TourCard.astro';
 import TourCarousel from '../../components/TourCarousel.astro';
@@ -8,7 +9,7 @@ const all = getAllTours();
 ---
 
 <SiteLayout
-	title="All tours — Blue Cave Tours"
+	title={pageTitle('All tours')}
 	description="Full catalog of boat tours and private days from Split: Blue Cave, islands, Blue Lagoon half-days, and custom private charters."
 >
 	<main id="main" class="main">

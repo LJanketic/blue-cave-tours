@@ -1,4 +1,6 @@
 ---
+import { SITE_NAME } from '../config/site';
+
 const nav = [
 	{ href: '/', label: 'Home' },
 	{ href: '/tours', label: 'Tours' },
@@ -12,7 +14,7 @@ const nav = [
 	<div class="header__inner">
 		<a class="header__brand" href="/">
 			<span class="header__logo" aria-hidden="true">BC</span>
-			<span class="header__name">Blue Cave Tours</span>
+			<span class="header__name">{SITE_NAME}</span>
 		</a>
 
 		<nav class="header__nav" id="primary-nav" aria-label="Primary">

@@ -1,9 +1,10 @@
 ---
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
 <SiteLayout
-	title="Booking details — Blue Cave Tours"
+	title={pageTitle('Booking details')}
 	description="What we collect for a unified booking: party size, date, contact details, and pricing notes — aligned with the board’s BOOKING DETAILS (unified) block."
 >
 	<main id="main" class="main">

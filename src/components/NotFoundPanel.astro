@@ -1,0 +1,46 @@
+---
+interface Props {
+	title: string;
+	description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<div class="nf">
+	<h1 class="nf__title">{title}</h1>
+	<p class="nf__lead">{description}</p>
+	<div class="nf__actions">
+		<slot />
+	</div>
+</div>
+
+<style>
+	.nf {
+		max-width: 560px;
+		margin: 0 auto;
+		padding: 4rem 1.25rem;
+	}
+
+	.nf__title {
+		margin: 0 0 1rem;
+		font-family: var(--font-display);
+		font-size: clamp(1.75rem, 3vw, 2.25rem);
+		color: var(--color-nav);
+	}
+
+	.nf__lead {
+		margin: 0 0 1rem;
+		line-height: 1.55;
+		color: var(--color-muted);
+	}
+
+	.nf__actions {
+		margin: 0;
+		line-height: 1.6;
+	}
+
+	.nf__actions :global(a) {
+		font-weight: 600;
+	}
+</style>

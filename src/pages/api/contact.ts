@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { jsonResponse } from '../../lib/json-response';
 
 export const prerender = false;
 
@@ -7,19 +8,13 @@ export const POST: APIRoute = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-			status: 400,
-			headers: { 'Content-Type': 'application/json' },
-		});
+		return jsonResponse({ error: 'Invalid JSON' }, 400);
 	}
 
 	const name = typeof body.name === 'string' ? body.name.trim() : '';
 	const email = typeof body.email === 'string' ? body.email.trim() : '';
 	if (!name || !email) {
-		return new Response(JSON.stringify({ error: 'Name and email are required' }), {
-			status: 400,
-			headers: { 'Content-Type': 'application/json' },
-		});
+		return jsonResponse({ error: 'Name and email are required' }, 400);
 	}
 
 	// Demo: no email provider wired — log server-side for inspection in dev
@@ -27,8 +22,5 @@ export const POST: APIRoute = async ({ request }) => {
 		console.info('[contact]', { ...body, receivedAt: new Date().toISOString() });
 	}
 
-	return new Response(JSON.stringify({ ok: true }), {
-		status: 200,
-		headers: { 'Content-Type': 'application/json' },
-	});
+	return jsonResponse({ ok: true });
 };

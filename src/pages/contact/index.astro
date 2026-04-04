@@ -1,4 +1,5 @@
 ---
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getAllTours } from '../../lib/tours';
 
@@ -6,7 +7,7 @@ const tours = getAllTours();
 ---
 
 <SiteLayout
-	title="Contact — Blue Cave Tours"
+	title={pageTitle('Contact')}
 	description="Reach Blue Cave Tours on Split’s Riva — stand 14 — or send a message about tours and private charters."
 >
 	<main id="main" class="main">
@@ -52,32 +53,9 @@ const tours = getAllTours();
 	</main>
 </SiteLayout>
 
-<script is:inline>
-	const form = document.getElementById('contact-form');
-	const statusEl = document.getElementById('contact-status');
-	form?.addEventListener('submit', async (e) => {
-		e.preventDefault();
-		if (!(form instanceof HTMLFormElement) || !statusEl) return;
-		const btn = form.querySelector('button[type="submit"]');
-		if (btn instanceof HTMLButtonElement) btn.disabled = true;
-		statusEl.textContent = 'Sending…';
-		const data = Object.fromEntries(new FormData(form).entries());
-		try {
-			const res = await fetch('/api/contact', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(data),
-			});
-			const json = await res.json().catch(() => ({}));
-			if (!res.ok) throw new Error(json.error || 'Failed to send');
-			statusEl.textContent = 'Thanks — we received your message.';
-			form.reset();
-		} catch (err) {
-			statusEl.textContent = err instanceof Error ? err.message : 'Something went wrong';
-		} finally {
-			if (btn instanceof HTMLButtonElement) btn.disabled = false;
-		}
-	});
+<script>
+	import { initContactForm } from '../../client/contact-form';
+	initContactForm();
 </script>
 
 <style>

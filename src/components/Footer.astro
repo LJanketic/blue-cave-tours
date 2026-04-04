@@ -1,11 +1,13 @@
 ---
+import { SITE_NAME } from '../config/site';
+
 const year = new Date().getFullYear();
 ---
 
 <footer class="foot" id="contact">
 	<div class="foot__inner">
 		<div class="foot__brand">
-			<p class="foot__name">Blue Cave Tours</p>
+			<p class="foot__name">{SITE_NAME}</p>
 			<p class="foot__address">
 				Riva promenade of Split, stand number 14<br />
 				Split, Croatia
@@ -43,7 +45,9 @@ const year = new Date().getFullYear();
 			</div>
 		</div>
 	</div>
-	<p class="foot__fine">&copy; {year} Blue Cave Tours · Checkout: Stripe when configured, or demo mode (see <code>CHECKOUT_MODE</code>).</p>
+	<p class="foot__fine">
+		&copy; {year} {SITE_NAME} · Checkout: Stripe when configured, or demo mode (see <code>CHECKOUT_MODE</code>).
+	</p>
 </footer>
 
 <style>

@@ -1,6 +1,8 @@
 ---
-import SiteLayout from '../../layouts/SiteLayout.astro';
+import NotFoundPanel from '../../components/NotFoundPanel.astro';
 import TourDetailView from '../../components/tour/TourDetailView.astro';
+import { pageTitle } from '../../config/site';
+import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getTourBySlug } from '../../lib/tours';
 
 const { slug } = Astro.params;
@@ -12,7 +14,7 @@ if (!tour) {
 ---
 
 <SiteLayout
-	title={tour ? `${tour.title} — Blue Cave Tours` : 'Tour not found — Blue Cave Tours'}
+	title={tour ? pageTitle(tour.title) : pageTitle('Tour not found')}
 	description={tour?.shortDescription ?? 'The requested tour does not exist.'}
 >
 	<main id="main">
@@ -20,30 +22,15 @@ if (!tour) {
 			tour ? (
 				<TourDetailView tour={tour} />
 			) : (
-				<div class="nf">
-					<h1>Tour not found</h1>
-					<p>
-						<a href="/tours">View all tours</a> · <a href="/">Home</a>
-					</p>
-				</div>
+				<NotFoundPanel
+					title="Tour not found"
+					description="The requested tour does not exist or the link may be outdated."
+				>
+					<a href="/tours">View all tours</a>
+					{' · '}
+					<a href="/">Home</a>
+				</NotFoundPanel>
 			)
 		}
 	</main>
 </SiteLayout>
-
-<style>
-	.nf {
-		max-width: 560px;
-		margin: 0 auto;
-		padding: 4rem 1.25rem;
-	}
-
-	.nf h1 {
-		font-family: var(--font-display);
-		color: var(--color-nav);
-	}
-
-	.nf a {
-		font-weight: 600;
-	}
-</style>

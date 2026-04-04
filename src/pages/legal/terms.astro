@@ -1,8 +1,9 @@
 ---
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
-<SiteLayout title="Terms &amp; Conditions — Blue Cave Tours" description="Terms and conditions for boat tours operated from Split.">
+<SiteLayout title={pageTitle('Terms & Conditions')} description="Terms and conditions for boat tours operated from Split.">
 	<main id="main" class="main">
 		<h1 class="title">Terms &amp; Conditions</h1>
 		<p class="meta">Placeholder legal text — replace with counsel-approved wording before production.</p>

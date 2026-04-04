@@ -1,12 +1,13 @@
 ---
 import '../styles/global.css';
+import { SITE_DEFAULT_DESCRIPTION } from '../config/site';
 
 type Props = {
 	title: string;
 	description?: string;
 };
 
-const { title, description = 'Boat tours and private charters from Split — Blue Cave, islands, and the best of the Adriatic.' } = Astro.props;
+const { title, description = SITE_DEFAULT_DESCRIPTION } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 ---
 

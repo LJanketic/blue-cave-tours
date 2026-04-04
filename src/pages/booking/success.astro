@@ -1,4 +1,5 @@
 ---
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 
 const demo = Astro.url.searchParams.has('demo');
@@ -6,7 +7,7 @@ const tourId = Astro.url.searchParams.get('tourId');
 ---
 
 <SiteLayout
-	title={demo ? 'Demo booking — Blue Cave Tours' : 'Booking confirmed — Blue Cave Tours'}
+	title={demo ? pageTitle('Demo booking') : pageTitle('Booking confirmed')}
 	description="Thank you for your booking or demo checkout."
 >
 	<main class="wrap" id="main">

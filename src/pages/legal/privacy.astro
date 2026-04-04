@@ -1,8 +1,9 @@
 ---
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
-<SiteLayout title="Privacy Policy — Blue Cave Tours" description="How Blue Cave Tours handles personal data for bookings and enquiries.">
+<SiteLayout title={pageTitle('Privacy Policy')} description="How Blue Cave Tours handles personal data for bookings and enquiries.">
 	<main id="main" class="main">
 		<h1 class="title">Privacy Policy</h1>
 		<p class="meta">Placeholder — align with GDPR and your actual processors (Stripe, email, analytics) before launch.</p>

@@ -1,8 +1,9 @@
 ---
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
-<SiteLayout title="Checkout cancelled — Blue Cave Tours" description="You left the Stripe checkout before completing payment.">
+<SiteLayout title={pageTitle('Checkout cancelled')} description="You left the Stripe checkout before completing payment.">
 	<main class="wrap" id="main">
 		<h1>Checkout cancelled</h1>
 		<p class="lead">No charge was made. You can return anytime and pick up where you left off.</p>
