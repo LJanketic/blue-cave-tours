@@ -1,7 +1,17 @@
+---
+import { HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS } from '../data/hero-image';
+import { unsplashDefaultSrc, unsplashSrcSet } from '../lib/unsplash';
+
+const heroSrcSet = unsplashSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
+const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
+---
+
 <section class="hero" aria-labelledby="hero-heading">
 	<div class="hero__media">
 		<img
-			src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1920&q=80"
+			src={heroSrc}
+			srcset={heroSrcSet}
+			sizes="100vw"
 			alt=""
 			width="1920"
 			height="1080"

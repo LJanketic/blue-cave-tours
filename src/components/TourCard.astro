@@ -1,15 +1,27 @@
 ---
 import type { TourDetail } from '../types/tour';
+import { unsplashDefaultSrc, unsplashSrcSet } from '../lib/unsplash';
 
 type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
+const cardSrcSet = unsplashSrcSet(tour.image.src, [400, 640, 960, 1200]);
+const cardSrc = unsplashDefaultSrc(tour.image.src, 800);
 ---
 
 <article class="card" id={tour.slug}>
 	<div class="card__image">
 		<a href={`/tours/${tour.slug}`} class="card__image-link">
-			<img src={tour.image.src} alt={tour.image.alt} width="600" height="400" loading="lazy" decoding="async" />
+			<img
+				src={cardSrc}
+				srcset={cardSrcSet}
+				sizes="(max-width: 480px) 88vw, (max-width: 900px) 45vw, min(380px, 32vw)"
+				alt={tour.image.alt}
+				width="600"
+				height="400"
+				loading="lazy"
+				decoding="async"
+			/>
 		</a>
 	</div>
 	<div class="card__body">
@@ -22,9 +34,11 @@ const { tour } = Astro.props;
 		<div class="card__footer">
 			<span class="card__price">From <strong>{tour.fromPrice}</strong></span>
 			<div class="card__actions">
-				<a class="card__secondary" href={`/tours/${tour.slug}`}>Details</a>
+				<a class="card__secondary" href={`/tours/${tour.slug}`} aria-label={`Tour details: ${tour.title}`}>
+					Details
+				</a>
 				<form class="checkout-form" data-tour-id={tour.slug}>
-					<button type="submit" class="card__cta">Book now</button>
+					<button type="submit" class="card__cta" aria-label={`Book now: ${tour.title}`}>Book now</button>
 				</form>
 			</div>
 		</div>

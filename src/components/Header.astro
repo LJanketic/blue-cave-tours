@@ -64,8 +64,13 @@ const nav = [
 		function syncAria() {
 			if (mq.matches) {
 				nav.removeAttribute('aria-hidden');
+				nav.removeAttribute('inert');
 			} else {
-				nav.setAttribute('aria-hidden', String(!header.classList.contains('header--open')));
+				const open = header.classList.contains('header--open');
+				nav.setAttribute('aria-hidden', String(!open));
+				/* inert removes focusables from tab order when menu is closed (Lighthouse / a11y) */
+				if (open) nav.removeAttribute('inert');
+				else nav.setAttribute('inert', '');
 			}
 		}
 
@@ -92,6 +97,7 @@ const nav = [
 				header.classList.remove('header--open');
 				btn.setAttribute('aria-expanded', 'false');
 				document.body.style.overflow = '';
+				nav.removeAttribute('inert');
 			}
 			syncAria();
 		});
