@@ -1,0 +1,134 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="foot" id="contact">
+	<div class="foot__inner">
+		<div class="foot__brand">
+			<p class="foot__name">Blue Cave Tours</p>
+			<p class="foot__address">
+				Riva promenade of Split, stand number 14<br />
+				Split, Croatia
+			</p>
+			<p class="foot__contact">
+				<a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a><br />
+				<a href="tel:+385919888838">+385 91 988 88 38</a>
+			</p>
+			<p class="foot__social">Connect with us on Instagram</p>
+		</div>
+		<div class="foot__cols">
+			<div>
+				<h2 class="foot__heading">Quick links</h2>
+				<ul class="foot__links">
+					<li><a href="#tours">Tours</a></li>
+					<li><a href="#why-us">About the experience</a></li>
+					<li><a href="#contact">Meet-up point</a></li>
+					<li><a href="#tours">Private tour</a></li>
+				</ul>
+			</div>
+			<div>
+				<h2 class="foot__heading">Legal</h2>
+				<ul class="foot__links">
+					<li><a href="#">Terms &amp; Conditions</a></li>
+					<li><a href="#">Privacy Policy</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<p class="foot__fine">&copy; {year} Blue Cave Tours · Demo landing — payments via Stripe Checkout</p>
+</footer>
+
+<style>
+	.foot {
+		background: var(--color-nav);
+		color: #cbd5e1;
+		padding: 3rem 1.25rem 1.5rem;
+	}
+
+	.foot__inner {
+		max-width: var(--content-max);
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2.5rem;
+		align-items: start;
+	}
+
+	.foot__name {
+		margin: 0 0 0.75rem;
+		font-family: var(--font-display);
+		font-size: 1.35rem;
+		font-weight: 700;
+		color: #fff;
+	}
+
+	.foot__address,
+	.foot__contact,
+	.foot__social {
+		margin: 0 0 0.75rem;
+		font-size: 0.9375rem;
+		line-height: 1.55;
+	}
+
+	.foot__contact a {
+		color: #fdba74;
+		text-decoration: none;
+		font-weight: 600;
+	}
+
+	.foot__contact a:hover {
+		color: #fff;
+		text-decoration: underline;
+	}
+
+	.foot__cols {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.5rem;
+	}
+
+	.foot__heading {
+		margin: 0 0 0.75rem;
+		font-size: 0.8125rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: #94a3b8;
+	}
+
+	.foot__links {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.foot__links a {
+		color: #e2e8f0;
+		text-decoration: none;
+		font-size: 0.9375rem;
+	}
+
+	.foot__links a:hover {
+		color: #fff;
+		text-decoration: underline;
+	}
+
+	.foot__fine {
+		max-width: var(--content-max);
+		margin: 2.5rem auto 0;
+		padding-top: 1.25rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.12);
+		font-size: 0.8125rem;
+		color: #94a3b8;
+		text-align: center;
+	}
+
+	@media (max-width: 720px) {
+		.foot__inner {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

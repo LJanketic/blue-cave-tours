@@ -1,0 +1,133 @@
+---
+import type { Tour } from '../data/tours';
+
+type Props = { tour: Tour };
+
+const { tour } = Astro.props;
+---
+
+<article class="card" id={tour.id}>
+	<div class="card__image">
+		<img src={tour.image.src} alt={tour.image.alt} width="600" height="400" loading="lazy" decoding="async" />
+	</div>
+	<div class="card__body">
+		<p class="card__meta">{tour.duration} · {tour.highlight}</p>
+		<h3 class="card__title">{tour.title}</h3>
+		<p class="card__tagline">{tour.tagline}</p>
+		<p class="card__desc">{tour.description}</p>
+		<div class="card__footer">
+			<span class="card__price">From <strong>{tour.fromPrice}</strong></span>
+			<form class="checkout-form" data-tour-id={tour.id}>
+				<button type="submit" class="card__cta">Book with Stripe</button>
+			</form>
+		</div>
+	</div>
+</article>
+
+<style>
+	.card {
+		display: flex;
+		flex-direction: column;
+		background: var(--color-surface);
+		border-radius: var(--radius);
+		overflow: hidden;
+		box-shadow: var(--shadow-card);
+		border: 1px solid var(--color-border);
+		height: 100%;
+	}
+
+	.card__image img {
+		width: 100%;
+		aspect-ratio: 3 / 2;
+		object-fit: cover;
+	}
+
+	.card__body {
+		padding: 1.25rem 1.35rem 1.35rem;
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		gap: 0.35rem;
+	}
+
+	.card__meta {
+		margin: 0;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: var(--color-muted);
+	}
+
+	.card__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 1.35rem;
+		font-weight: 700;
+		line-height: 1.25;
+	}
+
+	.card__tagline {
+		margin: 0;
+		font-weight: 600;
+		color: var(--color-nav-elevated);
+		font-size: 0.95rem;
+	}
+
+	.card__desc {
+		margin: 0.25rem 0 0;
+		flex: 1;
+		color: var(--color-muted);
+		font-size: 0.95rem;
+		line-height: 1.55;
+	}
+
+	.card__footer {
+		margin-top: 1.25rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--color-border);
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+
+	.card__price {
+		font-size: 0.9375rem;
+		color: var(--color-text);
+	}
+
+	.card__price strong {
+		font-size: 1.125rem;
+		color: var(--color-nav);
+	}
+
+	.checkout-form {
+		margin: 0;
+	}
+
+	.card__cta {
+		appearance: none;
+		border: none;
+		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.6rem 1.1rem;
+		border-radius: 8px;
+		background: var(--color-cta);
+		color: var(--color-cta-text);
+		font-weight: 700;
+		font-size: 0.9375rem;
+		font-family: inherit;
+		transition: background 0.15s ease;
+	}
+
+	.card__cta:hover {
+		background: var(--color-cta-hover);
+	}
+
+	.card__cta:disabled {
+		opacity: 0.65;
+		cursor: not-allowed;
+	}
+</style>

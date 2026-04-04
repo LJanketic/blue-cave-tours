@@ -1,0 +1,145 @@
+---
+const nav = [
+	{ href: '#tours', label: 'Tours' },
+	{ href: '#why-us', label: 'Why us' },
+	{ href: '#faq', label: 'FAQ' },
+	{ href: '#contact', label: 'Contact' },
+];
+---
+
+<header class="header">
+	<div class="header__inner">
+		<a class="header__brand" href="/">
+			<span class="header__logo" aria-hidden="true">BC</span>
+			<span class="header__name">Blue Cave Tours</span>
+		</a>
+		<nav class="header__nav" aria-label="Primary">
+			<ul class="header__list">
+				{
+					nav.map((item) => (
+						<li>
+							<a href={item.href}>{item.label}</a>
+						</li>
+					))
+				}
+			</ul>
+		</nav>
+		<a class="header__cta" href="#tours">Book a tour</a>
+	</div>
+</header>
+
+<style>
+	.header {
+		position: sticky;
+		top: 0;
+		z-index: 50;
+		background: var(--color-nav);
+		color: #f1f5f9;
+		box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+	}
+
+	.header__inner {
+		max-width: var(--content-max);
+		margin: 0 auto;
+		padding: 0.875rem 1.25rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.header__brand {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		color: inherit;
+		text-decoration: none;
+		font-weight: 700;
+	}
+
+	.header__brand:hover {
+		color: #fff;
+	}
+
+	.header__logo {
+		display: grid;
+		place-items: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		border-radius: 8px;
+		background: linear-gradient(145deg, var(--color-cta), #fb923c);
+		color: var(--color-cta-text);
+		font-size: 0.75rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
+	}
+
+	.header__name {
+		font-family: var(--font-display);
+		font-size: 1.125rem;
+	}
+
+	.header__nav {
+		flex: 1;
+		display: flex;
+		justify-content: center;
+	}
+
+	.header__list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.25rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.header__list a {
+		color: #cbd5e1;
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.9375rem;
+	}
+
+	.header__list a:hover {
+		color: #fff;
+	}
+
+	.header__cta {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem 1rem;
+		border-radius: 8px;
+		background: var(--color-cta);
+		color: var(--color-cta-text);
+		font-weight: 700;
+		font-size: 0.9375rem;
+		text-decoration: none;
+		white-space: nowrap;
+		transition: background 0.15s ease;
+	}
+
+	.header__cta:hover {
+		background: var(--color-cta-hover);
+		color: var(--color-cta-text);
+	}
+
+	@media (max-width: 768px) {
+		.header__inner {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.header__nav {
+			order: 3;
+			width: 100%;
+			justify-content: flex-start;
+		}
+
+		.header__cta {
+			align-self: flex-end;
+		}
+	}
+</style>

@@ -1,0 +1,65 @@
+<section class="why" id="why-us" aria-labelledby="why-heading">
+	<div class="why__inner">
+		<h2 id="why-heading" class="why__title">Why book with us</h2>
+		<ul class="why__list">
+			<li>
+				<h3 class="why__item-title">Experienced crew</h3>
+				<p class="why__item-text">Skippers who know the coast, weather windows, and how to keep the day smooth and safe.</p>
+			</li>
+			<li>
+				<h3 class="why__item-title">Modern boats</h3>
+				<p class="why__item-text">Speedboats built for comfort—room to move, shade when you need it, and clear safety briefings.</p>
+			</li>
+			<li>
+				<h3 class="why__item-title">Clear meeting point</h3>
+				<p class="why__item-text">
+					Easy find on Split’s Riva—we’ll confirm stand details and what to bring before departure.
+				</p>
+			</li>
+		</ul>
+	</div>
+</section>
+
+<style>
+	.why {
+		padding: 3.5rem 1.25rem;
+		background: var(--color-surface);
+		border-block: 1px solid var(--color-border);
+	}
+
+	.why__inner {
+		max-width: var(--content-max);
+		margin: 0 auto;
+	}
+
+	.why__title {
+		margin: 0 0 1.75rem;
+		font-family: var(--font-display);
+		font-size: clamp(1.75rem, 3vw, 2.125rem);
+		font-weight: 700;
+		color: var(--color-nav);
+	}
+
+	.why__list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.why__item-title {
+		margin: 0 0 0.5rem;
+		font-size: 1.0625rem;
+		font-weight: 700;
+		color: var(--color-nav);
+	}
+
+	.why__item-text {
+		margin: 0;
+		color: var(--color-muted);
+		font-size: 0.975rem;
+		line-height: 1.55;
+	}
+</style>
