@@ -1,53 +1,64 @@
 ---
-import { pageTitle } from '../../config/site';
+import { pageTitle, SITE_EMAIL, SITE_PHONE, SITE_PHONE_TEL } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import { t } from '../../i18n';
 import { getAllTours } from '../../lib/tours';
 
+const locale = Astro.currentLocale;
 const tours = getAllTours();
 ---
 
 <SiteLayout
-	title={pageTitle('Contact')}
-	description="Reach Blue Cave Tours on Split’s Riva — stand 14 — or send a message about tours and private charters."
+	title={pageTitle(t('contact.title', locale))}
+	description={t('contact.description', locale)}
 >
 	<main id="main" class="main">
-		<h1 class="title">Contact</h1>
+		<h1 class="title">{t('contact.title', locale)}</h1>
 		<p class="lead">
-			<strong>Meet-up:</strong> Riva promenade of Split, stand number 14 ·
-			<a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a> ·
-			<a href="tel:+385919888838">+385 91 988 88 38</a>
+			<strong>{t('contact.lead', locale)}</strong> ·
+			<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a> ·
+			<a href={`tel:${SITE_PHONE_TEL}`}>{SITE_PHONE}</a>
 		</p>
 
-		<form id="contact-form" class="form" novalidate>
+		<form
+			id="contact-form"
+			class="form"
+			novalidate
+			data-msg-sending={t('contact.sending', locale)}
+			data-msg-success={t('contact.success', locale)}
+			data-msg-success-no-email={t('contact.successNoEmail', locale)}
+		>
 			<div class="field">
-				<label for="name">Name <span class="req">*</span></label>
+				<label for="name">{t('contact.name', locale)} <span class="req">*</span></label>
 				<input id="name" name="name" type="text" required autocomplete="name" />
 			</div>
 			<div class="field">
-				<label for="email">Email <span class="req">*</span></label>
+				<label for="email">{t('contact.email', locale)} <span class="req">*</span></label>
 				<input id="email" name="email" type="email" required autocomplete="email" />
 			</div>
 			<div class="field">
-				<label for="phone">Phone</label>
+				<label for="phone">{t('contact.phone', locale)}</label>
 				<input id="phone" name="phone" type="tel" autocomplete="tel" />
 			</div>
 			<div class="field">
-				<label for="tourSlug">Tour interest (optional)</label>
+				<label for="tourSlug">{t('contact.tour', locale)}</label>
 				<select id="tourSlug" name="tourSlug">
-					<option value="">— Select —</option>
-					{tours.map((t) => (
-						<option value={t.slug}>
-							{t.title}
-						</option>
+					<option value="">{t('contact.tourSelect', locale)}</option>
+					{tours.map((tour) => (
+						<option value={tour.slug}>{tour.title}</option>
 					))}
 				</select>
 			</div>
-			<div class="field">
-				<label for="message">Message <span class="req">*</span></label>
-				<textarea id="message" name="message" rows="5" required placeholder="Dates, group size, questions…" />
+			<div class="field field--hp" aria-hidden="true">
+				<label for="website">Website</label>
+				<input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
 			</div>
-			<p class="fine">This demo posts to our server and logs the payload in development — no email provider yet.</p>
-			<button type="submit" class="submit">Send message</button>
+			<div class="field">
+				<label for="message">{t('contact.message', locale)} <span class="req">*</span></label>
+				<textarea id="message" name="message" rows="5" required placeholder={t('contact.messagePlaceholder', locale)} />
+			</div>
+			<p class="fine">{t('contact.fine', locale)}</p>
+			<button type="submit" class="submit">{t('contact.submit', locale)}</button>
 			<p id="contact-status" class="status" role="status" aria-live="polite"></p>
 		</form>
 	</main>
@@ -114,6 +125,14 @@ const tours = getAllTours();
 	.field textarea {
 		resize: vertical;
 		min-height: 120px;
+	}
+
+	.field--hp {
+		position: absolute;
+		left: -9999px;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
 	}
 
 	.fine {

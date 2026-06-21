@@ -1,0 +1,78 @@
+---
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { t } from '../i18n';
+
+const locale = Astro.currentLocale;
+const privacyHref = getRelativeLocaleUrl(locale, '/legal/privacy');
+---
+
+<div class="cookie-consent" data-cookie-consent hidden role="dialog" aria-label="Cookie notice">
+	<p>
+		{t('cookie.message', locale)}{' '}
+		<a href={privacyHref}>{t('cookie.privacy', locale)}</a>
+	</p>
+	<button type="button" class="cookie-consent__btn" data-cookie-accept>
+		{t('cookie.accept', locale)}
+	</button>
+</div>
+
+<script>
+	const KEY = 'bct-cookie-consent';
+	const banner = document.querySelector('[data-cookie-consent]');
+	if (banner instanceof HTMLElement && !localStorage.getItem(KEY)) {
+		banner.hidden = false;
+		const btn = banner.querySelector('[data-cookie-accept]');
+		btn?.addEventListener('click', () => {
+			localStorage.setItem(KEY, '1');
+			banner.hidden = true;
+		});
+	}
+</script>
+
+<style>
+	.cookie-consent {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		z-index: 100;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 1rem 1.25rem;
+		background: var(--color-nav);
+		color: #f8fafc;
+		font-size: 0.875rem;
+		box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.15);
+	}
+
+	.cookie-consent[hidden] {
+		display: none;
+	}
+
+	.cookie-consent p {
+		margin: 0;
+		max-width: 52ch;
+		line-height: 1.5;
+	}
+
+	.cookie-consent a {
+		color: #93c5fd;
+		font-weight: 600;
+	}
+
+	.cookie-consent__btn {
+		appearance: none;
+		border: none;
+		cursor: pointer;
+		padding: 0.5rem 1rem;
+		border-radius: 8px;
+		background: var(--color-cta);
+		color: var(--color-cta-text);
+		font-weight: 700;
+		font-family: inherit;
+		white-space: nowrap;
+	}
+</style>

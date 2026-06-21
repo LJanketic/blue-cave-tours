@@ -6,6 +6,7 @@ dist/
 
 # dependencies
 node_modules/
+.pnpm-store/
 
 # logs
 logs/
@@ -19,10 +20,20 @@ pnpm-debug.log*
 .env*
 !.env.example
 
+# keys & credentials (never commit)
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+service-account*.json
+
 # deployment / host CLI metadata (sensitive or machine-specific)
 .vercel/
 .netlify/
 .wrangler/
+.supabase/
 
 # caches & tooling
 .cache/

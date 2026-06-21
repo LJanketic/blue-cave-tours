@@ -1,18 +1,25 @@
 ---
-import { pageTitle } from '../../config/site';
+import { pageTitle, SITE_EMAIL, SITE_PHONE, SITE_PHONE_TEL } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import { t } from '../../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+
+const locale = Astro.currentLocale;
+const toursHref = getRelativeLocaleUrl(locale, '/tours');
+const homeHref = getRelativeLocaleUrl(locale, '/');
 ---
 
-<SiteLayout title={pageTitle('Checkout cancelled')} description="You left the Stripe checkout before completing payment.">
+<SiteLayout title={pageTitle(t('bookingCancel.title', locale))} description={t('bookingCancel.description', locale)}>
 	<main class="wrap" id="main">
-		<h1>Checkout cancelled</h1>
-		<p class="lead">No charge was made. You can return anytime and pick up where you left off.</p>
+		<h1>{t('bookingCancel.title', locale)}</h1>
+		<p class="lead">{t('bookingCancel.lead', locale)}</p>
 		<p class="muted">
-			Questions? Email <a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a> or call{' '}
-			<a href="tel:+385919888838">+385 91 988 88 38</a>.
+			{t('bookingCancel.help', locale)} <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a> ·{' '}
+			<a href={`tel:${SITE_PHONE_TEL}`}>{SITE_PHONE}</a>.
 		</p>
 		<p>
-			<a class="back" href="/tours">Browse tours</a> · <a class="back" href="/">Home</a>
+			<a class="back" href={toursHref}>{t('bookingSuccess.browse', locale)}</a> ·{' '}
+			<a class="back" href={homeHref}>{t('bookingSuccess.home', locale)}</a>
 		</p>
 	</main>
 </SiteLayout>

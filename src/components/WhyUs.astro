@@ -1,24 +1,30 @@
+---
+import { t } from '../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+
+const locale = Astro.currentLocale;
+const bookingDetailsHref = getRelativeLocaleUrl(locale, '/booking/details');
+---
+
 <section class="why" id="why-us" aria-labelledby="why-heading">
 	<div class="why__inner">
-		<h2 id="why-heading" class="why__title">Why book with us</h2>
+		<h2 id="why-heading" class="why__title">{t('why.title', locale)}</h2>
 		<ul class="why__list">
 			<li>
-				<h3 class="why__item-title">Experienced crew</h3>
-				<p class="why__item-text">Skippers who know the coast, weather windows, and how to keep the day smooth and safe.</p>
+				<h3 class="why__item-title">{t('why.crewTitle', locale)}</h3>
+				<p class="why__item-text">{t('why.crewText', locale)}</p>
 			</li>
 			<li>
-				<h3 class="why__item-title">Modern boats</h3>
-				<p class="why__item-text">Speedboats built for comfort—room to move, shade when you need it, and clear safety briefings.</p>
+				<h3 class="why__item-title">{t('why.boatsTitle', locale)}</h3>
+				<p class="why__item-text">{t('why.boatsText', locale)}</p>
 			</li>
 			<li>
-				<h3 class="why__item-title">Clear meeting point</h3>
-				<p class="why__item-text">
-					Easy find on Split’s Riva—we’ll confirm stand details and what to bring before departure.
-				</p>
+				<h3 class="why__item-title">{t('why.meetingTitle', locale)}</h3>
+				<p class="why__item-text">{t('why.meetingText', locale)}</p>
 			</li>
 		</ul>
 		<p class="why__extra">
-			<a href="/booking/details">What we collect for a booking →</a>
+			<a href={bookingDetailsHref}>{t('why.bookingLink', locale)}</a>
 		</p>
 	</div>
 </section>

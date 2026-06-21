@@ -2,14 +2,20 @@
 import NotFoundPanel from '../components/NotFoundPanel.astro';
 import { pageTitle } from '../config/site';
 import SiteLayout from '../layouts/SiteLayout.astro';
+import { t } from '../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+
+const locale = Astro.currentLocale;
+const toursHref = getRelativeLocaleUrl(locale, '/tours');
+const homeHref = getRelativeLocaleUrl(locale, '/');
 ---
 
-<SiteLayout title={pageTitle('Page not found')}>
+<SiteLayout title={pageTitle(t('notFound.title', locale))}>
 	<main id="main">
-		<NotFoundPanel title="404" description="That page doesn’t exist or the tour slug is wrong.">
-			<a href="/tours">Browse all tours</a>
-			{' or '}
-			<a href="/">return home</a>.
+		<NotFoundPanel title={t('notFound.title', locale)} description={t('notFound.description', locale)}>
+			<a href={toursHref}>{t('notFound.browseTours', locale)}</a>
+			{t('notFound.or', locale)}
+			<a href={homeHref}>{t('notFound.home', locale)}</a>.
 		</NotFoundPanel>
 	</main>
 </SiteLayout>

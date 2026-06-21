@@ -3,32 +3,41 @@ import NotFoundPanel from '../../components/NotFoundPanel.astro';
 import TourDetailView from '../../components/tour/TourDetailView.astro';
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import { t } from '../../i18n';
+import { tourJsonLd } from '../../lib/json-ld';
 import { getTourBySlug } from '../../lib/tours';
+import { getAbsoluteLocaleUrl, getRelativeLocaleUrl } from 'astro:i18n';
 
+const locale = Astro.currentLocale;
 const { slug } = Astro.params;
 const tour = slug ? getTourBySlug(slug) : undefined;
 
 if (!tour) {
 	Astro.response.status = 404;
 }
+
+const toursHref = getRelativeLocaleUrl(locale, '/tours');
+const homeHref = getRelativeLocaleUrl(locale, '/');
+const pageUrl = tour && slug ? getAbsoluteLocaleUrl(locale, `/tours/${slug}`) : '';
+const jsonLd = tour && pageUrl ? tourJsonLd(tour, pageUrl) : null;
 ---
 
 <SiteLayout
-	title={tour ? pageTitle(tour.title) : pageTitle('Tour not found')}
-	description={tour?.shortDescription ?? 'The requested tour does not exist.'}
+	title={tour ? pageTitle(tour.title) : pageTitle(t('tourNotFound.title', locale))}
+	description={tour?.shortDescription ?? t('tourNotFound.description', locale)}
+	ogImage={tour?.image.src}
+	ogType={tour ? 'article' : 'website'}
 >
+	{jsonLd && <script slot="head" type="application/ld+json" set:html={jsonLd} />}
 	<main id="main">
 		{
 			tour ? (
 				<TourDetailView tour={tour} />
 			) : (
-				<NotFoundPanel
-					title="Tour not found"
-					description="The requested tour does not exist or the link may be outdated."
-				>
-					<a href="/tours">View all tours</a>
+				<NotFoundPanel title={t('tourNotFound.title', locale)} description={t('tourNotFound.description', locale)}>
+					<a href={toursHref}>{t('notFound.browseTours', locale)}</a>
 					{' · '}
-					<a href="/">Home</a>
+					<a href={homeHref}>{t('bookingSuccess.home', locale)}</a>
 				</NotFoundPanel>
 			)
 		}

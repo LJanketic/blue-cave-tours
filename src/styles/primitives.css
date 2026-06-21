@@ -1,0 +1,30 @@
+.content-page {
+	max-width: 720px;
+	margin: 0 auto;
+	padding: 2.5rem 1.25rem 4rem;
+}
+
+.content-page__title {
+	font-family: var(--font-display);
+	font-size: clamp(1.75rem, 3vw, 2.25rem);
+	color: var(--color-nav);
+	margin: 0 0 0.5rem;
+}
+
+.content-page__meta {
+	font-size: 0.9rem;
+	color: var(--color-muted);
+	margin: 0 0 2rem;
+}
+
+.content-page__section-title {
+	font-size: 1.125rem;
+	margin: 1.5rem 0 0.5rem;
+	color: var(--color-nav);
+}
+
+.content-page__paragraph {
+	margin: 0;
+	line-height: 1.65;
+	color: var(--color-muted);
+}

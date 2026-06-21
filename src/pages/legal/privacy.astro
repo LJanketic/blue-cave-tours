@@ -1,67 +1,93 @@
 ---
-import { pageTitle } from '../../config/site';
+import { pageTitle, SITE_EMAIL, SITE_NAME } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
 <SiteLayout title={pageTitle('Privacy Policy')} description="How Blue Cave Tours handles personal data for bookings and enquiries.">
-	<main id="main" class="main">
-		<h1 class="title">Privacy Policy</h1>
-		<p class="meta">Placeholder — align with GDPR and your actual processors (Stripe, email, analytics) before launch.</p>
+	<main id="main" class="content-page">
+		<h1 class="content-page__title">Privacy Policy</h1>
+		<p class="content-page__meta">
+			Last updated: June 2026 · Draft for review before launch — have counsel confirm for your entities and markets.
+		</p>
 
 		<section class="sec">
-			<h2>Data we collect</h2>
-			<p>
-				Contact details you submit (name, email, phone), message content, and optional tour interest. Checkout data is
-				processed by Stripe when that mode is enabled.
+			<h2 class="content-page__section-title">Who we are</h2>
+			<p class="content-page__paragraph">
+				{SITE_NAME} operates boat tours and private charters from Split, Croatia. Services may be delivered under
+				operating companies named on your booking confirmation (e.g. Misericordia d.o.o., Aliskaf d.o.o., Per Mare
+				d.o.o.).
 			</p>
 		</section>
+
 		<section class="sec">
-			<h2>Purpose</h2>
-			<p>To respond to enquiries, operate tours, process payments, and meet legal obligations.</p>
+			<h2 class="content-page__section-title">Data we collect</h2>
+			<ul class="content-page__list">
+				<li>Contact details you submit: name, email, phone, message content, optional tour interest.</li>
+				<li>Booking details: preferred date, party size (adults, children, infants).</li>
+				<li>Payment reference from PayPal when you complete checkout — we do not store card numbers.</li>
+				<li>Technical logs from our hosting provider (IP address, browser type) for security and abuse prevention.</li>
+			</ul>
 		</section>
+
 		<section class="sec">
-			<h2>Retention</h2>
-			<p>Kept only as long as needed for operations, accounting, and dispute resolution — define exact periods per system.</p>
+			<h2 class="content-page__section-title">Why we use it</h2>
+			<p class="content-page__paragraph">
+				To respond to enquiries, confirm and operate tours, process payments, send operational emails, and meet legal
+				obligations (e.g. accounting).
+			</p>
 		</section>
+
 		<section class="sec">
-			<h2>Your rights</h2>
-			<p>
-				Depending on jurisdiction, you may request access, correction, deletion, or restriction — contact
-				<a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a>.
+			<h2 class="content-page__section-title">Processors &amp; hosting</h2>
+			<ul class="content-page__list">
+				<li><strong>Netlify</strong> — website hosting (US/EU edge; see Netlify DPA).</li>
+				<li><strong>Supabase</strong> — reservation records in the <strong>EU (Frankfurt)</strong> region.</li>
+				<li><strong>PayPal</strong> — payment processing; card data handled by PayPal under their terms.</li>
+				<li><strong>Email (SMTP)</strong> — transactional email via our existing mail provider on cPanel.</li>
+			</ul>
+			<p class="content-page__paragraph">
+				We do not sell personal data. Transfers outside the EEA, if any, rely on appropriate safeguards (e.g. SCCs) as
+				required by GDPR.
+			</p>
+		</section>
+
+		<section class="sec">
+			<h2 class="content-page__section-title">Retention</h2>
+			<ul class="content-page__list">
+				<li>Enquiries: typically up to 24 months unless a booking follows.</li>
+				<li>Completed bookings &amp; payment records: per Croatian accounting and tax rules (commonly 7–11 years for invoices).</li>
+				<li>Server logs: short rolling window (e.g. 30–90 days) unless needed for security incidents.</li>
+			</ul>
+		</section>
+
+		<section class="sec">
+			<h2 class="content-page__section-title">Cookies</h2>
+			<p class="content-page__paragraph">
+				We use essential cookies for site function. Optional analytics, if enabled later, will be disclosed here and
+				consented where required.
+			</p>
+		</section>
+
+		<section class="sec">
+			<h2 class="content-page__section-title">Your rights</h2>
+			<p class="content-page__paragraph">
+				Under GDPR you may request access, correction, deletion, restriction, or portability, and object to certain
+				processing. Contact <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>. You may lodge a complaint with the Croatian
+				Personal Data Protection Agency (AZOP).
 			</p>
 		</section>
 	</main>
 </SiteLayout>
 
 <style>
-	.main {
-		max-width: 720px;
-		margin: 0 auto;
-		padding: 2.5rem 1.25rem 4rem;
+	.sec {
+		margin-bottom: 1rem;
 	}
 
-	.title {
-		font-family: var(--font-display);
-		font-size: clamp(1.75rem, 3vw, 2.25rem);
-		color: var(--color-nav);
-		margin: 0 0 0.5rem;
-	}
-
-	.meta {
-		font-size: 0.9rem;
-		color: var(--color-muted);
-		margin: 0 0 2rem;
-	}
-
-	.sec h2 {
-		font-size: 1.125rem;
-		margin: 1.5rem 0 0.5rem;
-		color: var(--color-nav);
-	}
-
-	.sec p {
+	.content-page__list {
 		margin: 0;
-		line-height: 1.65;
+		padding-left: 1.25rem;
+		line-height: 1.6;
 		color: var(--color-muted);
 	}
 </style>

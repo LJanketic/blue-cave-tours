@@ -1,17 +1,24 @@
 ---
 import type { TourDetail } from '../types/tour';
+import { t, tf } from '../i18n';
 import { unsplashDefaultSrc, unsplashSrcSet } from '../lib/unsplash';
+import { getRelativeLocaleUrl } from 'astro:i18n';
 
 type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
+const locale = Astro.currentLocale ?? 'hr';
+const tourHref = getRelativeLocaleUrl(locale, `/tours/${tour.slug}`);
+const bookHref = `${tourHref}#book`;
 const cardSrcSet = unsplashSrcSet(tour.image.src, [400, 640, 960, 1200]);
 const cardSrc = unsplashDefaultSrc(tour.image.src, 800);
+const detailsAria = tf('tourCard.detailsAria', locale, { title: tour.title });
+const bookAria = tf('tourCard.bookAria', locale, { title: tour.title });
 ---
 
 <article class="card" id={tour.slug}>
 	<div class="card__image">
-		<a href={`/tours/${tour.slug}`} class="card__image-link">
+		<a href={tourHref} class="card__image-link">
 			<img
 				src={cardSrc}
 				srcset={cardSrcSet}
@@ -27,19 +34,19 @@ const cardSrc = unsplashDefaultSrc(tour.image.src, 800);
 	<div class="card__body">
 		<p class="card__meta">{tour.scheduleLabel} · {tour.duration}</p>
 		<h3 class="card__title">
-			<a href={`/tours/${tour.slug}`}>{tour.title}</a>
+			<a href={tourHref}>{tour.title}</a>
 		</h3>
 		<p class="card__tagline">{tour.tagline}</p>
 		<p class="card__desc">{tour.shortDescription}</p>
 		<div class="card__footer">
-			<span class="card__price">From <strong>{tour.fromPrice}</strong></span>
+			<span class="card__price">{t('tourCard.from', locale)} <strong>{tour.fromPrice}</strong></span>
 			<div class="card__actions">
-				<a class="card__secondary" href={`/tours/${tour.slug}`} aria-label={`Tour details: ${tour.title}`}>
-					Details
+				<a class="card__secondary" href={tourHref} aria-label={detailsAria}>
+					{t('tourCard.details', locale)}
 				</a>
-				<form class="checkout-form" data-tour-id={tour.slug}>
-					<button type="submit" class="card__cta" aria-label={`Book now: ${tour.title}`}>Book now</button>
-				</form>
+				<a class="card__cta" href={bookHref} aria-label={bookAria}>
+					{t('tourCard.bookNow', locale)}
+				</a>
 			</div>
 		</div>
 	</div>
@@ -161,14 +168,7 @@ const cardSrc = unsplashDefaultSrc(tour.image.src, 800);
 		background: #f8fafc;
 	}
 
-	.checkout-form {
-		margin: 0;
-	}
-
 	.card__cta {
-		appearance: none;
-		border: none;
-		cursor: pointer;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -178,16 +178,12 @@ const cardSrc = unsplashDefaultSrc(tour.image.src, 800);
 		color: var(--color-cta-text);
 		font-weight: 700;
 		font-size: 0.9375rem;
-		font-family: inherit;
+		text-decoration: none;
 		transition: background 0.15s ease;
 	}
 
 	.card__cta:hover {
 		background: var(--color-cta-hover);
-	}
-
-	.card__cta:disabled {
-		opacity: 0.65;
-		cursor: not-allowed;
+		color: var(--color-cta-text);
 	}
 </style>

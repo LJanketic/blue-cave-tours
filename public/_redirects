@@ -1,0 +1,4 @@
+# Scaffold — paste Yoast 301 export before DNS cutover (one rule per line).
+# WP admin / login → home (safe defaults until full redirect map is imported)
+/wp-admin/*    /    301
+/wp-login.php  /    301

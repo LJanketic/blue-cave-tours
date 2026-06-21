@@ -1,0 +1,331 @@
+---
+import { minBookingDateIso } from '../../lib/dates';
+import { getAvailablePaymentMethods } from '../../lib/env';
+import { PRIVATE_TOUR_SLUG } from '../../lib/pricing';
+import { t } from '../../i18n';
+import type { TourDetail } from '../../types/tour';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+
+type Props = {
+	tour: TourDetail;
+};
+
+const { tour } = Astro.props;
+const locale = Astro.currentLocale;
+const isPrivate = tour.slug === PRIVATE_TOUR_SLUG;
+const contactHref = getRelativeLocaleUrl(locale, '/contact');
+const minDate = minBookingDateIso();
+const { paypal: paypalAvailable, teya: teyaAvailable } = getAvailablePaymentMethods();
+const showPaymentChoice = paypalAvailable && teyaAvailable;
+---
+
+<section class="booking" id="book" aria-labelledby="booking-heading">
+	<h2 id="booking-heading" class="booking__title">
+		{isPrivate ? t('booking.privateTitle', locale) : t('booking.title', locale)}
+	</h2>
+
+	{isPrivate ? (
+		<div class="booking__private">
+			<p>{t('booking.privateMessage', locale)}</p>
+			<a class="booking__contact" href={contactHref}>
+				{t('booking.contactUs', locale)}
+			</a>
+		</div>
+	) : (
+		<form
+			class="booking-form"
+			data-booking-form
+			data-tour-slug={tour.slug}
+			data-tour-title={tour.title}
+			data-locale={locale ?? 'hr'}
+			data-demo-hint={t('booking.demoHint', locale)}
+			data-msg-calculating={t('booking.loading', locale)}
+			data-msg-choose-date={t('booking.chooseDate', locale)}
+			data-msg-custom-quote={t('booking.customQuote', locale)}
+			data-msg-could-not-calculate={t('booking.couldNotCalculate', locale)}
+			data-msg-creating-order={t('booking.creatingOrder', locale)}
+			data-msg-completing-payment={t('booking.completingPayment', locale)}
+			data-msg-payment-error={t('booking.paymentError', locale)}
+			data-msg-choose-paypal={t('booking.choosePayPal', locale)}
+			data-msg-choose-payment={t('booking.choosePaymentMethod', locale)}
+			data-msg-pay-with-paypal={t('booking.payWithPayPal', locale)}
+			data-msg-pay-with-teya={t('booking.payWithCard', locale)}
+			data-msg-free={t('booking.free', locale)}
+			data-msg-redirecting={t('booking.redirecting', locale)}
+			data-msg-could-not-start-payment={t('booking.couldNotStartPayment', locale)}
+			data-msg-capture-failed={t('booking.captureFailed', locale)}
+			data-msg-could-not-create-order={t('booking.couldNotCreateOrder', locale)}
+			data-msg-error={t('booking.error', locale)}
+			data-msg-contact-request={t('booking.contactRequest', locale)}
+			data-msg-contact-preferred-date={t('booking.contactPreferredDate', locale)}
+			data-msg-contact-party={t('booking.contactParty', locale)}
+			data-msg-contact-party-adult={t('booking.contactPartyAdult', locale)}
+			data-msg-contact-party-adults={t('booking.contactPartyAdults', locale)}
+			data-msg-contact-party-child={t('booking.contactPartyChild', locale)}
+			data-msg-contact-party-children={t('booking.contactPartyChildren', locale)}
+			data-msg-contact-party-infant={t('booking.contactPartyInfant', locale)}
+			data-msg-contact-party-infants={t('booking.contactPartyInfants', locale)}
+			data-msg-contact-estimated-total={t('booking.contactEstimatedTotal', locale)}
+			data-msg-contact-confirm={t('booking.contactConfirm', locale)}
+			novalidate
+		>
+			<div class="booking__grid">
+				<div class="booking__field">
+					<label for={`date-${tour.slug}`}>{t('booking.date', locale)}</label>
+					<input id={`date-${tour.slug}`} name="tourDate" type="date" min={minDate} required />
+				</div>
+				<div class="booking__field">
+					<label for={`adults-${tour.slug}`}>{t('booking.adults', locale)}</label>
+					<input id={`adults-${tour.slug}`} name="adults" type="number" min="1" max="20" value="2" required />
+				</div>
+				<div class="booking__field">
+					<label for={`children-${tour.slug}`}>{t('booking.children', locale)}</label>
+					<input id={`children-${tour.slug}`} name="children" type="number" min="0" max="20" value="0" />
+					<p class="booking__hint">{t('booking.childNote', locale)}</p>
+				</div>
+				<div class="booking__field">
+					<label for={`infants-${tour.slug}`}>{t('booking.infants', locale)}</label>
+					<input id={`infants-${tour.slug}`} name="infants" type="number" min="0" max="10" value="0" />
+					<p class="booking__hint">{t('booking.infantNote', locale)}</p>
+				</div>
+			</div>
+
+			<div class="booking__grid booking__grid--contact">
+				<div class="booking__field">
+					<label for={`name-${tour.slug}`}>{t('booking.name', locale)}</label>
+					<input id={`name-${tour.slug}`} name="name" type="text" required autocomplete="name" />
+				</div>
+				<div class="booking__field">
+					<label for={`email-${tour.slug}`}>{t('booking.email', locale)}</label>
+					<input id={`email-${tour.slug}`} name="email" type="email" required autocomplete="email" />
+				</div>
+				<div class="booking__field">
+					<label for={`phone-${tour.slug}`}>{t('booking.phone', locale)}</label>
+					<input id={`phone-${tour.slug}`} name="phone" type="tel" autocomplete="tel" />
+				</div>
+			</div>
+
+			<p class="booking__from">
+				{t('booking.fromPrice', locale)} <strong>{tour.fromPrice}</strong>
+				<span class="booking__note"> · {t('booking.placeholderNote', locale)}</span>
+			</p>
+			<ul class="booking__breakdown" data-booking-breakdown hidden></ul>
+			<p class="booking__total" data-booking-total hidden>
+				{t('booking.total', locale)}: <strong data-booking-total-value>—</strong>
+			</p>
+			<p class="booking__status" data-booking-status role="status" aria-live="polite"></p>
+
+			<fieldset
+				class="booking__payment"
+				data-booking-payment
+				hidden={!showPaymentChoice}
+				aria-label={t('booking.paymentMethod', locale)}
+			>
+				<legend class="booking__payment-legend">{t('booking.paymentMethod', locale)}</legend>
+				{paypalAvailable && (
+					<label class="booking__payment-option">
+						<input type="radio" name="paymentMethod" value="paypal" />
+						<span>{t('booking.payWithPayPal', locale)}</span>
+					</label>
+				)}
+				{teyaAvailable && (
+					<label class="booking__payment-option">
+						<input type="radio" name="paymentMethod" value="teya" />
+						<span>{t('booking.payWithCard', locale)}</span>
+					</label>
+				)}
+			</fieldset>
+
+			<div class="booking__actions">
+				<button type="submit" class="booking__submit" data-booking-submit>
+					{t('booking.calculate', locale)}
+				</button>
+				<div data-paypal-container class="booking__paypal" hidden></div>
+				<a class="booking__contact-link" data-booking-contact-link href={contactHref} hidden>
+					{t('booking.contactToBook', locale)}
+				</a>
+			</div>
+		</form>
+	)}
+</section>
+
+<style>
+	.booking {
+		padding: 1.5rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+	}
+
+	.booking__title {
+		margin: 0 0 1rem;
+		font-family: var(--font-display);
+		font-size: 1.35rem;
+		color: var(--color-nav);
+	}
+
+	.booking__grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.booking__grid--contact {
+		margin-top: 0.5rem;
+	}
+
+	.booking__field label {
+		display: block;
+		font-weight: 600;
+		font-size: 0.9rem;
+		margin-bottom: 0.35rem;
+		color: var(--color-nav);
+	}
+
+	.booking__field input {
+		width: 100%;
+		padding: 0.6rem 0.75rem;
+		border-radius: 8px;
+		border: 1px solid var(--color-border);
+		font: inherit;
+		background: #fff;
+	}
+
+	.booking__hint {
+		margin: 0.35rem 0 0;
+		font-size: 0.75rem;
+		color: var(--color-muted);
+	}
+
+	.booking__from {
+		margin: 0.5rem 0;
+		font-size: 0.9375rem;
+		color: var(--color-muted);
+	}
+
+	.booking__note {
+		font-size: 0.8125rem;
+	}
+
+	.booking__breakdown {
+		margin: 0.5rem 0 0.75rem;
+		padding-left: 1.1rem;
+		font-size: 0.875rem;
+		color: var(--color-muted);
+		line-height: 1.5;
+	}
+
+	.booking__total {
+		margin: 0 0 0.75rem;
+		font-weight: 600;
+		color: var(--color-nav);
+	}
+
+	.booking__status {
+		min-height: 1.25rem;
+		margin: 0 0 0.75rem;
+		font-size: 0.9rem;
+		color: var(--color-muted);
+	}
+
+	.booking__status[data-state='error'] {
+		color: #b91c1c;
+	}
+
+	.booking__status[data-state='info'] {
+		color: var(--color-nav-elevated);
+	}
+
+	.booking__payment {
+		margin: 0 0 1rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		background: #fff;
+	}
+
+	.booking__payment[hidden] {
+		display: none;
+	}
+
+	.booking__payment-legend {
+		padding: 0 0.25rem;
+		font-weight: 700;
+		font-size: 0.9rem;
+		color: var(--color-nav);
+	}
+
+	.booking__payment-option {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		font-size: 0.9375rem;
+		cursor: pointer;
+	}
+
+	.booking__payment-option input {
+		width: auto;
+		margin: 0;
+	}
+
+	.booking__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		align-items: center;
+	}
+
+	.booking__submit {
+		appearance: none;
+		border: none;
+		cursor: pointer;
+		padding: 0.75rem 1.5rem;
+		border-radius: 8px;
+		background: var(--color-cta);
+		color: var(--color-cta-text);
+		font-weight: 800;
+		font-size: 1rem;
+		font-family: inherit;
+	}
+
+	.booking__submit:disabled {
+		opacity: 0.65;
+		cursor: not-allowed;
+	}
+
+	.booking__paypal {
+		min-width: 200px;
+	}
+
+	.booking__contact-link {
+		display: inline-flex;
+		padding: 0.75rem 1.25rem;
+		border-radius: 8px;
+		background: var(--color-nav);
+		color: #f8fafc;
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.booking__contact-link[hidden] {
+		display: none;
+	}
+
+	.booking__private p {
+		margin: 0 0 1rem;
+		color: var(--color-muted);
+		line-height: 1.6;
+	}
+
+	.booking__contact {
+		display: inline-flex;
+		padding: 0.65rem 1.25rem;
+		border-radius: 8px;
+		background: var(--color-cta);
+		color: var(--color-cta-text);
+		font-weight: 700;
+		text-decoration: none;
+	}
+</style>

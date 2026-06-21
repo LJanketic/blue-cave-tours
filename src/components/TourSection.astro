@@ -1,21 +1,26 @@
 ---
 import TourCard from './TourCard.astro';
 import TourCarousel from './TourCarousel.astro';
+import { t } from '../i18n';
 import { getFeaturedTours } from '../lib/tours';
+import { getRelativeLocaleUrl } from 'astro:i18n';
 
+const locale = Astro.currentLocale;
 const featured = getFeaturedTours();
+const toursHref = getRelativeLocaleUrl(locale, '/tours');
 ---
 
 <section class="section" id="tours" aria-labelledby="tours-heading">
 	<div class="section__inner">
 		<div class="section__head">
-			<h2 id="tours-heading" class="section__title">Featured tours</h2>
+			<h2 id="tours-heading" class="section__title">{t('tours.featuredTitle', locale)}</h2>
 			<p class="section__sub">
-				Five highlighted routes — see the <a href="/tours">full catalog</a> for all tours (availability, half-day and
-				full-day windows, private charter).
+				{t('tours.featuredSubBefore', locale)}
+				<a href={toursHref}>{t('tours.featuredSubLink', locale)}</a>
+				{t('tours.featuredSubAfter', locale)}
 			</p>
 		</div>
-		<TourCarousel ariaLabel="Featured tours">
+		<TourCarousel ariaLabel={t('tours.carouselLabel', locale)}>
 			{
 				featured.map((tour) => (
 					<li class="tour-carousel__slide">
@@ -25,7 +30,7 @@ const featured = getFeaturedTours();
 			}
 		</TourCarousel>
 		<p class="section__more">
-			<a class="section__more-link" href="/tours">Browse all tours →</a>
+			<a class="section__more-link" href={toursHref}>{t('tours.browseAll', locale)}</a>
 		</p>
 	</div>
 </section>

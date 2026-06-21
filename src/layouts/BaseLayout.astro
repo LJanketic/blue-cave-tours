@@ -1,25 +1,45 @@
 ---
 import '../styles/global.css';
-import { SITE_DEFAULT_DESCRIPTION } from '../config/site';
+import '../styles/primitives.css';
+import { SITE_DEFAULT_DESCRIPTION, SITE_NAME } from '../config/site';
+import { t } from '../i18n';
+import { getAbsoluteLocaleUrl } from 'astro:i18n';
 
 type Props = {
 	title: string;
 	description?: string;
+	ogImage?: string;
+	ogType?: 'website' | 'article';
 };
 
-const { title, description = SITE_DEFAULT_DESCRIPTION } = Astro.props;
+const { title, description = SITE_DEFAULT_DESCRIPTION, ogImage, ogType = 'website' } = Astro.props;
+const locale = Astro.currentLocale ?? 'hr';
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? Astro.url).href : new URL('/favicon.svg', Astro.site ?? Astro.url).href;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={locale}>
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content={ogType} />
+		<meta property="og:url" content={canonical.href} />
+		<meta property="og:image" content={ogImageUrl} />
+		<meta property="og:site_name" content={SITE_NAME} />
+		<meta property="og:locale" content={locale} />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImageUrl} />
 		<link rel="canonical" href={canonical.href} />
+		<link rel="alternate" hreflang="hr" href={getAbsoluteLocaleUrl('hr', Astro.url.pathname)} />
+		<link rel="alternate" hreflang="x-default" href={getAbsoluteLocaleUrl('hr', Astro.url.pathname)} />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link rel="preconnect" href="https://images.unsplash.com" crossorigin />
@@ -31,7 +51,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 		<slot name="head" />
 	</head>
 	<body>
-		<a class="sr-only" href="#main">Skip to content</a>
+		<a class="sr-only" href="#main">{t('skipLink', locale)}</a>
 		<slot />
 	</body>
 </html>

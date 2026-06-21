@@ -1,22 +1,30 @@
+---
+import { t } from '../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+
+const locale = Astro.currentLocale;
+const faqHref = getRelativeLocaleUrl(locale, '/faq');
+---
+
 <section class="faq" id="faq" aria-labelledby="faq-heading">
 	<div class="faq__inner">
-		<h2 id="faq-heading" class="faq__title">FAQ</h2>
+		<h2 id="faq-heading" class="faq__title">{t('faq.title', locale)}</h2>
 		<dl class="faq__list">
 			<div class="faq__row">
-				<dt>Is the Blue Cave ticket included?</dt>
-				<dd>Cave entry fees are often billed separately on-site. We’ll spell out what’s included before you pay.</dd>
+				<dt>{t('faq.q1', locale)}</dt>
+				<dd>{t('faq.a1', locale)}</dd>
 			</div>
 			<div class="faq__row">
-				<dt>What about weather?</dt>
-				<dd>Sea conditions change—we monitor forecasts and communicate alternatives if a route isn’t safe or enjoyable.</dd>
+				<dt>{t('faq.q2', locale)}</dt>
+				<dd>{t('faq.a2', locale)}</dd>
 			</div>
 			<div class="faq__row">
-				<dt>Private vs group tours?</dt>
-				<dd>Private charters follow your schedule; group tours have fixed times and a shared pace—pick what fits your trip.</dd>
+				<dt>{t('faq.q3', locale)}</dt>
+				<dd>{t('faq.a3', locale)}</dd>
 			</div>
 		</dl>
 		<p class="faq__more">
-			<a href="/faq">Full FAQ &amp; partner (SEAYOU) block →</a>
+			<a href={faqHref}>{t('faq.more', locale)}</a>
 		</p>
 	</div>
 </section>

@@ -1,29 +1,35 @@
 ---
 import { SITE_NAME } from '../config/site';
+import { localeLabels, t } from '../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+
+const locale = Astro.currentLocale;
 
 const nav = [
-	{ href: '/', label: 'Home' },
-	{ href: '/tours', label: 'Tours' },
-	{ href: '/#why-us', label: 'Why us' },
-	{ href: '/faq', label: 'FAQ' },
-	{ href: '/contact', label: 'Contact' },
+	{ key: 'nav.home' as const, path: '/' },
+	{ key: 'nav.tours' as const, path: '/tours' },
+	{ key: 'nav.whyUs' as const, path: '/#why-us' },
+	{ key: 'nav.faq' as const, path: '/faq' },
+	{ key: 'nav.contact' as const, path: '/contact' },
 ];
+
+const currentPath = Astro.url.pathname;
 ---
 
 <header class="header" id="site-header">
 	<div class="header__inner">
-		<a class="header__brand" href="/">
+		<a class="header__brand" href={getRelativeLocaleUrl(locale, '/')}>
 			<span class="header__logo" aria-hidden="true">BC</span>
 			<span class="header__name">{SITE_NAME}</span>
 		</a>
 
-		<nav class="header__nav" id="primary-nav" aria-label="Primary">
+		<nav class="header__nav" id="primary-nav" aria-label={t('nav.primary', locale)}>
 			<ul class="header__list">
 				{
 					nav.map((item) => (
 						<li>
-							<a href={item.href} class="header__link">
-								{item.label}
+							<a href={getRelativeLocaleUrl(locale, item.path)} class="header__link">
+								{t(item.key, locale)}
 							</a>
 						</li>
 					))
@@ -32,9 +38,15 @@ const nav = [
 		</nav>
 
 		<div class="header__trailing">
-			<a class="header__cta" href="/tours">
-				<span class="header__cta-short">Book</span>
-				<span class="header__cta-long">Book a tour</span>
+			<div class="header__lang" title={t('nav.languageSoon', locale)}>
+				<label class="sr-only" for="lang-switch">{t('nav.language', locale)}</label>
+				<select id="lang-switch" class="header__lang-select" data-lang-switch disabled aria-disabled="true">
+					<option value="hr" selected>{localeLabels.hr}</option>
+				</select>
+			</div>
+			<a class="header__cta" href={getRelativeLocaleUrl(locale, '/tours')}>
+				<span class="header__cta-short">{t('nav.book', locale)}</span>
+				<span class="header__cta-long">{t('nav.bookTour', locale)}</span>
 			</a>
 			<button
 				type="button"
@@ -42,8 +54,10 @@ const nav = [
 				aria-expanded="false"
 				aria-controls="primary-nav"
 				id="menu-toggle"
+				data-label-open={t('nav.openMenu', locale)}
+				data-label-close={t('nav.closeMenu', locale)}
 			>
-				<span class="sr-only">Menu</span>
+				<span class="sr-only">{t('nav.menu', locale)}</span>
 				<span class="header__burger" aria-hidden="true">
 					<span></span>
 					<span></span>
@@ -54,58 +68,8 @@ const nav = [
 	</div>
 </header>
 
-<script is:inline>
-	(function () {
-		const header = document.getElementById('site-header');
-		const btn = document.getElementById('menu-toggle');
-		const nav = document.getElementById('primary-nav');
-		if (!header || !btn || !nav) return;
-
-		const mq = window.matchMedia('(min-width: 769px)');
-
-		function syncAria() {
-			if (mq.matches) {
-				nav.removeAttribute('aria-hidden');
-				nav.removeAttribute('inert');
-			} else {
-				const open = header.classList.contains('header--open');
-				nav.setAttribute('aria-hidden', String(!open));
-				/* inert removes focusables from tab order when menu is closed (Lighthouse / a11y) */
-				if (open) nav.removeAttribute('inert');
-				else nav.setAttribute('inert', '');
-			}
-		}
-
-		function setOpen(open) {
-			header.classList.toggle('header--open', open);
-			btn.setAttribute('aria-expanded', String(open));
-			document.body.style.overflow = open ? 'hidden' : '';
-			btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-			syncAria();
-		}
-
-		btn.addEventListener('click', () => setOpen(!header.classList.contains('header--open')));
-
-		nav.querySelectorAll('a').forEach((a) => {
-			a.addEventListener('click', () => setOpen(false));
-		});
-
-		document.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape' && header.classList.contains('header--open')) setOpen(false);
-		});
-
-		mq.addEventListener('change', () => {
-			if (mq.matches) {
-				header.classList.remove('header--open');
-				btn.setAttribute('aria-expanded', 'false');
-				document.body.style.overflow = '';
-				nav.removeAttribute('inert');
-			}
-			syncAria();
-		});
-
-		syncAria();
-	})();
+<script>
+	import '../client/header-menu.ts';
 </script>
 
 <style>
@@ -222,6 +186,18 @@ const nav = [
 		align-self: center;
 	}
 
+	.header__lang-select {
+		appearance: none;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 6px;
+		color: #e2e8f0;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		padding: 0.35rem 0.5rem;
+		cursor: pointer;
+	}
+
 	.header__cta {
 		display: inline-flex;
 		align-items: center;
@@ -301,7 +277,6 @@ const nav = [
 		transform: translateY(-7px) rotate(-45deg);
 	}
 
-	/* Desktop: single row, centered nav, no hamburger */
 	@media (min-width: 769px) {
 		.header__inner {
 			display: flex;

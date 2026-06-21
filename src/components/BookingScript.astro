@@ -1,0 +1,19 @@
+---
+import { getAvailablePaymentMethods, getPublicPayPalClientId } from '../lib/env';
+
+const paypalClientId = getPublicPayPalClientId();
+const { paypal: paypalAvailable, teya: teyaAvailable } = getAvailablePaymentMethods();
+---
+
+<script is:inline define:vars={{ paypalClientId, paypalAvailable, teyaAvailable }}>
+	if (paypalClientId) {
+		document.documentElement.dataset.paypalClientId = paypalClientId;
+	}
+	document.documentElement.dataset.paypalAvailable = paypalAvailable ? 'true' : 'false';
+	document.documentElement.dataset.teyaAvailable = teyaAvailable ? 'true' : 'false';
+</script>
+
+<script>
+	import { initBookingForms } from '../client/booking-form';
+	initBookingForms();
+</script>

@@ -1,9 +1,14 @@
 ---
 import { HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS } from '../data/hero-image';
+import { t } from '../i18n';
 import { unsplashDefaultSrc, unsplashSrcSet } from '../lib/unsplash';
+import { getRelativeLocaleUrl } from 'astro:i18n';
 
+const locale = Astro.currentLocale;
 const heroSrcSet = unsplashSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
 const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
+const toursHref = getRelativeLocaleUrl(locale, '/tours');
+const contactHref = getRelativeLocaleUrl(locale, '/contact');
 ---
 
 <section class="hero" aria-labelledby="hero-heading">
@@ -21,15 +26,12 @@ const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 		<div class="hero__overlay" aria-hidden="true"></div>
 	</div>
 	<div class="hero__content">
-		<p class="hero__eyebrow">Best Adriatic boat tours</p>
-		<h1 id="hero-heading" class="hero__title">Blue Cave &amp; island tours from the heart of Split</h1>
-		<p class="hero__lead">
-			Step aboard a modern speedboat, feel the sea breeze, and explore hidden bays and iconic islands with a crew that
-			prioritizes safety, comfort, and time in the water—not rushing between stops.
-		</p>
+		<p class="hero__eyebrow">{t('hero.eyebrow', locale)}</p>
+		<h1 id="hero-heading" class="hero__title">{t('hero.title', locale)}</h1>
+		<p class="hero__lead">{t('hero.lead', locale)}</p>
 		<div class="hero__actions">
-			<a class="btn btn--primary" href="/tours">See available tours</a>
-			<a class="btn btn--ghost" href="/contact">Message &amp; contact</a>
+			<a class="btn btn--primary" href={toursHref}>{t('hero.seeTours', locale)}</a>
+			<a class="btn btn--ghost" href={contactHref}>{t('hero.contact', locale)}</a>
 		</div>
 	</div>
 </section>

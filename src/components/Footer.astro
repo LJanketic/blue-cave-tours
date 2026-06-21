@@ -1,7 +1,16 @@
 ---
 import { SITE_NAME } from '../config/site';
+import { t } from '../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
 
+const locale = Astro.currentLocale;
 const year = new Date().getFullYear();
+const toursHref = getRelativeLocaleUrl(locale, '/tours');
+const whyUsHref = getRelativeLocaleUrl(locale, '/#why-us');
+const bookingDetailsHref = getRelativeLocaleUrl(locale, '/booking/details');
+const privateTourHref = getRelativeLocaleUrl(locale, '/tours/create-perfect-day-private');
+const termsHref = getRelativeLocaleUrl(locale, '/legal/terms');
+const privacyHref = getRelativeLocaleUrl(locale, '/legal/privacy');
 ---
 
 <footer class="foot" id="contact">
@@ -9,44 +18,41 @@ const year = new Date().getFullYear();
 		<div class="foot__brand">
 			<p class="foot__name">{SITE_NAME}</p>
 			<p class="foot__address">
-				Riva promenade of Split, stand number 14<br />
-				Split, Croatia
+				{t('footer.address', locale)}<br />
+				{t('footer.country', locale)}
 			</p>
 			<p class="foot__contact">
 				<a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a><br />
 				<a href="tel:+385919888838">+385 91 988 88 38</a>
 			</p>
 			<p class="foot__social">
-				<a href="https://www.instagram.com/" rel="noopener noreferrer" target="_blank">Instagram</a>
+				<a href="https://www.instagram.com/" rel="noopener noreferrer" target="_blank">{t('footer.instagram', locale)}</a>
 				<span class="foot__social-sep" aria-hidden="true">·</span>
-				<a href="https://www.facebook.com/" rel="noopener noreferrer" target="_blank">Facebook</a>
+				<a href="https://www.facebook.com/" rel="noopener noreferrer" target="_blank">{t('footer.facebook', locale)}</a>
 			</p>
-			<p class="foot__ops">
-				Operators may include Misericordia d.o.o., Aliskaf d.o.o., Per Mare d.o.o. — named on the planning board; the
-				contracting entity appears on your confirmation.
-			</p>
+			<p class="foot__ops">{t('footer.ops', locale)}</p>
 		</div>
 		<div class="foot__cols">
 			<div>
-				<h2 class="foot__heading">Quick links</h2>
+				<h2 class="foot__heading">{t('footer.quickLinks', locale)}</h2>
 				<ul class="foot__links">
-					<li><a href="/tours">Tours</a></li>
-					<li><a href="/#why-us">About the experience</a></li>
-					<li><a href="/booking/details">Booking details</a></li>
-					<li><a href="/tours/create-perfect-day-private">Private tour</a></li>
+					<li><a href={toursHref}>{t('footer.toursLink', locale)}</a></li>
+					<li><a href={whyUsHref}>{t('footer.aboutExperience', locale)}</a></li>
+					<li><a href={bookingDetailsHref}>{t('footer.bookingDetails', locale)}</a></li>
+					<li><a href={privateTourHref}>{t('footer.privateTour', locale)}</a></li>
 				</ul>
 			</div>
 			<div>
-				<h2 class="foot__heading">Legal</h2>
+				<h2 class="foot__heading">{t('footer.legal', locale)}</h2>
 				<ul class="foot__links">
-					<li><a href="/legal/terms">Terms &amp; Conditions</a></li>
-					<li><a href="/legal/privacy">Privacy Policy</a></li>
+					<li><a href={termsHref}>{t('footer.terms', locale)}</a></li>
+					<li><a href={privacyHref}>{t('footer.privacy', locale)}</a></li>
 				</ul>
 			</div>
 		</div>
 	</div>
 	<p class="foot__fine">
-		&copy; {year} {SITE_NAME} · Checkout: Stripe when configured, or demo mode (see <code>CHECKOUT_MODE</code>).
+		&copy; {year} {SITE_NAME} · {t('footer.copyright', locale)}
 	</p>
 </footer>
 

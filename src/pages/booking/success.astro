@@ -1,56 +1,76 @@
 ---
-import { pageTitle } from '../../config/site';
+import { pageTitle, SITE_EMAIL, SITE_PHONE, SITE_PHONE_TEL } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import { t } from '../../i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
 
-const demo = Astro.url.searchParams.has('demo');
+const locale = Astro.currentLocale ?? 'hr';
 const tourId = Astro.url.searchParams.get('tourId');
+const provider = Astro.url.searchParams.get('provider');
+const orderId = Astro.url.searchParams.get('orderId') ?? Astro.url.searchParams.get('token');
+const sessionId = Astro.url.searchParams.get('sessionId') ?? Astro.url.searchParams.get('session_id');
+const hasPaymentRef = Boolean(orderId || sessionId);
+
+const toursHref = getRelativeLocaleUrl(locale, '/tours');
+const homeHref = getRelativeLocaleUrl(locale, '/');
+
+const leadKey = !hasPaymentRef
+	? 'bookingSuccess.unverifiedLead'
+	: provider === 'teya'
+		? 'bookingSuccess.leadTeya'
+		: provider === 'paypal'
+			? 'bookingSuccess.leadPayPal'
+			: 'bookingSuccess.leadGeneric';
 ---
 
 <SiteLayout
-	title={demo ? pageTitle('Demo booking') : pageTitle('Booking confirmed')}
-	description="Thank you for your booking or demo checkout."
+	title={pageTitle(t('bookingSuccess.title', locale))}
+	description={t('bookingSuccess.description', locale)}
 >
-	<main class="wrap" id="main">
-		{demo && (
-			<p class="banner" role="status">
-				Demo checkout — no payment was processed{tourId ? ` (tour: ${tourId})` : ''}.
+	<main
+		class="wrap"
+		id="main"
+		data-booking-success
+		data-verifying={t('bookingSuccess.verifying', locale)}
+		data-lead-paypal={t('bookingSuccess.leadPayPal', locale)}
+		data-lead-teya={t('bookingSuccess.leadTeya', locale)}
+		data-lead-generic={t('bookingSuccess.leadGeneric', locale)}
+		data-unverified={t('bookingSuccess.unverifiedLead', locale)}
+		data-pending={t('bookingSuccess.pending', locale)}
+		data-failed={t('bookingSuccess.failed', locale)}
+		data-followup={t('bookingSuccess.followup', locale)}
+	>
+		<h1>{t('bookingSuccess.title', locale)}</h1>
+		<p class="lead" data-booking-success-lead>{t(leadKey, locale)}</p>
+		{tourId && (
+			<p class="muted">
+				{t('bookingSuccess.tour', locale)}: {tourId}
 			</p>
 		)}
-		<h1>{demo ? 'Demo complete' : 'Thank you!'}</h1>
-		<p class="lead">
-			{demo
-				? 'This run used mock checkout (no Stripe session).'
-				: 'Your payment was processed with Stripe Checkout.'}
-		</p>
+		<p class="status" data-booking-success-status hidden role="status" aria-live="polite"></p>
+		{hasPaymentRef && <p class="muted">{t('bookingSuccess.followup', locale)}</p>}
 		<p class="muted">
-			We’ll follow up by email with meeting-point details and anything you still need for the day of your tour.
-		</p>
-		<p class="muted">
-			If you need help, reach us at <a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a> or{' '}
-			<a href="tel:+385919888838">+385 91 988 88 38</a>.
+			{t('bookingSuccess.help', locale)}{' '}
+			<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a> ·{' '}
+			<a href={`tel:${SITE_PHONE_TEL}`}>{SITE_PHONE}</a>.
 		</p>
 		<p>
-			<a class="back" href="/tours">Browse tours</a> · <a class="back" href="/">Home</a>
+			<a class="back" href={toursHref}>{t('bookingSuccess.browse', locale)}</a> ·{' '}
+			<a class="back" href={homeHref}>{t('bookingSuccess.home', locale)}</a>
 		</p>
 	</main>
 </SiteLayout>
+
+<script>
+	import { initBookingSuccess } from '../../client/booking-success';
+	initBookingSuccess();
+</script>
 
 <style>
 	.wrap {
 		max-width: 560px;
 		margin: 0 auto;
 		padding: 4rem 1.25rem 5rem;
-	}
-
-	.banner {
-		margin: 0 0 1.25rem;
-		padding: 0.75rem 1rem;
-		background: #fff7ed;
-		border: 1px solid #fed7aa;
-		border-radius: 8px;
-		color: #9a3412;
-		font-weight: 600;
-		font-size: 0.9375rem;
 	}
 
 	h1 {
@@ -69,6 +89,16 @@ const tourId = Astro.url.searchParams.get('tourId');
 		color: var(--color-muted);
 		margin: 0 0 1rem;
 		line-height: 1.55;
+	}
+
+	.status {
+		margin: 0 0 1rem;
+		font-size: 0.95rem;
+		color: var(--color-nav-elevated);
+	}
+
+	.status[data-state='error'] {
+		color: #b91c1c;
 	}
 
 	.back {

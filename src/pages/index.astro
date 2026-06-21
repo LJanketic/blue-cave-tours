@@ -1,5 +1,5 @@
 ---
-import { HOME_PAGE_TITLE } from '../config/site';
+import { t } from '../i18n';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Hero from '../components/Hero.astro';
 import TourSection from '../components/TourSection.astro';
@@ -8,11 +8,12 @@ import FAQ from '../components/FAQ.astro';
 import { HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS } from '../data/hero-image';
 import { unsplashDefaultSrc, unsplashSrcSet } from '../lib/unsplash';
 
+const locale = Astro.currentLocale;
 const heroLcpSrcset = unsplashSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
 const heroLcpHref = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 ---
 
-<SiteLayout title={HOME_PAGE_TITLE}>
+<SiteLayout title={t('home.title', locale)} description={t('home.description', locale)}>
 	<link
 		slot="head"
 		rel="preload"

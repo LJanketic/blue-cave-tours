@@ -1,10 +1,14 @@
 ---
 import type { TourDetail } from '../../types/tour';
+import BookingForm from '../booking/BookingForm.astro';
 import { unsplashDefaultSrc, unsplashSrcSet } from '../../lib/unsplash';
+import { getRelativeLocaleUrl } from 'astro:i18n';
 
 type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
+const locale = Astro.currentLocale;
+const toursHref = getRelativeLocaleUrl(locale, '/tours');
 
 const heroSrcSet = unsplashSrcSet(tour.image.src, [640, 960, 1280, 1600]);
 const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
@@ -156,14 +160,11 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 			</ul>
 		</section>
 
-		<div class="cta-bar">
-			<form class="checkout-form" data-tour-id={tour.slug}>
-				<button type="submit" class="cta-bar__btn" aria-label={`Book now: ${tour.title}`}>
-					Book now
-				</button>
-			</form>
-			<a class="cta-bar__back" href="/tours">← All tours</a>
-		</div>
+		<BookingForm tour={tour} />
+
+		<p class="detail__back">
+			<a href={toursHref}>← All tours</a>
+		</p>
 	</div>
 </article>
 
@@ -370,41 +371,17 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 		}
 	}
 
-	.cta-bar {
-		padding: 1.5rem;
-		background: var(--color-nav);
-		color: #e2e8f0;
-		border-radius: var(--radius);
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		align-items: flex-start;
+	.detail__back {
+		margin: 0;
 	}
 
-	.cta-bar__btn {
-		appearance: none;
-		border: none;
-		cursor: pointer;
-		padding: 0.75rem 1.5rem;
-		border-radius: 8px;
-		background: var(--color-cta);
-		color: var(--color-cta-text);
-		font-weight: 800;
-		font-size: 1rem;
-		font-family: inherit;
-	}
-
-	.cta-bar__btn:hover {
-		background: var(--color-cta-hover);
-	}
-
-	.cta-bar__back {
-		color: #fdba74;
-		font-weight: 600;
+	.detail__back a {
+		font-weight: 700;
+		color: var(--color-nav-elevated);
 		text-decoration: none;
 	}
 
-	.cta-bar__back:hover {
-		color: #fff;
+	.detail__back a:hover {
+		text-decoration: underline;
 	}
 </style>

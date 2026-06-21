@@ -7,8 +7,8 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 	title={pageTitle('FAQ')}
 	description="Frequently asked questions about boat tours from Split, Blue Cave visits, weather, and safety."
 >
-	<main id="main" class="main">
-		<h1 class="title">Frequently asked questions</h1>
+	<main id="main" class="content-page">
+		<h1 class="content-page__title">Frequently asked questions</h1>
 		<p class="intro">
 			General guest questions below — a separate <strong>FAQ — SEAYOU</strong>-style block appears on the board for
 			channel-specific copy; we can swap in partner wording when final.
@@ -63,19 +63,6 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 </SiteLayout>
 
 <style>
-	.main {
-		max-width: 720px;
-		margin: 0 auto;
-		padding: 2.5rem 1.25rem 4rem;
-	}
-
-	.title {
-		font-family: var(--font-display);
-		font-size: clamp(1.75rem, 3vw, 2.25rem);
-		color: var(--color-nav);
-		margin: 0 0 0.75rem;
-	}
-
 	.intro {
 		margin: 0 0 2rem;
 		line-height: 1.6;
