@@ -22,6 +22,15 @@ export const POST: APIRoute = async ({ request }) => {
 	const origin = new URL(request.url).origin;
 	const mode = getCheckoutMode();
 
+	if (mode === 'off') {
+		return jsonResponse(
+			{
+				error: 'Online booking is not available yet. Please contact us to reserve your tour.',
+			},
+			503,
+		);
+	}
+
 	if (mode === 'mock') {
 		const url = new URL('/booking/success', origin);
 		url.searchParams.set('demo', '1');

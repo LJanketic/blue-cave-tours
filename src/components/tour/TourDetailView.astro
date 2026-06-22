@@ -1,10 +1,12 @@
 ---
 import type { TourDetail } from '../../types/tour';
 import { unsplashDefaultSrc, unsplashSrcSet } from '../../lib/unsplash';
+import { supportsOnlineCheckout, contactHrefForTour } from '../../lib/booking';
 
 type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
+const online = supportsOnlineCheckout(tour);
 
 const heroSrcSet = unsplashSrcSet(tour.image.src, [640, 960, 1280, 1600]);
 const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
@@ -27,7 +29,7 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 			<div class="detail__hero-overlay" aria-hidden="true"></div>
 		</div>
 		<div class="detail__hero-text">
-			<p class="detail__eyebrow">{tour.availability}</p>
+			<p class="detail__eyebrow type-label">{tour.availability}</p>
 			<h1 class="detail__title">{tour.title}</h1>
 			<p class="detail__tagline">{tour.tagline}</p>
 			<p class="detail__schedule">{tour.scheduleLabel}</p>
@@ -42,15 +44,15 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 
 		<section class="meta-grid" aria-label="Schedule summary">
 			<div class="meta-card">
-				<h3 class="meta-card__label">Departure</h3>
+				<h3 class="meta-card__label type-label">Departure</h3>
 				<p class="meta-card__val">{tour.departure}</p>
 			</div>
 			<div class="meta-card">
-				<h3 class="meta-card__label">Duration</h3>
+				<h3 class="meta-card__label type-label">Duration</h3>
 				<p class="meta-card__val">{tour.duration}</p>
 			</div>
 			<div class="meta-card">
-				<h3 class="meta-card__label">Return</h3>
+				<h3 class="meta-card__label type-label">Return</h3>
 				<p class="meta-card__val">{tour.returnTime}</p>
 			</div>
 		</section>
@@ -128,7 +130,6 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 
 		<section class="block" aria-labelledby="gallery-heading">
 			<h2 id="gallery-heading" class="block__h">Gallery</h2>
-			<p class="block__muted">Three photos — carousel or grid (FigJam note: “3 fotografije”).</p>
 			<div class="gallery">
 				{tour.gallery.map((img) => (
 					<figure class="gallery__fig">
@@ -157,11 +158,19 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 		</section>
 
 		<div class="cta-bar">
-			<form class="checkout-form" data-tour-id={tour.slug}>
-				<button type="submit" class="cta-bar__btn" aria-label={`Book now: ${tour.title}`}>
-					Book now
-				</button>
-			</form>
+			{
+				online ? (
+					<form class="checkout-form" data-tour-id={tour.slug}>
+						<button type="submit" class="cta-bar__btn" aria-label={`Book now: ${tour.title}`}>
+							Book now
+						</button>
+					</form>
+				) : (
+					<a class="cta-bar__btn cta-bar__btn--link" href={contactHrefForTour(tour)}>
+						Request a quote
+					</a>
+				)
+			}
 			<a class="cta-bar__back" href="/tours">← All tours</a>
 		</div>
 	</div>
@@ -175,7 +184,7 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 	.detail__hero {
 		position: relative;
 		min-height: 320px;
-		color: #f8fafc;
+		color: var(--color-chrome-text);
 	}
 
 	.detail__hero-media {
@@ -192,7 +201,7 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 	.detail__hero-overlay {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(to top, rgba(15, 41, 66, 0.95), rgba(15, 41, 66, 0.35));
+		background: linear-gradient(to top, var(--color-overlay-strong), var(--color-overlay-mid));
 	}
 
 	.detail__hero-text {
@@ -200,22 +209,20 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 		z-index: 1;
 		max-width: var(--content-max);
 		margin: 0 auto;
-		padding: 3rem 1.25rem 2.5rem;
+		padding: var(--section-padding-y) var(--page-padding-x) 2.5rem;
 	}
 
 	.detail__eyebrow {
 		margin: 0 0 0.5rem;
-		font-size: 0.8125rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: #fdba74;
+		font-size: var(--text-xs);
+		color: var(--color-chrome-link);
 	}
 
 	.detail__title {
 		margin: 0 0 0.35rem;
 		font-family: var(--font-display);
 		font-size: clamp(1.75rem, 4vw, 2.5rem);
+		font-weight: var(--font-weight-bold);
 		line-height: 1.15;
 	}
 
@@ -223,19 +230,19 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 		margin: 0 0 0.5rem;
 		font-size: 1.125rem;
 		font-weight: 600;
-		color: #e2e8f0;
+		color: var(--color-chrome-text-muted);
 	}
 
 	.detail__schedule {
 		margin: 0;
 		font-size: 0.9375rem;
-		color: #cbd5e1;
+		color: var(--color-chrome-text-muted);
 	}
 
 	.detail__content {
 		max-width: var(--content-max);
 		margin: 0 auto;
-		padding: 2.5rem 1.25rem 4rem;
+		padding: var(--section-padding-y) var(--page-padding-x) var(--page-padding-bottom);
 		display: flex;
 		flex-direction: column;
 		gap: 2rem;
@@ -245,6 +252,7 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 		margin: 0 0 0.75rem;
 		font-family: var(--font-display);
 		font-size: 1.35rem;
+		font-weight: var(--font-weight-bold);
 		color: var(--color-nav);
 	}
 
@@ -286,16 +294,14 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 
 	.meta-card__label {
 		margin: 0 0 0.35rem;
-		font-size: 0.75rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
+		font-size: var(--text-xs);
 		color: var(--color-muted);
 	}
 
 	.meta-card__val {
 		margin: 0;
-		font-weight: 600;
+		font-family: var(--font-display);
+		font-weight: var(--font-weight-semibold);
 		color: var(--color-nav);
 		line-height: 1.4;
 	}
@@ -339,10 +345,10 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 	}
 
 	.block--group {
-		background: linear-gradient(135deg, #fff7ed 0%, #fff 100%);
+		background: linear-gradient(135deg, var(--color-panel-muted) 0%, var(--color-surface) 100%);
 		padding: 1.5rem;
 		border-radius: var(--radius);
-		border: 1px solid #fed7aa;
+		border: 1px solid var(--color-panel-border);
 	}
 
 	.gallery {
@@ -372,8 +378,8 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 
 	.cta-bar {
 		padding: 1.5rem;
-		background: var(--color-nav);
-		color: #e2e8f0;
+		background: var(--color-chrome-bg);
+		color: var(--color-chrome-text-muted);
 		border-radius: var(--radius);
 		display: flex;
 		flex-direction: column;
@@ -385,26 +391,33 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 		appearance: none;
 		border: none;
 		cursor: pointer;
+		min-height: var(--touch-min);
 		padding: 0.75rem 1.5rem;
 		border-radius: 8px;
 		background: var(--color-cta);
 		color: var(--color-cta-text);
-		font-weight: 800;
-		font-size: 1rem;
-		font-family: inherit;
+		font-weight: var(--font-weight-bold);
+		font-size: var(--text-base);
 	}
 
 	.cta-bar__btn:hover {
 		background: var(--color-cta-hover);
+		color: var(--color-cta-text);
+	}
+
+	.cta-bar__btn--link {
+		display: inline-block;
+		text-decoration: none;
+		text-align: center;
 	}
 
 	.cta-bar__back {
-		color: #fdba74;
+		color: var(--color-chrome-link);
 		font-weight: 600;
 		text-decoration: none;
 	}
 
 	.cta-bar__back:hover {
-		color: #fff;
+		color: var(--color-brand-on-primary);
 	}
 </style>

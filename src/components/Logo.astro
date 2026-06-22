@@ -1,0 +1,43 @@
+---
+type Props = {
+	size?: number;
+	class?: string;
+};
+
+const { size = 36, class: className } = Astro.props;
+---
+
+<svg
+	class:list={['logo-monogram', className]}
+	xmlns="http://www.w3.org/2000/svg"
+	viewBox="0 0 36 36"
+	fill="none"
+	width={size}
+	height={size}
+	aria-hidden="true"
+>
+	<rect x="1" y="1" width="34" height="34" rx="4" stroke="currentColor" stroke-width="1.5"></rect>
+	<path stroke="currentColor" stroke-width="1" d="M1 18h34M18 1v34" opacity="0.35"></path>
+	<text x="9" y="14" fill="currentColor" font-family="Glorich, system-ui, sans-serif" font-size="8" font-weight="700"
+		>B</text
+	>
+	<text x="23" y="14" fill="currentColor" font-family="Glorich, system-ui, sans-serif" font-size="8" font-weight="700"
+		>C</text
+	>
+	<text x="9" y="29" fill="currentColor" font-family="Glorich, system-ui, sans-serif" font-size="8" font-weight="700"
+		>T</text
+	>
+	<path
+		stroke="currentColor"
+		stroke-width="1.2"
+		stroke-linecap="round"
+		d="M22 24.5c2 .8 4 .8 6 0M22 27c2 .6 4 .6 6 0M22 29.5c2 .5 4 .5 6 0"></path>
+</svg>
+
+<style>
+	.logo-monogram {
+		display: block;
+		flex-shrink: 0;
+		color: var(--color-brand-on-primary);
+	}
+</style>

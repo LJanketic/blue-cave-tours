@@ -13,8 +13,12 @@ export const POST: APIRoute = async ({ request }) => {
 
 	const name = typeof body.name === 'string' ? body.name.trim() : '';
 	const email = typeof body.email === 'string' ? body.email.trim() : '';
-	if (!name || !email) {
-		return jsonResponse({ error: 'Name and email are required' }, 400);
+	const message = typeof body.message === 'string' ? body.message.trim() : '';
+	if (!name || !email || !message) {
+		return jsonResponse({ error: 'Name, email, and message are required' }, 400);
+	}
+	if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+		return jsonResponse({ error: 'Enter a valid email address' }, 400);
 	}
 
 	// Demo: no email provider wired — log server-side for inspection in dev

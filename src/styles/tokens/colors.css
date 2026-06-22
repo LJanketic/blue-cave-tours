@@ -1,0 +1,51 @@
+/**
+ * Color tokens — ST Agency / Blue Cave Tours brand.
+ * @see src/config/colors.ts for canonical hex values.
+ */
+:root {
+	/* Brand primitives */
+	--color-brand-primary: #003d84;
+	--color-brand-primary-rgb: 0 61 132;
+	--color-brand-surface: #f6f1f2;
+	--color-brand-on-primary: #ffffff;
+
+	/* Semantic surfaces & text */
+	--color-base: var(--color-brand-surface);
+	--color-surface: #ffffff;
+	--color-nav: var(--color-brand-primary);
+	--color-nav-elevated: #002d63;
+	--color-text: var(--color-brand-primary);
+	--color-muted: #3a5270;
+	--color-border: rgb(var(--color-brand-primary-rgb) / 0.12);
+
+	/* Action accent — orange CTAs on light pages and blue chrome */
+	--color-brand-accent: #f97316;
+	--color-brand-accent-hover: #ea580c;
+	--color-brand-accent-text: #0f172a;
+	--color-cta: var(--color-brand-accent);
+	--color-cta-hover: var(--color-brand-accent-hover);
+	--color-cta-text: var(--color-brand-accent-text);
+	--color-cta-on-chrome: var(--color-brand-accent);
+	--color-cta-on-chrome-text: var(--color-brand-accent-text);
+
+	/* Dark chrome (header, footer, hero) */
+	--color-chrome-bg: var(--color-brand-primary);
+	--color-chrome-text: #f1f5f9;
+	--color-chrome-text-muted: #cbd5e1;
+	--color-chrome-text-subtle: #b8c5d4;
+	--color-chrome-link: rgba(255, 255, 255, 0.92);
+	--color-chrome-border: rgba(255, 255, 255, 0.12);
+
+	/* Photo overlays */
+	--color-overlay-strong: rgb(var(--color-brand-primary-rgb) / 0.55);
+	--color-overlay-mid: rgb(var(--color-brand-primary-rgb) / 0.28);
+	--color-overlay-light: rgb(var(--color-brand-primary-rgb) / 0.2);
+
+	/* Callout panels (group sale, demo banners) */
+	--color-panel-muted: var(--color-brand-surface);
+	--color-panel-border: var(--color-border);
+
+	--shadow-card: 0 4px 24px rgb(var(--color-brand-primary-rgb) / 0.08);
+	--radius: 12px;
+	--content-max: 1120px;
+}

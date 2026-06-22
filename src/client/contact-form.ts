@@ -4,6 +4,15 @@ export function initContactForm(): void {
 	const statusEl = document.getElementById('contact-status');
 	if (!(form instanceof HTMLFormElement) || !(statusEl instanceof HTMLElement)) return;
 
+	const params = new URLSearchParams(window.location.search);
+	const tour = params.get('tour');
+	if (tour) {
+		const select = form.querySelector('#tourSlug');
+		if (select instanceof HTMLSelectElement && [...select.options].some((o) => o.value === tour)) {
+			select.value = tour;
+		}
+	}
+
 	form.addEventListener('submit', async (e) => {
 		e.preventDefault();
 		const btn = form.querySelector('button[type="submit"]');
@@ -18,7 +27,7 @@ export function initContactForm(): void {
 			});
 			const json = (await res.json().catch(() => ({}))) as { error?: string };
 			if (!res.ok) throw new Error(json.error || 'Failed to send');
-			statusEl.textContent = 'Thanks — we received your message.';
+			statusEl.textContent = 'Thanks — we received your message and will get back to you soon.';
 			form.reset();
 		} catch (err) {
 			statusEl.textContent = err instanceof Error ? err.message : 'Something went wrong';

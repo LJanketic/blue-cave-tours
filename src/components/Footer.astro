@@ -4,7 +4,7 @@ import { SITE_NAME } from '../config/site';
 const year = new Date().getFullYear();
 ---
 
-<footer class="foot" id="contact">
+<footer class="foot" id="site-footer">
 	<div class="foot__inner">
 		<div class="foot__brand">
 			<p class="foot__name">{SITE_NAME}</p>
@@ -22,13 +22,13 @@ const year = new Date().getFullYear();
 				<a href="https://www.facebook.com/" rel="noopener noreferrer" target="_blank">Facebook</a>
 			</p>
 			<p class="foot__ops">
-				Operators may include Misericordia d.o.o., Aliskaf d.o.o., Per Mare d.o.o. — named on the planning board; the
-				contracting entity appears on your confirmation.
+				Operators may include Misericordia d.o.o., Aliskaf d.o.o., Per Mare d.o.o. The contracting entity appears on your
+				confirmation.
 			</p>
 		</div>
 		<div class="foot__cols">
 			<div>
-				<h2 class="foot__heading">Quick links</h2>
+				<h2 class="foot__heading type-label">Quick links</h2>
 				<ul class="foot__links">
 					<li><a href="/tours">Tours</a></li>
 					<li><a href="/#why-us">About the experience</a></li>
@@ -37,7 +37,7 @@ const year = new Date().getFullYear();
 				</ul>
 			</div>
 			<div>
-				<h2 class="foot__heading">Legal</h2>
+				<h2 class="foot__heading type-label">Legal</h2>
 				<ul class="foot__links">
 					<li><a href="/legal/terms">Terms &amp; Conditions</a></li>
 					<li><a href="/legal/privacy">Privacy Policy</a></li>
@@ -45,16 +45,14 @@ const year = new Date().getFullYear();
 			</div>
 		</div>
 	</div>
-	<p class="foot__fine">
-		&copy; {year} {SITE_NAME} · Checkout: Stripe when configured, or demo mode (see <code>CHECKOUT_MODE</code>).
-	</p>
+	<p class="foot__fine">&copy; {year} {SITE_NAME}</p>
 </footer>
 
 <style>
 	.foot {
-		background: var(--color-nav);
-		color: #cbd5e1;
-		padding: 3rem 1.25rem 1.5rem;
+		background: var(--color-chrome-bg);
+		color: var(--color-chrome-text-muted);
+		padding: var(--section-padding-y-lg) var(--page-padding-x) 1.5rem;
 	}
 
 	.foot__inner {
@@ -69,9 +67,9 @@ const year = new Date().getFullYear();
 	.foot__name {
 		margin: 0 0 0.75rem;
 		font-family: var(--font-display);
-		font-size: 1.35rem;
-		font-weight: 700;
-		color: #fff;
+		font-size: var(--text-xl);
+		font-weight: var(--font-weight-bold);
+		color: var(--color-brand-on-primary);
 	}
 
 	.foot__address,
@@ -79,32 +77,32 @@ const year = new Date().getFullYear();
 	.foot__social,
 	.foot__ops {
 		margin: 0 0 0.75rem;
-		font-size: 0.9375rem;
+		font-size: var(--text-sm);
 		line-height: 1.55;
 	}
 
 	.foot__ops {
-		font-size: 0.8125rem;
-		color: #94a3b8;
+		font-size: var(--text-xs);
+		color: var(--color-chrome-text-muted);
 		max-width: 52ch;
 	}
 
 	.foot__contact a,
 	.foot__social a {
-		color: #fdba74;
+		color: var(--color-chrome-link);
 		text-decoration: none;
 		font-weight: 600;
 	}
 
 	.foot__contact a:hover,
 	.foot__social a:hover {
-		color: #fff;
+		color: var(--color-brand-on-primary);
 		text-decoration: underline;
 	}
 
 	.foot__social-sep {
 		margin: 0 0.35rem;
-		color: #64748b;
+		color: var(--color-chrome-text-subtle);
 		font-weight: 400;
 	}
 
@@ -116,11 +114,8 @@ const year = new Date().getFullYear();
 
 	.foot__heading {
 		margin: 0 0 0.75rem;
-		font-size: 0.8125rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		color: #94a3b8;
+		font-size: var(--text-xs);
+		color: var(--color-chrome-text-subtle);
 	}
 
 	.foot__links {
@@ -133,31 +128,26 @@ const year = new Date().getFullYear();
 	}
 
 	.foot__links a {
-		color: #e2e8f0;
+		color: var(--color-chrome-text-muted);
 		text-decoration: none;
-		font-size: 0.9375rem;
+		font-size: var(--text-sm);
+		display: inline-block;
+		padding-block: 0.2rem;
 	}
 
 	.foot__links a:hover {
-		color: #fff;
+		color: var(--color-brand-on-primary);
 		text-decoration: underline;
 	}
 
 	.foot__fine {
 		max-width: var(--content-max);
 		margin: 2.5rem auto 0;
-		padding-top: 1.25rem;
-		border-top: 1px solid rgba(255, 255, 255, 0.12);
-		font-size: 0.8125rem;
-		color: #94a3b8;
+		padding: 1.25rem var(--page-padding-x) 0;
+		border-top: 1px solid var(--color-chrome-border);
+		font-size: var(--text-xs);
+		color: var(--color-chrome-text-muted);
 		text-align: center;
-	}
-
-	.foot__fine code {
-		font-size: 0.75em;
-		background: rgba(255, 255, 255, 0.08);
-		padding: 0.1em 0.35em;
-		border-radius: 4px;
 	}
 
 	@media (max-width: 720px) {

@@ -1,0 +1,24 @@
+/** Glorich — ST Agency display face (Light / Medium / Bold per VI PDF). */
+@font-face {
+	font-family: 'Glorich';
+	src: url('/fonts/glorich/Glorich-Light.ttf') format('truetype');
+	font-weight: 300;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Glorich';
+	src: url('/fonts/glorich/Glorich-Medium.ttf') format('truetype');
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Glorich';
+	src: url('/fonts/glorich/Glorich-Bold.ttf') format('truetype');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}

@@ -1,20 +1,7 @@
-:root {
-	--color-base: #f8fafc;
-	--color-surface: #ffffff;
-	--color-nav: #0f2942;
-	--color-nav-elevated: #153a5c;
-	--color-text: #0f172a;
-	--color-muted: #475569;
-	--color-border: #e2e8f0;
-	--color-cta: #f97316;
-	--color-cta-hover: #ea580c;
-	--color-cta-text: #0f172a;
-	--font-sans: 'Source Sans 3', system-ui, sans-serif;
-	--font-display: 'Fraunces', Georgia, serif;
-	--shadow-card: 0 4px 24px rgba(15, 41, 66, 0.08);
-	--radius: 12px;
-	--content-max: 1120px;
-}
+@import './tokens/fonts.css';
+@import './tokens/typography.css';
+@import './tokens/colors.css';
+@import './tokens/layout.css';
 
 *,
 *::before,
@@ -26,14 +13,36 @@ html {
 	scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
 body {
 	margin: 0;
 	min-height: 100vh;
-	font-family: var(--font-sans);
-	font-size: 1rem;
-	line-height: 1.6;
+	font-family: var(--font-body);
+	font-size: var(--text-base);
+	font-weight: var(--font-weight-light);
+	line-height: 1.65;
 	color: var(--color-text);
 	background: var(--color-base);
+}
+
+button,
+input,
+select,
+textarea {
+	font-family: var(--font-display);
 }
 
 img {
@@ -48,12 +57,58 @@ a {
 }
 
 a:hover {
-	color: var(--color-cta-hover);
+	color: var(--color-nav);
 }
 
 :focus-visible {
 	outline: 2px solid var(--color-cta);
 	outline-offset: 2px;
+}
+
+.header :focus-visible,
+.foot :focus-visible,
+.cta-bar :focus-visible {
+	outline-color: var(--color-brand-on-primary);
+}
+
+.skip-link {
+	position: absolute;
+	left: 1rem;
+	top: 0.75rem;
+	z-index: 1000;
+	padding: 0.5rem 1rem;
+	background: var(--color-brand-on-primary);
+	color: var(--color-brand-primary);
+	font-weight: var(--font-weight-semibold);
+	text-decoration: none;
+	border-radius: 6px;
+	transform: translateY(-200%);
+	transition: transform 0.15s ease;
+}
+
+.skip-link:focus-visible {
+	transform: translateY(0);
+}
+
+/* Touch-friendly interactive targets */
+a.header__cta,
+button.header__menu-toggle,
+.card__cta,
+.cta-bar__btn,
+.submit,
+.hero .btn {
+	min-height: var(--touch-min);
+}
+
+.site-shell {
+	position: relative;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.site-shell > main {
+	flex: 1;
 }
 
 .sr-only {

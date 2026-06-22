@@ -12,12 +12,12 @@ const all = getAllTours();
 	title={pageTitle('All tours')}
 	description="Full catalog of boat tours and private days from Split: Blue Cave, islands, Blue Lagoon half-days, and custom private charters."
 >
-	<main id="main" class="main">
+	<main id="main" class="page-shell page-shell--wide">
 		<header class="page-head">
-			<h1 class="page-head__title">All tours</h1>
-			<p class="page-head__lead">
-				Every named product from the webpage side of the board — schedules, meeting point on Split Riva (stand 14), and
-				booking through Stripe when enabled.
+			<h1 class="page-title">All tours</h1>
+			<p class="page-lead">
+				Full catalog of boat tours and private charters from Split — Blue Cave, islands, lagoon half-days, and custom days
+				at sea.
 			</p>
 		</header>
 		<TourCarousel ariaLabel="All tours">
@@ -33,28 +33,8 @@ const all = getAllTours();
 </SiteLayout>
 
 <style>
-	.main {
-		padding: 2.5rem 1.25rem 4rem;
-		max-width: var(--content-max);
-		margin: 0 auto;
-	}
-
 	.page-head {
 		margin-bottom: 2rem;
 		max-width: 62ch;
-	}
-
-	.page-head__title {
-		margin: 0 0 0.75rem;
-		font-family: var(--font-display);
-		font-size: clamp(2rem, 4vw, 2.5rem);
-		color: var(--color-nav);
-	}
-
-	.page-head__lead {
-		margin: 0;
-		color: var(--color-muted);
-		font-size: 1.0625rem;
-		line-height: 1.6;
 	}
 </style>

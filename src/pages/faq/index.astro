@@ -7,15 +7,14 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 	title={pageTitle('FAQ')}
 	description="Frequently asked questions about boat tours from Split, Blue Cave visits, weather, and safety."
 >
-	<main id="main" class="main">
-		<h1 class="title">Frequently asked questions</h1>
-		<p class="intro">
-			General guest questions below — a separate <strong>FAQ — SEAYOU</strong>-style block appears on the board for
-			channel-specific copy; we can swap in partner wording when final.
+	<main id="main" class="page-shell">
+		<h1 class="page-title">Frequently asked questions</h1>
+		<p class="page-lead">
+			Answers to the questions guests ask most often before booking. For anything else, <a href="/contact">contact us</a>.
 		</p>
 
-		<section class="section" aria-labelledby="g-heading">
-			<h2 id="g-heading" class="h2">General</h2>
+		<section class="prose-section" aria-labelledby="g-heading">
+			<h2 id="g-heading">General</h2>
 			<dl class="faq">
 				<div class="faq__row">
 					<dt>Is the Blue Cave ticket included?</dt>
@@ -40,20 +39,20 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 				<div class="faq__row">
 					<dt>Where do we meet?</dt>
 					<dd>
-						Split’s Riva — stand 14. You’ll get the exact pin and time after booking (FigJam sticky: “Meeting point:
-						Adresa”).
+						Split’s Riva promenade, stand 14. You’ll receive the exact meeting time and any last-minute updates after
+						booking.
 					</dd>
 				</div>
 			</dl>
 		</section>
 
-		<section class="section section--alt" aria-labelledby="s-heading">
-			<h2 id="s-heading" class="h2">FAQ — SEAYOU (placeholder)</h2>
-			<p class="muted">
-				Reserve this block for partner-specific cancellation terms, voucher redemption, or OTA handoff — content TBD with
-				stakeholders.
+		<section class="prose-section faq-partner" aria-labelledby="s-heading">
+			<h2 id="s-heading">Partner &amp; voucher bookings</h2>
+			<p class="page-meta">
+				If you booked through a partner or voucher platform, cancellation terms and changes may follow their policy. Contact
+				us with your reference and we’ll help.
 			</p>
-			<ul class="bullet">
+			<ul class="prose-list">
 				<li>Redemption windows and ID requirements</li>
 				<li>How to change a reservation made through a partner</li>
 				<li>Language of operation on board</li>
@@ -63,41 +62,19 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 </SiteLayout>
 
 <style>
-	.main {
-		max-width: 720px;
-		margin: 0 auto;
-		padding: 2.5rem 1.25rem 4rem;
-	}
-
-	.title {
+	dt {
+		margin: 0 0 0.35rem;
 		font-family: var(--font-display);
-		font-size: clamp(1.75rem, 3vw, 2.25rem);
+		font-size: var(--text-base);
+		font-weight: var(--font-weight-medium);
 		color: var(--color-nav);
-		margin: 0 0 0.75rem;
 	}
 
-	.intro {
-		margin: 0 0 2rem;
-		line-height: 1.6;
+	dd {
+		margin: 0;
+		font-size: var(--text-sm);
 		color: var(--color-muted);
-	}
-
-	.section {
-		margin-bottom: 2.5rem;
-	}
-
-	.section--alt {
-		padding: 1.5rem;
-		background: #f8fafc;
-		border-radius: var(--radius);
-		border: 1px solid var(--color-border);
-	}
-
-	.h2 {
-		font-family: var(--font-display);
-		font-size: 1.35rem;
-		margin: 0 0 1rem;
-		color: var(--color-nav);
+		line-height: 1.55;
 	}
 
 	.faq__row {
@@ -109,27 +86,14 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 		border-top: 1px solid var(--color-border);
 	}
 
-	dt {
-		font-weight: 700;
-		color: var(--color-nav);
-		margin-bottom: 0.35rem;
+	.faq-partner {
+		padding: 1.5rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
 	}
 
-	dd {
-		margin: 0;
-		color: var(--color-muted);
-		line-height: 1.55;
-	}
-
-	.muted {
-		color: var(--color-muted);
-		line-height: 1.55;
-	}
-
-	.bullet {
-		margin: 0.75rem 0 0;
-		padding-left: 1.25rem;
-		color: var(--color-muted);
-		line-height: 1.55;
+	.faq-partner .page-meta {
+		margin-bottom: 0.75rem;
 	}
 </style>

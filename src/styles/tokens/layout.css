@@ -1,0 +1,143 @@
+/**
+ * Layout & spacing tokens — single source for page rhythm.
+ */
+:root {
+	--page-padding-x: 1.25rem;
+	--page-padding-y: 2.5rem;
+	--page-padding-bottom: 4rem;
+	--section-padding-y: 3.5rem;
+	--section-padding-y-lg: 4rem;
+	--content-narrow: 40rem;
+	--content-form: 35rem;
+	--touch-min: 2.75rem; /* 44px — WCAG 2.5.5 target size */
+}
+
+/** Standard inner page shell (contact, legal, booking). */
+.page-shell {
+	width: 100%;
+	max-width: var(--content-narrow);
+	margin-inline: auto;
+	padding: var(--page-padding-y) var(--page-padding-x) var(--page-padding-bottom);
+}
+
+.page-shell--form {
+	max-width: var(--content-form);
+}
+
+.page-shell--wide {
+	max-width: var(--content-max);
+}
+
+/** Standard content width wrapper inside full-bleed sections. */
+.content-wrap {
+	width: 100%;
+	max-width: var(--content-max);
+	margin-inline: auto;
+	padding-inline: var(--page-padding-x);
+}
+
+/* Shared inner-page typography */
+.page-title {
+	margin: 0 0 1rem;
+	font-family: var(--font-display);
+	font-size: var(--text-2xl);
+	font-weight: var(--font-weight-bold);
+	color: var(--color-nav);
+}
+
+.page-lead {
+	margin: 0 0 2rem;
+	font-size: var(--text-base);
+	line-height: 1.65;
+	color: var(--color-muted);
+}
+
+.page-meta {
+	margin: 0 0 2rem;
+	font-size: var(--text-sm);
+	line-height: 1.55;
+	color: var(--color-muted);
+}
+
+.status-page {
+	width: 100%;
+	max-width: var(--content-form);
+	margin-inline: auto;
+	padding: var(--page-padding-y) var(--page-padding-x) var(--page-padding-bottom);
+}
+
+.status-page h1 {
+	margin: 0 0 1rem;
+	font-family: var(--font-display);
+	font-size: var(--text-2xl);
+	font-weight: var(--font-weight-bold);
+	color: var(--color-nav);
+}
+
+.status-page .lead {
+	margin: 0 0 1rem;
+	font-size: var(--text-lg);
+	line-height: 1.55;
+}
+
+.status-page .muted {
+	margin: 0 0 1rem;
+	color: var(--color-muted);
+	line-height: 1.55;
+}
+
+.status-page .back {
+	font-weight: var(--font-weight-bold);
+	color: var(--color-nav-elevated);
+}
+
+.status-banner {
+	margin: 0 0 1.25rem;
+	padding: 0.75rem 1rem;
+	border-radius: 8px;
+	font-size: var(--text-sm);
+	font-weight: var(--font-weight-medium);
+}
+
+.status-banner--info {
+	background: var(--color-panel-muted);
+	border: 1px solid var(--color-panel-border);
+	color: var(--color-brand-primary);
+}
+
+.status-banner--warn {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	color: var(--color-nav);
+}
+
+.prose-section {
+	margin-bottom: 1.75rem;
+}
+
+.prose-section h2 {
+	margin: 0 0 0.5rem;
+	font-family: var(--font-display);
+	font-size: var(--text-lg);
+	font-weight: var(--font-weight-bold);
+	color: var(--color-nav);
+}
+
+.prose-section p,
+.prose-list {
+	margin: 0;
+	font-size: var(--text-sm);
+	line-height: 1.6;
+	color: var(--color-muted);
+}
+
+.prose-list {
+	padding-left: 1.25rem;
+}
+
+.prose-section code {
+	font-size: 0.9em;
+	background: var(--color-base);
+	padding: 0.1em 0.35em;
+	border-radius: 4px;
+}

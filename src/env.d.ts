@@ -1,8 +1,9 @@
 /// <reference types="astro/client" />
 
 interface ImportMetaEnv {
+	readonly PUBLIC_SITE_URL?: string;
 	readonly STRIPE_SECRET_KEY?: string;
-	/** `mock` — always redirect without Stripe. `stripe` — require keys & Price IDs. Omit — mock if no secret, else stripe. */
+	/** `mock` — demo redirect. `stripe` — live checkout (requires keys). Omit — mock in dev, off in prod without Stripe. */
 	readonly CHECKOUT_MODE?: 'mock' | 'stripe';
 }
 

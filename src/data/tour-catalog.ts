@@ -1,6 +1,6 @@
 import type { TourDetail } from '../types/tour';
 
-/** Shared copy aligned with FigJam stickies and long-form “Blue Cave Adventure” text */
+/** Tour catalog — Blue Cave Tours product copy. */
 const MEETING_POINT =
 	'Meet at Split’s Riva promenade, stand number 14. After booking you’ll receive the exact location, map link, and what time to arrive.';
 
@@ -148,7 +148,7 @@ export const tours: TourDetail[] = [
 		slug: 'brac-golden-horn',
 		title: 'Brač island & Golden Horn',
 		tagline: 'Golden Horn focused day',
-		shortDescription: 'Prioritises Brač’s famous beach with a full-day window — same seasonal window as the wider Golden Horn marketing line on the board.',
+		shortDescription: 'Prioritises Brač’s famous beach with a full-day window in the same seasonal schedule as our Golden Horn routes.',
 		availability: 'Every day from 1 April to 31 October',
 		scheduleLabel: 'Full day: 08:30 – 18:30',
 		departure: '08:20 · 08:30 departure',
@@ -239,7 +239,7 @@ export const tours: TourDetail[] = [
 		itineraryKind: 'afternoon',
 		itineraryLabel: 'Afternoon itinerary',
 		itinerary: ['Afternoon departure', 'Blue Lagoon swim stop', 'Coastal return'],
-		overviewHighlights: 'Mirrors the board’s afternoon window for guests who prefer a later start.',
+		overviewHighlights: 'Afternoon departure for guests who prefer a later start and a relaxed pace along the coast.',
 		meetingPoint: MEETING_POINT,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
@@ -257,7 +257,7 @@ export const tours: TourDetail[] = [
 		slug: 'blue-lagoon-trogir',
 		title: 'Blue Lagoon & Trogir',
 		tagline: 'Half day · lagoon + UNESCO old town',
-		shortDescription: 'Combine lagoon swim time with a compact Trogir visit — timing per seasonal schedule (board: morning/afternoon variants TBC).',
+		shortDescription: 'Combine lagoon swim time with a compact Trogir visit — timing follows our seasonal schedule.',
 		availability: 'Every day from 1 April to 15 November',
 		scheduleLabel: 'Half day (morning or afternoon — selected at booking)',
 		departure: 'Flexible within published half-day slots',
@@ -366,7 +366,7 @@ export const tours: TourDetail[] = [
 		slug: 'hvar-red-rocks-pakleni',
 		title: 'Hvar, Red Rocks & Pakleni islands',
 		tagline: 'Scenic cliffs + Pakleni bays',
-		shortDescription: 'Named hi-fi route on the board — dramatic coastline with Hvar and Pakleni highlights.',
+		shortDescription: 'Dramatic coastline with Hvar and the Pakleni islands — one of our most scenic full-day routes.',
 		availability: 'Seasonal — confirm at booking',
 		scheduleLabel: 'Full day',
 		departure: 'Morning',
@@ -393,7 +393,7 @@ export const tours: TourDetail[] = [
 		slug: 'three-islands-trogir',
 		title: 'Three Islands & Trogir',
 		tagline: 'Islands + UNESCO Trogir',
-		shortDescription: 'Combines island hops with a Trogir stop — as listed on the board under combined marketing names.',
+		shortDescription: 'Island hops combined with a stop in Trogir — ideal if you want lagoon time and historic town in one day.',
 		availability: 'Every day from 1 April to 31 October',
 		scheduleLabel: 'Full day',
 		departure: 'Morning',
@@ -447,7 +447,7 @@ export const tours: TourDetail[] = [
 		slug: 'create-perfect-day-private',
 		title: 'Create your perfect day at sea',
 		tagline: 'Private charter · flexible itinerary',
-		shortDescription: 'Matches the board’s “Create Your Perfect Day” / WHY GO PRIVATE concept — you set the pace within operational limits.',
+		shortDescription: 'Design your own pace and stops within operational limits — ideal for families and special occasions.',
 		availability: 'On request',
 		scheduleLabel: 'Flexible · typically 1–10 hours',
 		departure: 'Flexible (e.g. 09:30–14:00 half-day or 10:00–19:00 full-day)',

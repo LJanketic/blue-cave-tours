@@ -5,3 +5,5 @@
 
 [build.environment]
 	NODE_VERSION = "22"
+
+# Set PUBLIC_SITE_URL in the Netlify UI for production canonical URLs.

@@ -23,7 +23,7 @@ export type TourDetail = {
 	whatToBring: string[];
 	included: string[];
 	notIncluded: string[];
-	/** Display pricing copy from FigJam notes */
+	/** Display pricing copy shown on cards and detail pages */
 	priceNotes: string;
 	caveTicketNote: string;
 	groupSale?: string;

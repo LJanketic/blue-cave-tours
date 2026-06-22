@@ -32,8 +32,8 @@ const featured = getFeaturedTours();
 
 <style>
 	.section {
-		padding: 4rem 1.25rem 4.5rem;
-		background: linear-gradient(180deg, var(--color-base) 0%, #eef2f7 100%);
+		padding: var(--section-padding-y-lg) var(--page-padding-x) calc(var(--section-padding-y-lg) + 0.5rem);
+		background: linear-gradient(180deg, var(--color-base) 0%, var(--color-surface) 100%);
 	}
 
 	.section__inner {
@@ -49,15 +49,15 @@ const featured = getFeaturedTours();
 	.section__title {
 		margin: 0 0 0.75rem;
 		font-family: var(--font-display);
-		font-size: clamp(1.75rem, 3vw, 2.25rem);
-		font-weight: 700;
+		font-size: var(--text-2xl);
+		font-weight: var(--font-weight-bold);
 		color: var(--color-nav);
 	}
 
 	.section__sub {
 		margin: 0;
 		color: var(--color-muted);
-		font-size: 1.0625rem;
+		font-size: var(--text-base);
 		line-height: 1.6;
 	}
 
@@ -74,7 +74,11 @@ const featured = getFeaturedTours();
 		font-weight: 700;
 		color: var(--color-nav-elevated);
 		text-decoration: none;
-		font-size: 1.0625rem;
+		font-size: var(--text-base);
+		display: inline-flex;
+		align-items: center;
+		min-height: var(--touch-min);
+		padding-inline: 0.5rem;
 	}
 
 	.section__more-link:hover {
@@ -83,7 +87,7 @@ const featured = getFeaturedTours();
 
 	@media (max-width: 640px) {
 		.section {
-			padding: 2.75rem 1.25rem 3.25rem;
+			padding: var(--section-padding-y) var(--page-padding-x) calc(var(--section-padding-y) + 0.5rem);
 		}
 
 		.section__head {

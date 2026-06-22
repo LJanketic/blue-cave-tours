@@ -17,15 +17,16 @@ const { title, description } = Astro.props;
 
 <style>
 	.nf {
-		max-width: 560px;
+		max-width: var(--content-form);
 		margin: 0 auto;
-		padding: 4rem 1.25rem;
+		padding: var(--page-padding-y) var(--page-padding-x);
 	}
 
 	.nf__title {
 		margin: 0 0 1rem;
 		font-family: var(--font-display);
-		font-size: clamp(1.75rem, 3vw, 2.25rem);
+		font-size: var(--text-2xl);
+		font-weight: var(--font-weight-bold);
 		color: var(--color-nav);
 	}
 

@@ -4,33 +4,32 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
 <SiteLayout title={pageTitle('Terms & Conditions')} description="Terms and conditions for boat tours operated from Split.">
-	<main id="main" class="main">
-		<h1 class="title">Terms &amp; Conditions</h1>
-		<p class="meta">Placeholder legal text — replace with counsel-approved wording before production.</p>
+	<main id="main" class="page-shell">
+		<h1 class="page-title">Terms &amp; Conditions</h1>
+		<p class="page-meta">Draft for review — replace with counsel-approved wording before relying on this in production.</p>
 
-		<section class="sec">
+		<section class="prose-section">
 			<h2>1. Operator</h2>
 			<p>
-				Services may be offered under entities referenced on the planning board (e.g. Misericordia d.o.o., Aliskaf d.o.o.,
-				Per Mare d.o.o.) depending on the boat and season. The contracting party will be confirmed on your booking
-				confirmation.
+				Services may be offered under entities such as Misericordia d.o.o., Aliskaf d.o.o., or Per Mare d.o.o. depending on
+				the boat and season. The contracting party is confirmed on your booking confirmation.
 			</p>
 		</section>
-		<section class="sec">
+		<section class="prose-section">
 			<h2>2. Itineraries &amp; weather</h2>
 			<p>
 				Routes, timings, and swim stops are indicative. The skipper may adjust or cancel stops for safety, harbour
 				regulations, or sea conditions.
 			</p>
 		</section>
-		<section class="sec">
+		<section class="prose-section">
 			<h2>3. Payments</h2>
 			<p>
 				Online payments may be processed via Stripe Checkout where enabled. Additional fees (e.g. cave entry) may be payable
 				on-site.
 			</p>
 		</section>
-		<section class="sec">
+		<section class="prose-section">
 			<h2>4. Liability</h2>
 			<p>
 				Guests participate in marine activities at their own risk within the safety briefing provided. Minors must be
@@ -39,36 +38,3 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 		</section>
 	</main>
 </SiteLayout>
-
-<style>
-	.main {
-		max-width: 720px;
-		margin: 0 auto;
-		padding: 2.5rem 1.25rem 4rem;
-	}
-
-	.title {
-		font-family: var(--font-display);
-		font-size: clamp(1.75rem, 3vw, 2.25rem);
-		color: var(--color-nav);
-		margin: 0 0 0.5rem;
-	}
-
-	.meta {
-		font-size: 0.9rem;
-		color: var(--color-muted);
-		margin: 0 0 2rem;
-	}
-
-	.sec h2 {
-		font-size: 1.125rem;
-		margin: 1.5rem 0 0.5rem;
-		color: var(--color-nav);
-	}
-
-	.sec p {
-		margin: 0;
-		line-height: 1.65;
-		color: var(--color-muted);
-	}
-</style>

@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { SITE_DEFAULT_DESCRIPTION } from '../config/site';
+import { GOOGLE_FONTS_HREF } from '../config/typography';
 
 type Props = {
 	title: string;
@@ -20,18 +21,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical.href} />
+		<link rel="preload" href="/fonts/glorich/Glorich-Medium.ttf" as="font" type="font/ttf" crossorigin />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link rel="preconnect" href="https://images.unsplash.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap"
-			rel="stylesheet"
-		/>
+		<link href={GOOGLE_FONTS_HREF} rel="stylesheet" />
 		<title>{title}</title>
 		<slot name="head" />
 	</head>
 	<body>
-		<a class="sr-only" href="#main">Skip to content</a>
 		<slot />
 	</body>
 </html>

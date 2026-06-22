@@ -1,0 +1,42 @@
+---
+type Props = {
+	class?: string;
+};
+
+const { class: className } = Astro.props;
+---
+
+<div class:list={['wave-divider', className]} aria-hidden="true">
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 12" fill="none" width="120" height="12">
+		<path
+			stroke="currentColor"
+			stroke-width="1.2"
+			stroke-linecap="round"
+			d="M4 6c8 3 16 3 24 0s16-3 24 0 16 3 24 0 16-3 24 0 16 3 24 0"></path>
+		<path
+			stroke="currentColor"
+			stroke-width="1.2"
+			stroke-linecap="round"
+			opacity="0.65"
+			d="M4 9c8 2.5 16 2.5 24 0s16-2.5 24 0 16 2.5 24 0 16-2.5 24 0 16 2.5 24 0"></path>
+		<path
+			stroke="currentColor"
+			stroke-width="1.2"
+			stroke-linecap="round"
+			opacity="0.35"
+			d="M4 3c8 2.5 16 2.5 24 0s16-2.5 24 0 16 2.5 24 0 16-2.5 24 0 16 2.5 24 0"></path>
+	</svg>
+</div>
+
+<style>
+	.wave-divider {
+		color: var(--color-brand-primary);
+		line-height: 0;
+	}
+
+	.wave-divider svg {
+		width: 5rem;
+		height: auto;
+		opacity: 0.55;
+	}
+</style>

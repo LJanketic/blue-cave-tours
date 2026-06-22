@@ -6,6 +6,7 @@ dist/
 
 # dependencies
 node_modules/
+.pnpm-store/
 
 # logs
 logs/
@@ -28,6 +29,10 @@ pnpm-debug.log*
 .cache/
 .eslintcache
 *.tsbuildinfo
+
+# local agent scratch (PDF tooling, page renders)
+.pdf-tools/
+ST-agency-vi-pages/
 
 # macOS
 .DS_Store

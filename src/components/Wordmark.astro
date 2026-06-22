@@ -1,0 +1,35 @@
+---
+type Props = {
+	theme?: 'light' | 'dark';
+	class?: string;
+};
+
+const { theme = 'light', class: className } = Astro.props;
+const fill = theme === 'dark' ? '#003D84' : '#FFFFFF';
+---
+
+<svg
+	class:list={['wordmark', className]}
+	xmlns="http://www.w3.org/2000/svg"
+	viewBox="0 0 360 48"
+	fill="none"
+	aria-hidden="true"
+>
+	<text
+		x="180"
+		y="34"
+		fill={fill}
+		font-family="Glorich, system-ui, sans-serif"
+		font-size="22"
+		font-weight="700"
+		letter-spacing="0.14em"
+		text-anchor="middle">BLUE CAVE TOURS</text>
+</svg>
+
+<style>
+	.wordmark {
+		display: block;
+		width: min(100%, 20rem);
+		height: auto;
+	}
+</style>

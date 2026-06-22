@@ -1,6 +1,8 @@
 ---
 import { HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS } from '../data/hero-image';
 import { unsplashDefaultSrc, unsplashSrcSet } from '../lib/unsplash';
+import WaveDivider from './WaveDivider.astro';
+import Wordmark from './Wordmark.astro';
 
 const heroSrcSet = unsplashSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
 const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
@@ -21,7 +23,9 @@ const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 		<div class="hero__overlay" aria-hidden="true"></div>
 	</div>
 	<div class="hero__content">
-		<p class="hero__eyebrow">Best Adriatic boat tours</p>
+		<Wordmark class="hero__wordmark" theme="light" />
+		<WaveDivider class="hero__wave" />
+		<p class="hero__eyebrow type-label">Best Adriatic boat tours</p>
 		<h1 id="hero-heading" class="hero__title">Blue Cave &amp; island tours from the heart of Split</h1>
 		<p class="hero__lead">
 			Step aboard a modern speedboat, feel the sea breeze, and explore hidden bays and iconic islands with a crew that
@@ -37,10 +41,11 @@ const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 <style>
 	.hero {
 		position: relative;
-		min-height: min(78vh, 720px);
+		min-height: min(85vh, 780px);
 		display: grid;
-		align-items: end;
-		color: #f8fafc;
+		place-items: center;
+		text-align: center;
+		color: var(--color-chrome-text);
 	}
 
 	.hero__media {
@@ -58,49 +63,65 @@ const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 	.hero__overlay {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(to top, rgba(15, 41, 66, 0.92) 0%, rgba(15, 41, 66, 0.35) 45%, rgba(15, 41, 66, 0.2) 100%);
+		background:
+			linear-gradient(to bottom, rgb(0 61 132 / 0.12) 0%, rgb(0 61 132 / 0.28) 100%),
+			linear-gradient(to top, rgb(0 61 132 / 0.55) 0%, transparent 50%);
 	}
 
 	.hero__content {
 		position: relative;
 		z-index: 1;
-		max-width: var(--content-max);
+		max-width: 42rem;
 		margin: 0 auto;
-		padding: 3rem 1.25rem 3.5rem;
+		padding: var(--page-padding-y) var(--page-padding-x) 3rem;
 		width: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+
+	.hero__wordmark {
+		margin-bottom: 0.75rem;
+	}
+
+	.hero__wave {
+		margin-bottom: 1.25rem;
+		color: var(--color-brand-on-primary);
 	}
 
 	.hero__eyebrow {
-		margin: 0 0 0.5rem;
-		font-size: 0.875rem;
-		font-weight: 600;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		color: #fdba74;
+		margin: 0 0 0.75rem;
+		font-size: var(--text-sm);
+		color: var(--color-chrome-link);
 	}
 
 	.hero__title {
 		margin: 0 0 1rem;
-		max-width: 18ch;
+		max-width: min(32ch, 100%);
 		font-family: var(--font-display);
-		font-size: clamp(2rem, 4.5vw, 3.25rem);
-		font-weight: 700;
-		line-height: 1.15;
+		font-size: var(--text-2xl);
+		font-weight: var(--font-weight-bold);
+		line-height: 1.2;
 		text-wrap: balance;
+		color: var(--color-brand-on-primary);
+		text-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
 	}
 
 	.hero__lead {
 		margin: 0 0 1.75rem;
-		max-width: 52ch;
-		font-size: 1.125rem;
+		max-width: min(48ch, 100%);
+		font-size: var(--text-lg);
 		line-height: 1.65;
-		color: #e2e8f0;
+		color: var(--color-chrome-text-muted);
+		text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
 	}
 
 	.hero__actions {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.75rem 1rem;
+		justify-content: center;
 	}
 
 	.btn {
@@ -109,8 +130,8 @@ const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 		justify-content: center;
 		padding: 0.75rem 1.25rem;
 		border-radius: 8px;
-		font-weight: 700;
-		font-size: 1rem;
+		font-weight: var(--font-weight-bold);
+		font-size: var(--text-base);
 		text-decoration: none;
 		transition:
 			background 0.15s ease,
@@ -131,19 +152,24 @@ const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 
 	.btn--ghost {
 		background: transparent;
-		color: #fff;
-		border: 2px solid rgba(255, 255, 255, 0.45);
+		color: var(--color-brand-on-primary);
+		border: 2px solid rgb(255 255 255 / 0.45);
 	}
 
 	.btn--ghost:hover {
-		border-color: #fff;
-		background: rgba(255, 255, 255, 0.08);
-		color: #fff;
+		border-color: var(--color-brand-on-primary);
+		background: rgb(255 255 255 / 0.08);
+		color: var(--color-brand-on-primary);
+	}
+
+	.btn--ghost:focus-visible {
+		outline-color: var(--color-brand-on-primary);
+		outline-offset: 3px;
 	}
 
 	@media (max-width: 540px) {
 		.hero__content {
-			padding: 2.25rem 1.25rem 2.75rem;
+			padding: 2.25rem var(--page-padding-x) 2.75rem;
 		}
 
 		.hero__actions {
