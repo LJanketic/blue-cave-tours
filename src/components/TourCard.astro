@@ -1,12 +1,12 @@
 ---
 import type { TourDetail } from '../types/tour';
 import { unsplashDefaultSrc, unsplashSrcSet } from '../lib/unsplash';
-import { supportsOnlineCheckout, contactHrefForTour } from '../lib/booking';
+import { supportsInstantBook, contactHrefForTour } from '../lib/booking';
 
 type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
-const online = supportsOnlineCheckout(tour);
+const instantBook = supportsInstantBook(tour);
 const cardSrcSet = unsplashSrcSet(tour.image.src, [400, 640, 960, 1200]);
 const cardSrc = unsplashDefaultSrc(tour.image.src, 800);
 ---
@@ -40,8 +40,8 @@ const cardSrc = unsplashDefaultSrc(tour.image.src, 800);
 					Details
 				</a>
 				{
-					online ? (
-						<form class="checkout-form" data-tour-id={tour.slug}>
+					instantBook ? (
+						<form class="booking-form" data-tour-id={tour.slug}>
 							<button type="submit" class="card__cta" aria-label={`Book now: ${tour.title}`}>
 								Book now
 							</button>
@@ -174,7 +174,7 @@ const cardSrc = unsplashDefaultSrc(tour.image.src, 800);
 		background: var(--color-base);
 	}
 
-	.checkout-form {
+	.booking-form {
 		margin: 0;
 	}
 

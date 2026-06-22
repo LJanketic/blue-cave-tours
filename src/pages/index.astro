@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import { HOME_PAGE_TITLE } from '../config/site';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Hero from '../components/Hero.astro';
@@ -12,7 +14,7 @@ const heroLcpSrcset = unsplashSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
 const heroLcpHref = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 ---
 
-<SiteLayout title={HOME_PAGE_TITLE}>
+<SiteLayout title={HOME_PAGE_TITLE} booking>
 	<link
 		slot="head"
 		rel="preload"

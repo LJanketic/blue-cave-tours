@@ -1,12 +1,12 @@
 ---
 import type { TourDetail } from '../../types/tour';
 import { unsplashDefaultSrc, unsplashSrcSet } from '../../lib/unsplash';
-import { supportsOnlineCheckout, contactHrefForTour } from '../../lib/booking';
+import { supportsInstantBook, contactHrefForTour } from '../../lib/booking';
 
 type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
-const online = supportsOnlineCheckout(tour);
+const instantBook = supportsInstantBook(tour);
 
 const heroSrcSet = unsplashSrcSet(tour.image.src, [640, 960, 1280, 1600]);
 const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
@@ -121,7 +121,7 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 			tour.groupSale && (
 				<section class="block block--group" aria-labelledby="group-heading">
 					<h2 id="group-heading" class="block__h">
-						Group sale
+						Group bookings
 					</h2>
 					<p class="block__p">{tour.groupSale}</p>
 				</section>
@@ -159,8 +159,8 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 
 		<div class="cta-bar">
 			{
-				online ? (
-					<form class="checkout-form" data-tour-id={tour.slug}>
+				instantBook ? (
+					<form class="booking-form" data-tour-id={tour.slug}>
 						<button type="submit" class="cta-bar__btn" aria-label={`Book now: ${tour.title}`}>
 							Book now
 						</button>

@@ -1,6 +1,6 @@
 import type { TourDetail } from '../types/tour';
 
-/** Tour catalog — Blue Cave Tours product copy. */
+/** Tour catalog — Hello Blue Cave product copy. */
 const MEETING_POINT =
 	'Meet at Split’s Riva promenade, stand number 14. After booking you’ll receive the exact location, map link, and what time to arrive.';
 
@@ -24,12 +24,12 @@ const CAVE_NOTE =
 	'Entrance to the Blue Cave may require a separate ticket payable on-site; availability depends on sea conditions and official cave opening hours.';
 
 const PRICE_STANDARD =
-	'Indicative pricing: infants 0–3 €0; children 4–10 from €139; adults from €159 — final price shown at checkout before payment.';
+	'Indicative pricing: infants 0–3 €0; children 4–10 from €139; adults from €159 — final price confirmed when you book.';
 
 const PRICE_PRIVATE =
 	'Private charters are quoted per boat and season. Request a quote via the contact form or by phone.';
 
-/** Verified HTTP 200 from images.unsplash.com (lagoon URL was returning 404) */
+/** Unsplash hero/tour imagery */
 const IMG = {
 	boat: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80',
 	deck: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
@@ -73,7 +73,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: ['Licensed crew & fuel', 'Safety equipment', 'Snorkelling gear where provided on board'],
 		notIncluded: ['Meals unless stated', 'National park / cave entry paid locally when applicable', 'Personal extras'],
-		priceNotes: 'Indicative: infants 0–3 €0; children 4–10 from €139; adults from €159 — final amount at checkout.',
+		priceNotes: 'Indicative: infants 0–3 €0; children 4–10 from €139; adults from €159 — final amount confirmed when you book.',
 		caveTicketNote: CAVE_NOTE,
 		groupSale: 'Ask about private group blocks for peak weeks — we can hold capacity with a deposit.',
 		disclaimers: DISCLAIMERS,
@@ -218,7 +218,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: ['Boat & skipper', 'Fuel', 'Safety gear'],
 		notIncluded: ['Meals'],
-		priceNotes: 'Half-day tiered pricing at checkout.',
+		priceNotes: 'Half-day tiered pricing — confirmed when you book.',
 		caveTicketNote: 'Not a Blue Cave itinerary.',
 		disclaimers: DISCLAIMERS,
 		gallery: galleryTriplet(IMG.lagoon, IMG.boat, IMG.islands),
@@ -246,7 +246,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: ['Boat & skipper', 'Fuel', 'Safety gear'],
 		notIncluded: ['Meals'],
-		priceNotes: 'Half-day tiered pricing at checkout.',
+		priceNotes: 'Half-day tiered pricing — confirmed when you book.',
 		caveTicketNote: 'Not a Blue Cave itinerary.',
 		disclaimers: DISCLAIMERS,
 		gallery: galleryTriplet(IMG.lagoon, IMG.deck, IMG.islands),
@@ -328,7 +328,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: ['Cabin boat charter for the tour', 'Crew', 'Fuel', 'Safety equipment'],
 		notIncluded: ['Meals unless pre-arranged', 'On-site cave tickets'],
-		priceNotes: 'Higher tier than open boat — price confirmed at checkout.',
+		priceNotes: 'Higher tier than open boat — price confirmed when you book.',
 		caveTicketNote: CAVE_NOTE,
 		disclaimers: DISCLAIMERS,
 		gallery: galleryTriplet(IMG.deck, IMG.cave, IMG.islands),
@@ -429,14 +429,14 @@ export const tours: TourDetail[] = [
 		itineraryKind: 'flexible',
 		itineraryLabel: 'Flexible itinerary',
 		itinerary: ['Direct lagoon-focused routing', 'Extended swim time', 'Return'],
-		overviewHighlights: 'Choose the half-day that fits your schedule — content matches our dedicated morning/afternoon products.',
+		overviewHighlights: 'Choose the half-day that fits your schedule — morning and afternoon slots available.',
 		meetingPoint: MEETING_POINT,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
 		whatToBring: BRING_DEFAULT,
 		included: ['Boat', 'Skipper', 'Fuel'],
 		notIncluded: ['Meals'],
-		priceNotes: 'Priced by slot length — see checkout.',
+		priceNotes: 'Priced by slot length — see tour page for current rates.',
 		caveTicketNote: 'Not Blue Cave.',
 		disclaimers: DISCLAIMERS,
 		gallery: galleryTriplet(IMG.lagoon, IMG.boat, IMG.deck),
@@ -458,10 +458,10 @@ export const tours: TourDetail[] = [
 		itinerary: [
 			'Pick-up briefing at Riva stand 14',
 			'Custom route within fuel / time limits',
-			'Predefined messaging available for private tours (per ops notes)',
+			'Swim stops and island time tailored to your group',
 		],
 		overviewHighlights:
-			'Private tours follow your schedule — ideal for families, proposals, or anyone who dislikes fixed group pacing. PDF offers, payment links, or QR codes can be arranged for bespoke quotes.',
+			'Private tours follow your schedule — ideal for families, proposals, or anyone who prefers a flexible pace. We’ll send a tailored quote with everything included.',
 		meetingPoint: MEETING_POINT,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,

@@ -1,7 +1,7 @@
 /**
  * Unsplash image CDN helpers — responsive widths + consistent compression for Lighthouse.
  */
-export function unsplashUrl(src: string, width: number, quality = 65): string {
+function unsplashUrl(src: string, width: number, quality = 65): string {
 	try {
 		const u = new URL(src);
 		u.searchParams.set('auto', 'format');

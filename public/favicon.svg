@@ -2,9 +2,9 @@
 	<rect width="32" height="32" rx="6" fill="#003D84" />
 	<rect x="3" y="3" width="26" height="26" rx="3" stroke="#FFFFFF" stroke-width="1.25" />
 	<path stroke="#FFFFFF" stroke-width="0.75" d="M3 16h26M16 3v26" opacity="0.35" />
-	<text x="7.5" y="12.5" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="7" font-weight="700">B</text>
-	<text x="20" y="12.5" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="7" font-weight="700">C</text>
-	<text x="7.5" y="25.5" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="7" font-weight="700">T</text>
+	<text x="7.5" y="12.5" fill="#FFFFFF" font-family="Glorich, system-ui, sans-serif" font-size="7" font-weight="700">H</text>
+	<text x="20" y="12.5" fill="#FFFFFF" font-family="Glorich, system-ui, sans-serif" font-size="7" font-weight="700">B</text>
+	<text x="7.5" y="25.5" fill="#FFFFFF" font-family="Glorich, system-ui, sans-serif" font-size="7" font-weight="700">C</text>
 	<path
 		stroke="#FFFFFF"
 		stroke-width="1"

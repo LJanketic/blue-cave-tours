@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
@@ -6,7 +8,6 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 <SiteLayout title={pageTitle('Terms & Conditions')} description="Terms and conditions for boat tours operated from Split.">
 	<main id="main" class="page-shell">
 		<h1 class="page-title">Terms &amp; Conditions</h1>
-		<p class="page-meta">Draft for review — replace with counsel-approved wording before relying on this in production.</p>
 
 		<section class="prose-section">
 			<h2>1. Operator</h2>
@@ -23,10 +24,9 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 			</p>
 		</section>
 		<section class="prose-section">
-			<h2>3. Payments</h2>
+			<h2>3. Booking &amp; payment</h2>
 			<p>
-				Online payments may be processed via Stripe Checkout where enabled. Additional fees (e.g. cave entry) may be payable
-				on-site.
+				Reservations are confirmed after we verify availability. Additional fees (e.g. cave entry) may be payable on-site.
 			</p>
 		</section>
 		<section class="prose-section">

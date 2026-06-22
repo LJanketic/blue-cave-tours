@@ -1,5 +1,7 @@
 ---
-import { pageTitle } from '../../config/site';
+export const prerender = true;
+
+import { pageTitle, SITE_EMAIL, SITE_NAME, SITE_PHONE, SITE_PHONE_DISPLAY } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getAllTours } from '../../lib/tours';
 
@@ -10,14 +12,14 @@ const selectedTour = tours.some((t) => t.slug === tourFromQuery) ? tourFromQuery
 
 <SiteLayout
 	title={pageTitle('Contact')}
-	description="Reach Blue Cave Tours on Split’s Riva — stand 14 — or send a message about tours and private charters."
+	description={`Reach ${SITE_NAME} on Split’s Riva — stand 14 — or send a message about tours and private charters.`}
 >
 	<main id="main" class="page-shell page-shell--form">
 		<h1 class="page-title">Contact</h1>
 		<p class="page-lead">
 			<strong>Meet-up:</strong> Riva promenade of Split, stand number 14 ·
-			<a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a> ·
-			<a href="tel:+385919888838">+385 91 988 88 38</a>
+			<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a> ·
+			<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>
 		</p>
 
 		<form id="contact-form" class="form" novalidate>
@@ -61,7 +63,7 @@ const selectedTour = tours.some((t) => t.slug === tourFromQuery) ? tourFromQuery
 </script>
 
 <style>
-	.lead a {
+	.page-lead a {
 		font-weight: var(--font-weight-medium);
 	}
 
@@ -80,7 +82,7 @@ const selectedTour = tours.some((t) => t.slug === tourFromQuery) ? tourFromQuery
 	}
 
 	.req {
-		color: #b91c1c;
+		color: var(--color-error);
 	}
 
 	.field input,

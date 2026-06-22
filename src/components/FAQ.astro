@@ -1,19 +1,30 @@
+---
+import { FAQ_ITEMS } from '../data/faq';
+
+const teaser = FAQ_ITEMS.slice(0, 3);
+---
+
 <section class="faq" id="faq" aria-labelledby="faq-heading">
 	<div class="faq__inner">
 		<h2 id="faq-heading" class="faq__title">FAQ</h2>
 		<dl class="faq__list">
-			<div class="faq__row">
-				<dt>Is the Blue Cave ticket included?</dt>
-				<dd>Cave entry fees are often billed separately on-site. We’ll spell out what’s included before you pay.</dd>
-			</div>
-			<div class="faq__row">
-				<dt>What about weather?</dt>
-				<dd>Sea conditions change—we monitor forecasts and communicate alternatives if a route isn’t safe or enjoyable.</dd>
-			</div>
-			<div class="faq__row">
-				<dt>Private vs group tours?</dt>
-				<dd>Private charters follow your schedule; group tours have fixed times and a shared pace—pick what fits your trip.</dd>
-			</div>
+			{
+				teaser.map((item) => (
+					<div class="faq__row">
+						<dt>{item.question}</dt>
+						<dd>
+							{item.link ? (
+								<>
+									{item.answer}{' '}
+									<a href={item.link.href}>{item.link.label}</a>.
+								</>
+							) : (
+								item.answer
+							)}
+						</dd>
+					</div>
+				))
+			}
 		</dl>
 		<p class="faq__more">
 			<a href="/faq">Full FAQ →</a>

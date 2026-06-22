@@ -2,14 +2,16 @@
 import BaseLayout from './BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import CheckoutScript from '../components/CheckoutScript.astro';
+import BookingScript from '../components/BookingScript.astro';
 
 type Props = {
 	title: string;
 	description?: string;
+	/** Load booking redirect script only on pages with Book now forms. */
+	booking?: boolean;
 };
 
-const { title, description } = Astro.props;
+const { title, description, booking = false } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
@@ -19,6 +21,6 @@ const { title, description } = Astro.props;
 		<Header />
 		<slot />
 		<Footer />
-		<CheckoutScript />
+		{booking && <BookingScript />}
 	</div>
 </BaseLayout>

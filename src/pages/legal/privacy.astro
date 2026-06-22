@@ -1,23 +1,24 @@
 ---
-import { pageTitle } from '../../config/site';
+export const prerender = true;
+
+import { pageTitle, SITE_EMAIL, SITE_NAME } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
-<SiteLayout title={pageTitle('Privacy Policy')} description="How Blue Cave Tours handles personal data for bookings and enquiries.">
+<SiteLayout title={pageTitle('Privacy Policy')} description={`How ${SITE_NAME} handles personal data for bookings and enquiries.`}>
 	<main id="main" class="page-shell">
 		<h1 class="page-title">Privacy Policy</h1>
-		<p class="page-meta">Draft for review — align with GDPR and your actual processors (Stripe, email) before launch.</p>
 
 		<section class="prose-section">
 			<h2>Data we collect</h2>
 			<p>
-				Contact details you submit (name, email, phone), message content, and optional tour interest. Checkout data is
-				processed by Stripe when that mode is enabled.
+				Contact details you submit (name, email, phone), message content, and optional tour interest when you enquire or
+				book.
 			</p>
 		</section>
 		<section class="prose-section">
 			<h2>Purpose</h2>
-			<p>To respond to enquiries, operate tours, process payments, and meet legal obligations.</p>
+			<p>To respond to enquiries, operate tours, confirm bookings, and meet legal obligations.</p>
 		</section>
 		<section class="prose-section">
 			<h2>Retention</h2>
@@ -27,7 +28,7 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 			<h2>Your rights</h2>
 			<p>
 				Depending on jurisdiction, you may request access, correction, deletion, or restriction — contact
-				<a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a>.
+				<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>.
 			</p>
 		</section>
 	</main>

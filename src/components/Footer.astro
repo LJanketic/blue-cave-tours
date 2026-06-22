@@ -1,5 +1,6 @@
 ---
-import { SITE_NAME } from '../config/site';
+import Logo from './Logo.astro';
+import { SITE_EMAIL, SITE_NAME, SITE_PHONE, SITE_PHONE_DISPLAY } from '../config/site';
 
 const year = new Date().getFullYear();
 ---
@@ -7,19 +8,17 @@ const year = new Date().getFullYear();
 <footer class="foot" id="site-footer">
 	<div class="foot__inner">
 		<div class="foot__brand">
-			<p class="foot__name">{SITE_NAME}</p>
+			<div class="foot__mark">
+				<Logo size={32} />
+				<p class="foot__name">{SITE_NAME}</p>
+			</div>
 			<p class="foot__address">
 				Riva promenade of Split, stand number 14<br />
 				Split, Croatia
 			</p>
 			<p class="foot__contact">
-				<a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a><br />
-				<a href="tel:+385919888838">+385 91 988 88 38</a>
-			</p>
-			<p class="foot__social">
-				<a href="https://www.instagram.com/" rel="noopener noreferrer" target="_blank">Instagram</a>
-				<span class="foot__social-sep" aria-hidden="true">·</span>
-				<a href="https://www.facebook.com/" rel="noopener noreferrer" target="_blank">Facebook</a>
+				<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a><br />
+				<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>
 			</p>
 			<p class="foot__ops">
 				Operators may include Misericordia d.o.o., Aliskaf d.o.o., Per Mare d.o.o. The contracting entity appears on your
@@ -64,17 +63,25 @@ const year = new Date().getFullYear();
 		align-items: start;
 	}
 
+	.foot__mark {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin-bottom: 0.75rem;
+	}
+
 	.foot__name {
-		margin: 0 0 0.75rem;
+		margin: 0;
 		font-family: var(--font-display);
-		font-size: var(--text-xl);
-		font-weight: var(--font-weight-bold);
+		font-size: var(--text-sm);
+		font-weight: var(--font-weight-semibold);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		color: var(--color-brand-on-primary);
 	}
 
 	.foot__address,
 	.foot__contact,
-	.foot__social,
 	.foot__ops {
 		margin: 0 0 0.75rem;
 		font-size: var(--text-sm);
@@ -87,23 +94,15 @@ const year = new Date().getFullYear();
 		max-width: 52ch;
 	}
 
-	.foot__contact a,
-	.foot__social a {
+	.foot__contact a {
 		color: var(--color-chrome-link);
 		text-decoration: none;
 		font-weight: 600;
 	}
 
-	.foot__contact a:hover,
-	.foot__social a:hover {
+	.foot__contact a:hover {
 		color: var(--color-brand-on-primary);
 		text-decoration: underline;
-	}
-
-	.foot__social-sep {
-		margin: 0 0.35rem;
-		color: var(--color-chrome-text-subtle);
-		font-weight: 400;
 	}
 
 	.foot__cols {

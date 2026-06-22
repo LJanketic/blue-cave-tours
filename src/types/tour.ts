@@ -1,7 +1,7 @@
 export type ItineraryKind = 'morning' | 'afternoon' | 'full' | 'flexible';
 
 export type TourDetail = {
-	/** URL segment and checkout id */
+	/** URL segment and booking id */
 	slug: string;
 	title: string;
 	tagline: string;

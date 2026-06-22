@@ -18,9 +18,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="generator" content={Astro.generator} />
+		<meta name="theme-color" content="#003D84" />
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonical.href} />
+		<link rel="preload" href="/fonts/glorich/Glorich-Bold.ttf" as="font" type="font/ttf" crossorigin />
 		<link rel="preload" href="/fonts/glorich/Glorich-Medium.ttf" as="font" type="font/ttf" crossorigin />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

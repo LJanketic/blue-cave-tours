@@ -25,7 +25,7 @@ const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 	<div class="hero__content">
 		<Wordmark class="hero__wordmark" theme="light" />
 		<WaveDivider class="hero__wave" />
-		<p class="hero__eyebrow type-label">Best Adriatic boat tours</p>
+		<p class="hero__eyebrow type-label">Your Adriatic adventure starts here</p>
 		<h1 id="hero-heading" class="hero__title">Blue Cave &amp; island tours from the heart of Split</h1>
 		<p class="hero__lead">
 			Step aboard a modern speedboat, feel the sea breeze, and explore hidden bays and iconic islands with a crew that
@@ -33,7 +33,7 @@ const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 		</p>
 		<div class="hero__actions">
 			<a class="btn btn--primary" href="/tours">See available tours</a>
-			<a class="btn btn--ghost" href="/contact">Message &amp; contact</a>
+			<a class="btn btn--ghost" href="/contact">Contact us</a>
 		</div>
 	</div>
 </section>
@@ -64,8 +64,8 @@ const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
 		position: absolute;
 		inset: 0;
 		background:
-			linear-gradient(to bottom, rgb(0 61 132 / 0.12) 0%, rgb(0 61 132 / 0.28) 100%),
-			linear-gradient(to top, rgb(0 61 132 / 0.55) 0%, transparent 50%);
+			linear-gradient(to bottom, var(--color-overlay-light) 0%, var(--color-overlay-mid) 100%),
+			linear-gradient(to top, var(--color-overlay-strong) 0%, transparent 50%);
 	}
 
 	.hero__content {

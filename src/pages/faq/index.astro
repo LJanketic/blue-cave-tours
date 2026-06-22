@@ -1,6 +1,9 @@
 ---
+export const prerender = true;
+
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import { FAQ_ITEMS } from '../../data/faq';
 ---
 
 <SiteLayout
@@ -16,47 +19,32 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 		<section class="prose-section" aria-labelledby="g-heading">
 			<h2 id="g-heading">General</h2>
 			<dl class="faq">
-				<div class="faq__row">
-					<dt>Is the Blue Cave ticket included?</dt>
-					<dd>
-						Cave entry is often billed separately on-site and depends on sea conditions and official opening hours. We
-						show what’s included before you pay.
-					</dd>
-				</div>
-				<div class="faq__row">
-					<dt>What if the weather is bad?</dt>
-					<dd>
-						We monitor forecasts. Routes may be shortened, reordered, or rescheduled so the day stays safe and enjoyable.
-					</dd>
-				</div>
-				<div class="faq__row">
-					<dt>Private vs group tours?</dt>
-					<dd>
-						Group tours follow a fixed timetable; private charters pick timing and pacing within operational limits — see
-						<a href="/tours/create-perfect-day-private">Create your perfect day at sea</a>.
-					</dd>
-				</div>
-				<div class="faq__row">
-					<dt>Where do we meet?</dt>
-					<dd>
-						Split’s Riva promenade, stand 14. You’ll receive the exact meeting time and any last-minute updates after
-						booking.
-					</dd>
-				</div>
+				{
+					FAQ_ITEMS.map((item) => (
+						<div class="faq__row">
+							<dt>{item.question}</dt>
+							<dd>
+								{item.link ? (
+									<>
+										{item.answer}{' '}
+										<a href={item.link.href}>{item.link.label}</a>.
+									</>
+								) : (
+									item.answer
+								)}
+							</dd>
+						</div>
+					))
+				}
 			</dl>
 		</section>
 
 		<section class="prose-section faq-partner" aria-labelledby="s-heading">
 			<h2 id="s-heading">Partner &amp; voucher bookings</h2>
 			<p class="page-meta">
-				If you booked through a partner or voucher platform, cancellation terms and changes may follow their policy. Contact
-				us with your reference and we’ll help.
+				If you booked through a partner or voucher platform, cancellation terms and changes may follow their policy.
+				Contact us with your reference and we’ll help.
 			</p>
-			<ul class="prose-list">
-				<li>Redemption windows and ID requirements</li>
-				<li>How to change a reservation made through a partner</li>
-				<li>Language of operation on board</li>
-			</ul>
 		</section>
 	</main>
 </SiteLayout>
@@ -94,6 +82,6 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 	}
 
 	.faq-partner .page-meta {
-		margin-bottom: 0.75rem;
+		margin-bottom: 0;
 	}
 </style>

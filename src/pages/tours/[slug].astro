@@ -1,9 +1,15 @@
 ---
+export const prerender = true;
+
 import NotFoundPanel from '../../components/NotFoundPanel.astro';
 import TourDetailView from '../../components/tour/TourDetailView.astro';
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { getTourBySlug } from '../../lib/tours';
+import { getAllTours, getTourBySlug } from '../../lib/tours';
+
+export function getStaticPaths() {
+	return getAllTours().map((tour) => ({ params: { slug: tour.slug } }));
+}
 
 const { slug } = Astro.params;
 const tour = slug ? getTourBySlug(slug) : undefined;
@@ -16,6 +22,7 @@ if (!tour) {
 <SiteLayout
 	title={tour ? pageTitle(tour.title) : pageTitle('Tour not found')}
 	description={tour?.shortDescription ?? 'The requested tour does not exist.'}
+	booking={Boolean(tour)}
 >
 	<main id="main">
 		{

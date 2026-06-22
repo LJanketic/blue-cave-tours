@@ -1,84 +1,35 @@
 ---
 export const prerender = false;
 
-import { pageTitle } from '../../config/site';
+import { pageTitle, SITE_EMAIL, SITE_NAME, SITE_PHONE, SITE_PHONE_DISPLAY } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getTourBySlug } from '../../lib/tours';
-import { verifyCheckoutSession } from '../../lib/stripe-session';
-import { getCheckoutMode } from '../../server/checkout-mode';
 
-const demo = Astro.url.searchParams.has('demo');
-const sessionId = Astro.url.searchParams.get('session_id');
 const tourIdParam = Astro.url.searchParams.get('tourId');
+const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
 
-const mode = getCheckoutMode();
-let verified = false;
-let tourTitle: string | undefined;
-let verifyError: string | undefined;
-
-if (sessionId && mode === 'stripe' && import.meta.env.STRIPE_SECRET_KEY) {
-	try {
-		const result = await verifyCheckoutSession(
-			sessionId,
-			import.meta.env.STRIPE_SECRET_KEY,
-			(slug) => getTourBySlug(slug)?.title,
-		);
-		verified = result.ok;
-		tourTitle = result.tourTitle;
-		if (!result.ok) {
-			verifyError = 'Payment is still processing or was not completed. Contact us if you were charged.';
-		}
-	} catch {
-		verifyError = 'We could not verify this payment. Contact us if you were charged.';
-	}
-} else if (sessionId && mode === 'stripe') {
-	verifyError = 'Booking confirmation is temporarily unavailable. Contact us with your receipt.';
+if (tourIdParam && !bookedTour) {
+	return Astro.redirect('/404');
 }
-
-if (demo && mode !== 'mock') {
-	verifyError = 'Invalid demo link.';
-}
-
-const demoTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
-const isDemo = demo && mode === 'mock';
-const isConfirmed = verified || isDemo;
 ---
 
 <SiteLayout
-	title={pageTitle(isDemo ? 'Demo booking' : isConfirmed ? 'Booking confirmed' : 'Booking status')}
-	description="Thank you for your booking with Blue Cave Tours."
+	title={pageTitle('Booking confirmed')}
+	description={`Your booking with ${SITE_NAME} has been received.`}
 >
 	<main class="status-page" id="main">
-		{
-			isDemo && (
-				<p class="status-banner status-banner--info" role="status">
-					Demo checkout — no payment was processed
-					{demoTour ? ` (${demoTour.title})` : tourIdParam ? ` (${tourIdParam})` : ''}.
-				</p>
-			)
-		}
-		{
-			verifyError && (
-				<p class="status-banner status-banner--warn" role="alert">
-					{verifyError}
-				</p>
-			)
-		}
-		<h1>{isDemo ? 'Demo complete' : verified ? 'Thank you!' : verifyError ? 'Booking status' : 'Thank you!'}</h1>
+		<p class="status-banner status-banner--info" role="status">
+			{bookedTour ? `Reserved: ${bookedTour.title}` : 'Your reservation has been received.'}
+		</p>
+		<h1>Thank you — booking received</h1>
 		<p class="lead">
-			{
-				isDemo
-					? 'This run used mock checkout (no Stripe session).'
-					: verified
-						? `Your payment was confirmed${tourTitle ? ` for ${tourTitle}` : ''}.`
-						: sessionId
-							? 'If payment succeeded, we will confirm your reservation by email.'
-							: 'Your booking request was received.'
-			}
+			We’ll confirm your date, meeting time, and any extras by email shortly. If you don’t hear from us within one
+			business day, please reach out.
 		</p>
 		<p class="muted">
-			Questions? Email <a href="mailto:info@bluecavetours.com">info@bluecavetours.com</a> or call{' '}
-			<a href="tel:+385919888838">+385 91 988 88 38</a>. Meet at Riva stand 14 unless we send other details.
+			Meet at Riva stand 14 unless we send other details. Questions? Email{' '}
+			<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a> or call{' '}
+			<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>.
 		</p>
 		<p>
 			<a class="back" href="/tours">Browse tours</a> · <a class="back" href="/">Home</a>
