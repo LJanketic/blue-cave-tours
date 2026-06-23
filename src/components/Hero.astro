@@ -1,11 +1,11 @@
 ---
 import { HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS } from '../data/hero-image';
-import { unsplashDefaultSrc, unsplashSrcSet } from '../lib/unsplash';
+import { responsiveSrc, responsiveSrcSet } from '../lib/responsive-image';
 import WaveDivider from './WaveDivider.astro';
 import Wordmark from './Wordmark.astro';
 
-const heroSrcSet = unsplashSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
-const heroSrc = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
+const heroSrcSet = responsiveSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
+const heroSrc = responsiveSrc(HERO_IMAGE_SRC, 1280);
 ---
 
 <section class="hero" aria-labelledby="hero-heading">

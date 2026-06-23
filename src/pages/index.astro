@@ -8,10 +8,10 @@ import TourSection from '../components/TourSection.astro';
 import WhyUs from '../components/WhyUs.astro';
 import FAQ from '../components/FAQ.astro';
 import { HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS } from '../data/hero-image';
-import { unsplashDefaultSrc, unsplashSrcSet } from '../lib/unsplash';
+import { responsiveSrc, responsiveSrcSet } from '../lib/responsive-image';
 
-const heroLcpSrcset = unsplashSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
-const heroLcpHref = unsplashDefaultSrc(HERO_IMAGE_SRC, 1280);
+const heroLcpSrcset = responsiveSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
+const heroLcpHref = responsiveSrc(HERO_IMAGE_SRC, 1280);
 ---
 
 <SiteLayout title={HOME_PAGE_TITLE} booking>

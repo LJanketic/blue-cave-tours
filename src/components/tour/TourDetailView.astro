@@ -1,6 +1,6 @@
 ---
 import type { TourDetail } from '../../types/tour';
-import { unsplashDefaultSrc, unsplashSrcSet } from '../../lib/unsplash';
+import { responsiveSrc, responsiveSrcSet } from '../../lib/responsive-image';
 import { supportsInstantBook, contactHrefForTour } from '../../lib/booking';
 
 type Props = { tour: TourDetail };
@@ -8,8 +8,8 @@ type Props = { tour: TourDetail };
 const { tour } = Astro.props;
 const instantBook = supportsInstantBook(tour);
 
-const heroSrcSet = unsplashSrcSet(tour.image.src, [640, 960, 1280, 1600]);
-const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
+const heroSrcSet = responsiveSrcSet(tour.image.src, [640, 1280]);
+const heroImgSrc = responsiveSrc(tour.image.src, 1280);
 ---
 
 <article class="detail">
@@ -134,8 +134,8 @@ const heroImgSrc = unsplashDefaultSrc(tour.image.src, 1280);
 				{tour.gallery.map((img) => (
 					<figure class="gallery__fig">
 						<img
-							src={unsplashDefaultSrc(img.src, 640)}
-							srcset={unsplashSrcSet(img.src, [400, 640, 960])}
+							src={responsiveSrc(img.src, 640)}
+							srcset={responsiveSrcSet(img.src, [640, 1280])}
 							sizes="(max-width: 720px) 100vw, 33vw"
 							alt={img.alt}
 							width="400"
