@@ -22,7 +22,8 @@ Client showcase site for **Hello Blue Cave** — boat tours and private charters
 
 - **Book now** on tour cards → confirmation page (`/booking/success?tourId=…`). No payment — for client review.
 - **Private charter** → contact / quote flow.
-- **Contact form** → validates and returns success (wire email delivery before production use).
+- **Contact form** → validates with honeypot + min submit time; returns success (no email yet).
+- **Before production:** wire email delivery, add Cloudflare Turnstile (or similar) + rate limiting — honeypot alone is not enough for a live public form.
 
 ## Structure
 

@@ -1,8 +1,18 @@
+import {
+	HONEYPOT_FIELD,
+	trimField,
+	validateContactSubmission,
+} from '../lib/contact-validation';
+
 /** Contact page: POST JSON to `/api/contact`, update status, reset on success. */
 export function initContactForm(): void {
 	const form = document.getElementById('contact-form');
 	const statusEl = document.getElementById('contact-status');
+	const startedAtEl = document.getElementById('contact-started-at');
 	if (!(form instanceof HTMLFormElement) || !(statusEl instanceof HTMLElement)) return;
+	if (!(startedAtEl instanceof HTMLInputElement)) return;
+
+	startedAtEl.value = String(Date.now());
 
 	const params = new URLSearchParams(window.location.search);
 	const tourFromUrl = params.get('tour');
@@ -24,12 +34,18 @@ export function initContactForm(): void {
 		statusEl.textContent = 'Sending…';
 
 		const data = Object.fromEntries(new FormData(form).entries());
-		const name = String(data.name ?? '').trim();
-		const email = String(data.email ?? '').trim();
-		const message = String(data.message ?? '').trim();
+		const result = validateContactSubmission({
+			name: trimField(data.name, 200),
+			email: trimField(data.email, 254),
+			message: trimField(data.message, 5000),
+			phone: trimField(data.phone, 30),
+			tourSlug: trimField(data.tourSlug, 80),
+			honeypot: trimField(data[HONEYPOT_FIELD], 200),
+			startedAt: Number(startedAtEl.value) || null,
+		});
 
-		if (!name || !email || !message) {
-			statusEl.textContent = 'Please fill in name, email, and message.';
+		if (!result.ok) {
+			statusEl.textContent = result.error;
 			if (btn instanceof HTMLButtonElement) btn.disabled = false;
 			return;
 		}
@@ -44,6 +60,7 @@ export function initContactForm(): void {
 			if (!res.ok) throw new Error(json.error || 'Failed to send');
 			statusEl.textContent = 'Thanks — we received your message and will get back to you soon.';
 			form.reset();
+			startedAtEl.value = String(Date.now());
 			applyTourPreselect();
 		} catch (err) {
 			statusEl.textContent = err instanceof Error ? err.message : 'Something went wrong';
