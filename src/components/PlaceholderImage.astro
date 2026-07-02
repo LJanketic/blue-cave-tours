@@ -1,0 +1,23 @@
+---
+import type { PhotoRef } from '../data/tour-photos';
+
+type Layout = 'hero' | 'card' | 'thumb' | 'gallery' | 'dest';
+
+type Props = {
+	photo: PhotoRef;
+	layout?: Layout;
+	icon?: string;
+	class?: string;
+};
+
+const { photo, layout = 'card', icon = 'photo', class: className } = Astro.props;
+---
+
+<div
+	class:list={['placeholder-image', `placeholder-image--${layout}`, className]}
+	style={`--placeholder-color: ${photo.color}`}
+	role="img"
+	aria-label={photo.alt}
+>
+	<i class={`ti ti-${icon}`} aria-hidden="true"></i>
+</div>

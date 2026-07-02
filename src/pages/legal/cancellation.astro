@@ -1,0 +1,223 @@
+---
+export const prerender = true;
+
+import { pageTitle, SITE_EMAIL, SITE_NAME, SITE_PHONE_DISPLAY } from '../../config/site';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+	title={pageTitle('Cancellation policy')}
+	description={`Cancellation and refund policy for boat tours booked with ${SITE_NAME}.`}
+>
+	<main id="main" class="page-shell page-shell--narrow">
+		<div class="page">
+			<nav class="legal-tab-bar" aria-label="Legal documents">
+				<a href="/legal/terms" class="legal-tab">Terms &amp; conditions</a>
+				<a href="/legal/privacy" class="legal-tab">Privacy policy</a>
+				<a href="/legal/cancellation" class="legal-tab legal-tab--active" aria-current="page">Cancellation policy</a>
+			</nav>
+
+			<div class="legal-layout">
+				<nav class="legal-nav" aria-label="Cancellation policy sections">
+					<a href="#overview" class="side-link active">Overview</a>
+					<a href="#group" class="side-link">Group tours</a>
+					<a href="#private" class="side-link">Private charters</a>
+					<a href="#weather" class="side-link">Weather</a>
+					<a href="#refunds" class="side-link">Refunds</a>
+					<a href="#how-to" class="side-link">How to cancel</a>
+				</nav>
+
+				<div>
+					<div class="legal-hero">
+						<h1>Cancellation policy</h1>
+						<p class="legal-meta">Last updated: 1 June 2025 · Applies to all bookings via {SITE_NAME}</p>
+					</div>
+
+					<div class="summary-box">
+						<p>The short version</p>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							Cancel 48h+ before departure — full refund, no questions
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							Cancel within 48h — non-refundable
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							We cancel for weather — full refund or free rebook
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							Private charter deposits are non-refundable
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							Refunds processed within 5–10 business days
+						</div>
+					</div>
+
+					<section id="overview" class="legal-section">
+						<h2><i class="ti ti-info-circle" aria-hidden="true"></i> Overview</h2>
+						<p>
+							We want you to book with confidence. This policy covers group departures and private charters
+							booked directly with {SITE_NAME}. Partner or voucher bookings may follow their platform's terms
+							— contact us with your reference and we'll help.
+						</p>
+					</section>
+
+					<section id="group" class="legal-section">
+						<h2><i class="ti ti-calendar-x" aria-hidden="true"></i> 1. Group tours</h2>
+						<div class="table-wrap">
+							<table class="legal-table">
+								<thead>
+									<tr>
+										<th>Notice given</th>
+										<th>Refund</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>More than 48 hours before departure</td>
+										<td>100% — full refund</td>
+									</tr>
+									<tr>
+										<td>Less than 48 hours before departure</td>
+										<td>0% — non-refundable</td>
+									</tr>
+									<tr>
+										<td>No show</td>
+										<td>0% — non-refundable</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div class="highlight-box">
+							<p>
+								If you need to cancel within 48 hours due to a medical emergency, contact us directly. We'll
+								do our best to offer a credit or rebook where possible, at our discretion.
+							</p>
+						</div>
+					</section>
+
+					<section id="private" class="legal-section">
+						<h2><i class="ti ti-crown" aria-hidden="true"></i> 2. Private charters</h2>
+						<div class="table-wrap">
+							<table class="legal-table">
+								<thead>
+									<tr>
+										<th>Notice given</th>
+										<th>Deposit (30%)</th>
+										<th>Balance</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>More than 14 days before</td>
+										<td>Non-refundable</td>
+										<td>Full refund</td>
+									</tr>
+									<tr>
+										<td>7–14 days before</td>
+										<td>Non-refundable</td>
+										<td>50% refund</td>
+									</tr>
+									<tr>
+										<td>Less than 7 days before</td>
+										<td>Non-refundable</td>
+										<td>Non-refundable</td>
+									</tr>
+									<tr>
+										<td>No show</td>
+										<td>Non-refundable</td>
+										<td>Non-refundable</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</section>
+
+					<section id="weather" class="legal-section">
+						<h2><i class="ti ti-cloud-storm" aria-hidden="true"></i> 3. Weather cancellations</h2>
+						<p>
+							If {SITE_NAME} cancels a tour due to unsafe conditions, you receive either a full refund
+							(within 5–10 business days) or a free rebook to any available date within the same season —
+							your choice.
+						</p>
+						<div class="highlight-box">
+							<p>
+								We will notify you at least 4 hours before the scheduled departure in the event of a weather
+								cancellation.
+							</p>
+						</div>
+					</section>
+
+					<section id="refunds" class="legal-section">
+						<h2><i class="ti ti-cash" aria-hidden="true"></i> 4. Refunds</h2>
+						<p>
+							Eligible refunds are returned to the original payment method within 5–10 business days. Refunds
+							are issued in Euros; we are not liable for exchange rate fluctuations.
+						</p>
+					</section>
+
+					<section id="how-to" class="legal-section">
+						<h2><i class="ti ti-mail" aria-hidden="true"></i> 5. How to cancel</h2>
+						<p>
+							To cancel, contact us with your booking reference via email ({SITE_EMAIL}), WhatsApp, or phone
+							({SITE_PHONE_DISPLAY}).
+						</p>
+						<div class="contact-note">
+							<i class="ti ti-info-circle" aria-hidden="true"></i>
+							<p>
+								Keep a record of when you sent your cancellation request. We recommend using email so you
+								have a timestamp in case of any dispute.
+							</p>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	</main>
+</SiteLayout>
+
+<style>
+	.legal-tab-bar {
+		display: flex;
+		gap: 8px;
+		margin-bottom: 28px;
+	}
+
+	.legal-tab {
+		flex: 1;
+		padding: 9px;
+		border-radius: var(--radius-md);
+		border: 0.5px solid var(--color-border-secondary);
+		font-size: 13px;
+		font-weight: 500;
+		text-align: center;
+		background: var(--color-background-primary);
+		color: var(--color-text-secondary);
+		text-decoration: none;
+	}
+
+	.legal-tab:hover {
+		color: var(--color-text-primary);
+	}
+
+	.legal-tab--active {
+		background: var(--color-background-secondary);
+		color: var(--color-text-primary);
+		border-color: var(--color-border-primary);
+	}
+
+	.table-wrap {
+		overflow-x: auto;
+		margin: 10px 0;
+	}
+
+	@media (max-width: 768px) {
+		.legal-tab-bar {
+			flex-direction: column;
+		}
+	}
+</style>

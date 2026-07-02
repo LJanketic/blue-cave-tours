@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 
-import { pageTitle, SITE_EMAIL, SITE_NAME, SITE_PHONE, SITE_PHONE_DISPLAY } from '../../config/site';
+import { pageTitle, SITE_NAME } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getTourBySlug } from '../../lib/tours';
 
@@ -11,28 +11,283 @@ const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
 if (tourIdParam && !bookedTour) {
 	return Astro.redirect('/404');
 }
+
+const mapUrl =
+	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
+const meetingLocation = 'Riva promenade, stand 14, Split';
+const bringList =
+	bookedTour?.whatToBring.slice(0, 3).join(', ') ?? 'Sunscreen, swimwear, towel';
 ---
 
 <SiteLayout
 	title={pageTitle('Booking confirmed')}
 	description={`Your booking with ${SITE_NAME} has been received.`}
+	robots="noindex, nofollow"
 >
-	<main class="status-page" id="main">
-		<p class="status-banner status-banner--info" role="status">
-			{bookedTour ? `Reserved: ${bookedTour.title}` : 'Your reservation has been received.'}
-		</p>
-		<h1>Thank you — booking received</h1>
-		<p class="lead">
-			We’ll confirm your date, meeting time, and any extras by email shortly. If you don’t hear from us within one
-			business day, please reach out.
-		</p>
-		<p class="muted">
-			Meet at Riva stand 14 unless we send other details. Questions? Email{' '}
-			<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a> or call{' '}
-			<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>.
-		</p>
-		<p>
-			<a class="back" href="/tours">Browse tours</a> · <a class="back" href="/">Home</a>
-		</p>
+	<main id="main" class="status-page-narrow payment-success-page">
+		<div class="success-hero">
+			<div class="check-circle" aria-hidden="true">
+				<i class="ti ti-check"></i>
+			</div>
+			<h1>You're booked!</h1>
+			<p>
+				We'll email your confirmation shortly. Check your inbox — including spam just in case.
+			</p>
+		</div>
+
+		<div class="conf-ref">
+			<span class="conf-ref-label">Booking ref:</span>
+			<span class="conf-ref-placeholder">Included in your confirmation email</span>
+		</div>
+
+		{
+			bookedTour && (
+				<div class="flow-card booking-card">
+					<p class="card-title">
+						<i class="ti ti-sailboat" aria-hidden="true"></i> Your booking
+					</p>
+					<div class="b-row">
+						<span class="b-label">Tour</span>
+						<span class="b-val">{bookedTour.title}</span>
+					</div>
+					<div class="b-row">
+						<span class="b-label">Date</span>
+						<span class="b-val b-val--placeholder">Confirmed by email</span>
+					</div>
+					<div class="b-row">
+						<span class="b-label">Departure</span>
+						<span class="b-val">{bookedTour.departure}</span>
+					</div>
+					<div class="b-row">
+						<span class="b-label">Guests</span>
+						<span class="b-val b-val--placeholder">Confirmed by email</span>
+					</div>
+					<hr class="b-div" />
+					<div class="b-row">
+						<span class="b-label">Total paid</span>
+						<span class="b-val b-val--placeholder">Confirmed by email</span>
+					</div>
+				</div>
+			)
+		}
+
+		<div class="meetup-card">
+			<p class="card-title card-title--meetup">
+				<i class="ti ti-map-pin" aria-hidden="true"></i> Where to meet us
+			</p>
+			<div class="meetup-grid">
+				<div class="meetup-item">
+					<span class="meetup-label">Location</span>
+					<span class="meetup-val">{meetingLocation}</span>
+				</div>
+				<div class="meetup-item">
+					<span class="meetup-label">Arrive by</span>
+					<span class="meetup-val">15 minutes before departure</span>
+				</div>
+				<div class="meetup-item">
+					<span class="meetup-label">What to bring</span>
+					<span class="meetup-val">{bringList}</span>
+				</div>
+				<div class="meetup-item">
+					<span class="meetup-label">Captain</span>
+					<span class="meetup-val">Our crew will meet you on the Riva</span>
+				</div>
+			</div>
+			<a class="map-stub" href={mapUrl} target="_blank" rel="noopener noreferrer">
+				<i class="ti ti-map-2" aria-hidden="true"></i>
+				View meeting point on map
+			</a>
+		</div>
+
+		<div class="flow-card">
+			<p class="card-title">
+				<i class="ti ti-list-check" aria-hidden="true"></i> What happens next
+			</p>
+			<div class="next-item">
+				<div class="next-icon" aria-hidden="true">
+					<i class="ti ti-mail"></i>
+				</div>
+				<div>
+					<p class="next-title">Check your email</p>
+					<p class="next-desc">
+						Full booking details, meeting point, and what to bring — sent shortly after confirmation.
+					</p>
+				</div>
+			</div>
+			<div class="next-item">
+				<div class="next-icon" aria-hidden="true">
+					<i class="ti ti-cloud-storm"></i>
+				</div>
+				<div>
+					<p class="next-title">Weather update</p>
+					<p class="next-desc">
+						We'll email you 24h before departure if conditions change. If cancelled, you get a full refund or
+						free rescheduling.
+					</p>
+				</div>
+			</div>
+			<div class="next-item">
+				<div class="next-icon" aria-hidden="true">
+					<i class="ti ti-anchor"></i>
+				</div>
+				<div>
+					<p class="next-title">Show up and enjoy</p>
+					<p class="next-desc">
+						Arrive at Riva stand 14 on time. Your crew will be waiting — no need to print anything.
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<a class="btn-browse" href="/tours">
+			<i class="ti ti-sailboat" aria-hidden="true"></i>
+			Browse more tours
+		</a>
 	</main>
 </SiteLayout>
+
+<style>
+	.payment-success-page {
+		max-width: 520px;
+		margin-inline: auto;
+		padding: 1.5rem 1.25rem 2rem;
+		font-size: 14px;
+	}
+
+	.payment-success-page .card-title {
+		font-size: 13px;
+		font-weight: 500;
+		margin: 0 0 12px;
+		display: flex;
+		align-items: center;
+		gap: 7px;
+	}
+
+	.payment-success-page .card-title .ti {
+		font-size: 15px;
+		color: #1d9e75;
+	}
+
+	.payment-success-page .card-title--meetup {
+		margin-bottom: 10px;
+	}
+
+	.payment-success-page .conf-ref {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		background: var(--color-background-secondary);
+		border-radius: var(--radius-md);
+		padding: 10px 16px;
+		margin: 16px 0 24px;
+		font-size: 13px;
+		text-align: center;
+		flex-wrap: wrap;
+	}
+
+	.payment-success-page .conf-ref-label {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+
+	.payment-success-page .conf-ref-placeholder {
+		font-size: 15px;
+		font-weight: 500;
+		color: var(--color-text-tertiary);
+		font-style: italic;
+	}
+
+	.payment-success-page .b-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 12px;
+		font-size: 13px;
+		margin-bottom: 8px;
+	}
+
+	.payment-success-page .b-label {
+		color: var(--color-text-secondary);
+	}
+
+	.payment-success-page .b-val {
+		font-weight: 500;
+		text-align: right;
+	}
+
+	.payment-success-page .b-val--placeholder {
+		font-weight: 400;
+		font-style: italic;
+		color: var(--color-text-tertiary);
+	}
+
+	.payment-success-page .b-div {
+		border: none;
+		border-top: 0.5px solid var(--color-border-tertiary);
+		margin: 4px 0;
+	}
+
+	.payment-success-page .booking-card {
+		margin-bottom: 14px;
+	}
+
+	.payment-success-page .map-stub {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 80px;
+		background: var(--color-background-primary);
+		border: 0.5px solid var(--color-border-tertiary);
+		border-radius: var(--radius-md);
+		margin-top: 10px;
+		margin-bottom: 0;
+		gap: 7px;
+		font-size: 13px;
+		color: var(--color-text-secondary);
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.payment-success-page .map-stub .ti {
+		font-size: 18px;
+		color: #1d9e75;
+	}
+
+	.payment-success-page .next-icon .ti {
+		font-size: 15px;
+	}
+
+	.payment-success-page .btn-browse {
+		width: 100%;
+		padding: 10px;
+		background: none;
+		color: var(--color-text-primary);
+		border: 0.5px solid var(--color-border-secondary);
+		border-radius: var(--radius-md);
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		font-family: var(--font-ui);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		text-decoration: none;
+		min-height: var(--touch-min);
+	}
+
+	.payment-success-page .btn-browse:hover {
+		background: var(--color-background-secondary);
+	}
+
+	.payment-success-page .btn-browse .ti {
+		font-size: 13px;
+	}
+
+	@media (max-width: 768px) {
+		.payment-success-page .meetup-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

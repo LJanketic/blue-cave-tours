@@ -1,0 +1,93 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Booking Summary & Review — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>:root{--color-text-primary:#111;--color-text-secondary:#555;--color-text-tertiary:#999;--color-text-info:#1a6fc4;--color-text-success:#085041;--color-text-danger:#8B1A15;--color-text-warning:#BA7517;--color-background-primary:#fff;--color-background-secondary:#f5f5f4;--color-background-info:#e6f1fb;--color-background-success:#e1f5ee;--color-border-primary:#aaa;--color-border-secondary:#ccc;--color-border-tertiary:#e5e5e3;--color-border-info:#7ab4e8;--border-radius-md:8px;--border-radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{box-sizing:border-box;}body{margin:0 auto;padding:24px;font-family:var(--font-sans);max-width:680px;background:var(--color-background-primary);color:var(--color-text-primary);}
+input,select,button,textarea{font-family:var(--font-sans);padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;}
+
+.page{max-width:480px;margin:0 auto;padding:1.5rem 0 2rem;font-size:14px;}
+.step-bar{display:flex;align-items:center;margin-bottom:28px;}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;}
+.step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;}
+.done .step-dot{background:var(--color-background-success);color:var(--color-text-success);}.done .step-lbl{color:var(--color-text-secondary);}
+.active .step-dot{background:var(--color-text-primary);color:var(--color-background-primary);}.active .step-lbl{font-weight:500;}
+.next .step-dot{background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px solid var(--color-border-secondary);}.next .step-lbl{color:var(--color-text-tertiary);}
+.step-line{flex:1;height:0.5px;background:var(--color-border-secondary);margin:0 8px;}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:12px;}
+.section-title{font-size:13px;font-weight:500;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;}
+.edit-btn{font-size:12px;color:var(--color-text-info);background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-sans);}
+.badge-private{background:#EEEDFE;color:#3C3489;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.label{font-size:13px;color:var(--color-text-secondary);}
+.value{font-size:13px;font-weight:500;text-align:right;}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:12px 0;}
+.extra-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+.policy-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;color:var(--color-text-secondary);line-height:1.6;}
+.total-row{display:flex;justify-content:space-between;align-items:baseline;}
+.cta-btn{width:100%;padding:13px;background:var(--color-text-primary);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font-sans);}
+.lock-note{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-tertiary);justify-content:center;margin-top:10px;}
+.tour-thumb{width:64px;height:64px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+</style><style>
+@media (max-width:768px){
+  body{padding:16px;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+}
+</style>
+</head><body>
+<div class="page">
+  <div class="step-bar">
+    <div class="step done"><div class="step-dot"><i class="ti ti-check" style="font-size:11px"></i></div><span class="step-lbl">Tour type</span></div><div class="step-line"></div>
+    <div class="step done"><div class="step-dot"><i class="ti ti-check" style="font-size:11px"></i></div><span class="step-lbl">Customise</span></div><div class="step-line"></div>
+    <div class="step active"><div class="step-dot">3</div><span class="step-lbl">Review</span></div><div class="step-line"></div>
+    <div class="step next"><div class="step-dot">4</div><span class="step-lbl">Payment</span></div>
+  </div>
+  <div class="card">
+    <div class="section-title">Tour details <button class="edit-btn">Edit <i class="ti ti-edit" style="font-size:12px;vertical-align:-1px"></i></button></div>
+    <div style="display:flex;gap:14px;align-items:flex-start">
+      <div class="tour-thumb"><i class="ti ti-sailboat" style="font-size:24px;color:var(--color-text-secondary)"></i></div>
+      <div style="flex:1">
+        <p style="font-size:14px;font-weight:500;margin:0 0 6px">Sunset Bay coastal cruise</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="badge-private">Private tour</span></div>
+        <div class="row"><span class="label"><i class="ti ti-calendar" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Date</span><span class="value">Sat, 12 Jul 2025</span></div>
+        <div class="row" style="margin-top:4px"><span class="label"><i class="ti ti-clock" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Departure</span><span class="value">18:00</span></div>
+        <div class="row" style="margin-top:4px"><span class="label"><i class="ti ti-clock" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Duration</span><span class="value">3 hours</span></div>
+        <div class="row" style="margin-top:4px"><span class="label"><i class="ti ti-map-pin" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Meeting point</span><span class="value">Marina Pier B, Gate 3</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">Guests & extras <button class="edit-btn">Edit <i class="ti ti-edit" style="font-size:12px;vertical-align:-1px"></i></button></div>
+    <div class="row"><span class="label">Adults</span><span class="value">4 × €95</span></div>
+    <div class="row" style="margin-top:6px"><span class="label">Children (under 12)</span><span class="value">2 × €55</span></div>
+    <hr class="divider">
+    <p style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin:0 0 8px">Add-ons</p>
+    <div class="extra-row"><span style="color:var(--color-text-secondary)"><i class="ti ti-bottle" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Champagne welcome</span><span style="font-weight:500">€40</span></div>
+    <div class="extra-row"><span style="color:var(--color-text-secondary)"><i class="ti ti-camera" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i>Professional photo package</span><span style="font-weight:500">€80</span></div>
+  </div>
+  <div class="card">
+    <div class="section-title">Guest details <button class="edit-btn">Edit <i class="ti ti-edit" style="font-size:12px;vertical-align:-1px"></i></button></div>
+    <div class="row"><span class="label">Name</span><span class="value">Ivan Kovač</span></div>
+    <div class="row" style="margin-top:6px"><span class="label">Email</span><span class="value">ivan@example.com</span></div>
+    <div class="row" style="margin-top:6px"><span class="label">Phone</span><span class="value">+385 91 234 5678</span></div>
+    <div class="row" style="margin-top:6px"><span class="label">Special requests</span><span class="value" style="max-width:60%;word-break:break-word">Nut allergy, one guest uses a wheelchair</span></div>
+  </div>
+  <div class="card">
+    <div class="section-title">Price breakdown</div>
+    <div class="row"><span class="label">Adults (4 × €95)</span><span class="value">€380</span></div>
+    <div class="row" style="margin-top:6px"><span class="label">Children (2 × €55)</span><span class="value">€110</span></div>
+    <div class="row" style="margin-top:6px"><span class="label">Champagne welcome</span><span class="value">€40</span></div>
+    <div class="row" style="margin-top:6px"><span class="label">Photo package</span><span class="value">€80</span></div>
+    <hr class="divider">
+    <div class="total-row"><span style="font-size:15px;font-weight:500">Total</span><span style="font-size:20px;font-weight:500">€610</span></div>
+    <p style="font-size:12px;color:var(--color-text-tertiary);margin:6px 0 0;text-align:right">Includes all taxes and fees</p>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-title" style="margin-bottom:8px"><i class="ti ti-shield-check" style="font-size:15px;vertical-align:-2px;margin-right:6px;color:var(--color-text-success)"></i>Cancellation policy</div>
+    <div class="policy-box">Free cancellation up to <strong style="color:var(--color-text-primary)">48 hours</strong> before departure. Cancellations within 48 hours are non-refundable. In case of bad weather, you'll receive a full refund or free rescheduling.</div>
+  </div>
+  <button class="cta-btn">Continue to payment <i class="ti ti-arrow-right" style="font-size:14px;vertical-align:-2px"></i></button>
+  <div class="lock-note"><i class="ti ti-lock" style="font-size:13px"></i> Secure payment handled by Stripe</div>
+</div>
+</body></html>

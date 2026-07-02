@@ -1,0 +1,544 @@
+---
+export const prerender = true;
+
+import { pageTitle } from '../../../config/site';
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import { getAllTours } from '../../../lib/tours';
+import type { TourDetail } from '../../../types/tour';
+
+export function getStaticPaths() {
+	return getAllTours().map((tour) => ({
+		params: { slug: tour.slug },
+		props: { tour },
+	}));
+}
+
+type Props = { tour: TourDetail };
+const { tour } = Astro.props;
+
+const isPrivate = tour.slug === 'create-perfect-day-private';
+const editHref = isPrivate ? `/book/${tour.slug}/private` : `/book/${tour.slug}/group`;
+const successUrl = `/booking/success?tourId=${encodeURIComponent(tour.slug)}`;
+const standMatch = tour.meetingPoint.match(/stand number (\d+)/i);
+const meetingShort = standMatch
+	? `Riva stand ${standMatch[1]}`
+	: (tour.meetingPoint.replace(/^Meet at /i, '').split('.')[0]?.trim() ?? tour.meetingPoint);
+const stepPlaceholder = 'As selected in previous step';
+
+const childFromPrice = tour.priceNotes.match(/children[^€]*?(€\d+)/i)?.[1] ?? null;
+const adultUnit = tour.fromPrice.match(/€(\d+)/)?.[1] ?? null;
+const adultsCount = 2;
+const adultsGuestLine = adultUnit ? `${adultsCount} × ${tour.fromPrice}` : `${adultsCount} adults`;
+const adultsBreakdownLabel = adultUnit
+	? `Adults (${adultsCount} × ${tour.fromPrice})`
+	: `Adults (${adultsCount})`;
+const adultsBreakdownTotal = adultUnit
+	? `€${Number.parseInt(adultUnit, 10) * adultsCount}`
+	: `from ${tour.fromPrice}`;
+---
+
+<SiteLayout title={pageTitle(`Review booking — ${tour.title}`)} description={`Review your booking for ${tour.title} before confirming.`} booking robots="noindex, nofollow">
+	<main id="main" class="page-shell page-shell--narrow">
+		<div class="page review-page">
+			<div class="step-bar" aria-label="Booking progress">
+				<div class="step done">
+					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
+					<span class="step-lbl">Tour type</span>
+				</div>
+				<div class="step-line"></div>
+				<div class="step done">
+					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
+					<span class="step-lbl">{isPrivate ? 'Customise' : 'Date & guests'}</span>
+				</div>
+				<div class="step-line"></div>
+				<div class="step active">
+					<div class="step-dot">3</div>
+					<span class="step-lbl">Review</span>
+				</div>
+				<div class="step-line"></div>
+				<div class="step next">
+					<div class="step-dot">4</div>
+					<span class="step-lbl">Payment</span>
+				</div>
+			</div>
+
+			<div class="card">
+				<div class="section-title">
+					Tour details
+					<a class="edit-btn" href={editHref}>
+						Edit <i class="ti ti-edit" aria-hidden="true"></i>
+					</a>
+				</div>
+				<div class="tour-detail-row">
+					<div class="tour-thumb" aria-hidden="true">
+						<i class="ti ti-sailboat"></i>
+					</div>
+					<div class="tour-detail-body">
+						<p class="tour-name">{tour.title}</p>
+						<div class="badge-row">
+							<span class={isPrivate ? 'badge-private' : 'badge-group'}>
+								{isPrivate ? 'Private tour' : 'Group tour'}
+							</span>
+						</div>
+						<div class="row">
+							<span class="label">
+								<i class="ti ti-calendar" aria-hidden="true"></i>Date
+							</span>
+							<span class="value value--placeholder">{stepPlaceholder}</span>
+						</div>
+						<div class="row">
+							<span class="label">
+								<i class="ti ti-clock" aria-hidden="true"></i>Departure
+							</span>
+							<span class="value value--placeholder">{stepPlaceholder}</span>
+						</div>
+						<div class="row">
+							<span class="label">
+								<i class="ti ti-clock" aria-hidden="true"></i>Duration
+							</span>
+							<span class="value">{tour.duration}</span>
+						</div>
+						<div class="row">
+							<span class="label">
+								<i class="ti ti-map-pin" aria-hidden="true"></i>Meeting point
+							</span>
+							<span class="value">{meetingShort}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="card">
+				<div class="section-title">
+					Guests &amp; extras
+					<a class="edit-btn" href={editHref}>
+						Edit <i class="ti ti-edit" aria-hidden="true"></i>
+					</a>
+				</div>
+				<div class="row">
+					<span class="label">Adults</span>
+					<span class="value">
+						{isPrivate ? (
+							<span class="value--placeholder">{stepPlaceholder}</span>
+						) : (
+							adultsGuestLine
+						)}
+					</span>
+				</div>
+				<div class="row">
+					<span class="label">Children (under 12)</span>
+					<span class="value">
+						{isPrivate ? (
+							<span class="value--placeholder">{stepPlaceholder}</span>
+						) : childFromPrice ? (
+							`0 × ${childFromPrice}`
+						) : (
+							'—'
+						)}
+					</span>
+				</div>
+				{
+					isPrivate && (
+						<>
+							<hr class="divider" />
+							<p class="addons-heading">Add-ons</p>
+							<p class="value value--placeholder">{stepPlaceholder}</p>
+						</>
+					)
+				}
+			</div>
+
+			<div class="card">
+				<div class="section-title">
+					Guest details
+					<a class="edit-btn" href={editHref}>
+						Edit <i class="ti ti-edit" aria-hidden="true"></i>
+					</a>
+				</div>
+				<div class="row">
+					<span class="label">Name</span>
+					<span class="value value--placeholder">{stepPlaceholder}</span>
+				</div>
+				<div class="row">
+					<span class="label">Email</span>
+					<span class="value value--placeholder">{stepPlaceholder}</span>
+				</div>
+				<div class="row">
+					<span class="label">Phone</span>
+					<span class="value value--placeholder">{stepPlaceholder}</span>
+				</div>
+				<div class="row">
+					<span class="label">Special requests</span>
+					<span class="value value--placeholder">{stepPlaceholder}</span>
+				</div>
+			</div>
+
+			<div class="card">
+				<div class="section-title">Price breakdown</div>
+				<div class="row">
+					<span class="label">{isPrivate ? 'Charter quote' : adultsBreakdownLabel}</span>
+					<span class="value">{isPrivate ? `From ${tour.fromPrice}` : adultsBreakdownTotal}</span>
+				</div>
+				<hr class="divider" />
+				<div class="total-row">
+					<span class="total-label">Total</span>
+					<span class="total-amount">{isPrivate ? `From ${tour.fromPrice}` : adultsBreakdownTotal}</span>
+				</div>
+				<p class="fees-note">{tour.priceNotes}</p>
+			</div>
+
+			<div class="card card--policy">
+				<div class="section-title section-title--policy">
+					<i class="ti ti-shield-check" aria-hidden="true"></i>Cancellation policy
+				</div>
+				<div class="policy-box">
+					Free cancellation up to <strong>48 hours</strong> before departure. Cancellations within 48 hours are
+					non-refundable. In case of bad weather, you'll receive a full refund or free rescheduling.
+				</div>
+			</div>
+
+			<a class="cta-btn" href={successUrl}>
+				Continue to payment
+				<i class="ti ti-arrow-right" aria-hidden="true"></i>
+			</a>
+			<p class="lock-note">
+				<i class="ti ti-lock" aria-hidden="true"></i>
+				Secure payment handled by Stripe
+			</p>
+		</div>
+	</main>
+</SiteLayout>
+
+<style>
+	.review-page {
+		max-width: 480px;
+		margin: 0 auto;
+		padding: 1.5rem 0 2rem;
+		font-size: 14px;
+	}
+
+	.review-page .step-bar {
+		display: flex;
+		align-items: center;
+		margin-bottom: 28px;
+	}
+
+	.review-page .step {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+	}
+
+	.review-page .step-dot {
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 11px;
+		font-weight: 500;
+		flex-shrink: 0;
+	}
+
+	.review-page .step.done .step-dot {
+		background: var(--color-background-success);
+		color: var(--color-text-success);
+	}
+
+	.review-page .step.done .step-lbl {
+		color: var(--color-text-secondary);
+	}
+
+	.review-page .step.active .step-dot {
+		background: var(--color-text-primary);
+		color: var(--color-background-primary);
+	}
+
+	.review-page .step.active .step-lbl {
+		font-weight: 500;
+	}
+
+	.review-page .step.next .step-dot {
+		background: var(--color-background-secondary);
+		color: var(--color-text-tertiary);
+		border: 0.5px solid var(--color-border-secondary);
+	}
+
+	.review-page .step.next .step-lbl {
+		color: var(--color-text-tertiary);
+	}
+
+	.review-page .step-line {
+		flex: 1;
+		height: 0.5px;
+		background: var(--color-border-secondary);
+		margin: 0 8px;
+	}
+
+	.review-page .step-dot .ti {
+		font-size: 11px;
+	}
+
+	.card {
+		background: var(--color-background-primary);
+		border: 0.5px solid var(--color-border-tertiary);
+		border-radius: var(--radius-lg);
+		padding: 1.25rem;
+		margin-bottom: 12px;
+	}
+
+	.card--policy {
+		margin-bottom: 16px;
+	}
+
+	.section-title {
+		font-size: 13px;
+		font-weight: 500;
+		margin: 0 0 12px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.section-title--policy {
+		margin-bottom: 8px;
+	}
+
+	.section-title--policy .ti {
+		font-size: 15px;
+		vertical-align: -2px;
+		margin-right: 6px;
+		color: var(--color-text-success);
+	}
+
+	.edit-btn {
+		font-size: 12px;
+		color: var(--color-text-info);
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		font-family: var(--font-ui);
+		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 2px;
+	}
+
+	.edit-btn .ti {
+		font-size: 12px;
+		vertical-align: -1px;
+	}
+
+	.tour-detail-row {
+		display: flex;
+		gap: 14px;
+		align-items: flex-start;
+	}
+
+	.tour-thumb {
+		width: 64px;
+		height: 64px;
+		border-radius: var(--radius-md);
+		background: var(--color-background-secondary);
+		border: 0.5px solid var(--color-border-tertiary);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	.tour-thumb .ti {
+		font-size: 24px;
+		color: var(--color-text-secondary);
+	}
+
+	.tour-detail-body {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.tour-name {
+		font-size: 14px;
+		font-weight: 500;
+		margin: 0 0 6px;
+	}
+
+	.badge-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 8px;
+	}
+
+	.badge-private {
+		background: #eeedfe;
+		color: #3c3489;
+		font-size: 11px;
+		font-weight: 500;
+		padding: 3px 10px;
+		border-radius: 20px;
+	}
+
+	.badge-group {
+		background: var(--color-background-success);
+		color: var(--color-text-success);
+		font-size: 11px;
+		font-weight: 500;
+		padding: 3px 10px;
+		border-radius: 20px;
+	}
+
+	.row {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 8px;
+		margin-top: 4px;
+	}
+
+	.row:first-of-type {
+		margin-top: 0;
+	}
+
+	.label {
+		font-size: 13px;
+		color: var(--color-text-secondary);
+	}
+
+	.label .ti {
+		font-size: 13px;
+		vertical-align: -2px;
+		margin-right: 4px;
+	}
+
+	.value {
+		font-size: 13px;
+		font-weight: 500;
+		text-align: right;
+	}
+
+	.value--placeholder {
+		font-style: italic;
+		font-weight: 400;
+		color: var(--color-text-secondary);
+	}
+
+	.value--wrap {
+		max-width: 60%;
+		word-break: break-word;
+	}
+
+	.divider {
+		border: none;
+		border-top: 0.5px solid var(--color-border-tertiary);
+		margin: 12px 0;
+	}
+
+	.addons-heading {
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--color-text-secondary);
+		margin: 0 0 8px;
+	}
+
+	.extra-row {
+		display: flex;
+		justify-content: space-between;
+		font-size: 13px;
+		padding: 4px 0;
+	}
+
+	.extra-label {
+		color: var(--color-text-secondary);
+	}
+
+	.extra-label .ti {
+		font-size: 13px;
+		vertical-align: -2px;
+		margin-right: 4px;
+	}
+
+	.extra-val {
+		font-weight: 500;
+	}
+
+	.total-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+	}
+
+	.total-label {
+		font-size: 15px;
+		font-weight: 500;
+	}
+
+	.total-amount {
+		font-size: 20px;
+		font-weight: 500;
+	}
+
+	.fees-note {
+		font-size: 12px;
+		color: var(--color-text-tertiary);
+		margin: 6px 0 0;
+		text-align: right;
+	}
+
+	.policy-box {
+		background: var(--color-background-secondary);
+		border-radius: var(--radius-md);
+		padding: 10px 14px;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+		line-height: 1.6;
+	}
+
+	.policy-box strong {
+		color: var(--color-text-primary);
+	}
+
+	.cta-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		width: 100%;
+		padding: 13px;
+		background: var(--color-text-primary);
+		color: var(--color-background-primary);
+		border: none;
+		border-radius: var(--radius-md);
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		font-family: var(--font-ui);
+		text-decoration: none;
+	}
+
+	.cta-btn:hover {
+		opacity: 0.88;
+	}
+
+	.cta-btn .ti {
+		font-size: 14px;
+		vertical-align: -2px;
+	}
+
+	.lock-note {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+		color: var(--color-text-tertiary);
+		justify-content: center;
+		margin-top: 10px;
+	}
+
+	.lock-note .ti {
+		font-size: 13px;
+	}
+</style>

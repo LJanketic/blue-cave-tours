@@ -6,30 +6,210 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
 <SiteLayout title={pageTitle('Privacy Policy')} description={`How ${SITE_NAME} handles personal data for bookings and enquiries.`}>
-	<main id="main" class="page-shell">
-		<h1 class="page-title">Privacy Policy</h1>
+	<main id="main" class="page-shell page-shell--narrow">
+		<div class="page">
+			<nav class="legal-tab-bar" aria-label="Legal documents">
+				<a href="/legal/terms" class="legal-tab">Terms &amp; conditions</a>
+				<a href="/legal/privacy" class="legal-tab legal-tab--active" aria-current="page">Privacy policy</a>
+				<a href="/legal/cancellation" class="legal-tab">Cancellation policy</a>
+			</nav>
 
-		<section class="prose-section">
-			<h2>Data we collect</h2>
-			<p>
-				Contact details you submit (name, email, phone), message content, and optional tour interest when you enquire or
-				book.
-			</p>
-		</section>
-		<section class="prose-section">
-			<h2>Purpose</h2>
-			<p>To respond to enquiries, operate tours, confirm bookings, and meet legal obligations.</p>
-		</section>
-		<section class="prose-section">
-			<h2>Retention</h2>
-			<p>Kept only as long as needed for operations, accounting, and dispute resolution.</p>
-		</section>
-		<section class="prose-section">
-			<h2>Your rights</h2>
-			<p>
-				Depending on jurisdiction, you may request access, correction, deletion, or restriction — contact
-				<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>.
-			</p>
-		</section>
+			<div class="legal-layout">
+				<nav class="legal-nav" aria-label="Privacy policy sections">
+					<a href="#collect" class="side-link active">What we collect</a>
+					<a href="#use" class="side-link">How we use it</a>
+					<a href="#sharing" class="side-link">Third parties</a>
+					<a href="#cookies" class="side-link">Cookies</a>
+					<a href="#rights" class="side-link">Your rights</a>
+					<a href="#contact" class="side-link">Contact</a>
+				</nav>
+
+				<div>
+					<div class="legal-hero">
+						<h1>Privacy policy</h1>
+						<p class="legal-meta">Last updated: 1 June 2025 · GDPR compliant</p>
+					</div>
+
+					<div class="summary-box">
+						<p>The short version</p>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							We collect only what we need to run your booking
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							We never sell your data to third parties
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							Payment details go directly to Stripe — we never see them
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							You can request deletion of your data at any time
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							We use essential cookies only — no ad tracking
+						</div>
+					</div>
+
+					<section id="collect" class="legal-section">
+						<h2><i class="ti ti-database" aria-hidden="true"></i> 1. What we collect</h2>
+						<p>
+							When you make a booking or contact us, we may collect: name, email address, phone number,
+							booking details, and correspondence sent via the contact form or email. We do not collect
+							payment card details — handled directly by Stripe.
+						</p>
+					</section>
+
+					<section id="use" class="legal-section">
+						<h2><i class="ti ti-settings" aria-hidden="true"></i> 2. How we use it</h2>
+						<p>
+							We use the information solely to process and manage your booking, send confirmations and
+							pre-departure information, contact you about weather changes, and respond to enquiries.
+						</p>
+						<div class="highlight-box">
+							<p>We do not use your data for marketing without your explicit consent.</p>
+						</div>
+					</section>
+
+					<section id="sharing" class="legal-section">
+						<h2><i class="ti ti-share" aria-hidden="true"></i> 3. Third-party services</h2>
+						<div class="table-wrap">
+							<table class="legal-table">
+								<thead>
+									<tr>
+										<th>Service</th>
+										<th>Purpose</th>
+										<th>Data shared</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>Stripe</td>
+										<td>Payment processing</td>
+										<td>Name, email, payment data</td>
+									</tr>
+									<tr>
+										<td>Google Analytics</td>
+										<td>Anonymous site usage</td>
+										<td>Anonymised, no personal data</td>
+									</tr>
+									<tr>
+										<td>Email provider</td>
+										<td>Confirmation emails</td>
+										<td>Name, email, booking ref</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</section>
+
+					<section id="cookies" class="legal-section">
+						<h2><i class="ti ti-cookie" aria-hidden="true"></i> 4. Cookies</h2>
+						<p>
+							We use essential cookies only — those required for the site and booking flow to function. No
+							advertising or tracking cookies.
+						</p>
+						<div class="table-wrap">
+							<table class="legal-table">
+								<thead>
+									<tr>
+										<th>Cookie</th>
+										<th>Purpose</th>
+										<th>Duration</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>session_id</td>
+										<td>Maintains your booking session</td>
+										<td>Session</td>
+									</tr>
+									<tr>
+										<td>csrf_token</td>
+										<td>Security — prevents form tampering</td>
+										<td>Session</td>
+									</tr>
+									<tr>
+										<td>cookie_consent</td>
+										<td>Stores your cookie preference</td>
+										<td>1 year</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</section>
+
+					<section id="rights" class="legal-section">
+						<h2><i class="ti ti-user-check" aria-hidden="true"></i> 5. Your rights</h2>
+						<p>
+							Under GDPR you have the right to access, correct, or delete your data, and to lodge a
+							complaint with the Croatian Personal Data Protection Agency (AZOP). We retain booking data for
+							5 years to comply with Croatian financial record-keeping obligations.
+						</p>
+					</section>
+
+					<section id="contact" class="legal-section">
+						<h2><i class="ti ti-mail" aria-hidden="true"></i> 6. Contact</h2>
+						<div class="contact-note">
+							<i class="ti ti-shield-check" aria-hidden="true"></i>
+							<p>
+								For privacy requests, contact <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>. We will
+								respond within 30 days as required by GDPR.
+							</p>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
 	</main>
 </SiteLayout>
+
+<style>
+	.legal-tab-bar {
+		display: flex;
+		gap: 8px;
+		margin-bottom: 28px;
+	}
+
+	.legal-tab {
+		flex: 1;
+		padding: 9px;
+		border-radius: var(--radius-md);
+		border: 0.5px solid var(--color-border-secondary);
+		font-size: 13px;
+		font-weight: 500;
+		text-align: center;
+		background: var(--color-background-primary);
+		color: var(--color-text-secondary);
+		text-decoration: none;
+	}
+
+	.legal-tab:hover {
+		color: var(--color-text-primary);
+	}
+
+	.legal-tab--active {
+		background: var(--color-background-secondary);
+		color: var(--color-text-primary);
+		border-color: var(--color-border-primary);
+	}
+
+	.table-wrap {
+		overflow-x: auto;
+		margin: 10px 0;
+	}
+
+	.contact-note a {
+		color: var(--color-text-info);
+		text-decoration: none;
+	}
+
+	@media (max-width: 768px) {
+		.legal-tab-bar {
+			flex-direction: column;
+		}
+	}
+</style>

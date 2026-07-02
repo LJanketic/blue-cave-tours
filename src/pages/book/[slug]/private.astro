@@ -1,0 +1,140 @@
+---
+export const prerender = true;
+
+import { pageTitle } from '../../../config/site';
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import PrivateBookingFlow from '../../../components/vue/PrivateBookingFlow.vue';
+import { getAllTours } from '../../../lib/tours';
+import { supportsInstantBook } from '../../../lib/booking';
+import type { TourDetail } from '../../../types/tour';
+
+export function getStaticPaths() {
+	return getAllTours().map((tour) => ({
+		params: { slug: tour.slug },
+		props: { tour },
+	}));
+}
+
+type Props = { tour: TourDetail };
+const { tour } = Astro.props;
+
+if (tour.slug !== 'create-perfect-day-private') {
+	if (supportsInstantBook(tour)) {
+		return Astro.redirect(`/book/${tour.slug}/group`);
+	}
+	return Astro.redirect('/404');
+}
+---
+
+<SiteLayout
+	title={pageTitle(`Private charter — ${tour.title}`)}
+	description="Plan your perfect day at sea — custom route, flexible timing, private boat from Split."
+	robots="noindex, nofollow"
+>
+	<main id="main" class="page-shell page-shell--narrow">
+		<div class="page private-booking-page">
+			<div class="step-bar" aria-label="Booking progress">
+				<div class="step done">
+					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
+					<span class="step-lbl">Tour type</span>
+				</div>
+				<div class="step-line"></div>
+				<div class="step active">
+					<div class="step-dot">2</div>
+					<span class="step-lbl">Customise</span>
+				</div>
+				<div class="step-line"></div>
+				<div class="step next">
+					<div class="step-dot">3</div>
+					<span class="step-lbl">Review</span>
+				</div>
+				<div class="step-line"></div>
+				<div class="step next">
+					<div class="step-dot">4</div>
+					<span class="step-lbl">Payment</span>
+				</div>
+			</div>
+
+			<PrivateBookingFlow
+				client:load
+				tourSlug={tour.slug}
+				tourTitle={tour.title}
+				fromPrice={tour.fromPrice}
+				priceNotes={tour.priceNotes}
+			/>
+		</div>
+	</main>
+</SiteLayout>
+
+<style>
+	.private-booking-page {
+		max-width: 580px;
+		margin: 0 auto;
+		padding: 1.5rem 0 2rem;
+		font-size: 14px;
+	}
+
+	.private-booking-page .step-bar {
+		display: flex;
+		align-items: center;
+		margin-bottom: 28px;
+	}
+
+	.private-booking-page .step {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+	}
+
+	.private-booking-page .step-dot {
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 11px;
+		font-weight: 500;
+		flex-shrink: 0;
+	}
+
+	.private-booking-page .step.done .step-dot {
+		background: var(--color-background-success);
+		color: var(--color-text-success);
+	}
+
+	.private-booking-page .step.done .step-lbl {
+		color: var(--color-text-secondary);
+	}
+
+	.private-booking-page .step.active .step-dot {
+		background: var(--color-text-primary);
+		color: var(--color-background-primary);
+	}
+
+	.private-booking-page .step.active .step-lbl {
+		font-weight: 500;
+	}
+
+	.private-booking-page .step.next .step-dot {
+		background: var(--color-background-secondary);
+		color: var(--color-text-tertiary);
+		border: 0.5px solid var(--color-border-secondary);
+	}
+
+	.private-booking-page .step.next .step-lbl {
+		color: var(--color-text-tertiary);
+	}
+
+	.private-booking-page .step-line {
+		flex: 1;
+		height: 0.5px;
+		background: var(--color-border-secondary);
+		margin: 0 8px;
+	}
+
+	.private-booking-page .step-dot .ti {
+		font-size: 11px;
+	}
+</style>

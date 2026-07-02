@@ -1,0 +1,136 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>FAQs — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>:root{--color-text-primary:#111;--color-text-secondary:#555;--color-text-tertiary:#999;--color-text-info:#1a6fc4;--color-text-success:#085041;--color-text-danger:#8B1A15;--color-background-primary:#fff;--color-background-secondary:#f5f5f4;--color-background-info:#e6f1fb;--color-background-success:#e1f5ee;--color-border-primary:#aaa;--color-border-secondary:#ccc;--color-border-tertiary:#e5e5e3;--color-border-info:#7ab4e8;--border-radius-md:8px;--border-radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{box-sizing:border-box;}body{margin:0 auto;padding:24px;font-family:var(--font-sans);max-width:960px;background:var(--color-background-primary);color:var(--color-text-primary);}
+input,select,button,textarea{font-family:var(--font-sans);padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;}
+
+.page{padding:0 0 2rem;font-size:14px;}
+.hero h1{font-size:20px;font-weight:500;margin:0 0 5px;}
+.hero p{font-size:13px;color:var(--color-text-secondary);margin:0 0 16px;line-height:1.6;}
+.search-bar{display:flex;gap:8px;margin-bottom:24px;}
+.search-bar input{flex:1;font-size:13px;}
+.search-bar button{padding:0 16px;font-size:13px;cursor:pointer;border-radius:var(--border-radius-md);background:var(--color-text-primary);color:var(--color-background-primary);border:none;}
+.layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;}
+.cat-nav{position:sticky;top:16px;display:flex;flex-direction:column;gap:4px;}
+.cat-link{font-size:13px;padding:7px 12px;border-radius:var(--border-radius-md);color:var(--color-text-secondary);cursor:pointer;display:flex;align-items:center;gap:8px;border:0.5px solid transparent;}
+.cat-link:hover{background:var(--color-background-secondary);color:var(--color-text-primary);}
+.cat-link.active{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-tertiary);font-weight:500;}
+.cat-link i{font-size:14px;}
+.cat-count{margin-left:auto;font-size:11px;color:var(--color-text-tertiary);background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:1px 7px;}
+.cat-section{margin-bottom:28px;}
+.cat-header{display:flex;align-items:center;gap:9px;margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.cat-icon{width:30px;height:30px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.cat-title{font-size:15px;font-weight:500;margin:0;}
+.faq-list{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;}
+.faq-item{border-bottom:0.5px solid var(--color-border-tertiary);}
+.faq-item:last-child{border-bottom:none;}
+.faq-q{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;}
+.faq-q:hover{background:var(--color-background-secondary);}
+.faq-item.open .faq-q{background:var(--color-background-secondary);}
+.faq-q-text{font-size:13px;font-weight:500;margin:0;line-height:1.4;}
+.faq-chevron{font-size:15px;color:var(--color-text-tertiary);flex-shrink:0;transition:transform 0.15s;}
+.faq-item.open .faq-chevron{transform:rotate(180deg);}
+.faq-a{display:none;padding:0 16px 14px;font-size:13px;color:var(--color-text-secondary);line-height:1.7;}
+.faq-item.open .faq-a{display:block;}
+.faq-a p{margin:0 0 8px;}.faq-a p:last-child{margin:0;}
+.no-results{text-align:center;padding:2.5rem;color:var(--color-text-secondary);font-size:13px;display:none;}
+.contact-band{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:8px;flex-wrap:wrap;}
+.contact-band h3{font-size:14px;font-weight:500;margin:0 0 3px;}
+.contact-band p{font-size:12px;color:var(--color-text-secondary);margin:0;}
+.contact-band-btns{display:flex;gap:8px;}
+.btn-sm{font-size:12px;padding:7px 14px;display:flex;align-items:center;gap:5px;border-radius:var(--border-radius-md);cursor:pointer;font-family:var(--font-sans);font-weight:500;}
+.btn-outline{background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);}
+.btn-dark{background:var(--color-text-primary);color:var(--color-background-primary);border:none;}
+</style><style>
+@media (max-width:768px){
+  body{padding:16px;}
+  .layout{grid-template-columns:1fr;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+}
+</style>
+</head><body>
+<div class="page">
+  <div class="hero"><h1>Frequently asked questions</h1><p>Everything you need to know before you book. Can't find the answer? We're happy to help directly.</p></div>
+  <div class="search-bar"><input type="text" id="faq-search" placeholder="Search — e.g. cancel, children, weather…" oninput="filterFaqs()"><button onclick="filterFaqs()"><i class="ti ti-search" style="font-size:13px;vertical-align:-1px"></i> Search</button></div>
+  <div class="layout">
+    <nav class="cat-nav">
+      <div class="cat-link active" data-cat="all" onclick="setcat('all',this)"><i class="ti ti-list"></i> All <span class="cat-count" id="count-all">20</span></div>
+      <div class="cat-link" data-cat="booking" onclick="setcat('booking',this)"><i class="ti ti-calendar-check"></i> Booking <span class="cat-count">5</span></div>
+      <div class="cat-link" data-cat="weather" onclick="setcat('weather',this)"><i class="ti ti-cloud-storm"></i> Weather <span class="cat-count">3</span></div>
+      <div class="cat-link" data-cat="onboard" onclick="setcat('onboard',this)"><i class="ti ti-sailboat"></i> On board <span class="cat-count">5</span></div>
+      <div class="cat-link" data-cat="guests" onclick="setcat('guests',this)"><i class="ti ti-users"></i> Guests <span class="cat-count">4</span></div>
+      <div class="cat-link" data-cat="private" onclick="setcat('private',this)"><i class="ti ti-crown"></i> Private <span class="cat-count">3</span></div>
+    </nav>
+    <div id="faq-main">
+      <div class="cat-section" data-section="booking">
+        <div class="cat-header"><div class="cat-icon" style="background:#E1F5EE;color:#085041"><i class="ti ti-calendar-check"></i></div><h2 class="cat-title">Booking & cancellation</h2></div>
+        <div class="faq-list">
+          <div class="faq-item" data-cat="booking" data-q="how do i book a tour"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">How do I book a tour?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Choose your tour from the tours page, pick your date and departure time, select the number of guests, and proceed to secure checkout. You'll receive an instant email confirmation.</p></div></div>
+          <div class="faq-item" data-cat="booking" data-q="can i cancel or reschedule"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Can I cancel or reschedule my booking?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Free cancellation up to 48 hours before departure. Cancellations within 48 hours are non-refundable. To reschedule, contact us as early as possible and we'll do our best to move you to another date, subject to availability.</p></div></div>
+          <div class="faq-item" data-cat="booking" data-q="do i need to pay in full"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Do I need to pay in full when I book?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Group tours are paid in full at booking. Private charters require a 30% deposit to confirm your reservation, with the balance due 7 days before departure.</p></div></div>
+          <div class="faq-item" data-cat="booking" data-q="will i receive a confirmation"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Will I receive a confirmation after booking?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Yes — immediately after payment. It includes your booking reference, meeting point, departure time, and everything you need to bring. Check spam if it doesn't arrive within a few minutes.</p></div></div>
+          <div class="faq-item" data-cat="booking" data-q="is my payment secure"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Is my payment secure?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>All payments are processed by Stripe. We never store your card details. Transactions are encrypted and 3D Secure verified where required.</p></div></div>
+        </div>
+      </div>
+      <div class="cat-section" data-section="weather">
+        <div class="cat-header"><div class="cat-icon" style="background:#E6F1FB;color:#0C447C"><i class="ti ti-cloud-storm"></i></div><h2 class="cat-title">Weather & cancellations</h2></div>
+        <div class="faq-list">
+          <div class="faq-item" data-cat="weather" data-q="what happens if the weather is bad"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">What happens if the weather is bad?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>We monitor sea conditions closely. If conditions are unsafe, we'll notify you at least 4 hours before departure. You'll receive a full refund or the option to rebook — your choice.</p></div></div>
+          <div class="faq-item" data-cat="weather" data-q="how do you decide if conditions are safe"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">How do you decide if conditions are safe to sail?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Our captains make the final call based on wind speed, wave height, and visibility — using official forecasts and local knowledge. Guest safety always comes first.</p></div></div>
+          <div class="faq-item" data-cat="weather" data-q="what if it rains but the sea is calm"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">What if it rains but the sea is calm?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Light rain doesn't cancel a tour. Tours are cancelled only when sea conditions make it unsafe to operate. We'll always contact you if there's any doubt.</p></div></div>
+        </div>
+      </div>
+      <div class="cat-section" data-section="onboard">
+        <div class="cat-header"><div class="cat-icon" style="background:#EEEDFE;color:#3C3489"><i class="ti ti-sailboat"></i></div><h2 class="cat-title">On board</h2></div>
+        <div class="faq-list">
+          <div class="faq-item" data-cat="onboard" data-q="what should i bring"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">What should I bring?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Swimwear, a towel, sunscreen (reef-safe if possible), sunglasses, and a light layer for the evening. Drinks are provided — no need to bring food.</p></div></div>
+          <div class="faq-item" data-cat="onboard" data-q="is food and drink provided"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Is food and drink provided on board?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>A welcome drink is included on all tours. Water is available throughout. Additional drinks can be purchased on board. Food is not included on group tours, but most day-trip routes include a stop where you can eat ashore.</p></div></div>
+          <div class="faq-item" data-cat="onboard" data-q="are life jackets provided"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Are life jackets provided?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Yes — life jackets in all sizes including children's, provided on every tour as standard. A safety briefing is given at the start of each departure.</p></div></div>
+          <div class="faq-item" data-cat="onboard" data-q="do i need to know how to swim"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Do I need to know how to swim?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>No. Life jackets are provided and swimming stops are always optional — you're welcome to stay on the boat.</p></div></div>
+          <div class="faq-item" data-cat="onboard" data-q="is the boat wheelchair accessible"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Is the boat wheelchair accessible?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Our Karaka Classic is accessible for guests with limited mobility. Please mention any accessibility needs in special requests when booking.</p></div></div>
+        </div>
+      </div>
+      <div class="cat-section" data-section="guests">
+        <div class="cat-header"><div class="cat-icon" style="background:#FAEEDA;color:#633806"><i class="ti ti-users"></i></div><h2 class="cat-title">Guests & suitability</h2></div>
+        <div class="faq-list">
+          <div class="faq-item" data-cat="guests" data-q="can i bring young children"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Can I bring young children?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Children aged 3 and above are welcome on all group tours. Life jackets are available in children's sizes. Children under 3 travel free. Private charters have no minimum age.</p></div></div>
+          <div class="faq-item" data-cat="guests" data-q="is the tour suitable for elderly guests non swimmers"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Is the tour suitable for elderly guests or non-swimmers?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Yes — tours are designed for all fitness levels. No physical activity is required beyond boarding. Swimming stops are optional.</p></div></div>
+          <div class="faq-item" data-cat="guests" data-q="can i bring my dog"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Can I bring my dog or other pet?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Small, well-behaved dogs are welcome on private charters — please let us know in advance. Pets are not permitted on group tour departures out of consideration for other guests.</p></div></div>
+          <div class="faq-item" data-cat="guests" data-q="i have a food allergy"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">I have a food allergy — what should I do?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Please mention any allergies in special requests when booking. For private charters with catered food, we'll work with you to make sure everything is safe.</p></div></div>
+        </div>
+      </div>
+      <div class="cat-section" data-section="private">
+        <div class="cat-header"><div class="cat-icon" style="background:#EEEDFE;color:#3C3489"><i class="ti ti-crown"></i></div><h2 class="cat-title">Private charters</h2></div>
+        <div class="faq-list">
+          <div class="faq-item" data-cat="private" data-q="what is included in a private charter"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">What's included in a private charter?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Every private charter includes a licensed captain, fuel, life jackets, and a welcome drink. You choose the boat, route, departure time, and duration. Optional add-ons can be added during booking.</p></div></div>
+          <div class="faq-item" data-cat="private" data-q="can i choose my own route"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">Can I choose my own route?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>Yes — that's the point. Choose from our suggested routes or describe your own idea in special requests. Your captain will help you plan the best possible day.</p></div></div>
+          <div class="faq-item" data-cat="private" data-q="how far in advance should i book a private charter"><div class="faq-q" onclick="toggle(this.parentElement)"><p class="faq-q-text">How far in advance should I book a private charter?</p><i class="ti ti-chevron-down faq-chevron"></i></div><div class="faq-a"><p>At least 2 weeks ahead in peak season (July–August) and 1 week in shoulder months. Last-minute bookings are sometimes possible — contact us directly.</p></div></div>
+        </div>
+      </div>
+      <div class="no-results" id="no-results"><i class="ti ti-mood-sad" style="font-size:28px;display:block;margin-bottom:8px;color:var(--color-border-secondary)"></i>No questions match your search.</div>
+    </div>
+  </div>
+  <div class="contact-band"><div><h3>Still have a question?</h3><p>We usually reply within a couple of hours during the season.</p></div><div class="contact-band-btns"><button class="btn-sm btn-outline"><i class="ti ti-mail"></i> Email us</button><button class="btn-sm btn-dark"><i class="ti ti-phone"></i> Call us</button></div></div>
+</div>
+<script>
+let activecat='all',searchTerm='';
+function toggle(item){const o=item.classList.contains('open');document.querySelectorAll('.faq-item.open').forEach(i=>i.classList.remove('open'));if(!o)item.classList.add('open');}
+function setcat(cat,el){activecat=cat;document.querySelectorAll('.cat-link').forEach(l=>l.classList.remove('active'));el.classList.add('active');applyFilters();}
+function filterFaqs(){searchTerm=document.getElementById('faq-search').value.toLowerCase().trim();applyFilters();}
+function applyFilters(){
+  let visible=0;
+  document.querySelectorAll('.faq-item').forEach(item=>{
+    const cat=item.dataset.cat,q=item.dataset.q||'',a=item.querySelector('.faq-a')?item.querySelector('.faq-a').textContent.toLowerCase():'';
+    const cm=activecat==='all'||cat===activecat,sm=!searchTerm||q.includes(searchTerm)||a.includes(searchTerm);
+    const show=cm&&sm;item.style.display=show?'':'none';if(show)visible++;
+  });
+  document.querySelectorAll('.cat-section').forEach(sec=>{
+    const any=Array.from(sec.querySelectorAll('.faq-item')).some(i=>i.style.display!=='none');sec.style.display=any?'':'none';
+  });
+  document.getElementById('no-results').style.display=visible===0?'block':'none';
+  document.getElementById('count-all').textContent=visible;
+}
+</script></body></html>

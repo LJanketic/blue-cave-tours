@@ -1,0 +1,254 @@
+---
+export const prerender = true;
+
+import { pageTitle } from '../../config/site';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { ABOUT } from '../../data/about';
+---
+
+<SiteLayout
+	title={pageTitle('About us')}
+	description="Split locals running small-group boat tours and private charters — Blue Cave, islands, and routes that follow the weather."
+>
+	<main id="main" class="page-shell about-page">
+		<div class="page">
+			<div class="about-hero-img" aria-hidden="true">
+				<i class="ti ti-sailboat"></i>
+			</div>
+
+			<div class="about-layout">
+				<div>
+					<h1>{ABOUT.headline}</h1>
+					<p class="intro-text">{ABOUT.intro}</p>
+				</div>
+				<div class="trust-grid">
+					{
+						ABOUT.trustStats.map((stat) => (
+							<div class="trust-item">
+								<span class="trust-icon">
+									<i class={`ti ti-${stat.icon}`} aria-hidden="true"></i>
+								</span>
+								<span class="trust-num">{stat.value}</span>
+								<span class="trust-label">{stat.label}</span>
+							</div>
+						))
+					}
+				</div>
+			</div>
+
+			<section class="section" aria-labelledby="timeline-heading">
+				<h2 id="timeline-heading" class="sec-title">How we got here</h2>
+				<div class="timeline">
+					{
+						ABOUT.foundingTimeline.map((event, index) => (
+							<div class="tl-item">
+								<div
+									class:list={[
+										'tl-dot',
+										{ active: index === 0 || index === ABOUT.foundingTimeline.length - 1 },
+									]}
+								/>
+								<p class="tl-year">{event.year}</p>
+								<p class="tl-title">{event.title}</p>
+								<p class="tl-desc">{event.description}</p>
+							</div>
+						))
+					}
+				</div>
+			</section>
+
+			<section class="section" aria-labelledby="crew-heading">
+				<h2 id="crew-heading" class="sec-title">Meet the crew</h2>
+				<div class="crew-grid">
+					{
+						ABOUT.crew.map((member) => (
+							<article class="crew-card">
+								<div class="crew-avatar" aria-hidden="true">
+									{member.initials}
+								</div>
+								<div class="crew-body">
+									<p class="crew-name">{member.name}</p>
+									<p class="crew-role">{member.role}</p>
+									<p class="crew-bio">{member.bio}</p>
+								</div>
+							</article>
+						))
+					}
+				</div>
+			</section>
+
+			<section class="section" aria-labelledby="values-heading">
+				<h2 id="values-heading" class="sec-title">What we believe in</h2>
+				<div class="values-grid">
+					{
+						ABOUT.values.map((value) => (
+							<div class="value-item">
+								<span class="value-icon">
+									<i class={`ti ti-${value.icon}`} aria-hidden="true"></i>
+								</span>
+								<p class="value-title">{value.title}</p>
+								<p class="value-desc">{value.description}</p>
+							</div>
+						))
+					}
+				</div>
+			</section>
+
+			<section class="section" aria-labelledby="press-heading">
+				<h2 id="press-heading" class="sec-title">What guests say</h2>
+				<div class="press-grid">
+					{
+						ABOUT.pressMentions.map((item) => (
+							<blockquote class="press-card">
+								<p class="press-pub">
+									<i class="ti ti-quote" aria-hidden="true"></i>
+									{item.author}
+								</p>
+								<p class="press-quote">{item.quote}</p>
+								<span class="press-date">{item.context}</span>
+							</blockquote>
+						))
+					}
+				</div>
+			</section>
+
+			<section class="cta-band" aria-labelledby="about-cta-heading">
+				<h2 id="about-cta-heading">Ready to get on the water?</h2>
+				<p>Tours depart daily from Split. Book early in peak season — popular routes fill quickly.</p>
+				<div class="cta-band-btns">
+					<a class="btn-primary" href="/tours">Browse all tours</a>
+					<a class="btn-secondary" href="/contact?tour=create-perfect-day-private">Plan a private charter</a>
+				</div>
+			</section>
+		</div>
+	</main>
+</SiteLayout>
+
+<style>
+	.about-page h1 {
+		font-size: 22px;
+		font-weight: 500;
+		margin: 0 0 10px;
+	}
+
+	.about-page .trust-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10px;
+	}
+
+	.about-page .trust-item {
+		align-items: flex-start;
+		text-align: left;
+		padding: 12px 14px;
+		gap: 4px;
+	}
+
+	.about-page .trust-icon {
+		font-size: 16px;
+		color: var(--color-accent-teal);
+		margin-bottom: 2px;
+		line-height: 1;
+	}
+
+	.about-page .trust-icon .ti {
+		font-size: 16px;
+	}
+
+	.about-page .trust-num {
+		font-size: 20px;
+	}
+
+	.about-page .trust-label {
+		font-size: 12px;
+	}
+
+	.about-page .sec-title {
+		font-size: 15px;
+		margin: 0 0 12px;
+	}
+
+	.about-page .section {
+		margin-bottom: 28px;
+	}
+
+	.about-page .crew-avatar {
+		font-size: 24px;
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		color: var(--color-text-secondary);
+	}
+
+	.about-page .press-card {
+		margin: 0;
+	}
+
+	.about-page .press-pub {
+		font-size: 11px;
+		font-weight: 500;
+		color: var(--color-text-tertiary);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		margin: 0;
+	}
+
+	.about-page .press-pub .ti {
+		font-size: 13px;
+		color: var(--color-border-secondary);
+	}
+
+	.about-page .press-date {
+		font-size: 11px;
+		color: var(--color-text-tertiary);
+	}
+
+	.about-page .cta-band {
+		padding: 1.5rem;
+		margin-bottom: 0;
+	}
+
+	.about-page .cta-band h2 {
+		font-size: 17px;
+	}
+
+	.about-page .cta-band p {
+		margin: 0 0 16px;
+	}
+
+	.about-page .cta-band-btns .btn-primary,
+	.about-page .cta-band-btns .btn-secondary {
+		font-size: 13px;
+		min-height: unset;
+	}
+
+	.about-page .cta-band-btns .btn-secondary {
+		background: none;
+	}
+
+	@media (max-width: 768px) {
+		.about-page .trust-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.about-page .crew-grid,
+		.about-page .press-grid {
+			margin: 0 0 24px;
+			padding-right: 16px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.about-page .crew-grid > *,
+		.about-page .press-grid > * {
+			flex: 0 0 60%;
+		}
+
+		.about-page .crew-grid,
+		.about-page .press-grid {
+			padding-right: 12px;
+		}
+	}
+</style>

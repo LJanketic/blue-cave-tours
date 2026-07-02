@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Hello Blue Cave  Split boat tours">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#085041"/>
+      <stop offset="100%" stop-color="#1d9e75"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="80" y="280" fill="#ffffff" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="64" font-weight="600">Hello Blue Cave</text>
+  <text x="80" y="360" fill="#e1f5ee" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="36">Split boat tours &amp; private charters</text>
+  <text x="80" y="430" fill="#c8ebe0" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="24">Blue Cave · Islands · Adriatic</text>
+</svg>

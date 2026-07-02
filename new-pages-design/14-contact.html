@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Contact — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>:root{--color-text-primary:#111;--color-text-secondary:#555;--color-text-tertiary:#999;--color-text-info:#1a6fc4;--color-text-success:#085041;--color-text-danger:#8B1A15;--color-background-primary:#fff;--color-background-secondary:#f5f5f4;--color-background-info:#e6f1fb;--color-background-success:#e1f5ee;--color-border-primary:#aaa;--color-border-secondary:#ccc;--color-border-tertiary:#e5e5e3;--color-border-info:#7ab4e8;--border-radius-md:8px;--border-radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{box-sizing:border-box;}body{margin:0 auto;padding:24px;font-family:var(--font-sans);max-width:960px;background:var(--color-background-primary);color:var(--color-text-primary);font-size:14px;}
+input,select,button,textarea{font-family:var(--font-sans);padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;}
+
+.page{padding:0 0 2rem;}
+h1{font-size:22px;font-weight:500;margin:0 0 5px;}
+.hero-sub{font-size:13px;color:var(--color-text-secondary);margin:0 0 24px;line-height:1.6;}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+.contact-card{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px 18px;display:flex;flex-direction:column;gap:6px;cursor:pointer;}
+.contact-card:hover{background:#ebebea;}
+.cc-icon{width:36px;height:36px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:2px;}
+.cc-type{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;}
+.cc-value{font-size:14px;font-weight:500;}
+.cc-sub{font-size:12px;color:var(--color-text-secondary);line-height:1.5;}
+.hours-card{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:24px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
+.hours-col{flex:1;min-width:160px;}
+.hours-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;}
+.hours-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;}
+.hours-day{color:var(--color-text-secondary);}
+.hours-time{font-weight:500;}
+.open-badge{display:inline-flex;align-items:center;gap:5px;background:#E1F5EE;color:#085041;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;margin-bottom:12px;}
+.open-dot{width:6px;height:6px;border-radius:50%;background:#1D9E75;}
+.form-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:24px;}
+.form-title{font-size:14px;font-weight:500;margin:0 0 14px;}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.full{grid-column:1/-1;}
+.field label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;}
+.field textarea{resize:vertical;min-height:80px;}
+.field select,.field input{font-size:13px;}
+.btn-primary{padding:11px 22px;background:var(--color-text-primary);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-sans);margin-top:6px;}
+.map-stub{height:140px;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;border:0.5px solid var(--color-border-tertiary);margin-bottom:16px;}
+.map-stub i{font-size:20px;color:#1D9E75;}
+.marina-note{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:11px 14px;font-size:12px;color:var(--color-text-secondary);line-height:1.6;display:flex;gap:8px;align-items:flex-start;}
+.marina-note i{font-size:14px;color:#1D9E75;flex-shrink:0;margin-top:1px;}
+</style><style>
+@media (max-width:768px){
+  body{padding:16px;}
+  .contact-grid{grid-template-columns:1fr;}
+  .fields{grid-template-columns:1fr;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+}
+</style>
+</head><body>
+<h1>Contact us</h1>
+<p class="hero-sub">Questions, special requests, or just not sure which tour is right for you — get in touch. We usually reply within a couple of hours during the season.</p>
+
+<div class="contact-grid">
+  <div class="contact-card">
+    <div class="cc-icon" style="background:#E1F5EE;color:#085041"><i class="ti ti-phone"></i></div>
+    <span class="cc-type">Phone</span>
+    <span class="cc-value">+385 20 123 456</span>
+    <span class="cc-sub">Office line — Mon to Sun, 08:00–20:00 during season</span>
+  </div>
+  <div class="contact-card">
+    <div class="cc-icon" style="background:#E1F5EE;color:#085041"><i class="ti ti-brand-whatsapp"></i></div>
+    <span class="cc-type">WhatsApp</span>
+    <span class="cc-value">+385 91 234 5678</span>
+    <span class="cc-sub">Fastest response — typically within the hour</span>
+  </div>
+  <div class="contact-card">
+    <div class="cc-icon" style="background:#E6F1FB;color:#1a6fc4"><i class="ti ti-mail"></i></div>
+    <span class="cc-type">Email</span>
+    <span class="cc-value">hello@adriaticsails.com</span>
+    <span class="cc-sub">For bookings, invoices, and detailed requests</span>
+  </div>
+  <div class="contact-card">
+    <div class="cc-icon" style="background:#FAEEDA;color:#633806"><i class="ti ti-map-pin"></i></div>
+    <span class="cc-type">Find us</span>
+    <span class="cc-value">Marina Pier B, Gate 3</span>
+    <span class="cc-sub">Old port of Dubrovnik — 5 min walk from Pile Gate</span>
+  </div>
+</div>
+
+<div class="hours-card">
+  <div class="hours-col">
+    <p class="hours-label">Response hours</p>
+    <div class="open-badge"><div class="open-dot"></div> Open now</div>
+    <div class="hours-row"><span class="hours-day">Mon – Fri</span><span class="hours-time">08:00 – 20:00</span></div>
+    <div class="hours-row"><span class="hours-day">Sat – Sun</span><span class="hours-time">08:00 – 18:00</span></div>
+  </div>
+  <div class="hours-col">
+    <p class="hours-label">Season</p>
+    <div class="hours-row"><span class="hours-day">May – October</span><span class="hours-time">Daily departures</span></div>
+    <div class="hours-row"><span class="hours-day">Off-season</span><span class="hours-time">Email only</span></div>
+    <p style="font-size:12px;color:var(--color-text-secondary);margin-top:8px;line-height:1.5">Private charters available year-round by request, weather permitting.</p>
+  </div>
+</div>
+
+<div class="form-card">
+  <p class="form-title">Send us a message</p>
+  <div class="fields">
+    <div class="field"><label>First name</label><input type="text" placeholder="Ivan"></div>
+    <div class="field"><label>Last name</label><input type="text" placeholder="Kovač"></div>
+    <div class="field"><label>Email</label><input type="email" placeholder="ivan@example.com"></div>
+    <div class="field"><label>Phone</label><input type="tel" placeholder="+385…"></div>
+    <div class="field full"><label>Subject</label>
+      <select>
+        <option>General enquiry</option>
+        <option>Group booking question</option>
+        <option>Private charter enquiry</option>
+        <option>Cancellation or rescheduling</option>
+        <option>Feedback or complaint</option>
+        <option>Press / media</option>
+      </select>
+    </div>
+    <div class="field full"><label>Message</label><textarea placeholder="Tell us what you have in mind — dates, group size, any special requests…"></textarea></div>
+  </div>
+  <button class="btn-primary">Send message <i class="ti ti-arrow-right" style="font-size:13px;vertical-align:-2px"></i></button>
+</div>
+
+<div class="map-stub"><i class="ti ti-map-2"></i> Marina Pier B · Old port of Dubrovnik — open in Google Maps</div>
+<div class="marina-note"><i class="ti ti-info-circle"></i> Enter the old port from Pile Gate and follow signs for the marina. We're at Pier B, Gate 3 — look for the blue Adriatic Sails flag. Parking is available at Ilijina Glavica garage, a 10-minute walk.</div>
+</body></html>

@@ -9,56 +9,161 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 	title={pageTitle('Booking details')}
 	description="What we collect when you book a boat tour from Split: party size, date, contact details, and pricing."
 >
-	<main id="main" class="page-shell">
-		<h1 class="page-title">What we need to book your tour</h1>
-		<p class="page-lead">
-			Whether you book online or request a quote, here is the information we use to confirm your day on the water.
-		</p>
+	<main id="main" class="page-shell page-shell--narrow booking-details-page">
+		<div class="page">
+			<div class="legal-hero">
+				<h1>What we need to book your tour</h1>
+				<p class="legal-meta">Information collected during online booking or quote requests</p>
+			</div>
 
-		<section class="prose-section" aria-labelledby="f-heading">
-			<h2 id="f-heading">Guest &amp; party</h2>
-			<ul class="prose-list">
-				<li>Number of guests (adults, children, infants) — group size affects pricing.</li>
-				<li>Preferred date and any flexibility if your plans might shift.</li>
-				<li>Contact details: name, email, phone, and language preference.</li>
-			</ul>
-		</section>
+			<p class="intro-text page-intro">
+				Whether you book online or request a quote, here is the information we use to confirm your day on the
+				water.
+			</p>
 
-		<section class="prose-section" aria-labelledby="p-heading">
-			<h2 id="p-heading">Price &amp; extras</h2>
-			<ul class="prose-list">
-				<li>Adult, child, and infant rates where applicable — shown per tour before you pay.</li>
-				<li>Promotional or group discounts when offered for your date and route.</li>
-				<li>Cave and park entry fees are often <strong>not</strong> included in the base price and are payable on-site.</li>
-			</ul>
-		</section>
+			<div class="summary-box">
+				<p>The short version</p>
+				<div class="sum-item">
+					<i class="ti ti-circle-check" aria-hidden="true"></i>
+					Guest count, preferred date, and your contact details
+				</div>
+				<div class="sum-item">
+					<i class="ti ti-circle-check" aria-hidden="true"></i>
+					Pricing shown per tour before you pay — cave and park fees may be on-site
+				</div>
+				<div class="sum-item">
+					<i class="ti ti-circle-check" aria-hidden="true"></i>
+					Confirmation by email with meeting point on Split’s Riva (stand 14)
+				</div>
+			</div>
 
-		<section class="prose-section" aria-labelledby="o-heading">
-			<h2 id="o-heading">Confirmation</h2>
-			<ul class="prose-list">
-				<li>Book now reserves your selection — we follow up by email or phone to confirm date, party size, and total.</li>
-				<li>Private charters receive a tailored quote with everything included.</li>
-				<li>Cave and park entry fees may still be payable on-site where applicable.</li>
-			</ul>
-		</section>
+			<section class="legal-section" aria-labelledby="f-heading">
+				<h2 id="f-heading">
+					<i class="ti ti-users" aria-hidden="true"></i> Guest &amp; party
+				</h2>
+				<ul>
+					<li>Number of guests (adults, children, infants) — group size affects pricing.</li>
+					<li>Preferred date and any flexibility if your plans might shift.</li>
+					<li>Contact details: name, email, phone, and language preference.</li>
+				</ul>
+			</section>
 
-		<section class="prose-section" aria-labelledby="m-heading">
-			<h2 id="m-heading">After you book</h2>
-			<ul class="prose-list">
-				<li>Meeting point on Split’s Riva (stand 14) and what to bring for the day.</li>
-				<li>Confirmation by email with any updates before departure.</li>
-			</ul>
-		</section>
+			<section class="legal-section" aria-labelledby="p-heading">
+				<h2 id="p-heading">
+					<i class="ti ti-cash" aria-hidden="true"></i> Price &amp; extras
+				</h2>
+				<ul>
+					<li>Adult, child, and infant rates where applicable — shown per tour before you pay.</li>
+					<li>Promotional or group discounts when offered for your date and route.</li>
+					<li>
+						Cave and park entry fees are often <strong>not</strong> included in the base price and are payable
+						on-site.
+					</li>
+				</ul>
+			</section>
 
-		<p>
-			<a class="back" href="/contact">Contact us</a> · <a href="/tours">Browse tours</a>
-		</p>
+			<section class="legal-section" aria-labelledby="o-heading">
+				<h2 id="o-heading">
+					<i class="ti ti-calendar-check" aria-hidden="true"></i> Confirmation
+				</h2>
+				<ul>
+					<li>
+						Book now reserves your selection — we follow up by email or phone to confirm date, party size, and
+						total.
+					</li>
+					<li>Private charters receive a tailored quote with everything included.</li>
+					<li>Cave and park entry fees may still be payable on-site where applicable.</li>
+				</ul>
+			</section>
+
+			<section class="legal-section" aria-labelledby="m-heading">
+				<h2 id="m-heading">
+					<i class="ti ti-map-pin" aria-hidden="true"></i> After you book
+				</h2>
+				<ul>
+					<li>Meeting point on Split’s Riva (stand 14) and what to bring for the day.</li>
+					<li>Confirmation by email with any updates before departure.</li>
+				</ul>
+			</section>
+
+			<div class="also-strip">
+				<div>
+					<p class="t1">Ready to book?</p>
+					<p class="t2">Browse tours or send us a message if you need help choosing.</p>
+				</div>
+				<div class="also-btns">
+					<a class="also-btn" href="/tours">Browse tours</a>
+					<a class="also-btn" href="/contact">Contact us</a>
+				</div>
+			</div>
+		</div>
 	</main>
 </SiteLayout>
 
 <style>
-	.back {
-		font-weight: var(--font-weight-bold);
-		color: var(--color-nav-elevated);
+	.booking-details-page .page {
+		padding-bottom: 2rem;
+	}
+
+	.booking-details-page .legal-hero h1 {
+		font-size: 20px;
+		font-weight: 500;
+		margin: 0 0 5px;
+	}
+
+	.booking-details-page .legal-meta {
+		font-size: 12px;
+		color: var(--color-text-tertiary);
+		margin: 0 0 14px;
+	}
+
+	.booking-details-page .page-intro {
+		margin: 0 0 24px;
+		font-size: 13px;
+		line-height: 1.75;
+		color: var(--color-text-secondary);
+	}
+
+	.booking-details-page .legal-section {
+		margin-bottom: 24px;
+	}
+
+	.booking-details-page .legal-section h2 {
+		font-size: 14px;
+		font-weight: 500;
+		margin: 0 0 10px;
+		padding-bottom: 8px;
+		border-bottom: 0.5px solid var(--color-border-tertiary);
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.booking-details-page .legal-section h2 .ti {
+		font-size: 15px;
+		color: #1d9e75;
+	}
+
+	.booking-details-page .legal-section ul {
+		margin: 0;
+		padding-left: 18px;
+	}
+
+	.booking-details-page .legal-section ul li {
+		font-size: 13px;
+		color: var(--color-text-secondary);
+		line-height: 1.7;
+		margin-bottom: 4px;
+	}
+
+	.booking-details-page .legal-section ul li strong {
+		color: var(--color-text-primary);
+		font-weight: 500;
+	}
+
+	.booking-details-page .also-btns {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
 	}
 </style>

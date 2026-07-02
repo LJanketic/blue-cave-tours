@@ -36,4 +36,6 @@ src/
   client/         Booking redirect + contact form
   pages/          Routes + /api/contact
   styles/tokens/  Colors, typography, layout
+docs/
+  redesign/       Redesign agent reference (start at 00-INDEX.md)
 ```

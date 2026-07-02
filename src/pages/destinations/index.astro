@@ -1,0 +1,107 @@
+---
+export const prerender = true;
+
+import { pageTitle } from '../../config/site';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import DestinationsCatalog from '../../components/vue/DestinationsCatalog.vue';
+import { getAllDestinations } from '../../lib/destinations';
+
+const destinations = getAllDestinations();
+const mapUrl =
+	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
+---
+
+<SiteLayout
+	title={pageTitle('Destinations')}
+	description="Islands, caves, and swim stops on our Split boat tours — Blue Cave, Vis, Hvar, Pakleni, Blue Lagoon, and more."
+>
+	<main id="main" class="page-shell destinations-page">
+		<div class="page">
+			<div class="hero">
+				<h1>Destinations</h1>
+				<p>
+					From Split’s Riva to the outer islands — here’s where our tours take you along the central
+					Dalmatian coast.
+				</p>
+			</div>
+
+			<a
+				class="map-strip"
+				href={mapUrl}
+				target="_blank"
+				rel="noopener noreferrer"
+				aria-label="View destinations map on Google Maps — opens in new tab"
+			>
+				<div class="map-dot" style="top: 38px; left: 20%"></div>
+				<span class="map-label" style="top: 22px; left: calc(20% + 13px)">Split</span>
+				<div class="map-dot" style="top: 55px; left: 44%"></div>
+				<span class="map-label" style="top: 60px; left: calc(44% + 13px)">Hvar</span>
+				<div class="map-dot" style="top: 48px; left: 36%"></div>
+				<span class="map-label" style="top: 32px; left: calc(36% + 13px)">Vis</span>
+				<div class="map-dot" style="top: 70px; left: 52%"></div>
+				<span class="map-label" style="top: 74px; left: calc(52% + 13px)">Blue Cave</span>
+				<div class="map-dot" style="top: 30px; left: 28%"></div>
+				<span class="map-label" style="top: 14px; left: calc(28% + 13px)">Blue Lagoon</span>
+				<span class="map-cta">
+					<i class="ti ti-map-2" aria-hidden="true"></i>
+					View full map ↗
+				</span>
+			</a>
+
+			<DestinationsCatalog client:visible destinations={destinations} />
+
+			<div class="also-strip">
+				<div>
+					<p class="t1">Not sure where to go?</p>
+					<p class="t2">Browse all tours and filter by activity, duration, or price instead.</p>
+				</div>
+				<a class="also-btn" href="/tours">Browse tours ↗</a>
+			</div>
+		</div>
+	</main>
+</SiteLayout>
+
+<style>
+	.destinations-page .page {
+		padding: 1.5rem 0 2rem;
+	}
+
+	.destinations-page .hero h1 {
+		font-size: 20px;
+		font-weight: 500;
+	}
+
+	.destinations-page .hero p {
+		font-size: 13px;
+	}
+
+	.destinations-page .map-strip {
+		margin-bottom: 24px;
+	}
+
+	.destinations-page .map-cta .ti {
+		font-size: 15px;
+	}
+
+	.destinations-page .also-strip {
+		margin-top: 8px;
+	}
+
+	.destinations-page .also-btn {
+		font-size: 13px;
+		padding: 7px 14px;
+		border-radius: var(--radius-md);
+		border: 0.5px solid var(--color-border-secondary);
+		background: var(--color-background-primary);
+		font-weight: 500;
+		text-decoration: none;
+		color: inherit;
+		display: inline-flex;
+		align-items: center;
+		white-space: nowrap;
+	}
+
+	.destinations-page .also-btn:hover {
+		border-color: var(--color-border-primary);
+	}
+</style>

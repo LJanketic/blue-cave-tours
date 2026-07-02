@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>About Us — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>:root{--color-text-primary:#111;--color-text-secondary:#555;--color-text-tertiary:#999;--color-text-info:#1a6fc4;--color-text-success:#085041;--color-text-danger:#8B1A15;--color-background-primary:#fff;--color-background-secondary:#f5f5f4;--color-background-info:#e6f1fb;--color-background-success:#e1f5ee;--color-border-primary:#aaa;--color-border-secondary:#ccc;--color-border-tertiary:#e5e5e3;--color-border-info:#7ab4e8;--border-radius-md:8px;--border-radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{box-sizing:border-box;}body{margin:0 auto;padding:24px;font-family:var(--font-sans);max-width:960px;background:var(--color-background-primary);color:var(--color-text-primary);font-size:14px;}
+input,select,button,textarea{font-family:var(--font-sans);padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;}
+
+.hero-img{width:100%;height:200px;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+.hero-img i{font-size:52px;color:var(--color-border-secondary);}
+.layout-2col{display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:start;margin-bottom:28px;}
+.section{margin-bottom:28px;}
+.sec-title{font-size:15px;font-weight:500;margin:0 0 12px;padding-bottom:8px;border-bottom:0.5px solid var(--color-border-tertiary);}
+h1{font-size:22px;font-weight:500;margin:0 0 10px;}
+.intro-text{font-size:13px;color:var(--color-text-secondary);line-height:1.8;margin:0;}
+.trust-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.trust-item{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px;display:flex;flex-direction:column;gap:4px;}
+.trust-num{font-size:20px;font-weight:500;}
+.trust-label{font-size:12px;color:var(--color-text-secondary);line-height:1.4;}
+.trust-icon{font-size:16px;color:#1D9E75;margin-bottom:2px;}
+.timeline{position:relative;padding-left:24px;}
+.timeline::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:0.5px;background:var(--color-border-secondary);}
+.tl-item{position:relative;padding-bottom:20px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-dot{position:absolute;left:-17px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--color-background-primary);border:2px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;}
+.tl-dot.active{border-color:#1D9E75;}
+.tl-dot.active::after{content:'';width:6px;height:6px;border-radius:50%;background:#1D9E75;}
+.tl-year{font-size:11px;font-weight:500;color:#1D9E75;margin:0 0 2px;text-transform:uppercase;letter-spacing:0.06em;}
+.tl-title{font-size:13px;font-weight:500;margin:0 0 3px;}
+.tl-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.55;margin:0;}
+.crew-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.crew-card{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);overflow:hidden;}
+.crew-avatar{height:100px;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;}
+.crew-avatar i{font-size:32px;color:var(--color-border-secondary);}
+.crew-body{padding:12px;}
+.crew-name{font-size:13px;font-weight:500;margin:0 0 2px;}
+.crew-role{font-size:11px;color:#1D9E75;font-weight:500;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.04em;}
+.crew-bio{font-size:12px;color:var(--color-text-secondary);line-height:1.55;margin:0;}
+.values-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.value-item{padding:14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);display:flex;flex-direction:column;gap:6px;}
+.value-icon{font-size:20px;color:#1D9E75;}
+.value-title{font-size:13px;font-weight:500;margin:0;}
+.value-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.55;margin:0;}
+.press-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.press-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px;display:flex;flex-direction:column;gap:8px;}
+.press-pub{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.06em;display:flex;align-items:center;gap:5px;}
+.press-pub i{font-size:13px;color:var(--color-border-secondary);}
+.press-quote{font-size:12px;color:var(--color-text-secondary);line-height:1.6;margin:0;font-style:italic;}
+.press-date{font-size:11px;color:var(--color-text-tertiary);}
+.cta-band{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.5rem;text-align:center;}
+.cta-band h2{font-size:17px;font-weight:500;margin:0 0 6px;}
+.cta-band p{font-size:13px;color:var(--color-text-secondary);margin:0 0 16px;}
+.cta-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.btn-primary{padding:10px 22px;background:var(--color-text-primary);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-sans);}
+.btn-secondary{padding:10px 22px;background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-sans);}
+</style><style>
+@media (max-width:768px){
+  body{padding:16px;}
+  .layout-2col{grid-template-columns:1fr;}
+  .trust-grid{grid-template-columns:1fr;}
+  .crew-grid,.press-grid{display:flex;grid-template-columns:none;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;margin:0 0 24px;padding-right:16px;}
+  .crew-grid::-webkit-scrollbar,.press-grid::-webkit-scrollbar{display:none;}
+  .crew-grid>*,.press-grid>*{flex:0 0 40%;scroll-snap-align:start;}
+  .values-grid{grid-template-columns:1fr;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+  .crew-grid,.press-grid{display:flex;grid-template-columns:none;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;margin:0 0 24px;padding-right:12px;}
+  .crew-grid::-webkit-scrollbar,.press-grid::-webkit-scrollbar{display:none;}
+  .crew-grid>*,.press-grid>*{flex:0 0 60%;scroll-snap-align:start;}
+}
+</style>
+</head><body>
+<div class="hero-img"><i class="ti ti-sailboat"></i></div>
+<div class="layout-2col">
+  <div>
+    <h1>We're small by design</h1>
+    <p class="intro-text">Adriatic Sails started in 2015 with one boat, one captain, and a strong belief that the best way to see the Dalmatian coast is from the water — slowly, in a small group, with someone who actually knows where to go.<br><br>Ten years later, we still cap our group tours at 12 guests. We still turn down the big agencies. And we still take every charter ourselves, with our own captains, on our own boats. That's not nostalgia — it's just the only way this works properly.</p>
+  </div>
+  <div class="trust-grid">
+    <div class="trust-item"><span class="trust-icon"><i class="ti ti-calendar"></i></span><span class="trust-num">10 yrs</span><span class="trust-label">on the Adriatic coast</span></div>
+    <div class="trust-item"><span class="trust-icon"><i class="ti ti-users"></i></span><span class="trust-num">4,200+</span><span class="trust-label">guests this season</span></div>
+    <div class="trust-item"><span class="trust-icon"><i class="ti ti-star"></i></span><span class="trust-num">4.9 ★</span><span class="trust-label">avg across 800+ reviews</span></div>
+    <div class="trust-item"><span class="trust-icon"><i class="ti ti-certificate"></i></span><span class="trust-num">Licensed</span><span class="trust-label">Croatian Maritime Authority</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="sec-title">How we got here</p>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-dot active"></div><p class="tl-year">2015</p><p class="tl-title">First charter, first season</p><p class="tl-desc">Marko Blažević launches Adriatic Sails with a single restored wooden vessel and a waitlist of family and friends. Sunset tours only, 8 guests maximum.</p></div>
+    <div class="tl-item"><div class="tl-dot"></div><p class="tl-year">2017</p><p class="tl-title">Second boat, island routes</p><p class="tl-desc">Growing demand for day trips leads to the purchase of a second vessel and the launch of the Elafiti island route — still one of our most popular tours.</p></div>
+    <div class="tl-item"><div class="tl-dot"></div><p class="tl-year">2019</p><p class="tl-title">Private charter programme</p><p class="tl-desc">After years of requests, we formalise private charters with fully customisable routes, optional catering, and photography packages.</p></div>
+    <div class="tl-item"><div class="tl-dot"></div><p class="tl-year">2021</p><p class="tl-title">Through the quiet years</p><p class="tl-desc">We ran reduced operations during the pandemic, focused on local guests and day-return bookings, and came out the other side with a waitlist for 2022.</p></div>
+    <div class="tl-item"><div class="tl-dot active"></div><p class="tl-year">2025</p><p class="tl-title">Ten years on the water</p><p class="tl-desc">Still independent. Still capping tours at 12. Still run by the same team. This year we welcomed our 20,000th guest.</p></div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="sec-title">Meet the crew</p>
+  <div class="crew-grid">
+    <div class="crew-card"><div class="crew-avatar"><i class="ti ti-user-circle"></i></div><div class="crew-body"><p class="crew-name">Marko Blažević</p><p class="crew-role">Founder & Captain</p><p class="crew-bio">Born in Dubrovnik. Licensed maritime captain for 18 years. Knows every cove between here and Vis by name.</p></div></div>
+    <div class="crew-card"><div class="crew-avatar"><i class="ti ti-user-circle"></i></div><div class="crew-body"><p class="crew-name">Ivan Kovačević</p><p class="crew-role">Captain & Guide</p><p class="crew-bio">Marine biologist turned sea captain. The person you want pointing at things underwater.</p></div></div>
+    <div class="crew-card"><div class="crew-avatar"><i class="ti ti-user-circle"></i></div><div class="crew-body"><p class="crew-name">Ana Blažević</p><p class="crew-role">Operations & Bookings</p><p class="crew-bio">Runs the bookings, the schedule, and everyone on it. If something goes right, it's usually her.</p></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="sec-title">What we believe in</p>
+  <div class="values-grid">
+    <div class="value-item"><span class="value-icon"><i class="ti ti-users"></i></span><p class="value-title">Small groups, always</p><p class="value-desc">We cap every tour at 12. Not because we have to — because it's the only way it works properly.</p></div>
+    <div class="value-item"><span class="value-icon"><i class="ti ti-leaf"></i></span><p class="value-title">Low-impact on the sea</p><p class="value-desc">Reef-safe sunscreen required. We don't anchor on coral. We take rubbish back to port.</p></div>
+    <div class="value-item"><span class="value-icon"><i class="ti ti-heart"></i></span><p class="value-title">Local all the way</p><p class="value-desc">Local captains, local crew, local suppliers. The money stays in Dubrovnik — that matters to us.</p></div>
+    <div class="value-item"><span class="value-icon"><i class="ti ti-shield-check"></i></span><p class="value-title">No compromise on safety</p><p class="value-desc">If conditions aren't right, we don't go. Full stop. The sea will still be there tomorrow.</p></div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="sec-title">As featured in</p>
+  <div class="press-grid">
+    <div class="press-card"><p class="press-pub"><i class="ti ti-news"></i> Travel + Leisure</p><p class="press-quote">One of the best small-boat operators on the Croatian coast — unpretentious, knowledgeable, and genuinely fun.</p><span class="press-date">Summer 2024</span></div>
+    <div class="press-card"><p class="press-pub"><i class="ti ti-news"></i> Condé Nast Traveller</p><p class="press-quote">Skip the party catamarans. Adriatic Sails is what you actually came to Croatia for.</p><span class="press-date">June 2024</span></div>
+    <div class="press-card"><p class="press-pub"><i class="ti ti-news"></i> The Guardian</p><p class="press-quote">A family-run operation that still feels like an insider tip — even after a decade on the water.</p><span class="press-date">May 2025</span></div>
+  </div>
+</div>
+
+<div class="cta-band">
+  <h2>Come sailing with us</h2>
+  <p>Group tours depart daily. Private charters available for 2–12 guests.</p>
+  <div class="cta-row"><button class="btn-primary">Browse tours</button><button class="btn-secondary">Plan a private charter</button></div>
+</div>
+</body></html>

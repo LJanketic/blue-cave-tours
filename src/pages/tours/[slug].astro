@@ -1,12 +1,12 @@
 ---
 export const prerender = true;
 
-import { getImage } from 'astro:assets';
 import NotFoundPanel from '../../components/NotFoundPanel.astro';
 import TourDetailView from '../../components/tour/TourDetailView.astro';
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getAllTours, getTourBySlug } from '../../lib/tours';
+import { breadcrumbJsonLd, tourJsonLd } from '../../lib/seo';
 
 export function getStaticPaths() {
 	return getAllTours().map((tour) => ({ params: { slug: tour.slug } }));
@@ -19,24 +19,27 @@ if (!tour) {
 	Astro.response.status = 404;
 }
 
-const ogImage = tour
-	? await getImage({
-			src: tour.image.src,
-			width: 1200,
-			height: 630,
-			fit: 'cover',
-			format: 'jpg',
-		})
-	: undefined;
+const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
+const jsonLd =
+	tour && siteUrl
+		? [
+				tourJsonLd(tour, siteUrl),
+				breadcrumbJsonLd([
+					{ name: 'Home', url: siteUrl },
+					{ name: 'Tours', url: `${siteUrl}/tours` },
+					{ name: tour.title, url: `${siteUrl}/tours/${tour.slug}` },
+				]),
+			]
+		: undefined;
 ---
 
 <SiteLayout
 	title={tour ? pageTitle(tour.title) : pageTitle('Tour not found')}
 	description={tour?.shortDescription ?? 'The requested tour does not exist.'}
 	booking={Boolean(tour)}
-	ogImage={ogImage?.src}
+	jsonLd={jsonLd}
 >
-	<main id="main">
+	<main id="main" class="page-shell">
 		{
 			tour ? (
 				<TourDetailView tour={tour} />

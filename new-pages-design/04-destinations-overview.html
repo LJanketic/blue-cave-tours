@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Destinations Overview — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{--color-text-primary:#111;--color-text-secondary:#555;--color-text-tertiary:#999;--color-text-info:#1a6fc4;--color-text-success:#085041;--color-text-danger:#8B1A15;--color-text-warning:#BA7517;--color-background-primary:#fff;--color-background-secondary:#f5f5f4;--color-background-info:#e6f1fb;--color-background-success:#e1f5ee;--color-border-primary:#aaa;--color-border-secondary:#ccc;--color-border-tertiary:#e5e5e3;--color-border-info:#7ab4e8;--border-radius-md:8px;--border-radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{box-sizing:border-box;}
+body{margin:0 auto;padding:24px;font-family:var(--font-sans);background:var(--color-background-primary);color:var(--color-text-primary);max-width:960px;}
+input,select,button,textarea{font-family:var(--font-sans);padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;}
+</style>
+<style>
+.page{padding:1.5rem 0 2rem;font-size:14px;}
+.hero h1{font-size:20px;font-weight:500;margin:0 0 4px;}
+.hero p{font-size:13px;color:var(--color-text-secondary);margin:0 0 16px;line-height:1.6;}
+.map-strip{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);height:130px;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:24px;cursor:pointer;position:relative;overflow:hidden;}
+.map-strip:hover{border-color:var(--color-border-primary);}
+.map-dot{position:absolute;width:10px;height:10px;border-radius:50%;background:#1D9E75;border:2px solid var(--color-background-primary);}
+.map-label{position:absolute;font-size:10px;font-weight:500;color:var(--color-text-secondary);white-space:nowrap;}
+.map-cta{font-size:13px;color:var(--color-text-info);display:flex;align-items:center;gap:5px;z-index:1;}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;white-space:nowrap;}
+.chip:hover{background:var(--color-background-secondary);}
+.chip.active{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary);}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
+.result-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.result-count{font-size:13px;color:var(--color-text-secondary);}
+.section-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 12px;}
+.dest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-bottom:28px;}
+.dest-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;cursor:pointer;}
+.dest-card:hover{border-color:var(--color-border-primary);}
+.dest-card.wide{grid-column:1/-1;display:grid;grid-template-columns:220px 1fr;}
+.card-img{height:160px;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
+.dest-card.wide .card-img{height:100%;min-height:160px;}
+.card-img i{font-size:40px;color:var(--color-border-secondary);}
+.region-pill{position:absolute;bottom:8px;left:8px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;background:var(--color-background-primary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);}
+.card-body{padding:14px 16px 16px;}
+.card-name{font-size:15px;font-weight:500;margin:0 0 3px;}
+.card-region{font-size:12px;color:var(--color-text-tertiary);margin:0 0 8px;display:flex;align-items:center;gap:4px;}
+.card-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.55;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.attr-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;}
+.attr-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:12px;background:var(--color-background-secondary);color:var(--color-text-secondary);}
+.card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);}
+.tour-count{font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px;}
+.card-cta{font-size:12px;padding:5px 12px;cursor:pointer;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:none;font-family:var(--font-sans);font-weight:500;}
+.no-results{text-align:center;padding:2.5rem;color:var(--color-text-secondary);font-size:13px;display:none;}
+.also-strip{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;}
+.also-strip .t1{font-size:14px;font-weight:500;margin:0 0 2px;}
+.also-strip .t2{font-size:12px;color:var(--color-text-secondary);margin:0;}
+.also-btn{font-size:13px;padding:7px 14px;cursor:pointer;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-family:var(--font-sans);font-weight:500;}
+</style>
+<style>
+@media (max-width:768px){
+  body{padding:16px;}
+  .wide{grid-template-columns:1fr;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hero"><h1>Destinations</h1><p>From the walled city of Dubrovnik to the remote islands of the outer archipelago — here's where our tours take you.</p></div>
+  <div class="map-strip">
+    <div class="map-dot" style="top:38px;left:28%"></div><span class="map-label" style="top:22px;left:calc(28% + 13px)">Dubrovnik</span>
+    <div class="map-dot" style="top:55px;left:44%"></div><span class="map-label" style="top:60px;left:calc(44% + 13px)">Hvar</span>
+    <div class="map-dot" style="top:48px;left:36%"></div><span class="map-label" style="top:32px;left:calc(36% + 13px)">Korčula</span>
+    <div class="map-dot" style="top:70px;left:52%"></div><span class="map-label" style="top:74px;left:calc(52% + 13px)">Vis</span>
+    <div class="map-dot" style="top:30px;left:20%"></div><span class="map-label" style="top:14px;left:calc(20% + 13px)">Elafiti Islands</span>
+    <span class="map-cta"><i class="ti ti-map-2" style="font-size:15px"></i> View full map ↗</span>
+  </div>
+  <div class="filter-row">
+    <span style="font-size:12px;color:var(--color-text-tertiary);margin-right:2px">Filter:</span>
+    <span class="chip active" data-f="all" onclick="setFilter('all',this)">All destinations</span>
+    <span class="chip" data-f="island" onclick="setFilter('island',this)"><i class="ti ti-island"></i> Islands</span>
+    <span class="chip" data-f="coast" onclick="setFilter('coast',this)"><i class="ti ti-anchor"></i> Coastal towns</span>
+    <span class="chip" data-f="cave" onclick="setFilter('cave',this)"><i class="ti ti-mountain"></i> Caves & nature</span>
+    <span class="chip" data-f="swim" onclick="setFilter('swim',this)"><i class="ti ti-swimming"></i> Best for swimming</span>
+  </div>
+  <div class="result-row"><span class="result-count" id="result-count">6 destinations</span></div>
+  <p class="section-label" id="featured-label">Not to miss</p>
+  <div class="dest-grid" id="featured-grid"></div>
+  <p class="section-label" id="more-label">More destinations</p>
+  <div class="dest-grid" id="more-grid"></div>
+  <div class="no-results" id="no-results"><i class="ti ti-compass-off" style="font-size:28px;display:block;margin-bottom:8px;color:var(--color-border-secondary)"></i>No destinations match this filter.</div>
+  <div class="also-strip"><div><p class="t1">Not sure where to go?</p><p class="t2">Browse all tours and filter by activity, duration, or price instead.</p></div><button class="also-btn">Browse tours ↗</button></div>
+</div>
+<script>
+const destinations=[
+  {id:1,name:'Dubrovnik old town',region:'Dalmatia coast',icon:'ti-building-castle',desc:"The jewel of the Adriatic — medieval city walls, marble streets, and sea views that stop you mid-sentence.",tags:['coast','swim'],attrs:[{icon:'ti-ship',label:'Main departure point'},{icon:'ti-swimming',label:'Sea swimming'},{icon:'ti-building-castle',label:'UNESCO old town'}],tourCount:8,featured:true,wide:true},
+  {id:2,name:'Hvar island',region:'Central Dalmatia',icon:'ti-sun',desc:"Croatia's sunniest island — lavender fields, a hilltop fortress, and some of the clearest water on the coast.",tags:['island','swim'],attrs:[{icon:'ti-swimming',label:'Crystal water'},{icon:'ti-sunset',label:'Sunset views'}],tourCount:4,featured:true,wide:false},
+  {id:3,name:'Elafiti islands',region:'Near Dubrovnik',icon:'ti-trees',desc:"Three car-free islands just 30 minutes from Dubrovnik. Quiet, lush, and largely untouched.",tags:['island','swim'],attrs:[{icon:'ti-trees',label:'Car-free'},{icon:'ti-fish',label:'Snorkelling'}],tourCount:3,featured:true,wide:false},
+  {id:4,name:'Blue Cave, Biševo',region:'Island of Vis',icon:'ti-droplet',desc:"One of the most photographed natural phenomena on the Adriatic. Electric blue between 11am and noon.",tags:['cave'],attrs:[{icon:'ti-clock',label:'Best 11:00–12:00'},{icon:'ti-users',label:'Entry by dinghy'}],tourCount:2,featured:false,wide:false},
+  {id:5,name:'Korčula old town',region:'Korčula island',icon:'ti-tower',desc:"A miniature Dubrovnik on its own island — cobbled streets, stone towers, and a claim to being Marco Polo's birthplace.",tags:['island','coast'],attrs:[{icon:'ti-building',label:'Medieval centre'},{icon:'ti-glass-full',label:'Good local wine'}],tourCount:2,featured:false,wide:false},
+  {id:6,name:'Vis island',region:'Outer archipelago',icon:'ti-island',desc:"Croatia's most remote inhabited island. Pristine bays, no crowds, and the best anchovies you'll eat anywhere.",tags:['island','swim','cave'],attrs:[{icon:'ti-fish',label:'Fishing village'},{icon:'ti-droplet',label:'Blue Cave nearby'}],tourCount:3,featured:false,wide:false},
+];
+let activeFilter='all';
+function cardHtml(d){
+  const wc=d.wide?' wide':'';
+  const attrs=d.attrs.map(a=>'<span class="attr-tag"><i class="ti '+a.icon+'"></i>'+a.label+'</span>').join('');
+  return '<div class="dest-card'+wc+'"><div class="card-img"><i class="ti '+d.icon+'"></i><span class="region-pill">'+d.region+'</span></div><div class="card-body"><p class="card-name">'+d.name+'</p><p class="card-region"><i class="ti ti-map-pin"></i>'+d.region+'</p><p class="card-desc">'+d.desc+'</p><div class="attr-row">'+attrs+'</div><div class="card-footer"><span class="tour-count"><i class="ti ti-sailboat"></i>'+d.tourCount+' tour'+(d.tourCount!==1?'s':'')+' visit here</span><button class="card-cta">See tours →</button></div></div></div>';
+}
+function render(){
+  const filtered=destinations.filter(d=>activeFilter==='all'||d.tags.includes(activeFilter));
+  const featured=filtered.filter(d=>d.featured),more=filtered.filter(d=>!d.featured);
+  document.getElementById('featured-grid').innerHTML=featured.map(cardHtml).join('');
+  document.getElementById('more-grid').innerHTML=more.map(cardHtml).join('');
+  document.getElementById('featured-label').style.display=featured.length?'':'none';
+  document.getElementById('featured-grid').style.display=featured.length?'':'none';
+  document.getElementById('more-label').style.display=more.length?'':'none';
+  document.getElementById('more-grid').style.display=more.length?'':'none';
+  document.getElementById('no-results').style.display=filtered.length===0?'block':'none';
+  document.getElementById('result-count').textContent=filtered.length+' destination'+(filtered.length!==1?'s':'');
+}
+function setFilter(f,el){activeFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');render();}
+render();
+</script>
+</body></html>

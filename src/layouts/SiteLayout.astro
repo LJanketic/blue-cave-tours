@@ -7,19 +7,21 @@ import BookingScript from '../components/BookingScript.astro';
 type Props = {
 	title: string;
 	description?: string;
-	/** Load booking redirect script only on pages with Book now forms. */
 	booking?: boolean;
 	ogImage?: string;
+	solidNav?: boolean;
+	robots?: string;
+	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 };
 
-const { title, description, booking = false, ogImage } = Astro.props;
+const { title, description, booking = false, ogImage, solidNav = true, robots, jsonLd } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description} ogImage={ogImage}>
+<BaseLayout title={title} description={description} ogImage={ogImage} robots={robots} jsonLd={jsonLd}>
 	<slot name="head" slot="head" />
 	<div class="site-shell">
 		<a class="skip-link" href="#main">Skip to content</a>
-		<Header />
+		<Header solid={solidNav} />
 		<slot />
 		<Footer />
 		{booking && <BookingScript />}

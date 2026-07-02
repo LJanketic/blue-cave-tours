@@ -1,0 +1,215 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Group Booking — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>:root{--color-text-primary:#111;--color-text-secondary:#555;--color-text-tertiary:#999;--color-text-info:#1a6fc4;--color-text-success:#085041;--color-background-primary:#fff;--color-background-secondary:#f5f5f4;--color-background-success:#e1f5ee;--color-border-primary:#aaa;--color-border-secondary:#ccc;--color-border-tertiary:#e5e5e3;--color-border-info:#7ab4e8;--border-radius-md:8px;--border-radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{box-sizing:border-box;}body{margin:0 auto;padding:24px;font-family:var(--font-sans);max-width:680px;}
+input,select,button,textarea{font-family:var(--font-sans);padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;}
+.page{max-width:560px;margin:0 auto;padding:1.5rem 0 2rem;font-size:14px;}
+.step-bar{display:flex;align-items:center;margin-bottom:28px;}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;}
+.step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;}
+.done .step-dot{background:var(--color-background-success);color:var(--color-text-success);}
+.done .step-lbl{color:var(--color-text-secondary);}
+.active .step-dot{background:var(--color-text-primary);color:var(--color-background-primary);}
+.active .step-lbl{color:var(--color-text-primary);font-weight:500;}
+.next .step-dot{background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px solid var(--color-border-secondary);}
+.next .step-lbl{color:var(--color-text-tertiary);}
+.step-line{flex:1;height:0.5px;background:var(--color-border-secondary);margin:0 8px;}
+.tour-snap{display:flex;gap:12px;align-items:center;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:20px;}
+.snap-img{width:56px;height:56px;border-radius:var(--border-radius-md);background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.snap-img i{font-size:22px;color:var(--color-border-secondary);}
+.snap-name{font-size:14px;font-weight:500;margin:0 0 3px;}
+.snap-meta{display:flex;gap:10px;flex-wrap:wrap;}
+.snap-tag{font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px;}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:14px;}
+.card-title{font-size:14px;font-weight:500;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
+.card-title i{font-size:16px;color:#1D9E75;}
+.card-sub{font-size:12px;color:var(--color-text-secondary);margin:0 0 14px;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-month{font-size:14px;font-weight:500;}
+.cal-nav{background:none;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font-sans);}
+.cal-nav:hover{background:var(--color-background-secondary);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-dow{font-size:11px;color:var(--color-text-tertiary);text-align:center;padding-bottom:4px;font-weight:500;}
+.cal-day{height:36px;border-radius:var(--border-radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;cursor:pointer;border:0.5px solid transparent;}
+.cal-day:hover:not(.empty):not(.past){background:var(--color-background-secondary);border-color:var(--color-border-secondary);}
+.cal-day.empty,.cal-day.past{cursor:default;color:var(--color-text-tertiary);}
+.cal-day.today{border-color:var(--color-border-info);color:var(--color-text-info);}
+.cal-day.sel{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary);}
+.avail-dot{width:4px;height:4px;border-radius:50%;background:#1D9E75;margin-top:1px;}
+.cal-day.sel .avail-dot{background:var(--color-background-primary);opacity:0.6;}
+.cal-day.past .avail-dot{display:none;}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+.slot{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color 0.12s;}
+.slot:hover{border-color:var(--color-border-primary);}
+.slot.sel{border:2px solid var(--color-text-primary);background:var(--color-background-secondary);}
+.slot-icon{width:36px;height:36px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.slot.sel .slot-icon{background:var(--color-background-primary);}
+.slot-time{font-size:15px;font-weight:500;margin:0 0 2px;}
+.slot-label{font-size:11px;color:var(--color-text-secondary);margin:0;}
+.slot-radio{width:18px;height:18px;border-radius:50%;border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:auto;}
+.slot.sel .slot-radio{background:var(--color-text-primary);border-color:var(--color-text-primary);}
+.slot.sel .slot-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--color-background-primary);}
+.guests-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.guest-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);}
+.guest-label{font-size:13px;}.guest-sub-label{font-size:11px;color:var(--color-text-tertiary);}
+.stepper{display:flex;align-items:center;gap:8px;}
+.step-btn{width:28px;height:28px;border-radius:50%;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font-sans);line-height:1;}
+.step-val{font-size:14px;font-weight:500;min-width:20px;text-align:center;}
+.cap-warn{font-size:11px;color:#BA7517;margin-top:8px;display:none;align-items:center;gap:5px;}
+.hold-note{font-size:12px;color:var(--color-text-secondary);margin-top:10px;display:flex;align-items:center;gap:6px;background:var(--color-background-secondary);padding:8px 12px;border-radius:var(--border-radius-md);}
+.hold-note i{color:#1D9E75;font-size:14px;flex-shrink:0;}
+.details-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;}
+.field.full{grid-column:1/-1;}
+.field textarea{resize:vertical;min-height:60px;font-family:var(--font-sans);}
+.summary-card{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.1rem 1.25rem;margin-bottom:16px;}
+.sum-title{font-size:13px;font-weight:500;margin:0 0 10px;}
+.sum-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
+.sum-label{color:var(--color-text-secondary);}.sum-val{font-weight:500;}
+.sum-div{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:10px 0;}
+.sum-total{display:flex;justify-content:space-between;font-size:15px;font-weight:500;}
+.sum-note{font-size:11px;color:var(--color-text-tertiary);margin-top:4px;text-align:right;}
+.cta-btn{width:100%;padding:13px;background:var(--color-text-primary);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font-sans);}
+.cta-btn:hover{opacity:0.88;}
+.back-btn{width:100%;padding:10px;background:none;color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;font-family:var(--font-sans);margin-top:8px;}
+.policy-note{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-success);justify-content:center;margin-top:10px;}
+</style><style>
+@media (max-width:768px){
+  body{padding:16px;}
+  .slots{grid-template-columns:1fr;}
+  .guests-grid{grid-template-columns:1fr;}
+  .details-grid{grid-template-columns:1fr;}
+  .cal-grid{gap:2px;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+  .cal-grid{font-size:11px;}
+}
+</style>
+</head><body>
+<div class="page">
+  <div class="step-bar">
+    <div class="step done"><div class="step-dot"><i class="ti ti-check" style="font-size:11px"></i></div><span class="step-lbl">Tour type</span></div>
+    <div class="step-line"></div>
+    <div class="step active"><div class="step-dot">2</div><span class="step-lbl">Date & guests</span></div>
+    <div class="step-line"></div>
+    <div class="step next"><div class="step-dot">3</div><span class="step-lbl">Review</span></div>
+    <div class="step-line"></div>
+    <div class="step next"><div class="step-dot">4</div><span class="step-lbl">Payment</span></div>
+  </div>
+  <div class="tour-snap">
+    <div class="snap-img"><i class="ti ti-sunset"></i></div>
+    <div><p class="snap-name">Sunset Bay coastal cruise</p><div class="snap-meta"><span class="snap-tag"><i class="ti ti-clock"></i> 3 hours</span><span class="snap-tag"><i class="ti ti-map-pin"></i> Marina Pier B</span><span class="snap-tag"><i class="ti ti-star" style="color:#BA7517"></i> 4.9 (128)</span></div></div>
+  </div>
+  <div class="card">
+    <p class="card-title"><i class="ti ti-calendar"></i> Choose a date</p>
+    <p class="card-sub">Tours run daily. Select your preferred day.</p>
+    <div class="cal-header"><button class="cal-nav" onclick="prevMonth()">‹</button><span class="cal-month" id="cal-month-label"></span><button class="cal-nav" onclick="nextMonth()">›</button></div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div id="slot-section" style="display:none;margin-top:18px;">
+      <p style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin:0 0 10px">Choose a departure time</p>
+      <div class="slots">
+        <div class="slot sel" id="slot-morning" onclick="selectSlot('09:00',this)"><div class="slot-icon" style="color:#EF9F27"><i class="ti ti-sun"></i></div><div><p class="slot-time">09:00</p><p class="slot-label">Morning departure</p></div><div class="slot-radio"></div></div>
+        <div class="slot" id="slot-sunset" onclick="selectSlot('18:00',this)"><div class="slot-icon" style="color:#E05C34"><i class="ti ti-sunset"></i></div><div><p class="slot-time">18:00</p><p class="slot-label">Sunset departure</p></div><div class="slot-radio"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <p class="card-title"><i class="ti ti-users"></i> How many guests?</p>
+    <p class="card-sub">Max 12 guests per departure. Children under 3 travel free.</p>
+    <div class="guests-grid">
+      <div class="guest-row"><div><p class="guest-label">Adults</p><p class="guest-sub-label">Age 13+ · €95</p></div><div class="stepper"><button class="step-btn" onclick="changeGuest('adults',-1)">−</button><span class="step-val" id="adults-val">2</span><button class="step-btn" onclick="changeGuest('adults',1)">+</button></div></div>
+      <div class="guest-row"><div><p class="guest-label">Children</p><p class="guest-sub-label">Age 3–12 · €55</p></div><div class="stepper"><button class="step-btn" onclick="changeGuest('children',-1)">−</button><span class="step-val" id="children-val">0</span><button class="step-btn" onclick="changeGuest('children',1)">+</button></div></div>
+    </div>
+    <div class="cap-warn" id="cap-warn"><i class="ti ti-alert-triangle"></i> Maximum 12 guests per departure reached.</div>
+    <div class="hold-note"><i class="ti ti-lock"></i> Your spots are held for 12 minutes once you proceed to review.</div>
+  </div>
+  <div class="card">
+    <p class="card-title"><i class="ti ti-user"></i> Your details</p>
+    <p class="card-sub">We'll send your confirmation and any updates here.</p>
+    <div class="details-grid">
+      <div class="field"><label>First name</label><input type="text" placeholder="Ivan"></div>
+      <div class="field"><label>Last name</label><input type="text" placeholder="Kovač"></div>
+      <div class="field"><label>Email</label><input type="email" placeholder="ivan@example.com"></div>
+      <div class="field"><label>Phone</label><input type="tel" placeholder="+385 91 234 5678"></div>
+      <div class="field full"><label>Special requests</label><textarea placeholder="Allergies, accessibility needs, anything we should know…"></textarea></div>
+    </div>
+  </div>
+  <div class="summary-card">
+    <p class="sum-title">Booking summary</p>
+    <div class="sum-row"><span class="sum-label">Tour</span><span class="sum-val">Sunset Bay coastal cruise</span></div>
+    <div class="sum-row"><span class="sum-label">Date</span><span class="sum-val" id="sum-date">— select a date</span></div>
+    <div class="sum-row"><span class="sum-label">Departure</span><span class="sum-val" id="sum-dep">09:00</span></div>
+    <div class="sum-row"><span class="sum-label">Guests</span><span class="sum-val" id="sum-guests">2 adults</span></div>
+    <hr class="sum-div">
+    <div class="sum-row"><span class="sum-label" id="sum-adults-label">Adults (2 × €95)</span><span class="sum-val" id="sum-adults-val">€190</span></div>
+    <div class="sum-row" id="sum-children-row" style="display:none"><span class="sum-label" id="sum-children-label">Children</span><span class="sum-val" id="sum-children-val">€0</span></div>
+    <hr class="sum-div">
+    <div class="sum-total"><span>Total</span><span id="sum-total">€190</span></div>
+    <p class="sum-note">Includes all taxes and fees</p>
+  </div>
+  <button class="cta-btn">Review booking <i class="ti ti-arrow-right" style="font-size:14px;vertical-align:-2px"></i></button>
+  <button class="back-btn">← Back to tour type</button>
+  <div class="policy-note"><i class="ti ti-shield-check" style="font-size:13px"></i> Free cancellation up to 48h before departure</div>
+</div>
+<script>
+const ADULT_PRICE=95,CHILD_PRICE=55,MAX_GUESTS=12;
+let adults=2,children=0,selDate=null,selSlot='09:00';
+const today=new Date();
+let viewYear=today.getFullYear(),viewMonth=today.getMonth();
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS=['Mo','Tu','We','Th','Fr','Sa','Su'];
+function renderCal(){
+  document.getElementById('cal-month-label').textContent=MONTHS[viewMonth]+' '+viewYear;
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML=DAYS.map(d=>'<div class="cal-dow">'+d+'</div>').join('');
+  let startDow=new Date(viewYear,viewMonth,1).getDay();
+  startDow=startDow===0?6:startDow-1;
+  for(let i=0;i<startDow;i++) grid.innerHTML+='<div class="cal-day empty"></div>';
+  const dim=new Date(viewYear,viewMonth+1,0).getDate();
+  for(let d=1;d<=dim;d++){
+    const date=new Date(viewYear,viewMonth,d);
+    const isPast=date<new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    const isToday=date.toDateString()===today.toDateString();
+    const isSel=selDate&&selDate.y===viewYear&&selDate.m===viewMonth&&selDate.d===d;
+    let cls='cal-day';
+    if(isPast) cls+=' past';
+    if(isToday&&!isPast) cls+=' today';
+    if(isSel) cls+=' sel';
+    const dot=isPast?'':'<div class="avail-dot"></div>';
+    grid.innerHTML+='<div class="'+cls+'"'+(isPast?'':' onclick="selectDate('+viewYear+','+viewMonth+','+d+')"')+'>'+d+dot+'</div>';
+  }
+}
+function selectDate(y,m,d){
+  selDate={y,m,d};renderCal();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('sum-date').textContent=d+' '+months[m]+' '+y;
+  document.getElementById('slot-section').style.display='';
+  selectSlot('09:00',document.getElementById('slot-morning'));
+}
+function selectSlot(time,el){
+  selSlot=time;document.querySelectorAll('.slot').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');
+  document.getElementById('sum-dep').textContent=time;
+}
+function prevMonth(){viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--;}renderCal();}
+function nextMonth(){viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++;}renderCal();}
+function changeGuest(type,delta){
+  if(type==='adults'){const n=adults+delta;if(n<1||n+children>MAX_GUESTS)return;adults=n;document.getElementById('adults-val').textContent=adults;}
+  else{const n=children+delta;if(n<0||adults+n>MAX_GUESTS)return;children=n;document.getElementById('children-val').textContent=children;}
+  document.getElementById('cap-warn').style.display=(adults+children>=MAX_GUESTS)?'flex':'none';
+  updateSummary();
+}
+function updateSummary(){
+  const at=adults*ADULT_PRICE,ct=children*CHILD_PRICE;
+  document.getElementById('sum-guests').textContent=adults+' adult'+(adults!==1?'s':'')+(children>0?', '+children+' child'+(children!==1?'ren':''):'');
+  document.getElementById('sum-adults-label').textContent='Adults ('+adults+' × €'+ADULT_PRICE+')';
+  document.getElementById('sum-adults-val').textContent='€'+at;
+  const cr=document.getElementById('sum-children-row');
+  if(children>0){cr.style.display='';document.getElementById('sum-children-label').textContent='Children ('+children+' × €'+CHILD_PRICE+')';document.getElementById('sum-children-val').textContent='€'+ct;}
+  else cr.style.display='none';
+  document.getElementById('sum-total').textContent='€'+(at+ct);
+}
+renderCal();updateSummary();
+</script>
+</body></html>

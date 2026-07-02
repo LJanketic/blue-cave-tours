@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /book/
+Disallow: /booking/success
+Disallow: /booking/error
+Disallow: /api/
+
+Sitemap: https://hellobluecave.com/sitemap-index.xml

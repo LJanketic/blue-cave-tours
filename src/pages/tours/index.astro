@@ -3,41 +3,33 @@ export const prerender = true;
 
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import TourCard from '../../components/TourCard.astro';
-import TourCarousel from '../../components/TourCarousel.astro';
+import ToursCatalog from '../../components/vue/ToursCatalog.vue';
 import { getAllTours } from '../../lib/tours';
 
 const all = getAllTours();
 ---
 
 <SiteLayout
-	title={pageTitle('All tours')}
-	description="Full catalog of boat tours and private days from Split: Blue Cave, islands, Blue Lagoon half-days, and custom private charters."
+	title={pageTitle('Our tours')}
+	description="Full catalog of boat tours and private charters from Split — Blue Cave, islands, lagoon half-days, and custom days at sea."
 	booking
 >
-	<main id="main" class="page-shell page-shell--wide">
-		<header class="page-head">
-			<h1 class="page-title">All tours</h1>
-			<p class="page-lead">
-				Full catalog of boat tours and private charters from Split — Blue Cave, islands, lagoon half-days, and custom days
-				at sea.
-			</p>
-		</header>
-		<TourCarousel ariaLabel="All tours">
-			{
-				all.map((tour, index) => (
-					<li class="tour-carousel__slide">
-						<TourCard tour={tour} eager={index < 2} />
-					</li>
-				))
-			}
-		</TourCarousel>
+	<main id="main" class="page-shell">
+		<div class="page tours-page">
+			<ToursCatalog client:visible tours={all} />
+		</div>
 	</main>
 </SiteLayout>
 
 <style>
-	.page-head {
-		margin-bottom: 2rem;
-		max-width: 62ch;
+	.tours-page {
+		padding: 1.5rem 0 2rem;
+		font-size: 14px;
+	}
+
+	@media (max-width: 768px) {
+		.tours-page {
+			padding-top: 1rem;
+		}
 	}
 </style>

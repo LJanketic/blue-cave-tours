@@ -1,197 +1,60 @@
 ---
 import type { TourDetail } from '../types/tour';
-import { supportsInstantBook, contactHrefForTour } from '../lib/booking';
-import TourImage from './TourImage.astro';
+import { contactHrefForTour, supportsInstantBook } from '../lib/booking';
+import PlaceholderImage from './PlaceholderImage.astro';
 
-type Props = { tour: TourDetail; eager?: boolean };
+type Props = {
+	tour: TourDetail;
+	featured?: boolean;
+};
 
-const { tour, eager = false } = Astro.props;
+const { tour, featured = false } = Astro.props;
 const instantBook = supportsInstantBook(tour);
+const photoIcon = tour.slug.includes('private') || !instantBook ? 'crown' : tour.slug.includes('lagoon') ? 'swimming' : 'island';
 ---
 
-<article class="card" id={tour.slug}>
-	<div class="card__image">
-		<a href={`/tours/${tour.slug}`} class="card__image-link">
-			<TourImage photo={tour.image} layout="card" eager={eager} fadeIn class="card__picture" />
-		</a>
-	</div>
-	<div class="card__body">
-		<p class="card__meta">{tour.scheduleLabel} · {tour.duration}</p>
-		<h3 class="card__title">
-			<a href={`/tours/${tour.slug}`}>{tour.title}</a>
-		</h3>
-		<p class="card__tagline">{tour.tagline}</p>
-		<p class="card__desc">{tour.shortDescription}</p>
-		<div class="card__footer">
-			<span class="card__price">From <strong>{tour.fromPrice}</strong></span>
-			<div class="card__actions">
-				<a class="card__secondary" href={`/tours/${tour.slug}`} aria-label={`Tour details: ${tour.title}`}>
-					Details
-				</a>
-				{
-					instantBook ? (
-						<form class="booking-form" data-tour-id={tour.slug}>
-							<button type="submit" class="card__cta" aria-label={`Book now: ${tour.title}`}>
-								Book now
-							</button>
-						</form>
-					) : (
-						<a class="card__cta card__cta--link" href={contactHrefForTour(tour)}>
-							Request a quote
-						</a>
-					)
-				}
+<article class:list={['tour-card', featured && 'featured']}>
+	<a href={`/tours/${tour.slug}`} class="tour-card__link">
+		<div class="tc-img card-img">
+			<PlaceholderImage photo={tour.image} layout="card" icon={photoIcon} />
+			<div class="img-badges">
+				{featured && <span class="tc-badge img-badge badge-bestseller">Best seller</span>}
+				{instantBook ? (
+					<span class="tc-badge img-badge badge-group">Group</span>
+				) : (
+					<span class="tc-badge img-badge badge-private">Private</span>
+				)}
 			</div>
 		</div>
+		<div class="tc-body card-body">
+			<p class="tc-name card-title">{tour.title}</p>
+			<div class="tc-meta card-meta">
+				<span class="meta-item"><i class="ti ti-clock"></i> {tour.duration}</span>
+				<span class="meta-item">
+					<i class={`ti ti-${instantBook ? 'users' : 'crown'}`}></i>
+					{instantBook ? 'Group tour' : 'Private charter'}
+				</span>
+			</div>
+			<p class="card-desc">{tour.shortDescription}</p>
+			<div class="tc-foot card-footer">
+				<div>
+					<span class="price-from">From </span>
+					<span class="tc-price price-val">{tour.fromPrice}</span>
+					<span class="price-per"> / person</span>
+				</div>
+			</div>
+		</div>
+	</a>
+	<div class="tour-card__actions">
+		<a class="btn-secondary tour-card__details" href={`/tours/${tour.slug}`}>Details</a>
+		{
+			instantBook ? (
+				<form class="booking-form" data-tour-id={tour.slug}>
+					<button type="submit" class="btn-primary">Book now</button>
+				</form>
+			) : (
+				<a class="btn-primary" href={contactHrefForTour(tour)}>Request a quote</a>
+			)
+		}
 	</div>
 </article>
-
-<style>
-	.card {
-		display: flex;
-		flex-direction: column;
-		background: var(--color-surface);
-		border-radius: var(--radius);
-		overflow: hidden;
-		box-shadow: var(--shadow-card);
-		border: 1px solid var(--color-border);
-		height: 100%;
-	}
-
-	.card__image-link {
-		display: block;
-		text-decoration: none;
-	}
-
-	.card__image :global(.card__picture) {
-		aspect-ratio: 3 / 2;
-	}
-
-	.card__body {
-		padding: 1.25rem 1.35rem 1.35rem;
-		display: flex;
-		flex-direction: column;
-		flex: 1;
-		gap: 0.35rem;
-	}
-
-	.card__meta {
-		margin: 0;
-		font-size: 0.8125rem;
-		font-weight: 600;
-		color: var(--color-muted);
-	}
-
-	.card__title {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: 1.35rem;
-		font-weight: var(--font-weight-bold);
-		line-height: 1.25;
-	}
-
-	.card__title a {
-		color: var(--color-nav);
-		text-decoration: none;
-	}
-
-	.card__title a:hover {
-		color: var(--color-nav-elevated);
-		text-decoration: underline;
-	}
-
-	.card__tagline {
-		margin: 0;
-		font-weight: 600;
-		color: var(--color-nav-elevated);
-		font-size: 0.95rem;
-	}
-
-	.card__desc {
-		margin: 0.25rem 0 0;
-		flex: 1;
-		color: var(--color-muted);
-		font-size: 0.95rem;
-		line-height: 1.55;
-	}
-
-	.card__footer {
-		margin-top: 1.25rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--color-border);
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.75rem;
-	}
-
-	.card__price {
-		font-size: 0.9375rem;
-		color: var(--color-text);
-	}
-
-	.card__price strong {
-		font-size: 1.125rem;
-		color: var(--color-nav);
-	}
-
-	.card__actions {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.card__secondary {
-		display: inline-flex;
-		align-items: center;
-		min-height: var(--touch-min);
-		padding: 0.6rem 0.9rem;
-		border-radius: 8px;
-		border: 1px solid var(--color-border);
-		color: var(--color-nav);
-		font-weight: 700;
-		font-size: 0.875rem;
-		text-decoration: none;
-	}
-
-	.card__secondary:hover {
-		border-color: var(--color-nav-elevated);
-		background: var(--color-base);
-	}
-
-	.booking-form {
-		margin: 0;
-	}
-
-	.card__cta {
-		appearance: none;
-		border: none;
-		cursor: pointer;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-height: var(--touch-min);
-		padding: 0.6rem 1.1rem;
-		border-radius: 8px;
-		background: var(--color-cta);
-		color: var(--color-cta-text);
-		font-weight: 700;
-		font-size: 0.9375rem;
-		transition: background 0.15s ease;
-	}
-
-	.card__cta:hover {
-		background: var(--color-cta-hover);
-	}
-
-	.card__cta:disabled {
-		opacity: 0.65;
-		cursor: not-allowed;
-	}
-
-	.card__cta--link {
-		text-decoration: none;
-	}
-</style>

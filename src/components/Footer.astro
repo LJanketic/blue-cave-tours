@@ -1,157 +1,49 @@
 ---
-import Logo from './Logo.astro';
 import { SITE_EMAIL, SITE_NAME, SITE_PHONE, SITE_PHONE_DISPLAY } from '../config/site';
-
-const year = new Date().getFullYear();
 ---
 
-<footer class="foot" id="site-footer">
-	<div class="foot__inner">
-		<div class="foot__brand">
-			<div class="foot__mark">
-				<Logo size={32} />
-				<p class="foot__name">{SITE_NAME}</p>
-			</div>
-			<p class="foot__address">
-				Riva promenade of Split, stand number 14<br />
-				Split, Croatia
-			</p>
-			<p class="foot__contact">
-				<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a><br />
-				<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>
-			</p>
-			<p class="foot__ops">
-				Operators may include Misericordia d.o.o., Aliskaf d.o.o., Per Mare d.o.o. The contracting entity appears on your
-				confirmation.
-			</p>
+<div class="footer-shell">
+<footer class="footer">
+	<div class="footer-brand">
+		<div class="nav-logo">
+			<i class="ti ti-sailboat" aria-hidden="true"></i>
+			{SITE_NAME}
 		</div>
-		<div class="foot__cols">
-			<div>
-				<h2 class="foot__heading type-label">Quick links</h2>
-				<ul class="foot__links">
-					<li><a href="/tours">Tours</a></li>
-					<li><a href="/#why-us">About the experience</a></li>
-					<li><a href="/booking/details">Booking details</a></li>
-					<li><a href="/tours/create-perfect-day-private">Private tour</a></li>
-				</ul>
-			</div>
-			<div>
-				<h2 class="foot__heading type-label">Legal</h2>
-				<ul class="foot__links">
-					<li><a href="/legal/terms">Terms &amp; Conditions</a></li>
-					<li><a href="/legal/privacy">Privacy Policy</a></li>
-				</ul>
-			</div>
-		</div>
+		<p>
+			Speedboat tours and private charters from Split. Licensed crew, small groups, and the best of the Adriatic
+			islands.
+		</p>
+		<p class="footer-contact">
+			<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>
+			{' · '}
+			<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>
+			<br />
+			Riva promenade, stand 14, Split
+		</p>
 	</div>
-	<p class="foot__fine">&copy; {year} {SITE_NAME}</p>
+	<div class="footer-col">
+		<h4>Tours</h4>
+		<a href="/tours">All tours</a>
+		<a href="/tours/create-perfect-day-private">Private charter</a>
+		<a href="/tours/blue-cave-hvar-5-islands">Blue Cave &amp; islands</a>
+		<a href="/tours/blue-lagoon-morning">Blue Lagoon</a>
+	</div>
+	<div class="footer-col">
+		<h4>Explore</h4>
+		<a href="/destinations">Destinations</a>
+		<a href="/about">About us</a>
+		<a href="/faq">FAQs</a>
+		<a href="/contact">Contact</a>
+	</div>
+	<div class="footer-col">
+		<h4>Legal</h4>
+		<a href="/legal/terms">Terms &amp; conditions</a>
+		<a href="/legal/privacy">Privacy policy</a>
+		<a href="/legal/cancellation">Cancellation policy</a>
+	</div>
 </footer>
-
-<style>
-	.foot {
-		background: var(--color-chrome-bg);
-		color: var(--color-chrome-text-muted);
-		padding: var(--section-padding-y-lg) var(--page-padding-x) 1.5rem;
-	}
-
-	.foot__inner {
-		max-width: var(--content-max);
-		margin: 0 auto;
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 2.5rem;
-		align-items: start;
-	}
-
-	.foot__mark {
-		display: flex;
-		align-items: center;
-		gap: 0.6rem;
-		margin-bottom: 0.75rem;
-	}
-
-	.foot__name {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: var(--text-sm);
-		font-weight: var(--font-weight-semibold);
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--color-brand-on-primary);
-	}
-
-	.foot__address,
-	.foot__contact,
-	.foot__ops {
-		margin: 0 0 0.75rem;
-		font-size: var(--text-sm);
-		line-height: 1.55;
-	}
-
-	.foot__ops {
-		font-size: var(--text-xs);
-		color: var(--color-chrome-text-muted);
-		max-width: 52ch;
-	}
-
-	.foot__contact a {
-		color: var(--color-chrome-link);
-		text-decoration: none;
-		font-weight: 600;
-	}
-
-	.foot__contact a:hover {
-		color: var(--color-brand-on-primary);
-		text-decoration: underline;
-	}
-
-	.foot__cols {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1.5rem;
-	}
-
-	.foot__heading {
-		margin: 0 0 0.75rem;
-		font-size: var(--text-xs);
-		color: var(--color-chrome-text-subtle);
-	}
-
-	.foot__links {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.foot__links a {
-		color: var(--color-chrome-text-muted);
-		text-decoration: none;
-		font-size: var(--text-sm);
-		display: inline-block;
-		padding-block: 0.2rem;
-	}
-
-	.foot__links a:hover {
-		color: var(--color-brand-on-primary);
-		text-decoration: underline;
-	}
-
-	.foot__fine {
-		max-width: var(--content-max);
-		margin: 2.5rem auto 0;
-		padding: 1.25rem var(--page-padding-x) 0;
-		border-top: 1px solid var(--color-chrome-border);
-		font-size: var(--text-xs);
-		color: var(--color-chrome-text-muted);
-		text-align: center;
-	}
-
-	@media (max-width: 720px) {
-		.foot__inner {
-			grid-template-columns: 1fr;
-		}
-	}
-</style>
+<div class="footer-bottom">
+	<span>&copy; {new Date().getFullYear()} {SITE_NAME}</span>
+	<span>Licensed maritime operator · Croatia</span>
+</div>
+</div>

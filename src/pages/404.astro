@@ -1,17 +1,29 @@
 ---
 export const prerender = true;
 
-import NotFoundPanel from '../components/NotFoundPanel.astro';
-import { pageTitle } from '../config/site';
 import SiteLayout from '../layouts/SiteLayout.astro';
+import { pageTitle } from '../config/site';
 ---
 
-<SiteLayout title={pageTitle('Page not found')}>
+<SiteLayout
+	title={pageTitle('Page not found')}
+	description="The page you requested could not be found. Browse our boat tours from Split or return to the homepage."
+	robots="noindex, follow"
+>
 	<main id="main">
-		<NotFoundPanel title="404" description="That page doesn’t exist or the tour slug is wrong.">
-			<a href="/tours">Browse all tours</a>
-			{' or '}
-			<a href="/">return home</a>.
-		</NotFoundPanel>
+		<div class="nf-page">
+			<div class="nf-icon" aria-hidden="true">
+				<i class="ti ti-compass-off"></i>
+			</div>
+			<h1>Page not found</h1>
+			<p>
+				That page doesn't exist, or the tour slug may be wrong. Check the URL or head back to browse our tours
+				from Split.
+			</p>
+			<div class="nf-actions">
+				<a class="btn-primary" href="/tours">Browse all tours</a>
+				<a class="btn-secondary" href="/">Return home</a>
+			</div>
+		</div>
 	</main>
 </SiteLayout>

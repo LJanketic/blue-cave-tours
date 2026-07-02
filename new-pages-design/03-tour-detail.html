@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tour Detail — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{--color-text-primary:#111;--color-text-secondary:#555;--color-text-tertiary:#999;--color-text-info:#1a6fc4;--color-text-success:#085041;--color-text-danger:#8B1A15;--color-background-primary:#fff;--color-background-secondary:#f5f5f4;--color-background-info:#e6f1fb;--color-background-success:#e1f5ee;--color-border-primary:#aaa;--color-border-secondary:#ccc;--color-border-tertiary:#e5e5e3;--color-border-info:#7ab4e8;--border-radius-md:8px;--border-radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{box-sizing:border-box;}body{margin:0;padding:24px;font-family:var(--font-sans);background:var(--color-background-primary);color:var(--color-text-primary);max-width:960px;margin:0 auto;}
+input,select,button,textarea{font-family:var(--font-sans);padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;}
+.page{padding:0 0 2rem;font-size:14px;}
+.breadcrumb{font-size:12px;color:var(--color-text-tertiary);margin-bottom:16px;}
+.breadcrumb a{color:var(--color-text-info);text-decoration:none;cursor:pointer;}
+.img-hero{width:100%;height:220px;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:10px;}
+.img-hero i{font-size:48px;color:var(--color-border-secondary);}
+.img-thumbs{display:flex;gap:8px;margin-bottom:20px;}
+.img-thumb{height:60px;flex:1;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.img-thumb:hover{border-color:var(--color-border-primary);}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;}
+.tag-priv{background:#EEEDFE;color:#3C3489;}.tag-grp{background:#E1F5EE;color:#085041;}.tag-dur{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+h1{font-size:20px;font-weight:500;margin:0 0 6px;}
+.rating-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:13px;color:var(--color-text-secondary);}
+.stars{color:#BA7517;font-size:13px;}
+.layout{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;}
+.section{margin-bottom:24px;}
+.section-title{font-size:14px;font-weight:500;margin:0 0 10px;padding-bottom:8px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.prose{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin:0;}
+.highlights{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.hl-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--color-text-secondary);padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);}
+.hl-item i{color:#1D9E75;font-size:15px;margin-top:1px;flex-shrink:0;}
+.itinerary-item{display:flex;gap:12px;padding-bottom:16px;position:relative;}
+.itinerary-item:not(:last-child)::before{content:'';position:absolute;left:11px;top:24px;bottom:0;width:0.5px;background:var(--color-border-secondary);}
+.it-dot{width:22px;height:22px;border-radius:50%;background:var(--color-background-info);border:0.5px solid var(--color-border-info);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.it-dot i{font-size:11px;color:var(--color-text-info);}
+.it-time{font-size:11px;color:var(--color-text-tertiary);margin-bottom:2px;}
+.it-label{font-size:13px;font-weight:500;}
+.it-desc{font-size:12px;color:var(--color-text-secondary);margin-top:2px;line-height:1.5;}
+.includes-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.inc-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--color-text-secondary);}
+.inc-item.yes i{color:var(--color-text-success);}.inc-item.no i{color:var(--color-text-danger);}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.info-item{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);}
+.info-item .info-label{font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em;}
+.info-item .info-val{font-size:13px;font-weight:500;}
+.review-card{padding:12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:8px;}
+.review-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#3C3489;flex-shrink:0;}
+.review-name{font-size:13px;font-weight:500;}.review-date{font-size:11px;color:var(--color-text-tertiary);margin-left:auto;}
+.review-text{font-size:12px;color:var(--color-text-secondary);line-height:1.6;margin:0;}
+.sticky-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;position:sticky;top:16px;}
+.price-row{display:flex;align-items:baseline;gap:4px;margin-bottom:4px;}
+.price-from{font-size:12px;color:var(--color-text-tertiary);}
+.price-val{font-size:22px;font-weight:500;}
+.price-per{font-size:12px;color:var(--color-text-secondary);}
+.card-divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:12px 0;}
+.card-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;}
+.card-label{color:var(--color-text-secondary);display:flex;align-items:center;gap:5px;}
+.card-val{font-weight:500;}
+.avail-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px;}
+.dot{width:8px;height:8px;border-radius:50%;}
+.dot-ok{background:#1D9E75;}.dot-few{background:#EF9F27;}.dot-no{background:var(--color-border-secondary);}
+.dot-legend{display:flex;gap:10px;margin-top:6px;font-size:11px;color:var(--color-text-tertiary);}
+.dot-legend span{display:flex;align-items:center;gap:4px;}
+.cta-primary{width:100%;padding:12px;background:var(--color-text-primary);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font-sans);margin-top:4px;}
+.cta-secondary{width:100%;padding:10px;background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-sans);margin-top:8px;}
+.policy-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-success);margin-top:10px;justify-content:center;}
+.show-more{font-size:13px;color:var(--color-text-info);background:none;border:none;padding:6px 0 0;cursor:pointer;font-family:var(--font-sans);}
+</style>
+<style>
+@media (max-width:768px){
+  body{padding:16px;}
+  .layout{grid-template-columns:1fr;}
+  .highlights{grid-template-columns:1fr;}
+  .includes-grid{grid-template-columns:1fr;}
+  .info-grid{grid-template-columns:1fr;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="breadcrumb"><a>Tours</a> › <a>Coastal cruises</a> › Sunset Bay coastal cruise</div>
+  <div class="img-hero">
+    <i class="ti ti-sailboat"></i>
+    <div style="position:absolute;top:10px;right:10px;background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:4px 10px;font-size:12px;font-weight:500;border:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:5px;"><i class="ti ti-photo" style="font-size:13px"></i> 1 / 12</div>
+  </div>
+  <div class="img-thumbs">
+    <div class="img-thumb"><i class="ti ti-anchor" style="font-size:18px;color:var(--color-border-secondary)"></i></div>
+    <div class="img-thumb"><i class="ti ti-sunset" style="font-size:18px;color:var(--color-border-secondary)"></i></div>
+    <div class="img-thumb"><i class="ti ti-fish" style="font-size:18px;color:var(--color-border-secondary)"></i></div>
+    <div class="img-thumb"><span style="font-size:12px;font-weight:500;color:var(--color-text-secondary)">+8</span></div>
+  </div>
+  <div class="tags">
+    <span class="tag tag-priv"><i class="ti ti-crown" style="font-size:11px"></i> Private available</span>
+    <span class="tag tag-grp"><i class="ti ti-users" style="font-size:11px"></i> Group tour</span>
+    <span class="tag tag-dur"><i class="ti ti-clock" style="font-size:11px"></i> 3 hours</span>
+    <span class="tag tag-dur"><i class="ti ti-star" style="font-size:11px"></i> Best seller</span>
+  </div>
+  <div class="layout">
+    <div>
+      <h1>Sunset Bay coastal cruise</h1>
+      <div class="rating-row"><span class="stars">★★★★★</span><span><strong style="color:var(--color-text-primary)">4.9</strong> · 128 reviews</span><span>·</span><span>500+ guests this season</span></div>
+      <div class="section"><p class="prose">Sail along the dramatic Adriatic coastline as the sun dips below the horizon. This three-hour voyage takes you past sea caves, hidden coves, and the old town walls — ending with a golden-hour view that's hard to forget. Available as a shared group departure or as a fully private charter.</p></div>
+      <div class="section">
+        <div class="section-title">Highlights</div>
+        <div class="highlights">
+          <div class="hl-item"><i class="ti ti-sunset-2"></i>Sunset sea cave entry</div>
+          <div class="hl-item"><i class="ti ti-swimming"></i>Swimming stop in a hidden cove</div>
+          <div class="hl-item"><i class="ti ti-bottle"></i>Welcome drink on board</div>
+          <div class="hl-item"><i class="ti ti-binoculars"></i>Guided coastal narration</div>
+          <div class="hl-item"><i class="ti ti-ship"></i>Max 12 guests per departure</div>
+          <div class="hl-item"><i class="ti ti-accessible"></i>Wheelchair accessible</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Itinerary</div>
+        <div class="itinerary-item"><div class="it-dot"><i class="ti ti-map-pin"></i></div><div><p class="it-time">18:00</p><p class="it-label">Departure — Marina Pier B, Gate 3</p><p class="it-desc">Meet your captain. Life jackets and safety briefing on board.</p></div></div>
+        <div class="itinerary-item"><div class="it-dot"><i class="ti ti-cave"></i></div><div><p class="it-time">18:30</p><p class="it-label">Sea cave passage</p><p class="it-desc">Enter the Blue Grotto by dinghy. Best light in the late afternoon.</p></div></div>
+        <div class="itinerary-item"><div class="it-dot"><i class="ti ti-swimming"></i></div><div><p class="it-time">19:10</p><p class="it-label">Swimming stop — Sveti Nikola cove</p><p class="it-desc">30 minutes at anchor. Snorkelling gear available on request.</p></div></div>
+        <div class="itinerary-item"><div class="it-dot"><i class="ti ti-sunset"></i></div><div><p class="it-time">20:00</p><p class="it-label">Sunset sail past the old town walls</p><p class="it-desc">Drinks served. Prime photo moment.</p></div></div>
+        <div class="itinerary-item" style="padding-bottom:0"><div class="it-dot"><i class="ti ti-anchor"></i></div><div><p class="it-time">21:00</p><p class="it-label">Return to Marina Pier B</p></div></div>
+      </div>
+      <div class="section">
+        <div class="section-title">What's included</div>
+        <div class="includes-grid">
+          <div class="inc-item yes"><i class="ti ti-circle-check"></i> Welcome drink</div>
+          <div class="inc-item yes"><i class="ti ti-circle-check"></i> Life jackets</div>
+          <div class="inc-item yes"><i class="ti ti-circle-check"></i> Guided narration</div>
+          <div class="inc-item yes"><i class="ti ti-circle-check"></i> Dinghy for cave entry</div>
+          <div class="inc-item no"><i class="ti ti-circle-x"></i> Snorkelling gear</div>
+          <div class="inc-item no"><i class="ti ti-circle-x"></i> Food / meals</div>
+          <div class="inc-item no"><i class="ti ti-circle-x"></i> Hotel transfers</div>
+          <div class="inc-item no"><i class="ti ti-circle-x"></i> Photo package</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Good to know</div>
+        <div class="info-grid">
+          <div class="info-item"><span class="info-label">Minimum age</span><span class="info-val">3 years</span></div>
+          <div class="info-item"><span class="info-label">Group size</span><span class="info-val">Max 12 guests</span></div>
+          <div class="info-item"><span class="info-label">Language</span><span class="info-val">EN, HR, DE</span></div>
+          <div class="info-item"><span class="info-label">Accessibility</span><span class="info-val">Wheelchair friendly</span></div>
+          <div class="info-item"><span class="info-label">Difficulty</span><span class="info-val">Easy — all fitness levels</span></div>
+          <div class="info-item"><span class="info-label">What to bring</span><span class="info-val">Swimwear, sunscreen, camera</span></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Reviews <span style="font-weight:400;color:var(--color-text-tertiary);font-size:13px">(128)</span></div>
+        <div class="review-card"><div class="review-meta"><div class="avatar">MK</div><span class="review-name">Maja K.</span><span class="stars" style="font-size:11px;margin-left:4px">★★★★★</span><span class="review-date">Jun 2025</span></div><p class="review-text">Absolutely magical. The sea cave was the highlight — we were the only boat there at that time of day. Captain was knowledgeable and funny. Book this.</p></div>
+        <div class="review-card"><div class="review-meta"><div class="avatar">TR</div><span class="review-name">Thomas R.</span><span class="stars" style="font-size:11px;margin-left:4px">★★★★☆</span><span class="review-date">May 2025</span></div><p class="review-text">Great tour. Swimming stop was a bit short for my taste but the sunset views more than made up for it. Very smooth booking process too.</p></div>
+        <button class="show-more">Show all 128 reviews ›</button>
+      </div>
+    </div>
+    <div>
+      <div class="sticky-card">
+        <div class="price-row"><span class="price-from">From</span><span class="price-val">€55</span><span class="price-per">/ person</span></div>
+        <p style="font-size:11px;color:var(--color-text-tertiary);margin:0 0 12px">Adults from €95 · Children from €55</p>
+        <div class="card-row"><span class="card-label"><i class="ti ti-calendar"></i> Next available</span><span class="card-val">Today, 18:00</span></div>
+        <div class="card-row"><span class="card-label"><i class="ti ti-users"></i> Availability</span><span class="card-val" style="color:#BA7517">4 spots left</span></div>
+        <div class="avail-dots">
+          <div class="dot dot-ok"></div><div class="dot dot-ok"></div><div class="dot dot-ok"></div><div class="dot dot-few"></div><div class="dot dot-few"></div><div class="dot dot-no"></div><div class="dot dot-no"></div><div class="dot dot-ok"></div><div class="dot dot-ok"></div><div class="dot dot-ok"></div><div class="dot dot-few"></div><div class="dot dot-ok"></div><div class="dot dot-ok"></div><div class="dot dot-no"></div>
+        </div>
+        <div class="dot-legend"><span><span class="dot dot-ok" style="display:inline-block"></span> Available</span><span><span class="dot dot-few" style="display:inline-block"></span> Few spots</span><span><span class="dot dot-no" style="display:inline-block"></span> Full</span></div>
+        <div class="card-divider"></div>
+        <button class="cta-primary">Book group tour <i class="ti ti-arrow-right" style="font-size:14px;vertical-align:-2px"></i></button>
+        <button class="cta-secondary"><i class="ti ti-crown" style="font-size:13px;vertical-align:-2px"></i> Book as private charter</button>
+        <div class="policy-pill"><i class="ti ti-shield-check" style="font-size:13px"></i> Free cancellation up to 48h before</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

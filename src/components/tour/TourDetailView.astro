@@ -1,405 +1,398 @@
 ---
 import type { TourDetail } from '../../types/tour';
-import { supportsInstantBook, contactHrefForTour } from '../../lib/booking';
-import TourImage from '../TourImage.astro';
+import { contactHrefForTour, supportsInstantBook } from '../../lib/booking';
+import ImageGallery from '../vue/ImageGallery.vue';
 
 type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
 const instantBook = supportsInstantBook(tour);
+
+const galleryPhotos = [tour.image, ...tour.gallery].map((photo, index) => ({
+	color: photo.color,
+	alt: photo.alt,
+	icon:
+		index === 0
+			? tour.slug.includes('lagoon')
+				? 'swimming'
+				: tour.slug.includes('private')
+					? 'crown'
+					: 'sailboat'
+			: ['anchor', 'sunset', 'fish', 'island'][index % 4],
+}));
+
+const heroPhoto = galleryPhotos[0];
+const thumbPhotos = galleryPhotos.slice(1);
+
+const highlightIcons = ['sunset-2', 'swimming', 'bottle', 'binoculars', 'ship', 'accessible', 'sailboat', 'droplet'];
+const itineraryIcons = ['map-pin', 'sailboat', 'swimming', 'sunset', 'anchor', 'island', 'droplet'];
+
+const goodToKnow = [
+	{ label: 'Duration', value: tour.duration },
+	{ label: 'Departure', value: tour.departure },
+	{ label: 'Return', value: tour.returnTime },
+	{ label: 'Season', value: tour.availability },
+	{ label: 'Meeting point', value: tour.meetingPoint },
+	{ label: 'What to bring', value: tour.whatToBring.join(', ') },
+];
+
+if (tour.caveTicketNote) {
+	goodToKnow.push({ label: 'Cave entry', value: tour.caveTicketNote });
+}
+
+const availPattern = [
+	'dot-ok',
+	'dot-ok',
+	'dot-ok',
+	'dot-few',
+	'dot-few',
+	'dot-no',
+	'dot-no',
+	'dot-ok',
+	'dot-ok',
+	'dot-ok',
+	'dot-few',
+	'dot-ok',
+	'dot-ok',
+	'dot-no',
+] as const;
 ---
 
-<article class="detail">
-	<header class="detail__hero">
-		<div class="detail__hero-media">
-			<TourImage photo={tour.image} layout="hero" priority class="detail__hero-picture" />
-			<div class="detail__hero-overlay" aria-hidden="true"></div>
-		</div>
-		<div class="detail__hero-text">
-			<p class="detail__eyebrow type-label">{tour.availability}</p>
-			<h1 class="detail__title">{tour.title}</h1>
-			<p class="detail__tagline">{tour.tagline}</p>
-			<p class="detail__schedule">{tour.scheduleLabel}</p>
-		</div>
-	</header>
+<article class="page tour-detail">
+	<nav class="breadcrumb" aria-label="Breadcrumb">
+		<a href="/tours">Tours</a>
+		<span aria-hidden="true"> › </span>
+		<a href="/tours">{tour.tagline}</a>
+		<span aria-hidden="true"> › </span>
+		<span aria-current="page">{tour.title}</span>
+	</nav>
 
-	<div class="detail__content">
-		<section class="block" aria-labelledby="overview-heading">
-			<h2 id="overview-heading" class="block__h">Tour overview &amp; highlights</h2>
-			<p class="block__p">{tour.overviewHighlights}</p>
-		</section>
+	<ImageGallery client:visible hero={heroPhoto} gallery={thumbPhotos} />
 
-		<section class="meta-grid" aria-label="Schedule summary">
-			<div class="meta-card">
-				<h3 class="meta-card__label type-label">Departure</h3>
-				<p class="meta-card__val">{tour.departure}</p>
-			</div>
-			<div class="meta-card">
-				<h3 class="meta-card__label type-label">Duration</h3>
-				<p class="meta-card__val">{tour.duration}</p>
-			</div>
-			<div class="meta-card">
-				<h3 class="meta-card__label type-label">Return</h3>
-				<p class="meta-card__val">{tour.returnTime}</p>
-			</div>
-		</section>
-
-		<section class="block" aria-labelledby="itin-heading">
-			<h2 id="itin-heading" class="block__h">{tour.itineraryLabel}</h2>
-			<ol class="itin-list">
-				{tour.itinerary.map((step) => (
-					<li>{step}</li>
-				))}
-			</ol>
-		</section>
-
-		<div class="triple">
-			<section class="block block--tight" aria-labelledby="meet-heading">
-				<h2 id="meet-heading" class="block__h">Meeting point</h2>
-				<p class="block__p">{tour.meetingPoint}</p>
-			</section>
-			<section class="block block--tight" aria-labelledby="wx-heading">
-				<h2 id="wx-heading" class="block__h">Weather</h2>
-				<p class="block__p">{tour.weather}</p>
-			</section>
-			<section class="block block--tight" aria-labelledby="safe-heading">
-				<h2 id="safe-heading" class="block__h">Important info &amp; safety</h2>
-				<p class="block__p">{tour.importantInfo}</p>
-			</section>
-		</div>
-
-		<section class="block" aria-labelledby="bring-heading">
-			<h2 id="bring-heading" class="block__h">What to bring</h2>
-			<ul class="bullet">
-				{tour.whatToBring.map((item) => (
-					<li>{item}</li>
-				))}
-			</ul>
-		</section>
-
-		<div class="split">
-			<section class="block block--tight" aria-labelledby="inc-heading">
-				<h2 id="inc-heading" class="block__h">What&apos;s included</h2>
-				<ul class="bullet">
-					{tour.included.map((item) => (
-						<li>{item}</li>
-					))}
-				</ul>
-			</section>
-			<section class="block block--tight" aria-labelledby="noinc-heading">
-				<h2 id="noinc-heading" class="block__h">Not included</h2>
-				<ul class="bullet">
-					{tour.notIncluded.map((item) => (
-						<li>{item}</li>
-					))}
-				</ul>
-			</section>
-		</div>
-
-		<section class="block block--price" aria-labelledby="price-heading">
-			<h2 id="price-heading" class="block__h">Price breakdown</h2>
-			<p class="block__p">{tour.priceNotes}</p>
-			<p class="block__note">
-				<strong>Cave &amp; park tickets:</strong> {tour.caveTicketNote}
-			</p>
-		</section>
-
+	<div class="tags">
 		{
-			tour.groupSale && (
-				<section class="block block--group" aria-labelledby="group-heading">
-					<h2 id="group-heading" class="block__h">
-						Group bookings
-					</h2>
-					<p class="block__p">{tour.groupSale}</p>
-				</section>
+			instantBook ? (
+				<span class="tag tag-grp">
+					<i class="ti ti-users" aria-hidden="true"></i> Group tour
+				</span>
+			) : (
+				<span class="tag tag-priv">
+					<i class="ti ti-crown" aria-hidden="true"></i> Private charter
+				</span>
 			)
 		}
+		{
+			instantBook && (
+				<span class="tag tag-priv">
+					<i class="ti ti-crown" aria-hidden="true"></i> Private available
+				</span>
+			)
+		}
+		<span class="tag tag-dur">
+			<i class="ti ti-clock" aria-hidden="true"></i> {tour.duration}
+		</span>
+		{tour.featured && (
+			<span class="tag tag-dur">
+				<i class="ti ti-star" aria-hidden="true"></i> Best seller
+			</span>
+		)}
+	</div>
 
-		<section class="block" aria-labelledby="gallery-heading">
-			<h2 id="gallery-heading" class="block__h">Gallery</h2>
-			<div class="gallery">
-				{tour.gallery.map((img) => (
-					<figure class="gallery__fig">
-						<TourImage photo={img} layout="gallery" fadeIn class="gallery__picture" />
-					</figure>
-				))}
-			</div>
-		</section>
+	<div class="layout">
+		<div>
+			<h1>{tour.title}</h1>
+			<p class="rating-row">
+				<span><strong>{tour.tagline}</strong></span>
+				<span aria-hidden="true">·</span>
+				<span>{tour.scheduleLabel}</span>
+			</p>
 
-		<section class="block" aria-labelledby="disc-heading">
-			<h2 id="disc-heading" class="block__h">Disclaimers</h2>
-			<ul class="bullet">
-				{tour.disclaimers.map((d) => (
-					<li>{d}</li>
-				))}
-			</ul>
-		</section>
+			<section class="section" aria-labelledby="overview-heading">
+				<h2 id="overview-heading" class="section-title">Overview</h2>
+				<p class="prose">{tour.overviewHighlights}</p>
+			</section>
 
-		<div class="cta-bar">
+			<section class="section" aria-labelledby="highlights-heading">
+				<h2 id="highlights-heading" class="section-title">Highlights</h2>
+				<div class="highlights">
+					{
+						tour.included.map((item, index) => (
+							<div class="hl-item">
+								<i
+									class={`ti ti-${highlightIcons[index % highlightIcons.length]}`}
+									aria-hidden="true"
+								></i>
+								{item}
+							</div>
+						))
+					}
+				</div>
+			</section>
+
+			<section class="section" aria-labelledby="itinerary-heading">
+				<h2 id="itinerary-heading" class="section-title">{tour.itineraryLabel}</h2>
+				{
+					tour.itinerary.map((step, index) => {
+						const isFirst = index === 0;
+						const isLast = index === tour.itinerary.length - 1;
+						const timeLabel = isFirst ? tour.scheduleLabel : isLast ? tour.returnTime : null;
+
+						return (
+							<div class={`itinerary-item${isLast ? ' itinerary-item--last' : ''}`}>
+								<div class="it-dot">
+									<i class={`ti ti-${itineraryIcons[index % itineraryIcons.length]}`} aria-hidden="true"></i>
+								</div>
+								<div>
+									{timeLabel && <p class="it-time">{timeLabel}</p>}
+									<p class="it-label">{step}</p>
+								</div>
+							</div>
+						);
+					})
+				}
+			</section>
+
+			<section class="section" aria-labelledby="included-heading">
+				<h2 id="included-heading" class="section-title">What&apos;s included</h2>
+				<div class="includes-grid">
+					{
+						tour.included.map((item) => (
+							<div class="inc-item yes">
+								<i class="ti ti-circle-check" aria-hidden="true"></i>
+								{item}
+							</div>
+						))
+					}
+					{
+						tour.notIncluded.map((item) => (
+							<div class="inc-item no">
+								<i class="ti ti-circle-x" aria-hidden="true"></i>
+								{item}
+							</div>
+						))
+					}
+				</div>
+			</section>
+
+			<section class="section" aria-labelledby="know-heading">
+				<h2 id="know-heading" class="section-title">Good to know</h2>
+				<div class="info-grid">
+					{
+						goodToKnow.map((item) => (
+							<div class="info-item">
+								<span class="info-label">{item.label}</span>
+								<span class="info-val">{item.value}</span>
+							</div>
+						))
+					}
+				</div>
+				<p class="prose tour-detail__note">{tour.importantInfo}</p>
+			</section>
+
 			{
-				instantBook ? (
-					<form class="booking-form" data-tour-id={tour.slug}>
-						<button type="submit" class="cta-bar__btn" aria-label={`Book now: ${tour.title}`}>
-							Book now
-						</button>
-					</form>
-				) : (
-					<a class="cta-bar__btn cta-bar__btn--link" href={contactHrefForTour(tour)}>
-						Request a quote
-					</a>
+				tour.disclaimers.length > 0 && (
+					<section class="section" aria-labelledby="disclaimers-heading">
+						<h2 id="disclaimers-heading" class="section-title">Please note</h2>
+						<ul class="tour-detail__disclaimers">
+							{tour.disclaimers.map((item) => (
+								<li>{item}</li>
+							))}
+						</ul>
+					</section>
 				)
 			}
-			<a class="cta-bar__back" href="/tours">← All tours</a>
 		</div>
+
+		<aside aria-label="Book this tour">
+			<div class="sticky-card">
+				<div class="price-row">
+					<span class="price-from">From</span>
+					<span class="price-val">{tour.fromPrice}</span>
+					<span class="price-per">{instantBook ? '/ person' : '/ boat'}</span>
+				</div>
+				<p class="sticky-card__price-note">{tour.priceNotes}</p>
+
+				<div class="card-row">
+					<span class="card-label"><i class="ti ti-calendar" aria-hidden="true"></i> Next departure</span>
+					<span class="card-val">{tour.departure}</span>
+				</div>
+				<div class="card-row">
+					<span class="card-label"><i class="ti ti-users" aria-hidden="true"></i> Season</span>
+					<span class="card-val">{tour.availability}</span>
+				</div>
+
+				<div class="avail-dots" aria-hidden="true">
+					{availPattern.map((state) => (
+						<div class={`dot ${state}`}></div>
+					))}
+				</div>
+				<div class="dot-legend" aria-hidden="true">
+					<span><span class="dot dot-ok"></span> Available</span>
+					<span><span class="dot dot-few"></span> Few spots</span>
+					<span><span class="dot dot-no"></span> Full</span>
+				</div>
+
+				<hr class="card-divider" />
+
+				{
+					instantBook ? (
+						<form class="booking-form" data-tour-id={tour.slug}>
+							<button type="submit" class="cta-primary">
+								Book group tour
+								<i class="ti ti-arrow-right" aria-hidden="true"></i>
+							</button>
+						</form>
+					) : (
+						<a class="cta-primary cta-primary--link" href={contactHrefForTour(tour)}>
+							Request a quote
+							<i class="ti ti-arrow-right" aria-hidden="true"></i>
+						</a>
+					)
+				}
+				{
+					instantBook && (
+						<a class="cta-secondary" href="/contact?tour=create-perfect-day-private">
+							<i class="ti ti-crown" aria-hidden="true"></i>
+							Book as private charter
+						</a>
+					)
+				}
+
+				<p class="policy-pill">
+					<i class="ti ti-shield-check" aria-hidden="true"></i>
+					Free cancellation up to 48h before
+				</p>
+			</div>
+		</aside>
 	</div>
 </article>
 
 <style>
-	.detail {
-		background: var(--color-base);
+	.tour-detail h1 {
+		font-size: 20px;
+		font-weight: 500;
+		margin: 0 0 6px;
 	}
 
-	.detail__hero {
-		position: relative;
-		min-height: 320px;
-		color: var(--color-chrome-text);
+	.tour-detail .rating-row {
+		margin-bottom: 16px;
 	}
 
-	.detail__hero-media {
-		position: absolute;
-		inset: 0;
+	.tour-detail .rating-row strong {
+		color: var(--color-text-primary);
 	}
 
-	.detail__hero-media :global(.detail__hero-picture) {
-		width: 100%;
-		height: 100%;
+	.tour-detail .sticky-card .price-from {
+		font-size: 12px;
 	}
 
-	.detail__hero-media :global(.tour-image__img) {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
+	.tour-detail .sticky-card .price-val {
+		font-size: 22px;
+		font-weight: 500;
 	}
 
-	.detail__hero-overlay {
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(to top, var(--color-overlay-strong), var(--color-overlay-mid));
+	.tour-detail .sticky-card .price-per {
+		font-size: 12px;
 	}
 
-	.detail__hero-text {
-		position: relative;
-		z-index: 1;
-		max-width: var(--content-max);
-		margin: 0 auto;
-		padding: var(--section-padding-y) var(--page-padding-x) 2.5rem;
+	.tour-detail .sticky-card .card-row:last-of-type {
+		margin-bottom: 0;
 	}
 
-	.detail__eyebrow {
-		margin: 0 0 0.5rem;
-		font-size: var(--text-xs);
-		color: var(--color-chrome-link);
-	}
-
-	.detail__title {
-		margin: 0 0 0.35rem;
-		font-family: var(--font-display);
-		font-size: clamp(1.75rem, 4vw, 2.5rem);
-		font-weight: var(--font-weight-bold);
-		line-height: 1.15;
-	}
-
-	.detail__tagline {
-		margin: 0 0 0.5rem;
-		font-size: 1.125rem;
-		font-weight: 600;
-		color: var(--color-chrome-text-muted);
-	}
-
-	.detail__schedule {
-		margin: 0;
-		font-size: 0.9375rem;
-		color: var(--color-chrome-text-muted);
-	}
-
-	.detail__content {
-		max-width: var(--content-max);
-		margin: 0 auto;
-		padding: var(--section-padding-y) var(--page-padding-x) var(--page-padding-bottom);
+	.tour-detail .avail-dots {
 		display: flex;
-		flex-direction: column;
-		gap: 2rem;
+		gap: 3px;
+		flex-wrap: wrap;
+		margin-top: 8px;
 	}
 
-	.block__h {
-		margin: 0 0 0.75rem;
-		font-family: var(--font-display);
-		font-size: 1.35rem;
-		font-weight: var(--font-weight-bold);
-		color: var(--color-nav);
+	.tour-detail .dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		flex-shrink: 0;
 	}
 
-	.block__p {
+	.tour-detail .dot-ok {
+		background: #1d9e75;
+	}
+
+	.tour-detail .dot-few {
+		background: #ef9f27;
+	}
+
+	.tour-detail .dot-no {
+		background: var(--color-border-secondary);
+	}
+
+	.tour-detail .dot-legend {
+		display: flex;
+		gap: 10px;
+		margin-top: 6px;
+		font-size: 11px;
+		color: var(--color-text-tertiary);
+		flex-wrap: wrap;
+	}
+
+	.tour-detail .dot-legend span {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.tour-detail .dot-legend .dot {
+		display: inline-block;
+	}
+
+	.tour-detail .hl-item .ti {
+		color: #1d9e75;
+	}
+
+	.tour-detail .itinerary-item--last {
+		padding-bottom: 0;
+	}
+
+	.tour-detail .booking-form {
 		margin: 0;
-		color: var(--color-muted);
-		line-height: 1.65;
-	}
-
-	.block__muted {
-		margin: 0 0 1rem;
-		font-size: 0.9rem;
-		color: var(--color-muted);
-	}
-
-	.block__note {
-		margin: 1rem 0 0;
-		padding: 1rem;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
-		font-size: 0.9375rem;
-		line-height: 1.55;
-		color: var(--color-text);
-	}
-
-	.meta-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-		gap: 1rem;
-	}
-
-	.meta-card {
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
-		padding: 1rem 1.15rem;
-	}
-
-	.meta-card__label {
-		margin: 0 0 0.35rem;
-		font-size: var(--text-xs);
-		color: var(--color-muted);
-	}
-
-	.meta-card__val {
-		margin: 0;
-		font-family: var(--font-display);
-		font-weight: var(--font-weight-semibold);
-		color: var(--color-nav);
-		line-height: 1.4;
-	}
-
-	.itin-list {
-		margin: 0;
-		padding-left: 1.25rem;
-		color: var(--color-muted);
-		line-height: 1.65;
-	}
-
-	.itin-list li {
-		margin-bottom: 0.35rem;
-	}
-
-	.triple {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-		gap: 1.5rem;
-	}
-
-	.split {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-		gap: 1.5rem;
-		align-items: start;
-	}
-
-	.bullet {
-		margin: 0;
-		padding-left: 1.25rem;
-		color: var(--color-muted);
-		line-height: 1.55;
-	}
-
-	.block--price {
-		background: var(--color-surface);
-		padding: 1.5rem;
-		border-radius: var(--radius);
-		border: 1px solid var(--color-border);
-	}
-
-	.block--group {
-		background: linear-gradient(135deg, var(--color-panel-muted) 0%, var(--color-surface) 100%);
-		padding: 1.5rem;
-		border-radius: var(--radius);
-		border: 1px solid var(--color-panel-border);
-	}
-
-	.gallery {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 0.75rem;
-	}
-
-	.gallery__fig {
-		margin: 0;
-		border-radius: 8px;
-		overflow: hidden;
-		aspect-ratio: 3 / 2;
-	}
-
-	.gallery__fig :global(.gallery__picture) {
 		width: 100%;
-		height: 100%;
 	}
 
-	@media (max-width: 640px) {
-		.gallery {
+	.tour-detail__note {
+		margin-top: 12px;
+	}
+
+	.tour-detail__disclaimers {
+		margin: 0;
+		padding-left: 1.25rem;
+		color: var(--color-text-secondary);
+		font-size: 13px;
+		line-height: 1.6;
+	}
+
+	.sticky-card__price-note {
+		font-size: 11px;
+		color: var(--color-text-tertiary);
+		margin: 0 0 12px;
+		line-height: 1.5;
+	}
+
+	.cta-primary--link {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		text-decoration: none;
+	}
+
+	@media (max-width: 768px) {
+		.tour-detail .layout {
 			grid-template-columns: 1fr;
 		}
-	}
 
-	.cta-bar {
-		padding: 1.5rem;
-		background: var(--color-chrome-bg);
-		color: var(--color-chrome-text-muted);
-		border-radius: var(--radius);
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		align-items: flex-start;
-	}
-
-	.cta-bar__btn {
-		appearance: none;
-		border: none;
-		cursor: pointer;
-		min-height: var(--touch-min);
-		padding: 0.75rem 1.5rem;
-		border-radius: 8px;
-		background: var(--color-cta);
-		color: var(--color-cta-text);
-		font-weight: var(--font-weight-bold);
-		font-size: var(--text-base);
-	}
-
-	.cta-bar__btn:hover {
-		background: var(--color-cta-hover);
-		color: var(--color-cta-text);
-	}
-
-	.cta-bar__btn--link {
-		display: inline-block;
-		text-decoration: none;
-		text-align: center;
-	}
-
-	.cta-bar__back {
-		color: var(--color-chrome-link);
-		font-weight: 600;
-		text-decoration: none;
-	}
-
-	.cta-bar__back:hover {
-		color: var(--color-brand-on-primary);
+		.tour-detail .highlights,
+		.tour-detail .includes-grid,
+		.tour-detail .info-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>

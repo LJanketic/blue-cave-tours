@@ -1,0 +1,433 @@
+{
+  "$schema": "internal/tour-data-v1",
+  "meta": {
+    "sourceOfTruth": "src/data/tour-catalog.ts",
+    "description": "Canonical tour catalog for redesign agent. Photo IDs reference docs/redesign/04-IMAGE-ASSETS.md — use design placeholders in phase 1, not real files.",
+    "tourCount": 10,
+    "featuredCount": 5,
+    "instantBookCount": 9,
+    "quoteOnlyCount": 1
+  },
+  "site": {
+    "SITE_NAME": "Hello Blue Cave",
+    "SITE_EMAIL": "info@hellobluecave.com",
+    "SITE_PHONE": "+385919888838",
+    "SITE_PHONE_DISPLAY": "+385 91 988 88 38",
+    "SITE_DEFAULT_DESCRIPTION": "Boat tours and private charters from Split — Blue Cave, islands, and the best of the Adriatic.",
+    "HOME_PAGE_TITLE": "Hello Blue Cave — Split boat tours & private charters"
+  },
+  "heroImagePhotoId": "blueLagoon",
+  "removedTourSlugs": [
+    "golden-horn-brac-hvar",
+    "brac-golden-horn",
+    "blue-lagoon-trogir",
+    "hvar-red-rocks-pakleni",
+    "three-islands-trogir"
+  ],
+  "faq": [
+    {
+      "question": "Is the Blue Cave ticket included?",
+      "answer": "Cave entry is often billed separately on-site and depends on sea conditions and official opening hours. We show what's included before you confirm your booking."
+    },
+    {
+      "question": "What if the weather is bad?",
+      "answer": "We monitor forecasts. Routes may be shortened, reordered, or rescheduled so the day stays safe and enjoyable."
+    },
+    {
+      "question": "Private vs group tours?",
+      "answer": "Group tours follow a fixed timetable; private charters pick timing and pacing within operational limits — see",
+      "link": {
+        "href": "/tours/create-perfect-day-private",
+        "label": "Create your perfect day at sea"
+      }
+    },
+    {
+      "question": "Where do we meet?",
+      "answer": "Split's Riva promenade, stand 14. You'll receive the exact meeting time and any last-minute updates after booking."
+    }
+  ],
+  "photos": {
+    "blueCave": {
+      "id": "blueCave",
+      "file": "src/assets/tours/blue-cave.jpg",
+      "alt": "Sea cave with turquoise water — Blue Cave area",
+      "placeholderColor": "#1a5c6e"
+    },
+    "blueLagoon": {
+      "id": "blueLagoon",
+      "file": "src/assets/tours/blue-lagoon.jpg",
+      "alt": "Aerial view of Blue Lagoon at Budikovac",
+      "placeholderColor": "#3a8fa8"
+    },
+    "blueLagoonAlt": {
+      "id": "blueLagoonAlt",
+      "file": "src/assets/tours/blue-lagoon-alt.jpg",
+      "alt": "Turquoise bays and anchored boats near Budikovac",
+      "placeholderColor": "#2d7a94"
+    },
+    "hvar": {
+      "id": "hvar",
+      "file": "src/assets/tours/hvar.jpg",
+      "alt": "Hvar town and harbour from the hillside",
+      "placeholderColor": "#5a7a8a"
+    },
+    "pakleni": {
+      "id": "pakleni",
+      "file": "src/assets/tours/pakleni.jpg",
+      "alt": "Turquoise Adriatic water beneath limestone cliffs",
+      "placeholderColor": "#2a8099"
+    },
+    "stiniva": {
+      "id": "stiniva",
+      "file": "src/assets/tours/stiniva.jpg",
+      "alt": "Layered cliffs and emerald water at Stiniva",
+      "placeholderColor": "#3a6860"
+    },
+    "boatSpeed": {
+      "id": "boatSpeed",
+      "file": "src/assets/tours/boat-speed.jpg",
+      "alt": "Tour boat entering a sea cave",
+      "placeholderColor": "#2a5060"
+    },
+    "boatDeck": {
+      "id": "boatDeck",
+      "file": "src/assets/tours/boat-speed.jpg",
+      "alt": "Tour boat at a sea cave entrance",
+      "placeholderColor": "#2a5060",
+      "note": "Same file as boatSpeed, different alt text"
+    }
+  },
+  "tours": [
+    {
+      "slug": "blue-cave-hvar-5-islands",
+      "title": "Blue Cave, Hvar & 5 islands",
+      "tagline": "Full-day signature route",
+      "shortDescription": "Our flagship island-hopping day — Blue Cave, Vis, Hvar archipelago highlights, and time to swim in hidden bays.",
+      "availability": "Every day from 1 April to 15 November",
+      "scheduleLabel": "Full day: 08:00 – 18:00",
+      "departure": "07:45 check-in · 08:00 departure",
+      "duration": "Approx. 10 hours",
+      "returnTime": "18:00",
+      "itineraryKind": "full",
+      "itineraryLabel": "Full-day itinerary",
+      "itinerary": [
+        "Departure from Split toward Vis & Biševo area (Blue Cave subject to conditions and optional ticket).",
+        "Swim stops and coastal cruising toward Pakleni / Hvar depending on conditions.",
+        "Free time or guided time ashore where the schedule allows.",
+        "Return along the Split channel with panoramic views."
+      ],
+      "overviewHighlights": "Step aboard our modern speedboat and discover the Adriatic in the most exciting yet comfortable way. Powerful, safe, and expertly handled by our experienced skipper, the boat offers the perfect balance of smooth cruising and dynamic performance. Glide across crystal-clear waters, feel the fresh sea breeze, and enjoy panoramic views of hidden bays and iconic islands. This tour packs the \"postcard\" islands into one full day — perfect if you want maximum scenery per day ashore.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Licensed crew & fuel", "Safety equipment", "Snorkelling gear where provided on board"],
+      "notIncluded": ["Meals unless stated", "National park / cave entry paid locally when applicable", "Personal extras"],
+      "priceNotes": "Indicative: infants 0–3 €0; children 4–10 from €139; adults from €159 — final amount confirmed when you book.",
+      "caveTicketNote": "Entrance to the Blue Cave may require a separate ticket payable on-site; availability depends on sea conditions and official cave opening hours.",
+      "groupSale": "Ask about private group blocks for peak weeks — we can hold capacity with a deposit.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "blueCave",
+      "gallery": ["pakleni", "hvar", "stiniva"],
+      "fromPrice": "€159",
+      "featured": true,
+      "instantBook": true
+    },
+    {
+      "slug": "three-islands",
+      "title": "Three islands",
+      "tagline": "Full-day island sampler",
+      "shortDescription": "Three curated stops — swim, scenery, and a taste of island life without the longest open-sea legs.",
+      "availability": "Every day from 1 April to 31 October",
+      "scheduleLabel": "Full day",
+      "departure": "Times confirmed at booking (morning departure)",
+      "duration": "Approx. 8–10 hours",
+      "returnTime": "Evening return",
+      "itineraryKind": "full",
+      "itineraryLabel": "Full-day itinerary",
+      "itinerary": ["Morning departure from Split", "Two to three island / swim segments", "Afternoon return window"],
+      "overviewHighlights": "A balanced \"three highlights\" day — ideal if you want variety without committing to the longest cave-focused routing.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Skipper & boat", "Fuel", "Safety gear"],
+      "notIncluded": ["Meals", "Optional entrances"],
+      "priceNotes": "Indicative pricing: infants 0–3 €0; children 4–10 from €139; adults from €159 — final price confirmed when you book.",
+      "caveTicketNote": "Cave visits are not guaranteed unless explicitly included in your offer.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "pakleni",
+      "gallery": ["blueLagoon", "hvar", "stiniva"],
+      "fromPrice": "€139",
+      "featured": true,
+      "instantBook": true
+    },
+    {
+      "slug": "hvar-pakleni",
+      "title": "Hvar & Pakleni islands",
+      "tagline": "Full day · Hvar archipelago",
+      "shortDescription": "Hvar town energy plus Pakleni bays — swimming and island atmosphere in one day.",
+      "availability": "Every day from 1 April to 31 October",
+      "scheduleLabel": "Full day",
+      "departure": "Morning departure (exact time on ticket)",
+      "duration": "Approx. 10 hours",
+      "returnTime": "Evening",
+      "itineraryKind": "full",
+      "itineraryLabel": "Full-day itinerary",
+      "itinerary": ["Open-water crossing toward Hvar", "Pakleni swim stops", "Time in Hvar where schedule allows", "Return to Split"],
+      "overviewHighlights": "Great if you want Hvar's buzz with time in quieter bays nearby.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Crew", "Fuel", "Safety equipment"],
+      "notIncluded": ["Meals", "Harbour fees where charged directly"],
+      "priceNotes": "Indicative pricing: infants 0–3 €0; children 4–10 from €139; adults from €159 — final price confirmed when you book.",
+      "caveTicketNote": "Blue Cave not the focus; separate add-ons possible.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "hvar",
+      "gallery": ["pakleni", "stiniva", "blueLagoon"],
+      "fromPrice": "€159",
+      "featured": true,
+      "instantBook": true
+    },
+    {
+      "slug": "blue-lagoon-morning",
+      "title": "Blue Lagoon morning tour",
+      "tagline": "Half day · 09:30 – 14:00",
+      "shortDescription": "Half-day escape to the Blue Lagoon area — morning light and swim time without a full-day commitment.",
+      "availability": "Every day from 1 April to 15 November",
+      "scheduleLabel": "Half day: 09:30 – 14:00",
+      "departure": "09:20 check-in · 09:30 departure",
+      "duration": "Approx. 5 hours",
+      "returnTime": "14:00",
+      "itineraryKind": "morning",
+      "itineraryLabel": "Morning itinerary",
+      "itinerary": ["Short coastal run", "Blue Lagoon swim & snorkel window", "Return toward Split"],
+      "overviewHighlights": "Perfect if you want a shorter day with maximum water time.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Boat & skipper", "Fuel", "Safety gear"],
+      "notIncluded": ["Meals"],
+      "priceNotes": "Half-day tiered pricing — confirmed when you book.",
+      "caveTicketNote": "Not a Blue Cave itinerary.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "blueLagoon",
+      "gallery": ["blueLagoonAlt", "stiniva", "pakleni"],
+      "fromPrice": "€89",
+      "featured": true,
+      "instantBook": true
+    },
+    {
+      "slug": "blue-lagoon-afternoon",
+      "title": "Blue Lagoon afternoon tour",
+      "tagline": "Half day · 14:30 – 19:00",
+      "shortDescription": "Afternoon session for late risers — same lagoon magic with a sunset-leaning return.",
+      "availability": "Every day from 1 April to 15 November",
+      "scheduleLabel": "Half day: 14:30 – 19:00",
+      "departure": "14:20 check-in · 14:30 departure",
+      "duration": "Approx. 5 hours",
+      "returnTime": "19:00",
+      "itineraryKind": "afternoon",
+      "itineraryLabel": "Afternoon itinerary",
+      "itinerary": ["Afternoon departure", "Blue Lagoon swim stop", "Coastal return"],
+      "overviewHighlights": "Afternoon departure for guests who prefer a later start and a relaxed pace along the coast.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Boat & skipper", "Fuel", "Safety gear"],
+      "notIncluded": ["Meals"],
+      "priceNotes": "Half-day tiered pricing — confirmed when you book.",
+      "caveTicketNote": "Not a Blue Cave itinerary.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "blueLagoonAlt",
+      "gallery": ["blueLagoon", "stiniva", "pakleni"],
+      "fromPrice": "€89",
+      "featured": false,
+      "instantBook": true
+    },
+    {
+      "slug": "blue-cave-open-boat",
+      "title": "Blue Cave tour — open boat",
+      "tagline": "Full day · classic open speedboat",
+      "shortDescription": "Blue Cave–centric routing on an open speedboat — wind-in-hair experience with professional crew.",
+      "availability": "Every day from 1 April to 31 October",
+      "scheduleLabel": "Full day: 08:00 – 18:00",
+      "departure": "07:45 · 08:00",
+      "duration": "Approx. 10 hours",
+      "returnTime": "18:00",
+      "itineraryKind": "full",
+      "itineraryLabel": "Full-day itinerary",
+      "itinerary": ["Biševo / Blue Cave window (conditions permitting)", "Vis & swim stops", "Return via favourite channels"],
+      "overviewHighlights": "Step aboard our modern speedboat and discover the Adriatic in the most exciting yet comfortable way. Powerful, safe, and expertly handled by our experienced skipper, the boat offers the perfect balance of smooth cruising and dynamic performance. Glide across crystal-clear waters, feel the fresh sea breeze, and enjoy panoramic views of hidden bays and iconic islands.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Open boat experience", "Crew", "Fuel", "Safety equipment"],
+      "notIncluded": ["Meals", "Cave ticket if charged on-site"],
+      "priceNotes": "Indicative pricing: infants 0–3 €0; children 4–10 from €139; adults from €159 — final price confirmed when you book.",
+      "caveTicketNote": "Entrance to the Blue Cave may require a separate ticket payable on-site; availability depends on sea conditions and official cave opening hours.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "boatSpeed",
+      "gallery": ["blueCave", "stiniva", "pakleni"],
+      "fromPrice": "€159",
+      "featured": false,
+      "instantBook": true
+    },
+    {
+      "slug": "blue-cave-luxury-cabin",
+      "title": "Blue Cave tour — luxury cabin boat",
+      "tagline": "Full day · more shade & comfort",
+      "shortDescription": "Same cave-and-islands ambition with a cabin boat for extra comfort, shade, and space.",
+      "availability": "Every day from 1 April to 31 October",
+      "scheduleLabel": "Full day: 08:00 – 18:00",
+      "departure": "07:45 · 08:00",
+      "duration": "Approx. 10 hours",
+      "returnTime": "18:00",
+      "itineraryKind": "full",
+      "itineraryLabel": "Full-day itinerary",
+      "itinerary": ["Blue Cave window (conditions permitting)", "Vis / archipelago swim stops", "Comfort-focused pacing"],
+      "overviewHighlights": "Premium seating and shelter for families or anyone who wants a softer ride while still covering the highlights.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Cabin boat charter for the tour", "Crew", "Fuel", "Safety equipment"],
+      "notIncluded": ["Meals unless pre-arranged", "On-site cave tickets"],
+      "priceNotes": "Higher tier than open boat — price confirmed when you book.",
+      "caveTicketNote": "Entrance to the Blue Cave may require a separate ticket payable on-site; availability depends on sea conditions and official cave opening hours.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "boatDeck",
+      "gallery": ["blueCave", "hvar", "stiniva"],
+      "fromPrice": "€229",
+      "featured": false,
+      "instantBook": true
+    },
+    {
+      "slug": "blue-cave-6-islands",
+      "title": "Blue Cave & 6 islands",
+      "tagline": "Maximum islands in one day",
+      "shortDescription": "Extended routing that adds extra island angles beyond the classic five-island framing.",
+      "availability": "Every day from 1 April to 15 November",
+      "scheduleLabel": "Full day: 08:00 – 18:00",
+      "departure": "07:45 · 08:00",
+      "duration": "Approx. 10 hours",
+      "returnTime": "18:00",
+      "itineraryKind": "full",
+      "itineraryLabel": "Full-day itinerary",
+      "itinerary": ["Blue Cave attempt window", "Multiple island passes and swim stops", "Packed but organised day"],
+      "overviewHighlights": "Step aboard our modern speedboat and discover the Adriatic in the most exciting yet comfortable way. Powerful, safe, and expertly handled by our experienced skipper, the boat offers the perfect balance of smooth cruising and dynamic performance. Glide across crystal-clear waters, feel the fresh sea breeze, and enjoy panoramic views of hidden bays and iconic islands. For guests who want the fullest island count in a single daylight window.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Crew", "Fuel", "Safety equipment"],
+      "notIncluded": ["Meals", "Optional tickets"],
+      "priceNotes": "Indicative pricing: infants 0–3 €0; children 4–10 from €139; adults from €159 — final price confirmed when you book.",
+      "caveTicketNote": "Entrance to the Blue Cave may require a separate ticket payable on-site; availability depends on sea conditions and official cave opening hours.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "blueCave",
+      "gallery": ["pakleni", "stiniva", "hvar"],
+      "fromPrice": "€169",
+      "featured": false,
+      "instantBook": true
+    },
+    {
+      "slug": "blue-lagoon-half-day",
+      "title": "Blue Lagoon half-day tour",
+      "tagline": "Flexible half-day slot",
+      "shortDescription": "Marketing umbrella for shorter lagoon experiences — book morning or afternoon depending on availability.",
+      "availability": "Every day from 1 April to 15 November",
+      "scheduleLabel": "Half day (morning or afternoon slot)",
+      "departure": "Per selected slot",
+      "duration": "Approx. 5–7 hours",
+      "returnTime": "Per slot",
+      "itineraryKind": "flexible",
+      "itineraryLabel": "Flexible itinerary",
+      "itinerary": ["Direct lagoon-focused routing", "Extended swim time", "Return"],
+      "overviewHighlights": "Choose the half-day that fits your schedule — morning and afternoon slots available.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Boat", "Skipper", "Fuel"],
+      "notIncluded": ["Meals"],
+      "priceNotes": "Priced by slot length — see tour page for current rates.",
+      "caveTicketNote": "Not Blue Cave.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "blueLagoon",
+      "gallery": ["stiniva", "pakleni", "blueLagoonAlt"],
+      "fromPrice": "€89",
+      "featured": false,
+      "instantBook": true
+    },
+    {
+      "slug": "create-perfect-day-private",
+      "title": "Create your perfect day at sea",
+      "tagline": "Private charter · flexible itinerary",
+      "shortDescription": "Design your own pace and stops within operational limits — ideal for families and special occasions.",
+      "availability": "On request",
+      "scheduleLabel": "Flexible · typically 1–10 hours",
+      "departure": "Flexible (e.g. 09:30–14:00 half-day or 10:00–19:00 full-day)",
+      "duration": "You choose within booked window",
+      "returnTime": "Flexible",
+      "itineraryKind": "flexible",
+      "itineraryLabel": "Flexible itinerary",
+      "itinerary": [
+        "Pick-up briefing at Riva stand 14",
+        "Custom route within fuel / time limits",
+        "Swim stops and island time tailored to your group"
+      ],
+      "overviewHighlights": "Private tours follow your schedule — ideal for families, proposals, or anyone who prefers a flexible pace. We'll send a tailored quote with everything included.",
+      "meetingPoint": "Meet at Split's Riva promenade, stand number 14. After booking you'll receive the exact location, map link, and what time to arrive.",
+      "weather": "We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.",
+      "importantInfo": "Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.",
+      "whatToBring": ["Sunscreen & hat", "Swimwear & towel", "Light jacket", "Water", "Sea-sickness remedy if needed"],
+      "included": ["Private use of booked vessel for the time block", "Professional skipper", "Fuel within agreed radius"],
+      "notIncluded": ["Premium add-ons unless quoted", "Harbour extras"],
+      "priceNotes": "Private charters are quoted per boat and season. Request a quote via the contact form or by phone.",
+      "caveTicketNote": "Cave entries billed separately if you add them to the day.",
+      "groupSale": "Corporate or large-family blocks — ask for staggered departures.",
+      "disclaimers": [
+        "Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.",
+        "National park and cave entry fees may be charged separately on-site where applicable."
+      ],
+      "image": "boatDeck",
+      "gallery": ["hvar", "blueLagoon", "pakleni"],
+      "fromPrice": "On request",
+      "featured": true,
+      "instantBook": false
+    }
+  ]
+}

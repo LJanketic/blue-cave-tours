@@ -1,0 +1,77 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Payment Success — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>:root{--color-text-primary:#111;--color-text-secondary:#555;--color-text-tertiary:#999;--color-text-info:#1a6fc4;--color-text-success:#085041;--color-text-danger:#8B1A15;--color-text-warning:#BA7517;--color-background-primary:#fff;--color-background-secondary:#f5f5f4;--color-background-info:#e6f1fb;--color-background-success:#e1f5ee;--color-border-primary:#aaa;--color-border-secondary:#ccc;--color-border-tertiary:#e5e5e3;--color-border-info:#7ab4e8;--border-radius-md:8px;--border-radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{box-sizing:border-box;}body{margin:0 auto;padding:24px;font-family:var(--font-sans);max-width:960px;background:var(--color-background-primary);color:var(--color-text-primary);}
+input,select,button,textarea{font-family:var(--font-sans);padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;}
+
+.page{max-width:520px;margin:0 auto;padding:1.5rem 0 2rem;font-size:14px;}
+.check-circle{width:72px;height:72px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.check-circle i{font-size:32px;color:#085041;}
+.success-hero{text-align:center;padding:2rem 1rem 1.5rem;}
+.success-hero h1{font-size:20px;font-weight:500;margin:0 0 6px;}
+.success-hero p{font-size:13px;color:var(--color-text-secondary);margin:0;line-height:1.6;}
+.conf-ref{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 16px;margin:16px 0 24px;font-size:13px;}
+.conf-ref strong{font-size:15px;letter-spacing:0.08em;}
+.copy-btn{font-size:11px;padding:4px 10px;border-radius:var(--border-radius-md);cursor:pointer;color:var(--color-text-secondary);}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:14px;}
+.card-title{font-size:13px;font-weight:500;margin:0 0 12px;display:flex;align-items:center;gap:7px;}
+.card-title i{font-size:15px;color:#1D9E75;}
+.b-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;font-size:13px;margin-bottom:8px;}
+.b-label{color:var(--color-text-secondary);}.b-val{font-weight:500;text-align:right;}
+.b-div{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:4px 0;}
+.meetup-card{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.1rem 1.25rem;margin-bottom:14px;}
+.meetup-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.meetup-item{display:flex;flex-direction:column;gap:2px;}
+.meetup-label{font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em;}
+.meetup-val{font-size:13px;font-weight:500;}
+.map-stub{height:80px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;margin-top:10px;gap:7px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;}
+.next-item{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:8px;}
+.next-icon{width:32px;height:32px;border-radius:var(--border-radius-md);background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.next-icon i{color:#1D9E75;}
+.next-title{font-size:13px;font-weight:500;margin:0 0 2px;}.next-desc{font-size:12px;color:var(--color-text-secondary);margin:0;line-height:1.5;}
+.btn-secondary{width:100%;padding:10px;background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-sans);}
+</style><style>
+@media (max-width:768px){
+  body{padding:16px;}
+  .meetup-grid{grid-template-columns:1fr;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+}
+</style>
+</head><body>
+<div class="page">
+  <div class="success-hero">
+    <div class="check-circle"><i class="ti ti-check"></i></div>
+    <h1>You're booked!</h1>
+    <p>Confirmation sent to <strong>ivan@example.com</strong>. Check your inbox — including spam just in case.</p>
+  </div>
+  <div class="conf-ref"><span style="font-size:12px;color:var(--color-text-secondary)">Booking ref:</span><strong>ADS-20847</strong><button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button></div>
+  <div class="card">
+    <p class="card-title"><i class="ti ti-sailboat"></i> Your booking</p>
+    <div class="b-row"><span class="b-label">Tour</span><span class="b-val">Sunset Bay coastal cruise</span></div>
+    <div class="b-row"><span class="b-label">Date</span><span class="b-val">Saturday, 12 Jul 2025</span></div>
+    <div class="b-row"><span class="b-label">Departure</span><span class="b-val">18:00 — Marina Pier B, Gate 3</span></div>
+    <div class="b-row"><span class="b-label">Guests</span><span class="b-val">2 adults, 1 child</span></div>
+    <hr class="b-div"><div class="b-row"><span class="b-label">Total paid</span><span class="b-val">€245</span></div>
+  </div>
+  <div class="meetup-card">
+    <p class="card-title" style="margin-bottom:10px"><i class="ti ti-map-pin" style="font-size:15px;color:#1D9E75"></i> Where to meet us</p>
+    <div class="meetup-grid">
+      <div class="meetup-item"><span class="meetup-label">Location</span><span class="meetup-val">Marina Pier B, Gate 3</span></div>
+      <div class="meetup-item"><span class="meetup-label">Arrive by</span><span class="meetup-val">17:45 (15 min early)</span></div>
+      <div class="meetup-item"><span class="meetup-label">What to bring</span><span class="meetup-val">Swimwear, sunscreen, camera</span></div>
+      <div class="meetup-item"><span class="meetup-label">Captain</span><span class="meetup-val">Marko will meet you</span></div>
+    </div>
+    <div class="map-stub"><i class="ti ti-map-2" style="font-size:18px;color:#1D9E75"></i> View meeting point on map</div>
+  </div>
+  <div class="card">
+    <p class="card-title"><i class="ti ti-list-check"></i> What happens next</p>
+    <div class="next-item"><div class="next-icon"><i class="ti ti-mail"></i></div><div><p class="next-title">Check your email</p><p class="next-desc">Full booking details, meeting point, and what to bring — sent to ivan@example.com right now.</p></div></div>
+    <div class="next-item"><div class="next-icon"><i class="ti ti-cloud-storm"></i></div><div><p class="next-title">Weather update</p><p class="next-desc">We'll email you 24h before departure if conditions change. If cancelled, you get a full refund or free rescheduling.</p></div></div>
+    <div class="next-item"><div class="next-icon"><i class="ti ti-anchor"></i></div><div><p class="next-title">Show up and enjoy</p><p class="next-desc">Arrive at Marina Pier B by 17:45. Your captain will be waiting — no need to print anything.</p></div></div>
+  </div>
+  <button class="btn-secondary"><i class="ti ti-sailboat" style="font-size:13px;vertical-align:-2px"></i> Browse more tours</button>
+</div>
+</body></html>

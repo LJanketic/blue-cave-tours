@@ -1,64 +1,184 @@
 ---
 export const prerender = true;
 
-import { pageTitle, SITE_EMAIL, SITE_NAME, SITE_PHONE, SITE_PHONE_DISPLAY } from '../../config/site';
+import {
+	pageTitle,
+	SITE_EMAIL,
+	SITE_NAME,
+	SITE_PHONE,
+	SITE_PHONE_DISPLAY,
+} from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getAllTours } from '../../lib/tours';
 
 const tours = getAllTours();
 const tourFromQuery = Astro.url.searchParams.get('tour') ?? '';
 const selectedTour = tours.some((t) => t.slug === tourFromQuery) ? tourFromQuery : '';
+const mapUrl =
+	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
+const whatsappUrl = `https://wa.me/${SITE_PHONE.replace(/\D/g, '')}`;
 ---
 
 <SiteLayout
 	title={pageTitle('Contact')}
 	description={`Reach ${SITE_NAME} on Split’s Riva — stand 14 — or send a message about tours and private charters.`}
 >
-	<main id="main" class="page-shell page-shell--form">
-		<h1 class="page-title">Contact</h1>
-		<p class="page-lead">
-			<strong>Meet-up:</strong> Riva promenade of Split, stand number 14 ·
-			<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a> ·
-			<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>
-		</p>
+	<main id="main" class="page-shell">
+		<div class="page contact-page">
+			<h1 class="contact-title">Contact us</h1>
+			<p class="hero-sub">
+				Questions, special requests, or just not sure which tour is right for you — get in touch. We usually
+				reply within a couple of hours during the season.
+			</p>
 
-		<form id="contact-form" class="form" novalidate>
-			<input type="hidden" name="_startedAt" id="contact-started-at" value="" />
-			<div class="field field--hp" aria-hidden="true">
-				<label for="company">Company</label>
-				<input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
+			<div class="contact-grid">
+				<a class="contact-card" href={`tel:${SITE_PHONE}`}>
+					<div class="cc-icon cc-icon--success">
+						<i class="ti ti-phone" aria-hidden="true"></i>
+					</div>
+					<span class="cc-type">Phone</span>
+					<span class="cc-value">{SITE_PHONE_DISPLAY}</span>
+					<span class="cc-sub">Office line — Mon to Sun, 08:00–20:00 during season</span>
+				</a>
+				<a class="contact-card" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+					<div class="cc-icon cc-icon--success">
+						<i class="ti ti-brand-whatsapp" aria-hidden="true"></i>
+					</div>
+					<span class="cc-type">WhatsApp</span>
+					<span class="cc-value">{SITE_PHONE_DISPLAY}</span>
+					<span class="cc-sub">Fastest response — typically within the hour</span>
+				</a>
+				<a class="contact-card" href={`mailto:${SITE_EMAIL}`}>
+					<div class="cc-icon cc-icon--info">
+						<i class="ti ti-mail" aria-hidden="true"></i>
+					</div>
+					<span class="cc-type">Email</span>
+					<span class="cc-value">{SITE_EMAIL}</span>
+					<span class="cc-sub">For bookings, invoices, and detailed requests</span>
+				</a>
+				<a class="contact-card" href={mapUrl} target="_blank" rel="noopener noreferrer">
+					<div class="cc-icon cc-icon--location">
+						<i class="ti ti-map-pin" aria-hidden="true"></i>
+					</div>
+					<span class="cc-type">Find us</span>
+					<span class="cc-value">Riva promenade, stand 14</span>
+					<span class="cc-sub">Split waterfront — meet before every departure</span>
+				</a>
 			</div>
-			<div class="field">
-				<label for="name">Name <span class="req" aria-hidden="true">*</span></label>
-				<input id="name" name="name" type="text" required autocomplete="name" aria-required="true" />
+
+			<div class="hours-card">
+				<div class="hours-col">
+					<p class="hours-label">Response hours</p>
+					<div class="open-badge">
+						<span class="open-dot" aria-hidden="true"></span>
+						Open now
+					</div>
+					<div class="hours-row">
+						<span class="hours-day">Mon – Fri</span>
+						<span class="hours-time">08:00 – 20:00</span>
+					</div>
+					<div class="hours-row">
+						<span class="hours-day">Sat – Sun</span>
+						<span class="hours-time">08:00 – 18:00</span>
+					</div>
+				</div>
+				<div class="hours-col">
+					<p class="hours-label">Season</p>
+					<div class="hours-row">
+						<span class="hours-day">Apr – Nov</span>
+						<span class="hours-time">Daily departures</span>
+					</div>
+					<div class="hours-row">
+						<span class="hours-day">Off-season</span>
+						<span class="hours-time">Email only</span>
+					</div>
+					<p class="hours-note">
+						Private charters available year-round by request, weather permitting.
+					</p>
+				</div>
 			</div>
-			<div class="field">
-				<label for="email">Email <span class="req" aria-hidden="true">*</span></label>
-				<input id="email" name="email" type="email" required autocomplete="email" aria-required="true" />
+
+			<div class="form-card">
+				<p class="form-title">Send us a message</p>
+				<form id="contact-form" novalidate>
+					<input type="hidden" name="_startedAt" id="contact-started-at" value="" />
+					<div class="form-field form-field--hp" aria-hidden="true">
+						<label for="company">Company</label>
+						<input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
+					</div>
+					<div class="form-grid">
+						<div class="form-field form-field--name">
+							<label for="name">Name <span class="sr-only">(required)</span></label>
+							<input
+								id="name"
+								name="name"
+								type="text"
+								required
+								autocomplete="name"
+								aria-required="true"
+								placeholder="Ivan"
+							/>
+						</div>
+						<div class="form-field form-field--email">
+							<label for="email">Email <span class="sr-only">(required)</span></label>
+							<input
+								id="email"
+								name="email"
+								type="email"
+								required
+								autocomplete="email"
+								aria-required="true"
+								placeholder="ivan@example.com"
+							/>
+						</div>
+						<div class="form-field form-field--phone">
+							<label for="phone">Phone</label>
+							<input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+385…" />
+						</div>
+						<div class="form-field full">
+							<label for="tourSlug">Subject</label>
+							<select id="tourSlug" name="tourSlug">
+								<option value="">General enquiry</option>
+								{
+									tours.map((t) => (
+										<option value={t.slug} selected={t.slug === selectedTour}>
+											{t.title}
+										</option>
+									))
+								}
+							</select>
+						</div>
+						<div class="form-field full">
+							<label for="message">Message <span class="sr-only">(required)</span></label>
+							<textarea
+								id="message"
+								name="message"
+								required
+								aria-required="true"
+								placeholder="Tell us what you have in mind — dates, group size, any special requests…"
+							></textarea>
+						</div>
+					</div>
+					<button type="submit" class="btn-primary contact-submit">
+						Send message
+						<i class="ti ti-arrow-right" aria-hidden="true"></i>
+					</button>
+					<p id="contact-status" role="status" aria-live="polite"></p>
+				</form>
 			</div>
-			<div class="field">
-				<label for="phone">Phone</label>
-				<input id="phone" name="phone" type="tel" autocomplete="tel" />
+
+			<a class="map-stub" href={mapUrl} target="_blank" rel="noopener noreferrer">
+				<i class="ti ti-map-2" aria-hidden="true"></i>
+				Riva promenade, stand 14 — open in Google Maps
+			</a>
+			<div class="marina-note">
+				<i class="ti ti-info-circle" aria-hidden="true"></i>
+				<span>
+					Meet at stand 14 on Split’s Riva — look for Hello Blue Cave signage near the boat berths. Arrive ten
+					to fifteen minutes before check-in; the waterfront gets busy in peak season.
+				</span>
 			</div>
-			<div class="field">
-				<label for="tourSlug">Tour interest (optional)</label>
-				<select id="tourSlug" name="tourSlug">
-					<option value="">— Select —</option>
-					{tours.map((t) => (
-						<option value={t.slug} selected={t.slug === selectedTour}>
-							{t.title}
-						</option>
-					))}
-				</select>
-			</div>
-			<div class="field">
-				<label for="message">Message <span class="req" aria-hidden="true">*</span></label>
-				<textarea id="message" name="message" rows="5" required aria-required="true" placeholder="Dates, group size, questions…"></textarea>
-			</div>
-			<p class="fine">We typically reply within one business day. For urgent questions, call us on the number above.</p>
-			<button type="submit" class="submit">Send message</button>
-			<p id="contact-status" class="status" role="status" aria-live="polite"></p>
-		</form>
+		</div>
 	</main>
 </SiteLayout>
 
@@ -68,83 +188,119 @@ const selectedTour = tours.some((t) => t.slug === tourFromQuery) ? tourFromQuery
 </script>
 
 <style>
-	.page-lead a {
-		font-weight: var(--font-weight-medium);
+	.contact-title {
+		font-size: 22px;
+		font-weight: 500;
+		margin: 0 0 5px;
 	}
 
-	.form {
-		display: flex;
-		flex-direction: column;
-		gap: 1.25rem;
+	.hero-sub {
+		font-size: 13px;
+		color: var(--color-text-secondary);
+		margin: 0 0 24px;
+		line-height: 1.6;
 	}
 
-	.field--hp {
-		position: absolute;
-		left: -9999px;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
+	.contact-page .cc-icon--success {
+		background: var(--color-background-success);
+		color: var(--color-text-success);
 	}
 
-	.field label {
-		display: block;
-		font-weight: var(--font-weight-medium);
-		font-size: var(--text-sm);
-		margin-bottom: 0.35rem;
-		color: var(--color-nav);
+	.contact-page .cc-icon--info {
+		background: var(--color-background-info);
+		color: var(--color-text-info);
 	}
 
-	.req {
-		color: var(--color-error);
+	.contact-page .cc-icon--location {
+		background: #faeeda;
+		color: #633806;
 	}
 
-	.field input,
-	.field select,
-	.field textarea {
-		width: 100%;
-		min-height: var(--touch-min);
-		padding: 0.65rem 0.75rem;
-		border-radius: 8px;
-		border: 1px solid var(--color-border);
-		font: inherit;
-		font-size: var(--text-base);
-		background: var(--color-surface);
+	.contact-page .open-dot {
+		background: #1d9e75;
 	}
 
-	.field textarea {
-		min-height: 8rem;
+	.hours-note {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+		margin: 8px 0 0;
+		line-height: 1.5;
+	}
+
+	.contact-page .form-field--name {
+		grid-column: 1;
+		grid-row: 1;
+	}
+
+	.contact-page .form-field--email {
+		grid-column: 1;
+		grid-row: 2;
+	}
+
+	.contact-page .form-field--phone {
+		grid-column: 2;
+		grid-row: 2;
+	}
+
+	.contact-page .form-field input,
+	.contact-page .form-field select,
+	.contact-page .form-field textarea {
+		font-size: 13px;
+	}
+
+	.contact-page .form-field textarea {
 		resize: vertical;
+		min-height: 80px;
 	}
 
-	.fine {
-		margin: 0;
-		font-size: var(--text-xs);
-		color: var(--color-muted);
+	.contact-submit {
+		margin-top: 6px;
+		padding: 11px 22px;
+		font-size: 13px;
+		min-height: auto;
 	}
 
-	.submit {
-		appearance: none;
-		border: none;
-		cursor: pointer;
-		align-self: flex-start;
-		min-height: var(--touch-min);
-		padding: 0.65rem 1.25rem;
-		border-radius: 8px;
-		background: var(--color-cta);
-		color: var(--color-cta-text);
-		font-weight: var(--font-weight-bold);
-		font-size: var(--text-base);
+	.contact-submit .ti {
+		font-size: 13px;
+		vertical-align: -2px;
 	}
 
-	.submit:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	.status {
+	#contact-status {
 		min-height: 1.5em;
+		margin: 8px 0 0;
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	#contact-status:empty {
+		min-height: 0;
 		margin: 0;
-		font-weight: 600;
-		color: var(--color-nav-elevated);
+	}
+
+	.contact-page .map-stub {
+		height: 140px;
+		margin-bottom: 16px;
+	}
+
+	.contact-page .map-stub .ti {
+		font-size: 20px;
+		color: #1d9e75;
+	}
+
+	.contact-page .marina-note .ti {
+		color: #1d9e75;
+	}
+
+	.contact-page .marina-note span {
+		margin: 0;
+	}
+
+	@media (max-width: 768px) {
+		.contact-page .form-field--name,
+		.contact-page .form-field--email,
+		.contact-page .form-field--phone {
+			grid-column: auto;
+			grid-row: auto;
+		}
 	}
 </style>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homepage — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  :root {
+    --color-text-primary: #111;
+    --color-text-secondary: #555;
+    --color-text-tertiary: #999;
+    --color-text-info: #1a6fc4;
+    --color-text-success: #085041;
+    --color-text-danger: #8B1A15;
+    --color-background-primary: #fff;
+    --color-background-secondary: #f5f5f4;
+    --color-background-info: #e6f1fb;
+    --color-background-success: #e1f5ee;
+    --color-border-primary: #aaa;
+    --color-border-secondary: #ccc;
+    --color-border-tertiary: #e5e5e3;
+    --color-border-info: #7ab4e8;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { overflow-x: hidden; }
+  body { margin: 0; padding: 16px; font-family: var(--font-sans); background: var(--color-background-primary); color: var(--color-text-primary); max-width: 960px; margin: 0 auto; }
+  input, select, button, textarea { font-family: var(--font-sans); padding: 8px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); outline: none; }
+  input:focus, select:focus, textarea:focus { border-color: var(--color-border-primary); }
+</style>
+<style>
+* { box-sizing: border-box; }
+.page { padding: 0 0 2rem; font-size: 14px; color: var(--color-text-primary); position:relative; }
+.nav { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:none; margin-bottom:0; position:absolute; top:0; left:0; right:0; z-index:5; background:transparent; }
+.nav-logo { font-size:15px; font-weight:500; display:flex; align-items:center; gap:7px; }
+.nav-logo i { font-size:18px; color:#1D9E75; }
+.nav-links { display:flex; gap:18px; }
+.nav-link { font-size:13px; color:var(--color-text-secondary); cursor:pointer; }
+.nav-link:hover { color:var(--color-text-primary); }
+.nav-cta { font-size:13px; padding:6px 14px; }
+.hero { position:relative; background:var(--color-background-secondary); height:66.67vh; text-align:center; margin-top:-16px; width:100vw; margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); box-sizing:border-box; }
+.hero-content { height:66.67%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding-top:56px; box-sizing:border-box; }
+.hero-icon { font-size:56px; color:var(--color-border-secondary); margin-bottom:16px; }
+.hero h1 { font-size:26px; font-weight:500; margin:0 0 8px; max-width:440px; line-height:1.3; }
+.hero-sub { font-size:14px; color:var(--color-text-secondary); margin:0 0 24px; max-width:380px; line-height:1.6; }
+.hero-btns { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.btn-primary { padding:10px 22px; background:var(--color-text-primary); color:var(--color-background-primary); border:none; border-radius:var(--border-radius-md); font-size:14px; font-weight:500; cursor:pointer; font-family:var(--font-sans); }
+.btn-primary:hover { opacity:0.88; }
+.btn-secondary { padding:10px 22px; background:var(--color-background-primary); color:var(--color-text-primary); border:0.5px solid var(--color-border-secondary); border-radius:var(--border-radius-md); font-size:14px; font-weight:500; cursor:pointer; font-family:var(--font-sans); }
+.btn-secondary:hover { background:var(--color-background-secondary); }
+.hero-badge { position:absolute; bottom:12px; right:12px; background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); padding:6px 12px; font-size:12px; display:flex; align-items:center; gap:6px; }
+.hero-badge i { color:#1D9E75; font-size:13px; }
+.quick-search { background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:16px; position:absolute; left:50%; bottom:10%; transform:translateX(-50%); width:min(700px,85%); z-index:6; display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:end; box-shadow:0 4px 20px rgba(0,0,0,0.12); text-align:left; }
+.qs-field { display:flex; flex-direction:column; gap:5px; }
+.qs-label { font-size:11px; font-weight:500; color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:0.05em; }
+.qs-field select, .qs-field input { font-size:13px; }
+.qs-btn { padding:9px 18px; background:var(--color-text-primary); color:var(--color-background-primary); border:none; border-radius:var(--border-radius-md); font-size:13px; font-weight:500; cursor:pointer; font-family:var(--font-sans); white-space:nowrap; display:flex; align-items:center; gap:5px; }
+.trust-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:28px 0 32px; }
+.trust-item { display:flex; flex-direction:column; align-items:center; text-align:center; padding:14px 10px; background:var(--color-background-secondary); border-radius:var(--border-radius-md); gap:6px; }
+.trust-item i { font-size:20px; color:#1D9E75; }
+.trust-num { font-size:18px; font-weight:500; }
+.trust-label { font-size:11px; color:var(--color-text-secondary); line-height:1.4; }
+.section-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+.section-title { font-size:17px; font-weight:500; margin:0; }
+.section-link { font-size:13px; color:var(--color-text-info); cursor:pointer; }
+.cards-scroll { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:32px; }
+.tour-card { background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); overflow:hidden; cursor:pointer; }
+.tour-card:hover { border-color:var(--color-border-primary); }
+.tc-img { height:120px; background:var(--color-background-secondary); display:flex; align-items:center; justify-content:center; position:relative; }
+.tc-img i { font-size:30px; color:var(--color-border-secondary); }
+.tc-badge { position:absolute; top:7px; left:7px; font-size:10px; font-weight:500; padding:2px 8px; border-radius:20px; }
+.b-best { background:#FAEEDA; color:#633806; }
+.b-priv { background:#EEEDFE; color:#3C3489; }
+.tc-body { padding:10px 12px 12px; }
+.tc-name { font-size:13px; font-weight:500; margin:0 0 4px; }
+.tc-meta { font-size:11px; color:var(--color-text-secondary); display:flex; gap:8px; margin-bottom:6px; }
+.tc-foot { display:flex; justify-content:space-between; align-items:baseline; padding-top:8px; border-top:0.5px solid var(--color-border-tertiary); }
+.tc-price { font-size:14px; font-weight:500; }
+.tc-rating { font-size:11px; color:var(--color-text-secondary); }
+.tc-stars { color:#BA7517; }
+.dest-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:32px; }
+.dest-card { border-radius:var(--border-radius-lg); height:110px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); display:flex; flex-direction:column; justify-content:flex-end; padding:10px 12px; cursor:pointer; position:relative; overflow:hidden; }
+.dest-card:hover { border-color:var(--color-border-primary); }
+.dest-card i.bg-icon { position:absolute; top:50%; left:50%; transform:translate(-50%,-60%); font-size:36px; color:var(--color-border-secondary); }
+.dest-name { font-size:13px; font-weight:500; position:relative; z-index:1; }
+.dest-count { font-size:11px; color:var(--color-text-secondary); position:relative; z-index:1; }
+.steps { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:32px; }
+.step-card { display:flex; flex-direction:column; gap:8px; padding:14px; background:var(--color-background-secondary); border-radius:var(--border-radius-lg); }
+.step-num { width:26px; height:26px; border-radius:50%; background:var(--color-background-primary); border:0.5px solid var(--color-border-secondary); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:500; }
+.step-title { font-size:13px; font-weight:500; margin:0; }
+.step-desc { font-size:12px; color:var(--color-text-secondary); margin:0; line-height:1.5; }
+.types-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:32px; }
+.type-card { border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:18px 20px; cursor:pointer; background:var(--color-background-primary); }
+.type-card:hover { border-color:var(--color-border-primary); }
+.type-card.featured { border:2px solid var(--color-border-info); }
+.type-icon { font-size:24px; margin-bottom:10px; }
+.type-title { font-size:15px; font-weight:500; margin:0 0 5px; }
+.type-desc { font-size:12px; color:var(--color-text-secondary); line-height:1.55; margin:0 0 12px; }
+.type-features { display:flex; flex-direction:column; gap:4px; margin-bottom:14px; }
+.type-feat { font-size:12px; color:var(--color-text-secondary); display:flex; align-items:center; gap:6px; }
+.type-feat i { color:#1D9E75; font-size:12px; }
+.type-cta { font-size:12px; padding:6px 14px; cursor:pointer; border-radius:var(--border-radius-md); border:0.5px solid var(--color-border-secondary); background:none; font-family:var(--font-sans); font-weight:500; }
+.reviews-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:32px; }
+.rev-card { background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:14px; }
+.rev-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.rev-avatar { width:32px; height:32px; border-radius:50%; background:#EEEDFE; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:500; color:#3C3489; flex-shrink:0; }
+.rev-name { font-size:13px; font-weight:500; margin:0; }
+.rev-date { font-size:11px; color:var(--color-text-tertiary); }
+.rev-stars { color:#BA7517; font-size:12px; }
+.rev-text { font-size:12px; color:var(--color-text-secondary); line-height:1.6; margin:0; }
+.rev-tour { font-size:11px; color:var(--color-text-tertiary); margin-top:8px; display:flex; align-items:center; gap:4px; }
+.faq-list { margin-bottom:32px; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); overflow:hidden; }
+.faq-item { padding:13px 16px; border-bottom:0.5px solid var(--color-border-tertiary); cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.faq-item:last-child { border-bottom:none; }
+.faq-item:hover { background:var(--color-background-secondary); }
+.faq-q { font-size:13px; font-weight:500; margin:0; }
+.faq-a { font-size:12px; color:var(--color-text-secondary); margin:6px 0 0; line-height:1.55; display:none; }
+.faq-item.open .faq-a { display:block; }
+.faq-item.open { background:var(--color-background-secondary); }
+.faq-chevron { font-size:14px; color:var(--color-text-tertiary); flex-shrink:0; transition:transform 0.15s; }
+.faq-item.open .faq-chevron { transform:rotate(180deg); }
+.cta-band { background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:2rem; text-align:center; margin-bottom:24px; }
+.cta-band h2 { font-size:18px; font-weight:500; margin:0 0 6px; }
+.cta-band p { font-size:13px; color:var(--color-text-secondary); margin:0 0 18px; }
+.cta-band-btns { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+.footer { border-top:0.5px solid var(--color-border-tertiary); padding-top:20px; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:16px; }
+.footer-brand p { font-size:12px; color:var(--color-text-secondary); margin:6px 0 0; line-height:1.6; max-width:200px; }
+.footer-col h4 { font-size:12px; font-weight:500; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-tertiary); }
+.footer-col a { display:block; font-size:12px; color:var(--color-text-secondary); margin-bottom:6px; cursor:pointer; text-decoration:none; }
+.footer-col a:hover { color:var(--color-text-primary); }
+.footer-bottom { margin-top:16px; padding-top:14px; border-top:0.5px solid var(--color-border-tertiary); display:flex; justify-content:space-between; font-size:11px; color:var(--color-text-tertiary); flex-wrap:wrap; gap:8px; }
+</style>
+<style>
+@media (max-width:768px){
+  body{padding:16px;}
+  .hero{height:100vh;}
+  .hero-content{height:100%;}
+  .quick-search{grid-template-columns:1fr 1fr;bottom:0;transform:translate(-50%,50%);}
+  .trust-bar{margin-top:90px;}
+  .trust-bar{grid-template-columns:repeat(2,1fr);}
+  .cards-scroll,.dest-grid,.reviews-grid{display:flex;grid-template-columns:none;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;margin:0 0 32px;padding-right:16px;}
+  .cards-scroll::-webkit-scrollbar,.dest-grid::-webkit-scrollbar,.reviews-grid::-webkit-scrollbar{display:none;}
+  .cards-scroll>*,.reviews-grid>*{flex:0 0 45%;scroll-snap-align:start;}
+  .dest-grid>*{flex:0 0 30%;scroll-snap-align:start;}
+  .steps{grid-template-columns:repeat(2,1fr);}
+  .types-grid{grid-template-columns:1fr;}
+  .footer{grid-template-columns:1fr 1fr;}
+  .nav-links{flex-wrap:wrap;gap:10px;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+  .quick-search{grid-template-columns:1fr;}
+  .trust-bar{grid-template-columns:1fr 1fr;margin-top:190px;}
+  .cards-scroll,.dest-grid,.reviews-grid{display:flex;grid-template-columns:none;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;margin:0 0 32px;padding-right:12px;}
+  .cards-scroll::-webkit-scrollbar,.dest-grid::-webkit-scrollbar,.reviews-grid::-webkit-scrollbar{display:none;}
+  .cards-scroll>*,.reviews-grid>*{flex:0 0 82%;scroll-snap-align:start;}
+  .dest-grid>*{flex:0 0 40%;scroll-snap-align:start;}
+  .steps{grid-template-columns:1fr;}
+  .footer{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <nav class="nav">
+    <div class="nav-logo"><i class="ti ti-sailboat"></i> Adriatic Sails</div>
+    <div class="nav-links">
+      <span class="nav-link">Tours</span>
+      <span class="nav-link">Destinations</span>
+      <span class="nav-link">About</span>
+      <span class="nav-link">FAQ</span>
+    </div>
+    <button class="btn-primary nav-cta">Book now</button>
+  </nav>
+  <div class="hero">
+    <div class="hero-content">
+      <i class="ti ti-sailboat hero-icon"></i>
+      <h1>The Adriatic from the water, the way it should be</h1>
+      <p class="hero-sub">Group departures and private charters along the Dalmatian coast. Small boats, real guides, no tourist conveyor belts.</p>
+      <div class="hero-btns">
+        <button class="btn-primary">Browse all tours</button>
+        <button class="btn-secondary">Plan a private charter</button>
+      </div>
+    </div>
+    <div class="hero-badge"><i class="ti ti-shield-check"></i> Free cancellation up to 48h</div>
+    <div class="quick-search">
+      <div class="qs-field"><span class="qs-label">Destination</span><select><option>All destinations</option><option>Dubrovnik</option><option>Hvar</option><option>Elafiti islands</option><option>Vis</option></select></div>
+      <div class="qs-field"><span class="qs-label">Date</span><input type="date"></div>
+      <div class="qs-field"><span class="qs-label">Tour type</span><select><option>Group or private</option><option>Group tour</option><option>Private charter</option></select></div>
+      <button class="qs-btn"><i class="ti ti-search" style="font-size:13px"></i> Search</button>
+    </div>
+  </div>
+  <div class="trust-bar">
+    <div class="trust-item"><i class="ti ti-users"></i><span class="trust-num">4,200+</span><span class="trust-label">guests this season</span></div>
+    <div class="trust-item"><i class="ti ti-star"></i><span class="trust-num">4.9</span><span class="trust-label">average rating across 800+ reviews</span></div>
+    <div class="trust-item"><i class="ti ti-sailboat"></i><span class="trust-num">14</span><span class="trust-label">tours and routes</span></div>
+    <div class="trust-item"><i class="ti ti-shield-check"></i><span class="trust-num">10 yrs</span><span class="trust-label">operating on the coast</span></div>
+  </div>
+  <div class="section-header"><h2 class="section-title">Popular tours</h2><span class="section-link">See all tours →</span></div>
+  <div class="cards-scroll">
+    <div class="tour-card"><div class="tc-img"><i class="ti ti-sunset"></i><span class="tc-badge b-best">Best seller</span></div><div class="tc-body"><p class="tc-name">Sunset Bay coastal cruise</p><div class="tc-meta"><span><i class="ti ti-clock"></i> 3h</span><span><i class="ti ti-users"></i> Group / private</span></div><div class="tc-foot"><div><span style="font-size:10px;color:var(--color-text-tertiary)">From </span><span class="tc-price">€55</span><span style="font-size:10px;color:var(--color-text-tertiary)"> / person</span></div><span class="tc-rating"><span class="tc-stars">★</span> 4.9 (128)</span></div></div></div>
+    <div class="tour-card"><div class="tc-img"><i class="ti ti-island"></i><span class="tc-badge b-best">Best seller</span></div><div class="tc-body"><p class="tc-name">Island hopping — Elafiti day trip</p><div class="tc-meta"><span><i class="ti ti-clock"></i> 7h</span><span><i class="ti ti-users"></i> Group</span></div><div class="tc-foot"><div><span style="font-size:10px;color:var(--color-text-tertiary)">From </span><span class="tc-price">€89</span><span style="font-size:10px;color:var(--color-text-tertiary)"> / person</span></div><span class="tc-rating"><span class="tc-stars">★</span> 4.8 (94)</span></div></div></div>
+    <div class="tour-card"><div class="tc-img"><i class="ti ti-crown"></i><span class="tc-badge b-priv">Private</span></div><div class="tc-body"><p class="tc-name">Private sunset charter</p><div class="tc-meta"><span><i class="ti ti-clock"></i> 2h</span><span><i class="ti ti-crown"></i> Private only</span></div><div class="tc-foot"><div><span style="font-size:10px;color:var(--color-text-tertiary)">From </span><span class="tc-price">€320</span><span style="font-size:10px;color:var(--color-text-tertiary)"> / boat</span></div><span class="tc-rating"><span class="tc-stars">★</span> 5.0 (41)</span></div></div></div>
+  </div>
+  <div class="section-header"><h2 class="section-title">Where we go</h2><span class="section-link">All destinations →</span></div>
+  <div class="dest-grid">
+    <div class="dest-card"><i class="ti ti-building-castle bg-icon"></i><span class="dest-name">Dubrovnik</span><span class="dest-count">8 tours</span></div>
+    <div class="dest-card"><i class="ti ti-sun bg-icon"></i><span class="dest-name">Hvar island</span><span class="dest-count">4 tours</span></div>
+    <div class="dest-card"><i class="ti ti-trees bg-icon"></i><span class="dest-name">Elafiti islands</span><span class="dest-count">3 tours</span></div>
+    <div class="dest-card"><i class="ti ti-droplet bg-icon"></i><span class="dest-name">Blue Cave, Biševo</span><span class="dest-count">2 tours</span></div>
+    <div class="dest-card"><i class="ti ti-tower bg-icon"></i><span class="dest-name">Korčula</span><span class="dest-count">2 tours</span></div>
+    <div class="dest-card"><i class="ti ti-island bg-icon"></i><span class="dest-name">Vis island</span><span class="dest-count">3 tours</span></div>
+  </div>
+  <div class="section-header" style="margin-bottom:14px"><h2 class="section-title">How it works</h2></div>
+  <div class="steps">
+    <div class="step-card"><div class="step-num">1</div><p class="step-title">Choose a tour</p><p class="step-desc">Browse by destination, activity, or duration. Group or private — your call.</p></div>
+    <div class="step-card"><div class="step-num">2</div><p class="step-title">Pick your date</p><p class="step-desc">Check live availability and choose a departure that suits your schedule.</p></div>
+    <div class="step-card"><div class="step-num">3</div><p class="step-title">Book securely</p><p class="step-desc">Pay online via secure checkout. Instant confirmation to your inbox.</p></div>
+    <div class="step-card"><div class="step-num">4</div><p class="step-title">Show up and sail</p><p class="step-desc">Meet your captain at the marina. Everything else is taken care of.</p></div>
+  </div>
+  <div class="section-header"><h2 class="section-title">Group or private?</h2></div>
+  <div class="types-grid">
+    <div class="type-card"><div class="type-icon" style="color:#1D9E75"><i class="ti ti-users"></i></div><p class="type-title">Group tour</p><p class="type-desc">Join a small shared departure — max 12 guests. Great for solo travellers, couples, and anyone who likes meeting people on the water.</p><div class="type-features"><span class="type-feat"><i class="ti ti-circle-check"></i> From €45 per person</span><span class="type-feat"><i class="ti ti-circle-check"></i> Fixed departures, daily</span><span class="type-feat"><i class="ti ti-circle-check"></i> Guided commentary included</span></div><button class="type-cta">Browse group tours</button></div>
+    <div class="type-card featured"><div class="type-icon" style="color:#534AB7"><i class="ti ti-crown"></i></div><p class="type-title">Private charter</p><p class="type-desc">The whole boat is yours. Choose your route, set your pace, bring your own food and music. Ideal for families, celebrations, and corporate groups.</p><div class="type-features"><span class="type-feat"><i class="ti ti-circle-check"></i> From €280 for the boat</span><span class="type-feat"><i class="ti ti-circle-check"></i> Fully customisable route</span><span class="type-feat"><i class="ti ti-circle-check"></i> Flexible departure time</span></div><button class="btn-primary" style="font-size:12px;padding:6px 14px;">Plan a private charter</button></div>
+  </div>
+  <div class="section-header"><h2 class="section-title">What guests say</h2><span class="section-link">Read all reviews →</span></div>
+  <div class="reviews-grid">
+    <div class="rev-card"><div class="rev-head"><div class="rev-avatar">MK</div><div><p class="rev-name">Maja K.</p><p class="rev-date rev-stars">★★★★★ · Jun 2025</p></div></div><p class="rev-text">Absolutely magical. The sea cave was the highlight — we were the only boat there at that time of day. Book this.</p><p class="rev-tour"><i class="ti ti-sailboat" style="font-size:11px"></i> Sunset Bay coastal cruise</p></div>
+    <div class="rev-card"><div class="rev-head"><div class="rev-avatar">TR</div><div><p class="rev-name">Thomas R.</p><p class="rev-date rev-stars">★★★★★ · May 2025</p></div></div><p class="rev-text">Booked the private charter for our anniversary. The captain was brilliant — knew every cove, every good light. Worth every cent.</p><p class="rev-tour"><i class="ti ti-crown" style="font-size:11px"></i> Private sunset charter</p></div>
+    <div class="rev-card"><div class="rev-head"><div class="rev-avatar">SP</div><div><p class="rev-name">Sara P.</p><p class="rev-date rev-stars">★★★★★ · Jul 2025</p></div></div><p class="rev-text">Did the Elafiti island hop with my family. Kids loved the swimming stops, adults loved the wine. Perfect day out.</p><p class="rev-tour"><i class="ti ti-island" style="font-size:11px"></i> Island hopping — Elafiti</p></div>
+  </div>
+  <div class="section-header"><h2 class="section-title">Common questions</h2><span class="section-link">All FAQs →</span></div>
+  <div class="faq-list">
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div><p class="faq-q">What happens if the weather is bad?</p><p class="faq-a">We monitor conditions closely. If a tour is cancelled due to weather, you'll receive a full refund or the option to rebook at no extra cost. We'll notify you at least 4 hours before departure.</p></div><i class="ti ti-chevron-down faq-chevron"></i></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div><p class="faq-q">Do I need to know how to swim?</p><p class="faq-a">Not at all. Life jackets are provided on all tours. Swimming stops are optional — you're welcome to stay on the boat.</p></div><i class="ti ti-chevron-down faq-chevron"></i></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div><p class="faq-q">Can I bring young children?</p><p class="faq-a">Yes — children aged 3 and above are welcome on all group tours. Life jackets are available in children's sizes. Private charters have no minimum age.</p></div><i class="ti ti-chevron-down faq-chevron"></i></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div><p class="faq-q">How do I cancel or reschedule?</p><p class="faq-a">Free cancellation up to 48 hours before departure. Inside 48 hours, bookings are non-refundable. To reschedule, contact us and we'll do our best to find an alternative date.</p></div><i class="ti ti-chevron-down faq-chevron"></i></div>
+  </div>
+  <div class="cta-band">
+    <h2>Ready to get on the water?</h2>
+    <p>Tours depart daily. Most sell out 3–5 days ahead in summer — book early.</p>
+    <div class="cta-band-btns"><button class="btn-primary">Browse all tours</button><button class="btn-secondary">Plan a private charter</button></div>
+  </div>
+  <footer class="footer">
+    <div class="footer-brand"><div class="nav-logo" style="margin-bottom:6px"><i class="ti ti-sailboat"></i> Adriatic Sails</div><p>Small-boat tours along the Dalmatian coast since 2015. Licensed, insured, and obsessed with the sea.</p></div>
+    <div class="footer-col"><h4>Tours</h4><a>Group tours</a><a>Private charters</a><a>Day trips</a><a>Sunset cruises</a></div>
+    <div class="footer-col"><h4>Info</h4><a>About us</a><a>Destinations</a><a>FAQs</a><a>Contact</a></div>
+    <div class="footer-col"><h4>Legal</h4><a>Terms & conditions</a><a>Privacy policy</a><a>Cancellation policy</a></div>
+  </footer>
+  <div class="footer-bottom"><span>© 2025 Adriatic Sails</span><span>Licensed maritime operator · Croatia</span></div>
+</div>
+</body>
+</html>

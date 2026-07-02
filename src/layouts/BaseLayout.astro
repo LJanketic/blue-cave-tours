@@ -1,17 +1,24 @@
 ---
 import '../styles/global.css';
-import { SITE_DEFAULT_DESCRIPTION } from '../config/site';
-import { GOOGLE_FONTS_HREF } from '../config/typography';
+import { SITE_DEFAULT_DESCRIPTION, SITE_NAME } from '../config/site';
+import { DEFAULT_OG_IMAGE } from '../lib/seo';
 
 type Props = {
 	title: string;
 	description?: string;
 	ogImage?: string;
+	robots?: string;
+	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 };
 
-const { title, description = SITE_DEFAULT_DESCRIPTION, ogImage } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
-const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? Astro.url).href : undefined;
+const { title, description = SITE_DEFAULT_DESCRIPTION, ogImage, robots, jsonLd } = Astro.props;
+const canonical = new URL(Astro.url.pathname, String(Astro.site ?? Astro.url));
+const ogImagePath = ogImage ?? DEFAULT_OG_IMAGE;
+const ogImageUrl = new URL(ogImagePath, Astro.site ?? Astro.url).href;
+const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+
+const TABLER_ICONS_VERSION = '3.31.0';
+const tablerIconsHref = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TABLER_ICONS_VERSION}/tabler-icons.min.css`;
 ---
 
 <!doctype html>
@@ -20,26 +27,40 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? Astro.url).href : un
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="theme-color" content="#003D84" />
+		<meta name="theme-color" content="#1d9e75" />
 		<meta name="description" content={description} />
+		{robots && <meta name="robots" content={robots} />}
 		<link rel="canonical" href={canonical.href} />
-		{
-			ogImageUrl && (
-				<>
-					<meta property="og:image" content={ogImageUrl} />
-					<meta property="og:image:width" content="1200" />
-					<meta property="og:image:height" content="630" />
-					<meta name="twitter:card" content="summary_large_image" />
-					<meta name="twitter:image" content={ogImageUrl} />
-				</>
-			)
-		}
-		<link rel="preload" href="/fonts/glorich/Glorich-Bold.ttf" as="font" type="font/ttf" crossorigin />
-		<link rel="preload" href="/fonts/glorich/Glorich-Medium.ttf" as="font" type="font/ttf" crossorigin />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href={GOOGLE_FONTS_HREF} rel="stylesheet" />
+
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content={SITE_NAME} />
+		<meta property="og:locale" content="en_GB" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical.href} />
+		<meta property="og:image" content={ogImageUrl} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content={`${SITE_NAME} — Split boat tours`} />
+
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImageUrl} />
+
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+		<link rel="preload" href={tablerIconsHref} as="style" />
+		<link rel="stylesheet" href={tablerIconsHref} media="print" onload="this.media='all'" />
+		<noscript><link rel="stylesheet" href={tablerIconsHref} /></noscript>
+
 		<title>{title}</title>
+
+		{
+			jsonLdBlocks.map((block) => (
+				<script is:inline type="application/ld+json" set:html={JSON.stringify(block)} />
+			))
+		}
+
 		<slot name="head" />
 	</head>
 	<body>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Private Charter Customisation — Adriatic Sails</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{--color-text-primary:#111;--color-text-secondary:#555;--color-text-tertiary:#999;--color-text-info:#1a6fc4;--color-text-success:#085041;--color-text-danger:#8B1A15;--color-text-warning:#BA7517;--color-background-primary:#fff;--color-background-secondary:#f5f5f4;--color-background-info:#e6f1fb;--color-background-success:#e1f5ee;--color-border-primary:#aaa;--color-border-secondary:#ccc;--color-border-tertiary:#e5e5e3;--color-border-info:#7ab4e8;--border-radius-md:8px;--border-radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{box-sizing:border-box;}body{margin:0 auto;padding:24px;font-family:var(--font-sans);max-width:680px;background:var(--color-background-primary);color:var(--color-text-primary);}
+input,select,button,textarea{font-family:var(--font-sans);padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;}
+
+.page{padding:1.5rem 0 2rem;font-size:14px;}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:14px;}
+.card-title{font-size:14px;font-weight:500;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
+.card-title i{font-size:16px;color:#1D9E75;}
+.card-sub{font-size:12px;color:var(--color-text-secondary);margin:0 0 14px;}
+.step-bar{display:flex;align-items:center;margin-bottom:28px;}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;}
+.step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;}
+.done .step-dot{background:var(--color-background-success);color:var(--color-text-success);}.done .step-lbl{color:var(--color-text-secondary);}
+.active .step-dot{background:var(--color-text-primary);color:var(--color-background-primary);}.active .step-lbl{font-weight:500;}
+.next .step-dot{background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px solid var(--color-border-secondary);}.next .step-lbl{color:var(--color-text-tertiary);}
+.step-line{flex:1;height:0.5px;background:var(--color-border-secondary);margin:0 8px;}
+.btn-primary{padding:12px 22px;background:var(--color-text-primary);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font-sans);}
+.btn-primary:hover{opacity:0.88;}
+.btn-secondary{padding:10px 22px;background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font-sans);}
+.btn-secondary:hover{background:var(--color-background-secondary);}
+.summary-card{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.1rem 1.25rem;margin-bottom:16px;}
+.sum-title{font-size:13px;font-weight:500;margin:0 0 10px;}
+.sum-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
+.sum-label{color:var(--color-text-secondary);}.sum-val{font-weight:500;}
+.sum-div{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:10px 0;}
+.sum-total{display:flex;justify-content:space-between;font-size:15px;font-weight:500;}
+
+.max-w{max-width:580px;margin:0 auto;}
+.boat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.boat-option{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px;}
+.boat-option:hover{border-color:var(--color-border-primary);}
+.boat-option.sel{border:2px solid var(--color-text-primary);background:var(--color-background-secondary);}
+.boat-name{font-size:13px;font-weight:500;}.boat-cap{font-size:11px;color:var(--color-text-secondary);}
+.boat-tag{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--color-background-secondary);color:var(--color-text-secondary);}
+.boat-option.sel .boat-tag{background:var(--color-background-primary);}
+.dtd-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;}
+.guests-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.guest-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);}
+.stepper{display:flex;align-items:center;gap:8px;}
+.step-btn{width:28px;height:28px;border-radius:50%;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font-sans);line-height:1;}
+.step-val{font-size:14px;font-weight:500;min-width:20px;text-align:center;}
+.route-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.route-option{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:11px 13px;cursor:pointer;display:flex;align-items:flex-start;gap:9px;}
+.route-option:hover{border-color:var(--color-border-primary);}
+.route-option.sel{border:2px solid var(--color-text-primary);background:var(--color-background-secondary);}
+.route-icon{font-size:18px;color:#1D9E75;margin-top:1px;flex-shrink:0;}
+.route-name{font-size:13px;font-weight:500;margin:0 0 2px;}.route-desc{font-size:11px;color:var(--color-text-secondary);line-height:1.4;}
+.extras-list{display:flex;flex-direction:column;gap:8px;}
+.extra-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);cursor:pointer;}
+.extra-item:hover{border-color:var(--color-border-secondary);}
+.extra-item.sel{border:0.5px solid var(--color-text-primary);background:var(--color-background-secondary);}
+.extra-icon{width:34px;height:34px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:16px;color:#1D9E75;flex-shrink:0;}
+.extra-item.sel .extra-icon{background:var(--color-background-primary);}
+.extra-name{font-size:13px;font-weight:500;margin:0 0 2px;}.extra-desc{font-size:11px;color:var(--color-text-secondary);margin:0;}
+.extra-price{font-size:13px;font-weight:500;white-space:nowrap;margin-left:auto;}
+.extra-check{width:18px;height:18px;border-radius:4px;border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.extra-item.sel .extra-check{background:var(--color-text-primary);border-color:var(--color-text-primary);color:var(--color-background-primary);}
+.cta-btn{width:100%;padding:13px;background:var(--color-text-primary);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font-sans);}
+.back-btn{width:100%;padding:10px;background:none;color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;font-family:var(--font-sans);margin-top:8px;}
+.policy-note{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-success);justify-content:center;margin-top:10px;}
+.cap-note{font-size:11px;color:var(--color-text-tertiary);margin-top:8px;display:flex;align-items:center;gap:5px;}
+
+</style>
+<style>
+@media (max-width:768px){
+  body{padding:16px;}
+  .boat-grid{grid-template-columns:1fr;}
+  .dtd-grid{grid-template-columns:1fr 1fr;}
+  .guests-grid{grid-template-columns:1fr;}
+  .route-grid{grid-template-columns:1fr;}
+}
+@media (max-width:480px){
+  body{padding:12px;}
+  .dtd-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="max-w">
+<div class="step-bar">
+  <div class="step done"><div class="step-dot"><i class="ti ti-check" style="font-size:11px"></i></div><span class="step-lbl">Tour type</span></div>
+  <div class="step-line"></div>
+  <div class="step active"><div class="step-dot">2</div><span class="step-lbl">Customise</span></div>
+  <div class="step-line"></div>
+  <div class="step next"><div class="step-dot">3</div><span class="step-lbl">Review</span></div>
+  <div class="step-line"></div>
+  <div class="step next"><div class="step-dot">4</div><span class="step-lbl">Payment</span></div>
+</div>
+<div class="card">
+  <p class="card-title"><i class="ti ti-sailboat"></i> Choose your boat</p>
+  <p class="card-sub">All boats come with a licensed captain and safety equipment.</p>
+  <div class="boat-grid" id="boat-grid">
+    <div class="boat-option sel" data-price="280" data-cap="8" onclick="selectBoat(this)">
+      <div style="font-size:22px;color:#1D9E75"><i class="ti ti-sailboat"></i></div>
+      <span class="boat-name">Karaka Classic</span>
+      <span class="boat-cap"><i class="ti ti-users"></i> Up to 8 guests</span>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px"><span class="boat-tag">Cabin</span><span class="boat-tag">Sundeck</span><span class="boat-tag">Sound system</span></div>
+      <span style="font-size:13px;font-weight:500;margin-top:4px">From €280</span>
+    </div>
+    <div class="boat-option" data-price="420" data-cap="12" onclick="selectBoat(this)">
+      <div style="font-size:22px;color:#534AB7"><i class="ti ti-ship"></i></div>
+      <span class="boat-name">Dubrovnik Star</span>
+      <span class="boat-cap"><i class="ti ti-users"></i> Up to 12 guests</span>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px"><span class="boat-tag">Cabin</span><span class="boat-tag">BBQ</span><span class="boat-tag">Snorkel gear</span></div>
+      <span style="font-size:13px;font-weight:500;margin-top:4px">From €420</span>
+    </div>
+  </div>
+  <p class="cap-note" id="cap-note"><i class="ti ti-info-circle"></i> <span>Karaka Classic fits up to 8 guests.</span></p>
+</div>
+<div class="card">
+  <p class="card-title"><i class="ti ti-calendar"></i> When and how long</p>
+  <p class="card-sub">Private charters depart at any time — we'll confirm availability after booking.</p>
+  <div class="dtd-grid">
+    <div class="field"><label>Date</label><input type="date"></div>
+    <div class="field"><label>Departure time</label><input type="time" value="10:00"></div>
+    <div class="field"><label>Duration</label><select id="duration" onchange="updateSummary()"><option value="2">2 hours</option><option value="3" selected>3 hours</option><option value="4">4 hours</option><option value="6">6 hours</option><option value="8">Full day (8h)</option></select></div>
+  </div>
+</div>
+<div class="card">
+  <p class="card-title"><i class="ti ti-users"></i> Guests</p>
+  <p class="card-sub" id="guest-sub">Maximum 8 guests for the selected boat.</p>
+  <div class="guests-grid">
+    <div class="guest-row"><div><p style="font-size:13px;margin:0">Adults</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:0">Age 13+</p></div><div class="stepper"><button class="step-btn" onclick="changeGuest('adults',-1)">−</button><span class="step-val" id="adults-val">2</span><button class="step-btn" onclick="changeGuest('adults',1)">+</button></div></div>
+    <div class="guest-row"><div><p style="font-size:13px;margin:0">Children</p><p style="font-size:11px;color:var(--color-text-tertiary);margin:0">Age 3–12</p></div><div class="stepper"><button class="step-btn" onclick="changeGuest('children',-1)">−</button><span class="step-val" id="children-val">0</span><button class="step-btn" onclick="changeGuest('children',1)">+</button></div></div>
+  </div>
+</div>
+<div class="card">
+  <p class="card-title"><i class="ti ti-map-2"></i> Choose your route</p>
+  <p class="card-sub">Pick a suggested route or describe your own in special requests.</p>
+  <div class="route-grid" id="route-grid">
+    <div class="route-option sel" onclick="selectRoute(this)"><i class="ti ti-sunset route-icon"></i><div><p class="route-name">Sunset coast</p><p class="route-desc">Sea caves, old town walls, golden hour views</p></div></div>
+    <div class="route-option" onclick="selectRoute(this)"><i class="ti ti-island route-icon"></i><div><p class="route-name">Elafiti islands</p><p class="route-desc">Three car-free islands, swimming, village lunch</p></div></div>
+    <div class="route-option" onclick="selectRoute(this)"><i class="ti ti-droplet route-icon"></i><div><p class="route-name">Blue Cave & Vis</p><p class="route-desc">The full outer-island bucket list</p></div></div>
+    <div class="route-option" onclick="selectRoute(this)"><i class="ti ti-swimming route-icon"></i><div><p class="route-name">Hidden coves</p><p class="route-desc">Snorkelling and swimming stops only locals know</p></div></div>
+  </div>
+</div>
+<div class="card">
+  <p class="card-title"><i class="ti ti-sparkles"></i> Add extras <span style="font-size:12px;font-weight:400;color:var(--color-text-tertiary)">— optional</span></p>
+  <p class="card-sub">Per-booking add-ons — all prepared before you arrive.</p>
+  <div class="extras-list">
+    <div class="extra-item" data-price="40" onclick="toggleExtra(this)"><div class="extra-icon"><i class="ti ti-bottle"></i></div><div><p class="extra-name">Champagne welcome</p><p class="extra-desc">Chilled on ice, ready when you board</p></div><span class="extra-price">+€40</span><div class="extra-check"><i class="ti ti-check" style="font-size:11px;display:none"></i></div></div>
+    <div class="extra-item" data-price="80" onclick="toggleExtra(this)"><div class="extra-icon"><i class="ti ti-camera"></i></div><div><p class="extra-name">Professional photo package</p><p class="extra-desc">Photographer on board, edited gallery within 24h</p></div><span class="extra-price">+€80</span><div class="extra-check"><i class="ti ti-check" style="font-size:11px;display:none"></i></div></div>
+    <div class="extra-item" data-price="65" onclick="toggleExtra(this)"><div class="extra-icon"><i class="ti ti-tools-kitchen-2"></i></div><div><p class="extra-name">Chef-prepared picnic lunch</p><p class="extra-desc">Local produce, seafood, bread, and a cheese board</p></div><span class="extra-price">+€65</span><div class="extra-check"><i class="ti ti-check" style="font-size:11px;display:none"></i></div></div>
+    <div class="extra-item" data-price="30" onclick="toggleExtra(this)"><div class="extra-icon"><i class="ti ti-fish"></i></div><div><p class="extra-name">Snorkelling gear</p><p class="extra-desc">Mask, fins, and vest for all guests</p></div><span class="extra-price">+€30</span><div class="extra-check"><i class="ti ti-check" style="font-size:11px;display:none"></i></div></div>
+  </div>
+</div>
+<div class="card">
+  <p class="card-title"><i class="ti ti-message"></i> Special requests</p>
+  <p class="card-sub">Allergies, accessibility needs, celebrations, custom route ideas.</p>
+  <textarea style="width:100%;min-height:72px;font-size:13px;resize:vertical" placeholder="e.g. It's our anniversary — can you have flowers on board?"></textarea>
+</div>
+<div class="summary-card">
+  <p class="sum-title">Your charter</p>
+  <div class="sum-row"><span class="sum-label">Boat</span><span class="sum-val" id="sum-boat">Karaka Classic</span></div>
+  <div class="sum-row"><span class="sum-label">Duration</span><span class="sum-val" id="sum-dur">3 hours</span></div>
+  <div class="sum-row"><span class="sum-label">Guests</span><span class="sum-val" id="sum-guests">2 adults</span></div>
+  <div class="sum-row"><span class="sum-label">Route</span><span class="sum-val" id="sum-route">Sunset coast</span></div>
+  <hr class="sum-div">
+  <div class="sum-row"><span class="sum-label">Charter base price</span><span class="sum-val" id="sum-base">€280</span></div>
+  <div class="sum-row" id="sum-extras-row" style="display:none"><span class="sum-label">Extras</span><span class="sum-val" id="sum-extras">€0</span></div>
+  <hr class="sum-div">
+  <div class="sum-total"><span>Total</span><span id="sum-total">€280</span></div>
+  <p style="font-size:11px;color:var(--color-text-tertiary);margin:4px 0 0;text-align:right">Includes all taxes and fees</p>
+</div>
+<button class="cta-btn">Review booking <i class="ti ti-arrow-right" style="font-size:14px;vertical-align:-2px"></i></button>
+<button class="back-btn">← Back to tour type</button>
+<div class="policy-note"><i class="ti ti-shield-check" style="font-size:13px"></i> Free cancellation up to 48h before departure</div>
+</div>
+
+<script>
+const boats={0:{name:'Karaka Classic',price:280,cap:8},1:{name:'Dubrovnik Star',price:420,cap:12}};
+let selBoat=0,adults=2,children=0,extrasTotal=0,selRoute='Sunset coast';
+const durMult={'2':1,'3':1.2,'4':1.4,'6':1.7,'8':2.2};
+const durLabel={'2':'2 hours','3':'3 hours','4':'4 hours','6':'6 hours','8':'Full day (8h)'};
+function selectBoat(el){
+  document.querySelectorAll('.boat-option').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');
+  selBoat=el===document.querySelectorAll('.boat-option')[0]?0:1;
+  document.getElementById('cap-note').querySelector('span').textContent=boats[selBoat].name+' fits up to '+boats[selBoat].cap+' guests.';
+  document.getElementById('guest-sub').textContent='Maximum '+boats[selBoat].cap+' guests for the selected boat.';
+  document.getElementById('sum-boat').textContent=boats[selBoat].name;
+  updateSummary();
+}
+function changeGuest(type,delta){
+  const cap=boats[selBoat].cap;
+  if(type==='adults'){const n=adults+delta;if(n<1||n+children>cap)return;adults=n;document.getElementById('adults-val').textContent=adults;}
+  else{const n=children+delta;if(n<0||adults+n>cap)return;children=n;document.getElementById('children-val').textContent=children;}
+  updateSummary();
+}
+function selectRoute(el){
+  document.querySelectorAll('.route-option').forEach(r=>r.classList.remove('sel'));el.classList.add('sel');
+  selRoute=el.querySelector('.route-name').textContent;
+  document.getElementById('sum-route').textContent=selRoute;
+}
+function toggleExtra(el){
+  el.classList.toggle('sel');el.querySelector('.extra-check i').style.display=el.classList.contains('sel')?'':'none';
+  extrasTotal=0;document.querySelectorAll('.extra-item.sel').forEach(e=>extrasTotal+=parseInt(e.dataset.price));
+  updateSummary();
+}
+function updateSummary(){
+  const dur=document.getElementById('duration').value;
+  const base=Math.round(boats[selBoat].price*(durMult[dur]||1));
+  document.getElementById('sum-dur').textContent=durLabel[dur];
+  document.getElementById('sum-guests').textContent=adults+' adult'+(adults!==1?'s':'')+(children>0?', '+children+' child'+(children!==1?'ren':''):'');
+  document.getElementById('sum-base').textContent='€'+base;
+  document.getElementById('sum-total').textContent='€'+(base+extrasTotal);
+  const er=document.getElementById('sum-extras-row');
+  if(extrasTotal>0){er.style.display='';document.getElementById('sum-extras').textContent='€'+extrasTotal;}else er.style.display='none';
+}
+</script>
+</body>
+</html>

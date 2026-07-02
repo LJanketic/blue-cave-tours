@@ -1,29 +1,305 @@
 ---
 export const prerender = true;
 
-import { HOME_PAGE_TITLE } from '../config/site';
+import { HOME_PAGE_TITLE, SITE_DEFAULT_DESCRIPTION } from '../config/site';
 import SiteLayout from '../layouts/SiteLayout.astro';
-import Hero from '../components/Hero.astro';
-import TourSection from '../components/TourSection.astro';
-import WhyUs from '../components/WhyUs.astro';
-import FAQ from '../components/FAQ.astro';
-import { getImage } from 'astro:assets';
-import { HERO_IMAGE } from '../data/hero-image';
+import TourCard from '../components/TourCard.astro';
+import QuickSearch from '../components/vue/QuickSearch.vue';
+import FAQAccordion from '../components/vue/FAQAccordion.vue';
+import { getFeaturedTours } from '../lib/tours';
+import { getAllDestinations } from '../lib/destinations';
+import { ABOUT } from '../data/about';
+import { FAQ_ITEMS } from '../data/faq';
+import { faqPageJsonLd, organizationJsonLd, websiteJsonLd } from '../lib/seo';
 
-const ogImage = await getImage({
-	src: HERO_IMAGE.src,
-	width: 1200,
-	height: 630,
-	fit: 'cover',
-	format: 'jpg',
-});
+const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
+const jsonLd = siteUrl
+	? [organizationJsonLd(siteUrl), websiteJsonLd(siteUrl), faqPageJsonLd(FAQ_ITEMS.slice(0, 4))]
+	: faqPageJsonLd(FAQ_ITEMS.slice(0, 4));
+
+const featuredTours = getFeaturedTours();
+const allDestinations = getAllDestinations();
+const destinationStrip = allDestinations.slice(0, 6);
+const faqPreview = FAQ_ITEMS.slice(0, 4);
+const destinationOptions = allDestinations.map((d) => ({ slug: d.slug, name: d.name }));
+
+const reviews = [
+	{
+		initials: 'SM',
+		name: 'Sarah M.',
+		date: 'Jul 2025',
+		text: 'The Blue Cave timing was perfect — we were in at the right moment and still had time for swimming near Vis. Best day of our Croatia trip.',
+		tour: 'Blue Cave, Hvar & 5 islands',
+		icon: 'island',
+	},
+	{
+		initials: 'TR',
+		name: 'Thomas R.',
+		date: 'Jun 2025',
+		text: 'Booked the private charter for our anniversary. The skipper built the route around our pace and found a quiet cove near Pakleni for lunch on the boat.',
+		tour: 'Create your perfect day at sea',
+		icon: 'crown',
+	},
+	{
+		initials: 'EP',
+		name: 'Elena P.',
+		date: 'Aug 2025',
+		text: 'Morning lagoon tour with two kids under six — calm water, short day, and the crew was patient with every question. Exactly what we needed.',
+		tour: 'Blue Lagoon morning tour',
+		icon: 'swimming',
+	},
+];
 ---
 
-<SiteLayout title={HOME_PAGE_TITLE} booking ogImage={ogImage.src}>
+<SiteLayout title={HOME_PAGE_TITLE} description={SITE_DEFAULT_DESCRIPTION} solidNav={false} booking jsonLd={jsonLd}>
 	<main id="main">
-		<Hero />
-		<TourSection />
-		<WhyUs />
-		<FAQ />
+		<div class="page home-page">
+			<section class="hero hero--home" aria-labelledby="hero-heading">
+				<div class="hero-content">
+					<i class="ti ti-sailboat hero-icon" aria-hidden="true"></i>
+					<h1 id="hero-heading">Split boat tours &amp; private charters</h1>
+					<p class="hero-sub">
+						Group departures and private charters from Split — Blue Cave, islands, and hidden bays. Small boats,
+						local skippers, routes that follow the weather.
+					</p>
+					<div class="hero-btns">
+						<a class="btn-primary" href="/tours">Browse all tours</a>
+						<a class="btn-secondary" href="/contact?tour=create-perfect-day-private">Plan a private charter</a>
+					</div>
+				</div>
+				<div class="hero-badge">
+					<i class="ti ti-shield-check" aria-hidden="true"></i>
+					Free cancellation up to 48h
+				</div>
+				<QuickSearch client:idle destinations={destinationOptions} />
+			</section>
+
+			<div class="page-shell">
+				<section class="trust-bar" aria-label="Why guests trust us">
+					{
+						ABOUT.trustStats.map((stat) => (
+							<div class="trust-item">
+								<i class={`ti ti-${stat.icon}`} aria-hidden="true" />
+								<span class="trust-num">{stat.value}</span>
+								<span class="trust-label">{stat.label}</span>
+							</div>
+						))
+					}
+				</section>
+
+				<section aria-labelledby="featured-heading">
+					<div class="section-header">
+						<h2 id="featured-heading" class="section-title">Popular tours</h2>
+						<a class="section-link" href="/tours">See all tours →</a>
+					</div>
+					<div class="cards-scroll">
+						{
+							featuredTours.map((tour) => (
+								<TourCard tour={tour} featured={tour.featured} />
+							))
+						}
+					</div>
+				</section>
+
+				<section aria-labelledby="destinations-heading">
+					<div class="section-header">
+						<h2 id="destinations-heading" class="section-title">Where we go</h2>
+						<a class="section-link" href="/destinations">All destinations →</a>
+					</div>
+					<div class="dest-grid">
+						{
+							destinationStrip.map((dest) => (
+								<a class="dest-card" href={`/destinations/${dest.slug}`}>
+									<i class={`ti ti-${dest.icon} bg-icon`} aria-hidden="true" />
+									<span class="dest-name">{dest.name}</span>
+									<span class="dest-count">
+										{dest.tourSlugs.length} tour{dest.tourSlugs.length === 1 ? '' : 's'}
+									</span>
+								</a>
+							))
+						}
+					</div>
+				</section>
+
+				<section aria-labelledby="how-heading">
+					<div class="section-header">
+						<h2 id="how-heading" class="section-title">How it works</h2>
+					</div>
+					<div class="steps">
+						<div class="step-card">
+							<div class="step-num">1</div>
+							<p class="step-title">Choose a tour</p>
+							<p class="step-desc">
+								Browse by destination, duration, or activity. Group or private — your call.
+							</p>
+						</div>
+						<div class="step-card">
+							<div class="step-num">2</div>
+							<p class="step-title">Pick your date</p>
+							<p class="step-desc">Check availability and choose a departure that suits your schedule.</p>
+						</div>
+						<div class="step-card">
+							<div class="step-num">3</div>
+							<p class="step-title">Book securely</p>
+							<p class="step-desc">Pay online via secure checkout. Instant confirmation to your inbox.</p>
+						</div>
+						<div class="step-card">
+							<div class="step-num">4</div>
+							<p class="step-title">Show up and sail</p>
+							<p class="step-desc">
+								Meet your captain at Riva stand 14. Everything else is taken care of.
+							</p>
+						</div>
+					</div>
+				</section>
+
+				<section aria-labelledby="types-heading">
+					<div class="section-header">
+						<h2 id="types-heading" class="section-title">Group or private?</h2>
+					</div>
+					<div class="types-grid">
+						<div class="type-card">
+							<div class="type-icon type-icon--group">
+								<i class="ti ti-users" aria-hidden="true"></i>
+							</div>
+							<p class="type-title">Group tour</p>
+							<p class="type-desc">
+								Join a small shared departure — max 12 guests. Great for solo travellers, couples, and
+								anyone who likes meeting people on the water.
+							</p>
+							<div class="type-features">
+								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> From €89 per person</span>
+								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fixed departures, daily</span>
+								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Licensed skipper on every route</span>
+							</div>
+							<a class="type-cta" href="/tours">Browse group tours</a>
+						</div>
+						<div class="type-card featured">
+							<div class="type-icon type-icon--private">
+								<i class="ti ti-crown" aria-hidden="true"></i>
+							</div>
+							<p class="type-title">Private charter</p>
+							<p class="type-desc">
+								The whole boat is yours. Choose your route, set your pace, bring your own food and music.
+								Ideal for families, celebrations, and corporate groups.
+							</p>
+							<div class="type-features">
+								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Quoted per boat and season</span>
+								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fully customisable route</span>
+								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Flexible departure time</span>
+							</div>
+							<a class="btn-primary btn-primary--compact" href="/contact?tour=create-perfect-day-private">
+								Plan a private charter
+							</a>
+						</div>
+					</div>
+				</section>
+
+				<section aria-labelledby="reviews-heading">
+					<div class="section-header">
+						<h2 id="reviews-heading" class="section-title">What guests say</h2>
+						<a class="section-link" href="/about">Read all reviews →</a>
+					</div>
+					<div class="reviews-grid">
+						{
+							reviews.map((review) => (
+								<article class="rev-card">
+									<div class="rev-head">
+										<div class="rev-avatar">{review.initials}</div>
+										<div>
+											<p class="rev-name">{review.name}</p>
+											<p class="rev-date rev-stars">★★★★★ · {review.date}</p>
+										</div>
+									</div>
+									<p class="rev-text">{review.text}</p>
+									<p class="rev-tour">
+										<i class={`ti ti-${review.icon}`} aria-hidden="true"></i>
+										{review.tour}
+									</p>
+								</article>
+							))
+						}
+					</div>
+				</section>
+
+				<section aria-labelledby="faq-heading">
+					<div class="section-header">
+						<h2 id="faq-heading" class="section-title">Common questions</h2>
+						<a class="section-link" href="/faq">All FAQs →</a>
+					</div>
+					<FAQAccordion client:visible items={faqPreview} />
+				</section>
+
+				<section class="cta-band" aria-labelledby="cta-heading">
+					<h2 id="cta-heading">Ready to get on the water?</h2>
+					<p>Tours depart daily from Split. Book early in July and August — popular routes fill 3–5 days ahead.</p>
+					<div class="cta-band-btns">
+						<a class="btn-primary" href="/tours">Browse all tours</a>
+						<a class="btn-secondary" href="/contact?tour=create-perfect-day-private">Plan a private charter</a>
+					</div>
+				</section>
+			</div>
+		</div>
 	</main>
 </SiteLayout>
+
+<style>
+	.home-page .page-shell {
+		padding: 0 1rem;
+	}
+
+	.home-page .hero--home .hero-content {
+		padding: 56px 0 0;
+	}
+
+	.home-page .hero-btns .btn-primary,
+	.home-page .hero-btns .btn-secondary,
+	.home-page .cta-band-btns .btn-primary,
+	.home-page .cta-band-btns .btn-secondary {
+		min-height: unset;
+	}
+
+	.dest-card {
+		height: 110px;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.type-icon--group {
+		color: #1d9e75;
+	}
+
+	.type-icon--private {
+		color: #534ab7;
+	}
+
+	.type-cta {
+		display: inline-block;
+		text-decoration: none;
+		color: var(--color-text-primary);
+	}
+
+	.btn-primary--compact {
+		font-size: 12px;
+		padding: 6px 14px;
+		min-height: unset;
+	}
+
+	.rev-tour .ti {
+		font-size: 11px;
+	}
+
+	.home-page .cards-scroll .tour-card.featured {
+		border: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.home-page .cards-scroll .tour-card.featured:hover {
+		border-color: var(--color-border-primary);
+	}
+
+	@media (max-width: 480px) {
+		.home-page .page-shell {
+			padding-inline: 0.75rem;
+		}
+	}
+</style>

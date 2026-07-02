@@ -1,0 +1,191 @@
+---
+export const prerender = false;
+
+import { pageTitle, SITE_NAME } from '../../config/site';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+	title={pageTitle('Payment unsuccessful')}
+	description={`There was a problem completing your payment with ${SITE_NAME}.`}
+	robots="noindex, nofollow"
+>
+	<main id="main" class="status-page-narrow payment-error-page">
+		<div class="error-hero">
+			<div class="error-circle" aria-hidden="true">
+				<i class="ti ti-x"></i>
+			</div>
+			<h1>Payment unsuccessful</h1>
+			<p>Your booking hasn't been confirmed yet. No money has been taken from your account.</p>
+		</div>
+
+		<div class="error-note" role="alert">
+			<i class="ti ti-alert-circle" aria-hidden="true"></i>
+			<span>
+				Your spots may still be held for a short time. Try again before the hold expires or your selection may be
+				released.
+			</span>
+		</div>
+
+		<div class="flow-card">
+			<p class="card-title">
+				<i class="ti ti-help-circle" aria-hidden="true"></i> Common reasons this happens
+			</p>
+			<div class="reason-item">
+				<i class="ti ti-credit-card" aria-hidden="true"></i>
+				Incorrect card number, expiry, or CVV
+			</div>
+			<div class="reason-item">
+				<i class="ti ti-building-bank" aria-hidden="true"></i>
+				Bank declined the transaction — try contacting them
+			</div>
+			<div class="reason-item">
+				<i class="ti ti-wifi-off" aria-hidden="true"></i>
+				Connection dropped mid-payment
+			</div>
+			<div class="reason-item">
+				<i class="ti ti-lock" aria-hidden="true"></i>
+				3D Secure verification timed out or was declined
+			</div>
+		</div>
+
+		<div class="hold-warn">
+			<i class="ti ti-clock" aria-hidden="true"></i>
+			Your date and time slot may be held briefly. Try again now to keep your selection.
+		</div>
+
+		<div class="help-strip">
+			<div class="help-icon" aria-hidden="true">
+				<i class="ti ti-headset"></i>
+			</div>
+			<div>
+				<p class="help-title">Need help?</p>
+				<p class="help-desc">If the problem persists, we can take your booking manually.</p>
+				<a class="help-link" href="/contact">Contact us →</a>
+			</div>
+		</div>
+
+		<a class="btn-retry" href="/tours">
+			<i class="ti ti-refresh" aria-hidden="true"></i>
+			Try payment again
+		</a>
+		<a class="btn-back" href="/tours">Back to tours</a>
+	</main>
+</SiteLayout>
+
+<style>
+	.payment-error-page {
+		max-width: 520px;
+		margin-inline: auto;
+		padding: 1.5rem 1.25rem 2rem;
+		font-size: 14px;
+	}
+
+	.payment-error-page .error-hero p {
+		max-width: 380px;
+		margin-inline: auto;
+	}
+
+	.payment-error-page .error-note i {
+		font-size: 15px;
+		flex-shrink: 0;
+		margin-top: 1px;
+	}
+
+	.payment-error-page .card-title {
+		font-size: 13px;
+		font-weight: 500;
+		margin: 0 0 12px;
+		display: flex;
+		align-items: center;
+		gap: 7px;
+	}
+
+	.payment-error-page .card-title .ti {
+		font-size: 15px;
+		color: #1d9e75;
+	}
+
+	.payment-error-page .reason-item i {
+		font-size: 14px;
+		color: var(--color-text-tertiary);
+		flex-shrink: 0;
+	}
+
+	.payment-error-page .hold-warn i {
+		font-size: 15px;
+		flex-shrink: 0;
+	}
+
+	.payment-error-page .help-title {
+		font-size: 13px;
+		font-weight: 500;
+		margin: 0 0 2px;
+	}
+
+	.payment-error-page .help-desc {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+		margin: 0;
+		line-height: 1.5;
+	}
+
+	.payment-error-page .help-link {
+		font-size: 12px;
+		color: var(--color-text-info);
+		text-decoration: none;
+		display: inline-block;
+		margin-top: 4px;
+		cursor: pointer;
+	}
+
+	.payment-error-page .help-link:hover {
+		text-decoration: underline;
+	}
+
+	.payment-error-page .btn-retry {
+		width: 100%;
+		padding: 13px;
+		background: var(--color-text-primary);
+		color: var(--color-background-primary);
+		border: none;
+		border-radius: var(--radius-md);
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		font-family: var(--font-ui);
+		margin-bottom: 8px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		text-decoration: none;
+		min-height: var(--touch-min);
+	}
+
+	.payment-error-page .btn-retry .ti {
+		font-size: 13px;
+	}
+
+	.payment-error-page .btn-back {
+		width: 100%;
+		padding: 10px;
+		background: none;
+		color: var(--color-text-primary);
+		border: 0.5px solid var(--color-border-secondary);
+		border-radius: var(--radius-md);
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		font-family: var(--font-ui);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		text-decoration: none;
+		min-height: var(--touch-min);
+	}
+
+	.payment-error-page .btn-back:hover {
+		background: var(--color-background-secondary);
+	}
+</style>

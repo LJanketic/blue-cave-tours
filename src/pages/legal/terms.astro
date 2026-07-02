@@ -1,40 +1,181 @@
 ---
 export const prerender = true;
 
-import { pageTitle } from '../../config/site';
+import { pageTitle, SITE_EMAIL, SITE_NAME } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 ---
 
-<SiteLayout title={pageTitle('Terms & Conditions')} description="Terms and conditions for boat tours operated from Split.">
-	<main id="main" class="page-shell">
-		<h1 class="page-title">Terms &amp; Conditions</h1>
+<SiteLayout title={pageTitle('Terms & Conditions')} description={`Terms and conditions for boat tours operated by ${SITE_NAME} from Split.`}>
+	<main id="main" class="page-shell page-shell--narrow">
+		<div class="page">
+			<nav class="legal-tab-bar" aria-label="Legal documents">
+				<a href="/legal/terms" class="legal-tab legal-tab--active" aria-current="page">Terms &amp; conditions</a>
+				<a href="/legal/privacy" class="legal-tab">Privacy policy</a>
+				<a href="/legal/cancellation" class="legal-tab">Cancellation policy</a>
+			</nav>
 
-		<section class="prose-section">
-			<h2>1. Operator</h2>
-			<p>
-				Services may be offered under entities such as Misericordia d.o.o., Aliskaf d.o.o., or Per Mare d.o.o. depending on
-				the boat and season. The contracting party is confirmed on your booking confirmation.
-			</p>
-		</section>
-		<section class="prose-section">
-			<h2>2. Itineraries &amp; weather</h2>
-			<p>
-				Routes, timings, and swim stops are indicative. The skipper may adjust or cancel stops for safety, harbour
-				regulations, or sea conditions.
-			</p>
-		</section>
-		<section class="prose-section">
-			<h2>3. Booking &amp; payment</h2>
-			<p>
-				Reservations are confirmed after we verify availability. Additional fees (e.g. cave entry) may be payable on-site.
-			</p>
-		</section>
-		<section class="prose-section">
-			<h2>4. Liability</h2>
-			<p>
-				Guests participate in marine activities at their own risk within the safety briefing provided. Minors must be
-				supervised by a parent or guardian.
-			</p>
-		</section>
+			<div class="legal-layout">
+				<nav class="legal-nav" aria-label="Terms sections">
+					<a href="#bookings" class="side-link active">Bookings</a>
+					<a href="#payment" class="side-link">Payment</a>
+					<a href="#conduct" class="side-link">Conduct</a>
+					<a href="#liability" class="side-link">Liability</a>
+					<a href="#safety" class="side-link">Safety</a>
+					<a href="#law" class="side-link">Governing law</a>
+				</nav>
+
+				<div>
+					<div class="legal-hero">
+						<h1>Terms &amp; conditions</h1>
+						<p class="legal-meta">Last updated: 1 June 2025 · {SITE_NAME}</p>
+					</div>
+
+					<div class="summary-box">
+						<p>The short version</p>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							Book online, pay securely, get instant confirmation
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							Free cancellation up to 48h before departure
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							Weather cancellations always get a full refund or rebook
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							We can remove guests who endanger safety without refund
+						</div>
+						<div class="sum-item">
+							<i class="ti ti-circle-check" aria-hidden="true"></i>
+							Croatian law applies to all disputes
+						</div>
+					</div>
+
+					<section id="bookings" class="legal-section">
+						<h2><i class="ti ti-calendar-check" aria-hidden="true"></i> 1. Bookings</h2>
+						<p>
+							A booking is confirmed once full payment (group tours) or the required deposit (private
+							charters) has been received and a confirmation email has been sent. You must be 18 or older
+							to make a booking.
+						</p>
+						<p>
+							Changes to guest numbers or departure date are subject to availability and must be requested at
+							least 48 hours before departure.
+						</p>
+						<p>
+							Tours may be operated by contracted entities such as Misericordia d.o.o., Aliskaf d.o.o., or
+							Per Mare d.o.o. depending on the boat and season. The contracting party is confirmed on your
+							booking confirmation.
+						</p>
+					</section>
+
+					<section id="payment" class="legal-section">
+						<h2><i class="ti ti-credit-card" aria-hidden="true"></i> 2. Payment</h2>
+						<p>
+							Group tours are payable in full at the time of booking. Private charters require a
+							non-refundable deposit of 30% at booking, with the balance due 7 days before departure.
+						</p>
+						<div class="warn-box">
+							<p>
+								If the balance for a private charter is not received 7 days before departure, {SITE_NAME}
+								reserves the right to cancel the booking and retain the deposit.
+							</p>
+						</div>
+						<p>
+							All payments are processed securely via Stripe. Prices are quoted in Euros and include all
+							applicable taxes. Additional fees (e.g. cave entry) may be payable on-site where applicable.
+						</p>
+					</section>
+
+					<section id="conduct" class="legal-section">
+						<h2><i class="ti ti-users" aria-hidden="true"></i> 3. Guest conduct</h2>
+						<p>
+							All guests must follow the instructions of the captain and crew at all times. The captain has
+							the right to refuse boarding or remove a guest if their behaviour poses a risk to the safety
+							or enjoyment of others.
+						</p>
+						<div class="warn-box">
+							<p>Guests removed for conduct reasons are not entitled to a refund, partial or otherwise.</p>
+						</div>
+					</section>
+
+					<section id="liability" class="legal-section">
+						<h2><i class="ti ti-shield" aria-hidden="true"></i> 4. Liability</h2>
+						<p>
+							{SITE_NAME} holds full public liability insurance covering all passengers. We are not liable for
+							loss or damage to personal belongings brought on board. Nothing in these terms limits
+							liability for death or personal injury caused by negligence.
+						</p>
+					</section>
+
+					<section id="safety" class="legal-section">
+						<h2><i class="ti ti-anchor" aria-hidden="true"></i> 5. Safety</h2>
+						<p>
+							All vessels are inspected and certified in accordance with Croatian Maritime Authority
+							requirements. The captain's decision regarding sailing conditions is final.
+						</p>
+					</section>
+
+					<section id="law" class="legal-section">
+						<h2><i class="ti ti-scale" aria-hidden="true"></i> 6. Governing law</h2>
+						<p>
+							These terms are governed by the laws of the Republic of Croatia. Disputes shall be subject to
+							the exclusive jurisdiction of the courts of Split-Dalmatia County.
+						</p>
+						<div class="contact-note">
+							<i class="ti ti-mail" aria-hidden="true"></i>
+							<p>
+								Questions? Email <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>
+							</p>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
 	</main>
 </SiteLayout>
+
+<style>
+	.legal-tab-bar {
+		display: flex;
+		gap: 8px;
+		margin-bottom: 28px;
+	}
+
+	.legal-tab {
+		flex: 1;
+		padding: 9px;
+		border-radius: var(--radius-md);
+		border: 0.5px solid var(--color-border-secondary);
+		font-size: 13px;
+		font-weight: 500;
+		text-align: center;
+		background: var(--color-background-primary);
+		color: var(--color-text-secondary);
+		text-decoration: none;
+	}
+
+	.legal-tab:hover {
+		color: var(--color-text-primary);
+	}
+
+	.legal-tab--active {
+		background: var(--color-background-secondary);
+		color: var(--color-text-primary);
+		border-color: var(--color-border-primary);
+	}
+
+	.contact-note a {
+		color: var(--color-text-info);
+		text-decoration: none;
+	}
+
+	@media (max-width: 768px) {
+		.legal-tab-bar {
+			flex-direction: column;
+		}
+	}
+</style>

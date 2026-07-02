@@ -12,6 +12,7 @@ export function initContactForm(): void {
 	if (!(form instanceof HTMLFormElement) || !(statusEl instanceof HTMLElement)) return;
 	if (!(startedAtEl instanceof HTMLInputElement)) return;
 
+	const contactForm = form;
 	startedAtEl.value = String(Date.now());
 
 	const params = new URLSearchParams(window.location.search);
@@ -19,7 +20,7 @@ export function initContactForm(): void {
 
 	function applyTourPreselect() {
 		if (!tourFromUrl) return;
-		const select = form.querySelector('#tourSlug');
+		const select = contactForm.querySelector('#tourSlug');
 		if (select instanceof HTMLSelectElement && [...select.options].some((o) => o.value === tourFromUrl)) {
 			select.value = tourFromUrl;
 		}
@@ -27,13 +28,13 @@ export function initContactForm(): void {
 
 	applyTourPreselect();
 
-	form.addEventListener('submit', async (e) => {
+	contactForm.addEventListener('submit', async (e) => {
 		e.preventDefault();
-		const btn = form.querySelector('button[type="submit"]');
+		const btn = contactForm.querySelector('button[type="submit"]');
 		if (btn instanceof HTMLButtonElement) btn.disabled = true;
 		statusEl.textContent = 'Sending…';
 
-		const data = Object.fromEntries(new FormData(form).entries());
+		const data = Object.fromEntries(new FormData(contactForm).entries());
 		const result = validateContactSubmission({
 			name: trimField(data.name, 200),
 			email: trimField(data.email, 254),
@@ -59,7 +60,7 @@ export function initContactForm(): void {
 			const json = (await res.json().catch(() => ({}))) as { error?: string };
 			if (!res.ok) throw new Error(json.error || 'Failed to send');
 			statusEl.textContent = 'Thanks — we received your message and will get back to you soon.';
-			form.reset();
+			contactForm.reset();
 			startedAtEl.value = String(Date.now());
 			applyTourPreselect();
 		} catch (err) {
