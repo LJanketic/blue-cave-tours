@@ -17,8 +17,8 @@ const ogImagePath = ogImage ?? DEFAULT_OG_IMAGE;
 const ogImageUrl = new URL(ogImagePath, Astro.site ?? Astro.url).href;
 const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
-const TABLER_ICONS_VERSION = '3.31.0';
-const tablerIconsHref = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TABLER_ICONS_VERSION}/tabler-icons.min.css`;
+const TABLER_ICONS_VERSION = '3.44.0';
+const tablerIconsHref = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TABLER_ICONS_VERSION}/dist/tabler-icons.min.css`;
 ---
 
 <!doctype html>
@@ -50,8 +50,7 @@ const tablerIconsHref = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TA
 
 		<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 		<link rel="preload" href={tablerIconsHref} as="style" />
-		<link rel="stylesheet" href={tablerIconsHref} media="print" onload="this.media='all'" />
-		<noscript><link rel="stylesheet" href={tablerIconsHref} /></noscript>
+		<link rel="stylesheet" href={tablerIconsHref} />
 
 		<title>{title}</title>
 

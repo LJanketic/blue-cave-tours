@@ -10,6 +10,12 @@ export type NearbyStop = {
 	icon: string;
 };
 
+export type DestinationAttr = {
+	/** Tabler icon suffix, e.g. `swimming` → `ti-swimming` */
+	icon: string;
+	label: string;
+};
+
 export type Destination = {
 	slug: string;
 	name: string;
@@ -19,7 +25,7 @@ export type Destination = {
 	shortDescription: string;
 	intro: string;
 	tags: string[];
-	attrs: string[];
+	attrs: DestinationAttr[];
 	highlights: string[];
 	/** Month scores Jan–Dec: 0 off-season, 1 good, 2 very good, 3 peak */
 	bestTimeMonths: [number, number, number, number, number, number, number, number, number, number, number, number];
@@ -43,7 +49,11 @@ export const destinations: Destination[] = [
 		intro:
 			'The Blue Cave on Biševo island is the Adriatic’s most photographed natural wonder. On calm mornings, sunlight refracts through an underwater opening and floods the chamber with luminous blue light. We reach it by speedboat from Split, timing the visit around official opening hours and sea conditions — because the cave is worth the planning.',
 		tags: ['Cave', 'Swimming', 'Must-see'],
-		attrs: ['Sea cave', 'Ticket on-site', 'Weather-dependent'],
+		attrs: [
+			{ icon: 'droplet', label: 'Sea cave' },
+			{ icon: 'ticket', label: 'Ticket on-site' },
+			{ icon: 'cloud-storm', label: 'Weather-dependent' },
+		],
 		highlights: [
 			'Iconic blue light inside the cave chamber',
 			'Short boat transfer from Vis island',
@@ -91,7 +101,11 @@ export const destinations: Destination[] = [
 		intro:
 			'Vis sits further from the mainland than Hvar or Brač, which kept it quieter for decades. Today it’s the anchor for Blue Cave visits and some of the clearest swim stops on our routes — think Stiniva’s emerald cove, hidden bays, and a town that still feels like a working island rather than a postcard set.',
 		tags: ['Island', 'Swimming', 'Hidden bays'],
-		attrs: ['Remote island', 'Swim stops', 'Blue Cave gateway'],
+		attrs: [
+			{ icon: 'island', label: 'Remote island' },
+			{ icon: 'swimming', label: 'Swim stops' },
+			{ icon: 'droplet', label: 'Blue Cave gateway' },
+		],
 		highlights: [
 			'Stiniva Bay — one of Croatia’s most famous beaches',
 			'Crystal-clear water away from mainland crowds',
@@ -140,7 +154,11 @@ export const destinations: Destination[] = [
 		intro:
 			'Hvar town is the Adriatic at its most glamorous: a hilltop fortress, marble streets, and yachts lined along the riva. Our tours give you time ashore or in the harbour depending on the schedule — enough to wander, swim nearby, and feel the island’s energy without rushing the open-sea legs that get you there.',
 		tags: ['Island', 'Culture', 'Swimming'],
-		attrs: ['Historic town', 'Fortress views', 'Lively harbour'],
+		attrs: [
+			{ icon: 'building-castle', label: 'Historic town' },
+			{ icon: 'building-fortress', label: 'Fortress views' },
+			{ icon: 'anchor', label: 'Lively harbour' },
+		],
 		highlights: [
 			'Venetian-era old town and waterfront promenade',
 			'Fortica fortress with panoramic views',
@@ -188,7 +206,11 @@ export const destinations: Destination[] = [
 		intro:
 			'The Pakleni (Paklinski) islands are where locals take their boats on weekends: shallow turquoise water, rocky coves, and pine trees down to the shore. Our Hvar-focused routes anchor here for extended swim breaks — the kind of stop where you forget about the clock until the crew calls everyone back aboard.',
 		tags: ['Swimming', 'Snorkelling', 'Island chain'],
-		attrs: ['Turquoise bays', 'Swim stops', 'Near Hvar'],
+		attrs: [
+			{ icon: 'droplet', label: 'Turquoise bays' },
+			{ icon: 'swimming', label: 'Swim stops' },
+			{ icon: 'map-pin', label: 'Near Hvar' },
+		],
 		highlights: [
 			'Some of the clearest water in the Hvar archipelago',
 			'Multiple bays — Palmižana, Vinogradišće, and more',
@@ -236,7 +258,11 @@ export const destinations: Destination[] = [
 		intro:
 			'The Blue Lagoon at Budikovac is exactly what the name promises: shallow, luminous water over white sand, ringed by small islets. It’s close enough to Split for a relaxed half-day but feels worlds away from the city. Our morning and afternoon slots maximise swim time without the long open-sea legs of a full island-hopping day.',
 		tags: ['Swimming', 'Half-day', 'Snorkelling'],
-		attrs: ['Shallow lagoon', 'Half-day tours', 'Family-friendly'],
+		attrs: [
+			{ icon: 'swimming', label: 'Shallow lagoon' },
+			{ icon: 'clock', label: 'Half-day tours' },
+			{ icon: 'users', label: 'Family-friendly' },
+		],
 		highlights: [
 			'Calm, shallow water ideal for swimming and snorkelling',
 			'Morning and afternoon departure options',
@@ -284,7 +310,11 @@ export const destinations: Destination[] = [
 		intro:
 			'Every Hello Blue Cave tour begins in Split, where Diocletian’s Palace meets a working harbour and the Riva promenade buzzes with cafés and boats. We meet at stand 14 — easy to find, right on the waterfront. Split is more than a transit point: it’s the gateway to the islands, and many guests add a day in the old town before or after their tour.',
 		tags: ['Departure', 'Historic city', 'Riva harbour'],
-		attrs: ['Meeting point', 'UNESCO old town', 'Ferry & airport access'],
+		attrs: [
+			{ icon: 'map-pin', label: 'Meeting point' },
+			{ icon: 'building-castle', label: 'UNESCO old town' },
+			{ icon: 'plane', label: 'Ferry & airport access' },
+		],
 		highlights: [
 			'Meet at Riva promenade, stand 14 — waterfront location',
 			'Diocletian’s Palace — UNESCO World Heritage old town',

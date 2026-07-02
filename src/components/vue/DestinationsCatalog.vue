@@ -123,7 +123,10 @@ function destinationHref(slug: string): string {
 						</p>
 						<p class="card-desc">{{ dest.shortDescription }}</p>
 						<div class="attr-row">
-							<span v-for="attr in dest.attrs" :key="attr" class="attr-tag">{{ attr }}</span>
+							<span v-for="attr in dest.attrs" :key="attr.label" class="attr-tag">
+								<i :class="`ti ti-${attr.icon}`" aria-hidden="true"></i>
+								{{ attr.label }}
+							</span>
 						</div>
 						<div class="card-footer">
 							<span class="tour-count">
@@ -157,7 +160,10 @@ function destinationHref(slug: string): string {
 					</p>
 					<p class="card-desc">{{ dest.shortDescription }}</p>
 					<div class="attr-row">
-						<span v-for="attr in dest.attrs" :key="attr" class="attr-tag">{{ attr }}</span>
+						<span v-for="attr in dest.attrs" :key="attr.label" class="attr-tag">
+							<i :class="`ti ti-${attr.icon}`" aria-hidden="true"></i>
+							{{ attr.label }}
+						</span>
 					</div>
 					<div class="card-footer">
 						<span class="tour-count">
