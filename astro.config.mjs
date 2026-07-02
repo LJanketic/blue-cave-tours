@@ -8,5 +8,8 @@ const site = process.env.PUBLIC_SITE_URL;
 export default defineConfig({
 	output: 'server',
 	adapter: netlify(),
+	image: {
+		layout: 'constrained',
+	},
 	...(site ? { site } : {}),
 });

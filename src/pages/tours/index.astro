@@ -25,9 +25,9 @@ const all = getAllTours();
 		</header>
 		<TourCarousel ariaLabel="All tours">
 			{
-				all.map((tour) => (
+				all.map((tour, index) => (
 					<li class="tour-carousel__slide">
-						<TourCard tour={tour} />
+						<TourCard tour={tour} eager={index < 2} />
 					</li>
 				))
 			}

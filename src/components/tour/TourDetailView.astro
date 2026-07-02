@@ -1,31 +1,18 @@
 ---
 import type { TourDetail } from '../../types/tour';
-import { responsiveSrc, responsiveSrcSet } from '../../lib/responsive-image';
 import { supportsInstantBook, contactHrefForTour } from '../../lib/booking';
+import TourImage from '../TourImage.astro';
 
 type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
 const instantBook = supportsInstantBook(tour);
-
-const heroSrcSet = responsiveSrcSet(tour.image.src, [640, 1280]);
-const heroImgSrc = responsiveSrc(tour.image.src, 1280);
 ---
 
 <article class="detail">
 	<header class="detail__hero">
 		<div class="detail__hero-media">
-			<img
-				src={heroImgSrc}
-				srcset={heroSrcSet}
-				sizes="100vw"
-				alt={tour.image.alt}
-				width="1200"
-				height="675"
-				loading="eager"
-				decoding="async"
-				fetchpriority="high"
-			/>
+			<TourImage photo={tour.image} layout="hero" priority class="detail__hero-picture" />
 			<div class="detail__hero-overlay" aria-hidden="true"></div>
 		</div>
 		<div class="detail__hero-text">
@@ -133,16 +120,7 @@ const heroImgSrc = responsiveSrc(tour.image.src, 1280);
 			<div class="gallery">
 				{tour.gallery.map((img) => (
 					<figure class="gallery__fig">
-						<img
-							src={responsiveSrc(img.src, 640)}
-							srcset={responsiveSrcSet(img.src, [640, 1280])}
-							sizes="(max-width: 720px) 100vw, 33vw"
-							alt={img.alt}
-							width="400"
-							height="267"
-							loading="lazy"
-							decoding="async"
-						/>
+						<TourImage photo={img} layout="gallery" fadeIn class="gallery__picture" />
 					</figure>
 				))}
 			</div>
@@ -192,7 +170,12 @@ const heroImgSrc = responsiveSrc(tour.image.src, 1280);
 		inset: 0;
 	}
 
-	.detail__hero-media img {
+	.detail__hero-media :global(.detail__hero-picture) {
+		width: 100%;
+		height: 100%;
+	}
+
+	.detail__hero-media :global(.tour-image__img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
@@ -364,10 +347,9 @@ const heroImgSrc = responsiveSrc(tour.image.src, 1280);
 		aspect-ratio: 3 / 2;
 	}
 
-	.gallery__fig img {
+	.gallery__fig :global(.gallery__picture) {
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
 	}
 
 	@media (max-width: 640px) {

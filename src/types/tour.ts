@@ -1,3 +1,5 @@
+import type { PhotoRef } from '../data/tour-photos';
+
 export type ItineraryKind = 'morning' | 'afternoon' | 'full' | 'flexible';
 
 export type TourDetail = {
@@ -28,8 +30,8 @@ export type TourDetail = {
 	caveTicketNote: string;
 	groupSale?: string;
 	disclaimers: string[];
-	gallery: { src: string; alt: string }[];
-	image: { src: string; alt: string };
+	gallery: PhotoRef[];
+	image: PhotoRef;
 	fromPrice: string;
 	featured?: boolean;
 };

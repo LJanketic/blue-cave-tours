@@ -1,6 +1,7 @@
 ---
 export const prerender = true;
 
+import { getImage } from 'astro:assets';
 import NotFoundPanel from '../../components/NotFoundPanel.astro';
 import TourDetailView from '../../components/tour/TourDetailView.astro';
 import { pageTitle } from '../../config/site';
@@ -17,12 +18,23 @@ const tour = slug ? getTourBySlug(slug) : undefined;
 if (!tour) {
 	Astro.response.status = 404;
 }
+
+const ogImage = tour
+	? await getImage({
+			src: tour.image.src,
+			width: 1200,
+			height: 630,
+			fit: 'cover',
+			format: 'jpg',
+		})
+	: undefined;
 ---
 
 <SiteLayout
 	title={tour ? pageTitle(tour.title) : pageTitle('Tour not found')}
 	description={tour?.shortDescription ?? 'The requested tour does not exist.'}
 	booking={Boolean(tour)}
+	ogImage={ogImage?.src}
 >
 	<main id="main">
 		{

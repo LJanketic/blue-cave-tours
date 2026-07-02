@@ -1,25 +1,13 @@
 ---
-import { HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS } from '../data/hero-image';
-import { responsiveSrc, responsiveSrcSet } from '../lib/responsive-image';
+import { HERO_IMAGE } from '../data/hero-image';
+import TourImage from './TourImage.astro';
 import WaveDivider from './WaveDivider.astro';
 import Wordmark from './Wordmark.astro';
-
-const heroSrcSet = responsiveSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
-const heroSrc = responsiveSrc(HERO_IMAGE_SRC, 1280);
 ---
 
 <section class="hero" aria-labelledby="hero-heading">
 	<div class="hero__media">
-		<img
-			src={heroSrc}
-			srcset={heroSrcSet}
-			sizes="100vw"
-			alt=""
-			width="1920"
-			height="1080"
-			fetchpriority="high"
-			decoding="async"
-		/>
+		<TourImage photo={HERO_IMAGE} layout="hero" priority class="hero__picture" />
 		<div class="hero__overlay" aria-hidden="true"></div>
 	</div>
 	<div class="hero__content">
@@ -54,7 +42,12 @@ const heroSrc = responsiveSrc(HERO_IMAGE_SRC, 1280);
 		overflow: hidden;
 	}
 
-	.hero__media img {
+	.hero__media :global(.hero__picture) {
+		width: 100%;
+		height: 100%;
+	}
+
+	.hero__media :global(.tour-image__img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;

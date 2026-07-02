@@ -9,12 +9,13 @@ type Props = {
 	description?: string;
 	/** Load booking redirect script only on pages with Book now forms. */
 	booking?: boolean;
+	ogImage?: string;
 };
 
-const { title, description, booking = false } = Astro.props;
+const { title, description, booking = false, ogImage } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} ogImage={ogImage}>
 	<slot name="head" slot="head" />
 	<div class="site-shell">
 		<a class="skip-link" href="#main">Skip to content</a>

@@ -7,22 +7,19 @@ import Hero from '../components/Hero.astro';
 import TourSection from '../components/TourSection.astro';
 import WhyUs from '../components/WhyUs.astro';
 import FAQ from '../components/FAQ.astro';
-import { HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS } from '../data/hero-image';
-import { responsiveSrc, responsiveSrcSet } from '../lib/responsive-image';
+import { getImage } from 'astro:assets';
+import { HERO_IMAGE } from '../data/hero-image';
 
-const heroLcpSrcset = responsiveSrcSet(HERO_IMAGE_SRC, HERO_SRCSET_WIDTHS);
-const heroLcpHref = responsiveSrc(HERO_IMAGE_SRC, 1280);
+const ogImage = await getImage({
+	src: HERO_IMAGE.src,
+	width: 1200,
+	height: 630,
+	fit: 'cover',
+	format: 'jpg',
+});
 ---
 
-<SiteLayout title={HOME_PAGE_TITLE} booking>
-	<link
-		slot="head"
-		rel="preload"
-		as="image"
-		href={heroLcpHref}
-		imagesrcset={heroLcpSrcset}
-		imagesizes="100vw"
-	/>
+<SiteLayout title={HOME_PAGE_TITLE} booking ogImage={ogImage.src}>
 	<main id="main">
 		<Hero />
 		<TourSection />

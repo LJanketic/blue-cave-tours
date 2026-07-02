@@ -1,41 +1,71 @@
+import type { ImageMetadata } from 'astro';
+import blueCave from '../assets/tours/blue-cave.jpg';
+import blueLagoon from '../assets/tours/blue-lagoon.jpg';
+import blueLagoonAlt from '../assets/tours/blue-lagoon-alt.jpg';
+import boatSpeed from '../assets/tours/boat-speed.jpg';
+import hvar from '../assets/tours/hvar.jpg';
+import pakleni from '../assets/tours/pakleni.jpg';
+import stiniva from '../assets/tours/stiniva.jpg';
+
 /** Optimized local photos — see docs/TOUR-CATALOG-AND-PHOTOS.md for source mapping. */
+export type PhotoRef = {
+	src: ImageMetadata;
+	alt: string;
+	/** Dominant color for card/gallery placeholders (hex). */
+	color: string;
+};
+
 export const PHOTO = {
 	blueCave: {
-		src: '/assets/tours/blue-cave-1280.jpg',
+		src: blueCave,
 		alt: 'Sea cave with turquoise water — Blue Cave area',
+		color: '#1a5c6e',
 	},
 	blueLagoon: {
-		src: '/assets/tours/blue-lagoon-1280.jpg',
+		src: blueLagoon,
 		alt: 'Aerial view of Blue Lagoon at Budikovac',
+		color: '#3a8fa8',
 	},
 	blueLagoonAlt: {
-		src: '/assets/tours/blue-lagoon-alt-1280.jpg',
+		src: blueLagoonAlt,
 		alt: 'Turquoise bays and anchored boats near Budikovac',
+		color: '#2d7a94',
 	},
 	hvar: {
-		src: '/assets/tours/hvar-1280.jpg',
+		src: hvar,
 		alt: 'Hvar town and harbour from the hillside',
+		color: '#5a7a8a',
 	},
 	pakleni: {
-		src: '/assets/tours/pakleni-1280.jpg',
+		src: pakleni,
 		alt: 'Turquoise Adriatic water beneath limestone cliffs',
+		color: '#2a8099',
 	},
 	stiniva: {
-		src: '/assets/tours/stiniva-1280.jpg',
+		src: stiniva,
 		alt: 'Layered cliffs and emerald water at Stiniva',
+		color: '#3a6860',
 	},
 	boatSpeed: {
-		src: '/assets/tours/boat-speed-1280.jpg',
+		src: boatSpeed,
 		alt: 'Tour boat entering a sea cave',
+		color: '#2a5060',
 	},
+	/** Same asset as boatSpeed — people-free fleet shot, different alt for luxury cabin tour. */
 	boatDeck: {
-		src: '/assets/tours/boat-deck-1280.jpg',
+		src: boatSpeed,
 		alt: 'Tour boat at a sea cave entrance',
+		color: '#2a5060',
 	},
-} as const;
+} as const satisfies Record<string, PhotoRef>;
 
-export type PhotoRef = (typeof PHOTO)[keyof typeof PHOTO];
+/** Homepage hero — same aerial lagoon as blueLagoon (canonical asset on disk). */
+export const HERO_IMAGE: PhotoRef = {
+	src: blueLagoon,
+	alt: '',
+	color: '#3a8fa8',
+};
 
-export function galleryFrom(...items: PhotoRef[]): { src: string; alt: string }[] {
-	return items.map(({ src, alt }) => ({ src, alt }));
+export function galleryFrom(...items: PhotoRef[]): PhotoRef[] {
+	return items;
 }

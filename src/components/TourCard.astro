@@ -1,29 +1,18 @@
 ---
 import type { TourDetail } from '../types/tour';
-import { responsiveSrc, responsiveSrcSet } from '../lib/responsive-image';
 import { supportsInstantBook, contactHrefForTour } from '../lib/booking';
+import TourImage from './TourImage.astro';
 
-type Props = { tour: TourDetail };
+type Props = { tour: TourDetail; eager?: boolean };
 
-const { tour } = Astro.props;
+const { tour, eager = false } = Astro.props;
 const instantBook = supportsInstantBook(tour);
-const cardSrcSet = responsiveSrcSet(tour.image.src, [640, 1280]);
-const cardSrc = responsiveSrc(tour.image.src, 960);
 ---
 
 <article class="card" id={tour.slug}>
 	<div class="card__image">
 		<a href={`/tours/${tour.slug}`} class="card__image-link">
-			<img
-				src={cardSrc}
-				srcset={cardSrcSet}
-				sizes="(max-width: 480px) 88vw, (max-width: 900px) 45vw, min(380px, 32vw)"
-				alt={tour.image.alt}
-				width="600"
-				height="400"
-				loading="lazy"
-				decoding="async"
-			/>
+			<TourImage photo={tour.image} layout="card" eager={eager} fadeIn class="card__picture" />
 		</a>
 	</div>
 	<div class="card__body">
@@ -74,10 +63,8 @@ const cardSrc = responsiveSrc(tour.image.src, 960);
 		text-decoration: none;
 	}
 
-	.card__image img {
-		width: 100%;
+	.card__image :global(.card__picture) {
 		aspect-ratio: 3 / 2;
-		object-fit: cover;
 	}
 
 	.card__body {
