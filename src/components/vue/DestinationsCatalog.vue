@@ -80,7 +80,7 @@ function destinationHref(slug: string): string {
 
 <template>
 	<div class="destinations-catalog">
-		<div class="filter-row">
+		<div class="filter-row" role="group" aria-label="Filter destinations">
 			<span class="filter-label">Filter:</span>
 			<button
 				v-for="chip in FILTERS"
@@ -88,6 +88,7 @@ function destinationHref(slug: string): string {
 				type="button"
 				class="filter-chip"
 				:class="{ active: activeFilter === chip.id }"
+				:aria-pressed="activeFilter === chip.id"
 				@click="setFilter(chip.id)"
 			>
 				<i v-if="chip.id !== 'all'" :class="`ti ti-${chip.icon}`" aria-hidden="true"></i>
@@ -104,19 +105,57 @@ function destinationHref(slug: string): string {
 		<template v-if="featuredDestinations.length">
 			<p class="section-label">Not to miss</p>
 			<div class="dest-grid dest-grid--listing">
-				<a
+				<article
 					v-for="(dest, index) in featuredDestinations"
 					:key="`featured-${dest.slug}`"
 					class="dest-card dest-card--rich"
 					:class="{ wide: index === 0 }"
-					:href="destinationHref(dest.slug)"
 				>
+					<a class="dest-card__link" :href="destinationHref(dest.slug)">
+						<div class="card-img">
+							<i :class="`ti ti-${dest.icon}`" aria-hidden="true"></i>
+							<span class="region-pill">{{ dest.region }}</span>
+						</div>
+						<div class="card-body">
+							<h3 class="card-name">{{ dest.name }}</h3>
+							<p class="card-region">
+								<i class="ti ti-map-pin" aria-hidden="true"></i>
+								{{ dest.region }}
+							</p>
+							<p class="card-desc">{{ dest.shortDescription }}</p>
+							<div class="attr-row">
+								<span v-for="attr in dest.attrs" :key="attr.label" class="attr-tag">
+									<i :class="`ti ti-${attr.icon}`" aria-hidden="true"></i>
+									{{ attr.label }}
+								</span>
+							</div>
+						</div>
+					</a>
+					<div class="card-footer">
+						<span class="tour-count">
+							<i class="ti ti-sailboat" aria-hidden="true"></i>
+							{{ tourCount(dest) }} tour{{ tourCount(dest) === 1 ? '' : 's' }} visit here
+						</span>
+						<a class="card-cta" :href="toursHref(dest)">See tours →</a>
+					</div>
+				</article>
+			</div>
+		</template>
+
+		<p v-if="otherDestinations.length" class="section-label">More destinations</p>
+		<div v-if="otherDestinations.length" class="dest-grid dest-grid--listing">
+			<article
+				v-for="dest in otherDestinations"
+				:key="dest.slug"
+				class="dest-card dest-card--rich"
+			>
+				<a class="dest-card__link" :href="destinationHref(dest.slug)">
 					<div class="card-img">
 						<i :class="`ti ti-${dest.icon}`" aria-hidden="true"></i>
 						<span class="region-pill">{{ dest.region }}</span>
 					</div>
 					<div class="card-body">
-						<p class="card-name">{{ dest.name }}</p>
+						<h3 class="card-name">{{ dest.name }}</h3>
 						<p class="card-region">
 							<i class="ti ti-map-pin" aria-hidden="true"></i>
 							{{ dest.region }}
@@ -128,52 +167,16 @@ function destinationHref(slug: string): string {
 								{{ attr.label }}
 							</span>
 						</div>
-						<div class="card-footer">
-							<span class="tour-count">
-								<i class="ti ti-sailboat" aria-hidden="true"></i>
-								{{ tourCount(dest) }} tour{{ tourCount(dest) === 1 ? '' : 's' }} visit here
-							</span>
-							<a class="card-cta" :href="toursHref(dest)" @click.stop>See tours →</a>
-						</div>
 					</div>
 				</a>
-			</div>
-		</template>
-
-		<p v-if="otherDestinations.length" class="section-label">More destinations</p>
-		<div v-if="otherDestinations.length" class="dest-grid dest-grid--listing">
-			<a
-				v-for="dest in otherDestinations"
-				:key="dest.slug"
-				class="dest-card dest-card--rich"
-				:href="destinationHref(dest.slug)"
-			>
-				<div class="card-img">
-					<i :class="`ti ti-${dest.icon}`" aria-hidden="true"></i>
-					<span class="region-pill">{{ dest.region }}</span>
+				<div class="card-footer">
+					<span class="tour-count">
+						<i class="ti ti-sailboat" aria-hidden="true"></i>
+						{{ tourCount(dest) }} tour{{ tourCount(dest) === 1 ? '' : 's' }} visit here
+					</span>
+					<a class="card-cta" :href="toursHref(dest)">See tours →</a>
 				</div>
-				<div class="card-body">
-					<p class="card-name">{{ dest.name }}</p>
-					<p class="card-region">
-						<i class="ti ti-map-pin" aria-hidden="true"></i>
-						{{ dest.region }}
-					</p>
-					<p class="card-desc">{{ dest.shortDescription }}</p>
-					<div class="attr-row">
-						<span v-for="attr in dest.attrs" :key="attr.label" class="attr-tag">
-							<i :class="`ti ti-${attr.icon}`" aria-hidden="true"></i>
-							{{ attr.label }}
-						</span>
-					</div>
-					<div class="card-footer">
-						<span class="tour-count">
-							<i class="ti ti-sailboat" aria-hidden="true"></i>
-							{{ tourCount(dest) }} tour{{ tourCount(dest) === 1 ? '' : 's' }} visit here
-						</span>
-						<a class="card-cta" :href="toursHref(dest)" @click.stop>See tours →</a>
-					</div>
-				</div>
-			</a>
+			</article>
 		</div>
 
 		<div v-if="filteredDestinations.length === 0" class="no-results">
@@ -196,6 +199,7 @@ function destinationHref(slug: string): string {
 	font-size: 12px;
 	color: var(--color-text-tertiary);
 	margin-right: 2px;
+	flex-shrink: 0;
 }
 
 .result-row {
@@ -228,22 +232,43 @@ function destinationHref(slug: string): string {
 
 .dest-card--rich {
 	color: inherit;
-	text-decoration: none;
-	cursor: pointer;
 	background: var(--color-background-primary);
 	border: 0.5px solid var(--color-border-tertiary);
 	border-radius: var(--radius-lg);
 	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
 .dest-card--rich:hover {
 	border-color: var(--color-border-primary);
 }
 
-.dest-card.wide {
-	grid-column: 1 / -1;
+.dest-card__link {
+	display: block;
+	color: inherit;
+	text-decoration: none;
+	cursor: pointer;
+	flex: 1 1 auto;
+}
+
+.dest-card--rich.wide {
 	display: grid;
-	grid-template-columns: 220px 1fr;
+}
+
+.dest-card--rich.wide .dest-card__link {
+	display: contents;
+}
+
+.dest-card--rich .card-body {
+	padding: 14px 16px 12px;
+}
+
+.card-name {
+	font-size: 15px;
+	font-weight: 500;
+	margin: 0 0 3px;
+	line-height: 1.3;
 }
 
 .dest-card--rich .card-img {
@@ -256,7 +281,7 @@ function destinationHref(slug: string): string {
 	position: relative;
 }
 
-.dest-card.wide .card-img {
+.dest-card--rich.wide .card-img {
 	height: 100%;
 	min-height: 160px;
 }
@@ -279,14 +304,13 @@ function destinationHref(slug: string): string {
 	border: 0.5px solid var(--color-border-tertiary);
 }
 
-.dest-card--rich .card-body {
-	padding: 14px 16px 16px;
-}
-
-.card-name {
-	font-size: 15px;
-	font-weight: 500;
-	margin: 0 0 3px;
+.dest-card--rich .card-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 16px 16px;
+	margin: 0;
+	border-top: 0.5px solid var(--color-border-tertiary);
 }
 
 .card-region {
@@ -313,7 +337,11 @@ function destinationHref(slug: string): string {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 5px;
-	margin-bottom: 12px;
+	margin-bottom: 0;
+}
+
+.card-body .attr-row {
+	margin-bottom: 0;
 }
 
 .attr-tag {
@@ -327,20 +355,14 @@ function destinationHref(slug: string): string {
 	color: var(--color-text-secondary);
 }
 
-.dest-card--rich .card-footer {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding-top: 10px;
-	border-top: 0.5px solid var(--color-border-tertiary);
-}
-
 .tour-count {
 	font-size: 12px;
 	color: var(--color-text-secondary);
 	display: flex;
 	align-items: center;
 	gap: 4px;
+	min-width: 0;
+	flex: 1 1 auto;
 }
 
 .card-cta {
@@ -378,6 +400,25 @@ function destinationHref(slug: string): string {
 }
 
 @media (max-width: 768px) {
+	.filter-row {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
+		padding-bottom: 4px;
+		margin-bottom: 16px;
+		margin-inline: calc(-1 * var(--page-gutter));
+		padding-inline: var(--page-gutter);
+	}
+
+	.filter-row::-webkit-scrollbar {
+		display: none;
+	}
+
+	.filter-row .filter-chip {
+		flex-shrink: 0;
+	}
+
 	.dest-grid--listing {
 		display: grid;
 		overflow-x: visible;
@@ -391,8 +432,14 @@ function destinationHref(slug: string): string {
 		scroll-snap-align: unset;
 	}
 
-	.dest-card.wide {
-		grid-template-columns: 1fr;
+	.dest-card--rich.wide .card-img {
+		height: 160px;
+		min-height: 160px;
+	}
+
+	/* Region shown on image pill — hide duplicate line in body */
+	.card-region {
+		display: none;
 	}
 }
 
