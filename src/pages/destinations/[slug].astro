@@ -224,7 +224,7 @@ const mapStubLabel = distanceGeo
 												<PlaceholderImage photo={tour.image} layout="thumb" icon="sailboat" />
 											</div>
 											<div>
-												<p class="tc-name">{tour.title}</p>
+												<h3 class="tc-name">{tour.title}</h3>
 												<div class="tc-meta">
 													<span class="tc-tag">
 														<i class="ti ti-clock" aria-hidden="true"></i>
@@ -303,22 +303,24 @@ const mapStubLabel = distanceGeo
 						<i class="ti ti-crown" aria-hidden="true"></i>
 						Plan a private charter
 					</a>
-					<hr class="sc-divider" />
-					<p class="sidebar-nearby-label">Also nearby</p>
-					<div class="sidebar-nearby-list">
-						{
-							destination.nearby.slice(0, 3).map((stop) => {
-								const count = nearbyTourCount(stop.slug);
-								return (
-									<a class="sidebar-link" href={`/destinations/${stop.slug}`}>
-										<span>{stop.name}</span>
-										<span>
-											{count} tour{count === 1 ? '' : 's'} →
-										</span>
-									</a>
-								);
-							})
-						}
+					<div class="sidebar-nearby-block">
+						<hr class="sc-divider" />
+						<p class="sidebar-nearby-label">Also nearby</p>
+						<div class="sidebar-nearby-list">
+							{
+								destination.nearby.slice(0, 3).map((stop) => {
+									const count = nearbyTourCount(stop.slug);
+									return (
+										<a class="sidebar-link" href={`/destinations/${stop.slug}`}>
+											<span>{stop.name}</span>
+											<span>
+												{count} tour{count === 1 ? '' : 's'} →
+											</span>
+										</a>
+									);
+								})
+							}
+						</div>
 					</div>
 				</aside>
 			</div>
@@ -531,6 +533,10 @@ const mapStubLabel = distanceGeo
 	@media (max-width: 768px) {
 		.dest-detail-page .layout {
 			grid-template-columns: 1fr;
+		}
+
+		.dest-detail-page .sidebar-nearby-block {
+			display: none;
 		}
 
 		.dest-detail-page .highlights,

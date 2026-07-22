@@ -115,6 +115,7 @@ function answerId(item: FaqItem): string {
 					type="button"
 					class="cat-link"
 					:class="{ active: activeCategory === 'all' }"
+					:aria-pressed="activeCategory === 'all'"
 					@click="setCategory('all')"
 				>
 					<i class="ti ti-list" aria-hidden="true"></i>
@@ -127,6 +128,7 @@ function answerId(item: FaqItem): string {
 					type="button"
 					class="cat-link"
 					:class="{ active: activeCategory === cat.id }"
+					:aria-pressed="activeCategory === cat.id"
 					@click="setCategory(cat.id)"
 				>
 					<i :class="`ti ti-${cat.icon}`" aria-hidden="true"></i>
@@ -285,6 +287,7 @@ function answerId(item: FaqItem): string {
 .cat-link {
 	font-size: 13px;
 	padding: 7px 12px;
+	min-height: var(--touch-min);
 	border-radius: var(--radius-md);
 	color: var(--color-text-secondary);
 	cursor: pointer;

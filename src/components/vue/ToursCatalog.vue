@@ -121,7 +121,7 @@ onMounted(readUrlParams);
 			</div>
 		</header>
 
-		<div class="filter-bar">
+		<div class="filter-bar" role="group" aria-label="Filter tours">
 			<span class="filter-label">Filter:</span>
 			<button
 				v-for="chip in FILTERS"
@@ -129,6 +129,7 @@ onMounted(readUrlParams);
 				type="button"
 				class="filter-chip"
 				:class="{ active: activeFilter === chip.id }"
+				:aria-pressed="activeFilter === chip.id"
 				@click="setFilter(chip.id)"
 			>
 				<i v-if="chip.id !== 'all'" :class="`ti ti-${chip.icon}`" aria-hidden="true"></i>
@@ -170,7 +171,7 @@ onMounted(readUrlParams);
 							</div>
 						</div>
 						<div class="card-body">
-							<p class="card-title">{{ tour.title }}</p>
+							<h3 class="card-title">{{ tour.title }}</h3>
 							<div class="card-meta">
 								<span class="meta-item">
 									<i class="ti ti-clock" aria-hidden="true"></i>

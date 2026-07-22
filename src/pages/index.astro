@@ -111,7 +111,7 @@ const reviews = [
 							destinationStrip.map((dest) => (
 								<a class="dest-card" href={`/destinations/${dest.slug}`}>
 									<i class={`ti ti-${dest.icon} bg-icon`} aria-hidden="true" />
-									<span class="dest-name">{dest.name}</span>
+									<h3 class="dest-name">{dest.name}</h3>
 									<span class="dest-count">
 										{dest.tourSlugs.length} tour{dest.tourSlugs.length === 1 ? '' : 's'}
 									</span>
