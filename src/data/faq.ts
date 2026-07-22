@@ -40,8 +40,8 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'booking',
 		question: 'Can I cancel or reschedule?',
 		answer:
-			'Cancellation terms depend on how you booked. Contact us as early as possible with your reference — we’ll explain options and help where we can.',
-		link: { href: '/contact', label: 'Get in touch' },
+			'Free cancellation up to 48 hours before departure. Cancellations within 48 hours are non-refundable. To reschedule, contact us as early as possible and we\'ll do our best to move you to another date, subject to availability.',
+		link: { href: '/legal/cancellation', label: 'Cancellation policy' },
 	},
 	{
 		category: 'weather',

@@ -30,7 +30,7 @@ const reviews = [
 		date: 'Jul 2025',
 		text: 'The Blue Cave timing was perfect — we were in at the right moment and still had time for swimming near Vis. Best day of our Croatia trip.',
 		tour: 'Blue Cave, Hvar & 5 islands',
-		icon: 'island',
+		icon: 'sailboat',
 	},
 	{
 		initials: 'TR',
@@ -245,11 +245,7 @@ const reviews = [
 
 <style>
 	.home-page .page-shell {
-		padding: 0 1rem;
-	}
-
-	.home-page .hero--home .hero-content {
-		padding: 56px 0 0;
+		padding: 0 var(--page-gutter);
 	}
 
 	.home-page .hero-btns .btn-primary,
@@ -295,11 +291,5 @@ const reviews = [
 
 	.home-page .cards-scroll .tour-card.featured:hover {
 		border-color: var(--color-border-primary);
-	}
-
-	@media (max-width: 480px) {
-		.home-page .page-shell {
-			padding-inline: 0.75rem;
-		}
 	}
 </style>

@@ -10,7 +10,7 @@ type Props = {
 
 const { tour, featured = false } = Astro.props;
 const instantBook = supportsInstantBook(tour);
-const photoIcon = tour.slug.includes('private') || !instantBook ? 'crown' : tour.slug.includes('lagoon') ? 'swimming' : 'island';
+const photoIcon = tour.slug.includes('private') || !instantBook ? 'crown' : tour.slug.includes('lagoon') ? 'swimming' : 'sailboat';
 ---
 
 <article class:list={['tour-card', featured && 'featured']}>

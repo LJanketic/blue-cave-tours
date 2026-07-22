@@ -65,7 +65,7 @@ function tourIcon(tour: TourDetail): string {
 	if (!instant || tour.slug.includes('private')) return 'crown';
 	if (tour.slug.includes('lagoon')) return 'swimming';
 	if (tour.slug.includes('cave')) return 'droplet';
-	return 'island';
+	return 'sailboat';
 }
 
 function priceUnit(tour: TourDetail): string {
@@ -285,10 +285,6 @@ onMounted(readUrlParams);
 	margin-right: 2px;
 }
 
-.filter-chip {
-	min-height: unset;
-}
-
 .sort-row {
 	display: flex;
 	justify-content: space-between;
@@ -501,6 +497,10 @@ onMounted(readUrlParams);
 @media (max-width: 480px) {
 	.search-row {
 		flex-direction: column;
+	}
+
+	.tour-grid {
+		grid-template-columns: 1fr;
 	}
 }
 </style>

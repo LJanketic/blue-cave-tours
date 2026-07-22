@@ -72,7 +72,7 @@ export const destinations: Destination[] = [
 			{ label: 'How we get there', value: 'Speedboat via Vis channel' },
 		],
 		nearby: [
-			{ slug: 'vis', name: 'Vis island', distance: '~20 min', icon: 'island' },
+			{ slug: 'vis', name: 'Vis island', distance: '~20 min', icon: 'building-lighthouse' },
 			{ slug: 'hvar', name: 'Hvar town', distance: '~1 hour', icon: 'building-castle' },
 			{ slug: 'pakleni', name: 'Pakleni islands', distance: '~1.5 hours', icon: 'beach' },
 		],
@@ -95,14 +95,14 @@ export const destinations: Destination[] = [
 		slug: 'vis',
 		name: 'Vis island',
 		region: 'Central Dalmatia · Outer islands',
-		icon: 'island',
+		icon: 'building-lighthouse',
 		shortDescription:
 			'Remote, unhurried Vis — gateway to the Blue Cave, home to Stiniva Bay, and one of the Adriatic’s most authentic island atmospheres.',
 		intro:
 			'Vis sits further from the mainland than Hvar or Brač, which kept it quieter for decades. Today it’s the anchor for Blue Cave visits and some of the clearest swim stops on our routes — think Stiniva’s emerald cove, hidden bays, and a town that still feels like a working island rather than a postcard set.',
 		tags: ['Island', 'Swimming', 'Hidden bays'],
 		attrs: [
-			{ icon: 'island', label: 'Remote island' },
+			{ icon: 'building-lighthouse', label: 'Remote island' },
 			{ icon: 'swimming', label: 'Swim stops' },
 			{ icon: 'droplet', label: 'Blue Cave gateway' },
 		],
@@ -179,7 +179,7 @@ export const destinations: Destination[] = [
 		nearby: [
 			{ slug: 'pakleni', name: 'Pakleni islands', distance: '~15 min', icon: 'beach' },
 			{ slug: 'blue-cave', name: 'Blue Cave, Biševo', distance: '~1 hour', icon: 'droplet' },
-			{ slug: 'vis', name: 'Vis island', distance: '~45 min', icon: 'island' },
+			{ slug: 'vis', name: 'Vis island', distance: '~45 min', icon: 'building-lighthouse' },
 		],
 		insiderTips: [
 			'The fortress walk takes about twenty minutes from the main square — go late afternoon for the best light.',
@@ -231,7 +231,7 @@ export const destinations: Destination[] = [
 		nearby: [
 			{ slug: 'hvar', name: 'Hvar town', distance: '~15 min', icon: 'building-castle' },
 			{ slug: 'blue-lagoon', name: 'Blue Lagoon', distance: '~45 min', icon: 'swimming' },
-			{ slug: 'vis', name: 'Vis island', distance: '~1 hour', icon: 'island' },
+			{ slug: 'vis', name: 'Vis island', distance: '~1 hour', icon: 'building-lighthouse' },
 		],
 		insiderTips: [
 			'Palmižana has a marina restaurant if you want a long lunch — tell the crew when you board if you’re interested.',

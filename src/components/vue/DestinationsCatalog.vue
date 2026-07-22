@@ -15,7 +15,7 @@ const props = defineProps<{
 
 const FILTERS: { id: DestinationFilter; label: string; icon: string }[] = [
 	{ id: 'all', label: 'All destinations', icon: 'map' },
-	{ id: 'island', label: 'Islands', icon: 'island' },
+	{ id: 'island', label: 'Islands', icon: 'building-lighthouse' },
 	{ id: 'coast', label: 'Coastal towns', icon: 'anchor' },
 	{ id: 'cave', label: 'Caves & nature', icon: 'mountain' },
 	{ id: 'swim', label: 'Best for swimming', icon: 'swimming' },
@@ -196,10 +196,6 @@ function destinationHref(slug: string): string {
 	font-size: 12px;
 	color: var(--color-text-tertiary);
 	margin-right: 2px;
-}
-
-.filter-chip {
-	min-height: auto;
 }
 
 .result-row {
@@ -397,6 +393,21 @@ function destinationHref(slug: string): string {
 
 	.dest-card.wide {
 		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 480px) {
+	.dest-grid--listing {
+		grid-template-columns: 1fr;
+	}
+
+	.dest-card--rich .card-footer {
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.card-cta {
+		flex-shrink: 0;
 	}
 }
 </style>

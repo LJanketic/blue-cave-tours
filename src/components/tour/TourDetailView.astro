@@ -18,14 +18,14 @@ const galleryPhotos = [tour.image, ...tour.gallery].map((photo, index) => ({
 				: tour.slug.includes('private')
 					? 'crown'
 					: 'sailboat'
-			: ['anchor', 'sunset', 'fish', 'island'][index % 4],
+			: ['anchor', 'sunset', 'fish', 'building-lighthouse'][index % 4],
 }));
 
 const heroPhoto = galleryPhotos[0];
 const thumbPhotos = galleryPhotos.slice(1);
 
 const highlightIcons = ['sunset-2', 'swimming', 'bottle', 'binoculars', 'ship', 'accessible', 'sailboat', 'droplet'];
-const itineraryIcons = ['map-pin', 'sailboat', 'swimming', 'sunset', 'anchor', 'island', 'droplet'];
+const itineraryIcons = ['map-pin', 'sailboat', 'swimming', 'sunset', 'anchor', 'building-lighthouse', 'droplet'];
 
 const goodToKnow = [
 	{ label: 'Duration', value: tour.duration },

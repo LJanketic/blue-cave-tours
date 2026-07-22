@@ -32,7 +32,7 @@ const BOATS = [
 
 const ROUTES = [
 	{ icon: 'ti-droplet', name: 'Blue Cave & Vis', desc: 'Biševo cave and Vis bays when conditions allow' },
-	{ icon: 'ti-island', name: 'Hvar & Pakleni', desc: 'Hvar town and Pakleni archipelago swim stops' },
+	{ icon: 'ti-building-lighthouse', name: 'Hvar & Pakleni', desc: 'Hvar town and Pakleni archipelago swim stops' },
 	{ icon: 'ti-swimming', name: 'Blue Lagoon route', desc: 'Budikovac lagoon and nearby hidden bays' },
 	{ icon: 'ti-map', name: 'Design your own', desc: 'Share your priorities — we plan the route with you' },
 ] as const;
@@ -735,11 +735,14 @@ function goToReview() {
 .policy-note {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 4px 6px;
 	font-size: 12px;
 	color: var(--color-text-success);
-	justify-content: center;
-	margin-top: 10px;
+	text-align: center;
+	padding-inline: 0.5rem;
+	margin: 10px 0 0;
 }
 
 .policy-note .ti {
@@ -753,8 +756,18 @@ function goToReview() {
 		grid-template-columns: 1fr;
 	}
 
+	.private-booking :deep(input),
+	.private-booking :deep(select),
+	.private-booking :deep(textarea) {
+		font-size: 16px;
+	}
+
 	.dtd-grid {
 		grid-template-columns: 1fr 1fr;
+	}
+
+	.dtd-grid .field:last-child {
+		grid-column: 1 / -1;
 	}
 }
 

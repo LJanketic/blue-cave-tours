@@ -529,4 +529,15 @@ function answerId(item: FaqItem): string {
 		position: static;
 	}
 }
+
+@media (max-width: 480px) {
+	.search-bar {
+		flex-direction: column;
+	}
+
+	.search-bar button {
+		width: 100%;
+		justify-content: center;
+	}
+}
 </style>

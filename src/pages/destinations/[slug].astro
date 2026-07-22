@@ -26,7 +26,7 @@ type Props = { destination: import('../../data/destinations').Destination };
 
 const TAG_ICONS: Record<string, string> = {
 	Swimming: 'swimming',
-	Island: 'island',
+	Island: 'building-lighthouse',
 	Cave: 'droplet',
 	Culture: 'building-castle',
 	'Half-day': 'clock',
@@ -59,7 +59,7 @@ const galleryPhotos = galleryFrom(
 ).map((photo, index) => ({
 	color: photo.color,
 	alt: photo.alt,
-	icon: index === 0 ? destination.icon : ['anchor', 'swimming', 'island', 'sunset'][index % 4],
+	icon: index === 0 ? destination.icon : ['anchor', 'swimming', 'building-lighthouse', 'sunset'][index % 4],
 }));
 
 const mapUrl =
@@ -546,6 +546,15 @@ const mapStubLabel = distanceGeo
 	@media (max-width: 480px) {
 		.dest-detail-page .best-time-grid {
 			grid-template-columns: repeat(3, 1fr);
+		}
+
+		.dest-detail-page .tc-foot {
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+
+		.dest-detail-page .tc-cta {
+			margin-left: auto;
 		}
 	}
 </style>

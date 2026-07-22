@@ -791,11 +791,14 @@ function goToReview() {
 .policy-note {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 4px 6px;
 	font-size: 12px;
 	color: var(--color-text-success);
-	justify-content: center;
-	margin-top: 10px;
+	text-align: center;
+	padding-inline: 0.5rem;
+	margin: 10px 0 0;
 }
 
 .policy-note .ti {
@@ -807,6 +810,12 @@ function goToReview() {
 	.details-grid,
 	.guests-grid {
 		grid-template-columns: 1fr;
+	}
+
+	.group-booking :deep(input),
+	.group-booking :deep(select),
+	.group-booking :deep(textarea) {
+		font-size: 16px;
 	}
 
 	.cal-grid {
