@@ -81,7 +81,6 @@ function destinationHref(slug: string): string {
 <template>
 	<div class="destinations-catalog">
 		<div class="filter-row" role="group" aria-label="Filter destinations">
-			<span class="filter-label">Filter:</span>
 			<button
 				v-for="chip in FILTERS"
 				:key="chip.id"
@@ -96,14 +95,8 @@ function destinationHref(slug: string): string {
 			</button>
 		</div>
 
-		<div class="result-row">
-			<span class="result-count">
-				{{ filteredDestinations.length }} destination{{ filteredDestinations.length === 1 ? '' : 's' }}
-			</span>
-		</div>
-
 		<template v-if="featuredDestinations.length">
-			<p class="section-label">Not to miss</p>
+			<p class="section-label">Not to miss ({{ featuredDestinations.length }})</p>
 			<div class="dest-grid dest-grid--listing">
 				<article
 					v-for="(dest, index) in featuredDestinations"
@@ -142,7 +135,7 @@ function destinationHref(slug: string): string {
 			</div>
 		</template>
 
-		<p v-if="otherDestinations.length" class="section-label">More destinations</p>
+		<p v-if="otherDestinations.length" class="section-label">More destinations ({{ otherDestinations.length }})</p>
 		<div v-if="otherDestinations.length" class="dest-grid dest-grid--listing">
 			<article
 				v-for="dest in otherDestinations"
@@ -193,25 +186,6 @@ function destinationHref(slug: string): string {
 	flex-wrap: wrap;
 	align-items: center;
 	margin-bottom: 20px;
-}
-
-.filter-label {
-	font-size: 12px;
-	color: var(--color-text-tertiary);
-	margin-right: 2px;
-	flex-shrink: 0;
-}
-
-.result-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 14px;
-}
-
-.result-count {
-	font-size: 13px;
-	color: var(--color-text-secondary);
 }
 
 .section-label {

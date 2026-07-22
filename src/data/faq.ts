@@ -38,6 +38,13 @@ export const FAQ_ITEMS: FaqItem[] = [
 	},
 	{
 		category: 'booking',
+		question: 'Is online payment secure?',
+		answer:
+			'Yes. All payments are processed securely by Stripe — card details go straight to Stripe and are never stored on our servers. Prices are shown in Euros with applicable taxes included.',
+		link: { href: '/legal/privacy', label: 'Privacy policy' },
+	},
+	{
+		category: 'booking',
 		question: 'Can I cancel or reschedule?',
 		answer:
 			'Free cancellation up to 48 hours before departure. Cancellations within 48 hours are non-refundable. To reschedule, contact us as early as possible and we\'ll do our best to move you to another date, subject to availability.',
@@ -96,6 +103,12 @@ export const FAQ_ITEMS: FaqItem[] = [
 		question: 'Is the tour suitable for non-swimmers?',
 		answer:
 			'Yes. Swimming stops are optional and life jackets are provided. Let the crew know if anyone in your group prefers to stay on the boat.',
+	},
+	{
+		category: 'guests',
+		question: 'Can you cater to food allergies or dietary needs?',
+		answer:
+			'Meals aren’t included on group tours, so you choose your own food during stops ashore — which makes allergies easy to manage. On private charters with catering, tell us about any allergies or dietary needs in advance and we’ll do our best to accommodate.',
 	},
 	{
 		category: 'guests',

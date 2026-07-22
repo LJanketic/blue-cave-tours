@@ -34,4 +34,12 @@ export type TourDetail = {
 	image: PhotoRef;
 	fromPrice: string;
 	featured?: boolean;
+	/**
+	 * Which booking modes this tour offers. When omitted it is derived from
+	 * booking support (instant-book tours default to group + private available,
+	 * quote-only tours default to private).
+	 */
+	types?: ('group' | 'private')[];
+	/** Optional marketing badge shown on cards (e.g. a newly added route). */
+	badge?: 'new';
 };

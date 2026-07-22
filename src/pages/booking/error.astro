@@ -3,14 +3,23 @@ export const prerender = false;
 
 import { pageTitle, SITE_NAME } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import MiniNav from '../../components/MiniNav.astro';
+import TrustStrip from '../../components/TrustStrip.astro';
+import { getTourBySlug } from '../../lib/tours';
+
+const tourIdParam = Astro.url.searchParams.get('tourId');
+const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
+const retryHref = bookedTour ? `/book/${bookedTour.slug}/review` : '/tours';
 ---
 
 <SiteLayout
 	title={pageTitle('Payment unsuccessful')}
 	description={`There was a problem completing your payment with ${SITE_NAME}.`}
+	checkout
 	robots="noindex, nofollow"
 >
 	<main id="main" class="status-page-narrow payment-error-page">
+		<MiniNav />
 		<div class="error-hero">
 			<div class="error-circle" aria-hidden="true">
 				<i class="ti ti-x"></i>
@@ -65,11 +74,13 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 			</div>
 		</div>
 
-		<a class="btn-retry" href="/tours">
+		<a class="btn-retry" href={retryHref}>
 			<i class="ti ti-refresh" aria-hidden="true"></i>
 			Try payment again
 		</a>
 		<a class="btn-back" href="/tours">Back to tours</a>
+
+		<TrustStrip />
 	</main>
 </SiteLayout>
 

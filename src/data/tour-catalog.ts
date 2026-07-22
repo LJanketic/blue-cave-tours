@@ -64,6 +64,7 @@ export const tours: TourDetail[] = [
 		image: PHOTO.blueCave,
 		fromPrice: '€159',
 		featured: true,
+		types: ['group', 'private'],
 	},
 	{
 		slug: 'three-islands',
@@ -230,6 +231,7 @@ export const tours: TourDetail[] = [
 		gallery: galleryFrom(PHOTO.blueCave, PHOTO.hvar, PHOTO.stiniva),
 		image: PHOTO.boatDeck,
 		fromPrice: '€229',
+		types: ['group', 'private'],
 	},
 	{
 		slug: 'blue-cave-6-islands',
@@ -257,6 +259,7 @@ export const tours: TourDetail[] = [
 		gallery: galleryFrom(PHOTO.pakleni, PHOTO.stiniva, PHOTO.hvar),
 		image: PHOTO.blueCave,
 		fromPrice: '€169',
+		badge: 'new',
 	},
 	{
 		slug: 'blue-lagoon-half-day',

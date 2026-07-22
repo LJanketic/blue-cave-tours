@@ -328,7 +328,7 @@ function goToReview() {
 
 .card-title .ti {
 	font-size: 16px;
-	color: #1d9e75;
+	color: var(--color-accent);
 }
 
 .optional-tag {
@@ -525,7 +525,7 @@ function goToReview() {
 
 .route-icon {
 	font-size: 18px;
-	color: #1d9e75;
+	color: var(--color-accent);
 	margin-top: 1px;
 	flex-shrink: 0;
 }
@@ -581,7 +581,7 @@ function goToReview() {
 	align-items: center;
 	justify-content: center;
 	font-size: 16px;
-	color: #1d9e75;
+	color: var(--color-accent);
 	flex-shrink: 0;
 }
 

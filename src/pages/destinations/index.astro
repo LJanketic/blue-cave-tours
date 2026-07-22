@@ -17,9 +17,9 @@ const mapUrl =
 >
 	<main id="main" class="page-shell destinations-page">
 		<div class="page">
-			<div class="hero">
-				<h1>Destinations</h1>
-				<p>
+			<div class="dest-header">
+				<h1 class="dest-title">Destinations</h1>
+				<p class="dest-desc">
 					From Split’s Riva to the outer islands — here’s where our tours take you along the central
 					Dalmatian coast.
 				</p>
@@ -66,13 +66,22 @@ const mapUrl =
 		padding: 1.5rem 0 2rem;
 	}
 
-	.destinations-page .hero h1 {
-		font-size: 20px;
-		font-weight: 500;
+	.dest-header {
+		margin: 8px 0 24px;
 	}
 
-	.destinations-page .hero p {
-		font-size: 13px;
+	.dest-title {
+		font-size: 28px;
+		font-weight: 500;
+		margin: 0 0 8px;
+	}
+
+	.dest-desc {
+		font-size: 14px;
+		color: var(--color-text-secondary);
+		line-height: 1.6;
+		max-width: 520px;
+		margin: 0;
 	}
 
 	.destinations-page .map-strip {

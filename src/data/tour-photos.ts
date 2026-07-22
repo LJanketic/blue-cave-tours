@@ -1,4 +1,4 @@
-/** Phase 1 — placeholder registry. Photo IDs map to colors for design placeholders; swap src in phase 2. */
+/** Placeholder photo registry — color blocks until real assets are wired. */
 export type PhotoRef = {
 	/** Registry key — matches docs/redesign/04-IMAGE-ASSETS.md */
 	id: string;
@@ -49,12 +49,6 @@ export const PHOTO = {
 		color: '#2a5060',
 	},
 } as const satisfies Record<string, PhotoRef>;
-
-export const HERO_IMAGE: PhotoRef = {
-	id: 'blueLagoon',
-	alt: 'Blue Lagoon aerial view',
-	color: '#3a8fa8',
-};
 
 export function galleryFrom(...items: PhotoRef[]): PhotoRef[] {
 	return items;

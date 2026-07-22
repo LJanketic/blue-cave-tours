@@ -1,27 +1,107 @@
+/* Hello Blue Cave — design tokens (two-tier semantic color system)
+   Mirrors the design handoff in assets/css/variables.css.
+
+   1. PALETTE (--palette-*) — raw values. Never reference these directly in
+      component CSS; they only exist so the semantic tokens below have
+      something to point at.
+   2. SEMANTIC TOKENS (--color-*) — what components actually use. Retheme by
+      re-pointing a semantic token at a different palette value.
+
+   Legacy aliases (--color-accent-teal, --badge-*, --radius-*) are kept at the
+   bottom so existing rules keep working during/after the migration. */
 :root {
-	--color-text-primary: #111;
-	--color-text-secondary: #555;
-	--color-text-tertiary: #767676;
-	--color-text-info: #1a6fc4;
-	--color-text-success: #085041;
-	--color-text-danger: #8b1a15;
-	--color-text-warning: #ba7517;
-	--color-background-primary: #fff;
-	--color-background-secondary: #f5f5f4;
-	--color-background-info: #e6f1fb;
-	--color-background-success: #e1f5ee;
-	--color-border-primary: #aaa;
-	--color-border-secondary: #ccc;
-	--color-border-tertiary: #e5e5e3;
-	--color-border-info: #7ab4e8;
-	--color-accent-teal: #1d9e75;
-	--color-star: #ba7517;
-	--badge-group-bg: #e1f5ee;
-	--badge-group-text: #085041;
-	--badge-private-bg: #eeedfe;
-	--badge-private-text: #3c3489;
-	--badge-bestseller-bg: #faeeda;
-	--badge-bestseller-text: #633806;
+	/* ---------- 1. Palette (raw values) ---------- */
+	--palette-black: #111;
+	--palette-gray-700: #555;
+	--palette-gray-550: #767676; /* AA-contrast tertiary text (a11y) */
+	--palette-gray-500: #999;
+	--palette-gray-400: #ccc;
+	--palette-gray-300: #aaa;
+	--palette-gray-200: #e5e5e3;
+	--palette-gray-150: #ebebea;
+	--palette-gray-100: #f5f5f4;
+	--palette-white: #fff;
+
+	--palette-teal-900: #085041;
+	--palette-teal-500: #1d9e75;
+	--palette-teal-100: #e1f5ee;
+
+	--palette-blue-900: #0c447c;
+	--palette-blue-500: #1a6fc4;
+	--palette-blue-300: #7ab4e8;
+	--palette-blue-100: #e6f1fb;
+
+	--palette-amber-900: #633806;
+	--palette-amber-500: #ef9f27;
+	--palette-amber-400: #ba7517;
+	--palette-amber-100: #faeeda;
+	--palette-amber-50: #fef3e2;
+
+	--palette-red-900: #8b1a15;
+	--palette-red-100: #fdecea;
+
+	--palette-purple-900: #3c3489;
+	--palette-purple-500: #534ab7;
+	--palette-purple-100: #eeedfe;
+
+	--palette-coral-500: #e05c34;
+
+	/* ---------- 2. Semantic tokens ---------- */
+
+	/* Text */
+	--color-text-primary: var(--palette-black);
+	--color-text-secondary: var(--palette-gray-700);
+	--color-text-tertiary: var(--palette-gray-550);
+	--color-text-info: var(--palette-blue-500);
+	--color-text-success: var(--palette-teal-900);
+	--color-text-danger: var(--palette-red-900);
+	--color-text-warning: var(--palette-amber-400);
+
+	/* Backgrounds */
+	--color-background-primary: var(--palette-white);
+	--color-background-secondary: var(--palette-gray-100);
+	--color-background-hover: var(--palette-gray-150);
+	--color-background-info: var(--palette-blue-100);
+	--color-background-success: var(--palette-teal-100);
+	--color-background-warning: var(--palette-amber-100);
+	--color-background-warning-soft: var(--palette-amber-50);
+	--color-background-danger: var(--palette-red-100);
+
+	/* Borders */
+	--color-border-primary: var(--palette-gray-300);
+	--color-border-secondary: var(--palette-gray-400);
+	--color-border-tertiary: var(--palette-gray-200);
+	--color-border-info: var(--palette-blue-300);
+	--color-border-warning: var(--palette-amber-500);
+
+	/* Brand accent — the single most-reused color on the site */
+	--color-accent: var(--palette-teal-500);
+	--color-accent-dark: var(--palette-teal-900);
+
+	/* Category colors — badges/tags that carry a specific meaning */
+	--color-category-private-bg: var(--palette-purple-100);
+	--color-category-private-text: var(--palette-purple-900);
+	--color-category-private-icon: var(--palette-purple-500);
+
+	--color-category-info-icon: var(--palette-blue-900);
+
+	--color-category-tip-bg: var(--palette-amber-100);
+	--color-category-tip-text: var(--palette-amber-900);
+	--color-category-warning-icon: var(--palette-amber-500);
+
+	--color-icon-sunset: var(--palette-coral-500);
+
+	/* ---------- 3. Legacy aliases (back-compat) ---------- */
+	--color-accent-teal: var(--color-accent);
+	--color-star: var(--color-text-warning);
+	--badge-group-bg: var(--color-background-success);
+	--badge-group-text: var(--color-text-success);
+	--badge-private-bg: var(--color-category-private-bg);
+	--badge-private-text: var(--color-category-private-text);
+	--badge-bestseller-bg: var(--color-category-tip-bg);
+	--badge-bestseller-text: var(--color-category-tip-text);
+
+	/* ---------- 4. Layout & type ---------- */
 	--radius-md: 8px;
 	--radius-lg: 12px;
 	--border-radius-md: 8px;

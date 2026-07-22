@@ -7,10 +7,22 @@ type GalleryPhoto = {
 	icon: string;
 };
 
-const props = defineProps<{
-	hero: GalleryPhoto;
-	gallery: GalleryPhoto[];
-}>();
+export type GalleryTag = {
+	icon: string;
+	label: string;
+	/** Visual treatment; maps to a semantic colour. */
+	variant?: 'feat' | 'group' | 'private' | 'tip';
+};
+
+const props = withDefaults(
+	defineProps<{
+		hero: GalleryPhoto;
+		gallery: GalleryPhoto[];
+		/** Optional pills overlaid on the top-left of the hero image. */
+		tags?: GalleryTag[];
+	}>(),
+	{ tags: () => [] },
+);
 
 const allPhotos = computed(() => [props.hero, ...props.gallery]);
 const activeIndex = ref(0);
@@ -33,6 +45,17 @@ function selectPhoto(index: number) {
 			:aria-label="activePhoto.alt"
 		>
 			<i class="image-gallery__hero-icon" :class="`ti ti-${activePhoto.icon}`" aria-hidden="true"></i>
+			<div v-if="tags.length" class="image-gallery__tags">
+				<span
+					v-for="tag in tags"
+					:key="tag.label"
+					class="image-gallery__tag"
+					:class="`image-gallery__tag--${tag.variant ?? 'feat'}`"
+				>
+					<i :class="`ti ti-${tag.icon}`" aria-hidden="true"></i>
+					{{ tag.label }}
+				</span>
+			</div>
 			<div class="image-gallery__counter">
 				<i class="ti ti-photo" aria-hidden="true"></i>
 				{{ activeIndex + 1 }} / {{ allPhotos.length }}
@@ -62,6 +85,61 @@ function selectPhoto(index: number) {
 .image-gallery__hero-icon {
 	font-size: 48px;
 	color: rgb(255 255 255 / 85%);
+}
+
+.image-gallery__tags {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	max-width: calc(100% - 90px);
+}
+
+.image-gallery__tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 9px;
+	border-radius: 20px;
+	font-size: 11px;
+	font-weight: 500;
+	background: var(--color-background-primary);
+	color: var(--color-text-secondary);
+	border: 0.5px solid var(--color-border-tertiary);
+}
+
+.image-gallery__tag .ti {
+	font-size: 12px;
+	color: var(--color-accent);
+}
+
+.image-gallery__tag--group {
+	background: var(--color-background-success);
+	color: var(--color-text-success);
+}
+
+.image-gallery__tag--group .ti {
+	color: var(--color-text-success);
+}
+
+.image-gallery__tag--private {
+	background: var(--color-category-private-bg);
+	color: var(--color-category-private-text);
+}
+
+.image-gallery__tag--private .ti {
+	color: var(--color-category-private-icon);
+}
+
+.image-gallery__tag--tip {
+	background: var(--color-category-tip-bg);
+	color: var(--color-category-tip-text);
+}
+
+.image-gallery__tag--tip .ti {
+	color: var(--color-category-warning-icon);
 }
 
 .image-gallery__counter {

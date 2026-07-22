@@ -3,6 +3,8 @@ export const prerender = true;
 
 import { pageTitle } from '../../../config/site';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
+import MiniNav from '../../../components/MiniNav.astro';
+import TrustStrip from '../../../components/TrustStrip.astro';
 import PrivateBookingFlow from '../../../components/vue/PrivateBookingFlow.vue';
 import { getAllTours } from '../../../lib/tours';
 import { supportsInstantBook } from '../../../lib/booking';
@@ -29,10 +31,12 @@ if (tour.slug !== 'create-perfect-day-private') {
 <SiteLayout
 	title={pageTitle(`Private charter — ${tour.title}`)}
 	description="Plan your perfect day at sea — custom route, flexible timing, private boat from Split."
+	checkout
 	robots="noindex, nofollow"
 >
 	<main id="main" class="page-shell page-shell--narrow">
 		<div class="page private-booking-page">
+			<MiniNav exitHref={`/tours/${tour.slug}`} exitLabel="Exit" />
 			<div class="step-bar" aria-label="Booking progress">
 				<div class="step done">
 					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
@@ -62,6 +66,8 @@ if (tour.slug !== 'create-perfect-day-private') {
 				fromPrice={tour.fromPrice}
 				priceNotes={tour.priceNotes}
 			/>
+
+			<TrustStrip />
 		</div>
 	</main>
 </SiteLayout>

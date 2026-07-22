@@ -4,9 +4,13 @@ export const prerender = true;
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import ToursCatalog from '../../components/vue/ToursCatalog.vue';
+import { getAllDestinations } from '../../lib/destinations';
 import { getAllTours } from '../../lib/tours';
 
 const all = getAllTours();
+const toursByDestination = Object.fromEntries(
+	getAllDestinations().map((destination) => [destination.slug, destination.tourSlugs]),
+);
 ---
 
 <SiteLayout
@@ -16,7 +20,7 @@ const all = getAllTours();
 >
 	<main id="main" class="page-shell">
 		<div class="page tours-page">
-			<ToursCatalog client:visible tours={all} />
+			<ToursCatalog client:visible tours={all} toursByDestination={toursByDestination} />
 		</div>
 	</main>
 </SiteLayout>

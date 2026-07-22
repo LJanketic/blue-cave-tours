@@ -1,0 +1,26 @@
+---
+import { SITE_NAME } from '../config/site';
+
+type Props = {
+	/** Optional exit link (e.g. back to the tour) shown on the right. */
+	exitHref?: string;
+	exitLabel?: string;
+};
+
+const { exitHref, exitLabel = 'Exit' } = Astro.props;
+---
+
+<div class="mini-nav">
+	<a class="nav-logo" href="/">
+		<i class="ti ti-sailboat" aria-hidden="true"></i>
+		{SITE_NAME}
+	</a>
+	{
+		exitHref && (
+			<a class="exit-link" href={exitHref}>
+				<i class="ti ti-x" aria-hidden="true" />
+				{exitLabel}
+			</a>
+		)
+	}
+</div>

@@ -212,12 +212,16 @@ const whatsappUrl = `https://wa.me/${SITE_PHONE.replace(/\D/g, '')}`;
 	}
 
 	.contact-page .cc-icon--location {
-		background: #faeeda;
-		color: #633806;
+		background: var(--color-category-tip-bg);
+		color: var(--color-category-tip-text);
+	}
+
+	.contact-page .contact-card:hover {
+		background: var(--color-background-hover);
 	}
 
 	.contact-page .open-dot {
-		background: #1d9e75;
+		background: var(--color-accent);
 	}
 
 	.hours-note {
@@ -284,11 +288,11 @@ const whatsappUrl = `https://wa.me/${SITE_PHONE.replace(/\D/g, '')}`;
 
 	.contact-page .map-stub .ti {
 		font-size: 20px;
-		color: #1d9e75;
+		color: var(--color-accent);
 	}
 
 	.contact-page .marina-note .ti {
-		color: #1d9e75;
+		color: var(--color-accent);
 	}
 
 	.contact-page .marina-note span {

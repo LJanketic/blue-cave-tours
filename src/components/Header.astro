@@ -2,6 +2,7 @@
 import { SITE_NAME } from '../config/site';
 
 type Props = {
+	/** When false the bar floats (fixed) over a full-bleed hero (homepage). */
 	solid?: boolean;
 };
 
@@ -9,30 +10,34 @@ const { solid = false } = Astro.props;
 const currentPath = Astro.url.pathname;
 ---
 
-<header class:list={['nav', solid && 'nav--solid']} id="site-header">
+<header class:list={['nav', !solid && 'nav--floating']} id="site-header" data-floating={String(!solid)}>
 	<div class="nav-inner">
 		<a class="nav-logo" href="/">
 			<i class="ti ti-sailboat" aria-hidden="true"></i>
 			{SITE_NAME}
 		</a>
 		<nav class="nav-links" id="primary-nav" aria-label="Main">
+			<button type="button" class="nav-close" id="menu-close" aria-label="Close menu">
+				<i class="ti ti-x" aria-hidden="true"></i>
+			</button>
 			<a class:list={['nav-link', currentPath.startsWith('/tours') && 'nav-link--active']} href="/tours">Tours</a>
 			<a class:list={['nav-link', currentPath.startsWith('/destinations') && 'nav-link--active']} href="/destinations">Destinations</a>
 			<a class:list={['nav-link', currentPath === '/about' && 'nav-link--active']} href="/about">About</a>
 			<a class:list={['nav-link', currentPath.startsWith('/faq') && 'nav-link--active']} href="/faq">FAQ</a>
 			<a class:list={['nav-link', currentPath.startsWith('/contact') && 'nav-link--active']} href="/contact">Contact</a>
 		</nav>
+		<a class="btn-primary nav-cta" href="/tours">Book now</a>
 		<button type="button" class="nav-toggle" id="menu-toggle" aria-expanded="false" aria-controls="primary-nav">
 			<span class="sr-only">Menu</span>
 			<i class="ti ti-menu-2" aria-hidden="true"></i>
 		</button>
-		<a class="btn-primary nav-cta" href="/tours">Book now</a>
 	</div>
 </header>
 
 <script>
 	const header = document.getElementById('site-header');
 	const toggle = document.getElementById('menu-toggle');
+	const closeBtn = document.getElementById('menu-close');
 	const nav = document.getElementById('primary-nav');
 
 	if (header && toggle && nav) {
@@ -74,6 +79,8 @@ const currentPath = Astro.url.pathname;
 			setOpen(!headerEl.classList.contains('nav--open'));
 		});
 
+		closeBtn?.addEventListener('click', closeMenu);
+
 		document.addEventListener('click', (event) => {
 			if (!headerEl.contains(event.target as Node)) {
 				closeMenu();
@@ -107,5 +114,39 @@ const currentPath = Astro.url.pathname;
 				first.focus();
 			}
 		});
+
+		// Scroll behaviour: solidify past 40px, hide on scroll-down / show on
+		// scroll-up (never while the mobile menu is open). rAF-throttled.
+		let lastY = window.scrollY;
+		let ticking = false;
+
+		function onScroll() {
+			const y = window.scrollY;
+			headerEl.classList.toggle('nav-solid', y > 40);
+
+			const menuOpen = headerEl.classList.contains('nav--open');
+			if (!menuOpen) {
+				if (y > lastY && y > 80) {
+					headerEl.classList.add('nav-hidden');
+				} else {
+					headerEl.classList.remove('nav-hidden');
+				}
+			}
+			lastY = y;
+			ticking = false;
+		}
+
+		window.addEventListener(
+			'scroll',
+			() => {
+				if (!ticking) {
+					requestAnimationFrame(onScroll);
+					ticking = true;
+				}
+			},
+			{ passive: true },
+		);
+
+		onScroll();
 	}
 </script>

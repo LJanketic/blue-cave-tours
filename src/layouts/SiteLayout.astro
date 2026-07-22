@@ -8,22 +8,34 @@ type Props = {
 	title: string;
 	description?: string;
 	booking?: boolean;
+	/** Checkout mode — hides the full site Header/Footer so pages can use the
+	 * minimal MiniNav + TrustStrip chrome instead (reduces mid-funnel fall-off). */
+	checkout?: boolean;
 	ogImage?: string;
 	solidNav?: boolean;
 	robots?: string;
 	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 };
 
-const { title, description, booking = false, ogImage, solidNav = true, robots, jsonLd } = Astro.props;
+const {
+	title,
+	description,
+	booking = false,
+	checkout = false,
+	ogImage,
+	solidNav = true,
+	robots,
+	jsonLd,
+} = Astro.props;
 ---
 
 <BaseLayout title={title} description={description} ogImage={ogImage} robots={robots} jsonLd={jsonLd}>
 	<slot name="head" slot="head" />
-	<div class="site-shell">
+	<div class:list={['site-shell', checkout && 'site-shell--checkout']}>
 		<a class="skip-link" href="#main">Skip to content</a>
-		<Header solid={solidNav} />
+		{!checkout && <Header solid={solidNav} />}
 		<slot />
-		<Footer />
+		{!checkout && <Footer />}
 		{booking && <BookingScript />}
 	</div>
 </BaseLayout>

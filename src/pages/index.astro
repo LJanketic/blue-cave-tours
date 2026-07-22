@@ -1,15 +1,18 @@
 ---
 export const prerender = true;
 
+import { Picture } from 'astro:assets';
 import { HOME_PAGE_TITLE, SITE_DEFAULT_DESCRIPTION } from '../config/site';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import TourCard from '../components/TourCard.astro';
-import QuickSearch from '../components/vue/QuickSearch.vue';
+import HeroCarousel from '../components/vue/HeroCarousel.vue';
+import type { HeroPanel } from '../components/vue/HeroCarousel.vue';
 import FAQAccordion from '../components/vue/FAQAccordion.vue';
 import { getFeaturedTours } from '../lib/tours';
 import { getAllDestinations } from '../lib/destinations';
 import { ABOUT } from '../data/about';
 import { FAQ_ITEMS } from '../data/faq';
+import { HERO_IMAGE } from '../data/hero-image';
 import { faqPageJsonLd, organizationJsonLd, websiteJsonLd } from '../lib/seo';
 
 const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
@@ -21,32 +24,27 @@ const featuredTours = getFeaturedTours();
 const allDestinations = getAllDestinations();
 const destinationStrip = allDestinations.slice(0, 6);
 const faqPreview = FAQ_ITEMS.slice(0, 4);
-const destinationOptions = allDestinations.map((d) => ({ slug: d.slug, name: d.name }));
 
-const reviews = [
+const heroPanels: HeroPanel[] = [
 	{
-		initials: 'SM',
-		name: 'Sarah M.',
-		date: 'Jul 2025',
-		text: 'The Blue Cave timing was perfect — we were in at the right moment and still had time for swimming near Vis. Best day of our Croatia trip.',
-		tour: 'Blue Cave, Hvar & 5 islands',
+		id: 'tours',
 		icon: 'sailboat',
+		heading: 'The Adriatic from the water, the way it should be',
+		subtext:
+			'Group departures along the Dalmatian coast. Small boats, real skippers, no tourist conveyor belts.',
+		ctaLabel: 'Browse all tours',
+		ctaHref: '/tours',
+		dotLabel: 'Show all tours',
 	},
 	{
-		initials: 'TR',
-		name: 'Thomas R.',
-		date: 'Jun 2025',
-		text: 'Booked the private charter for our anniversary. The skipper built the route around our pace and found a quiet cove near Pakleni for lunch on the boat.',
-		tour: 'Create your perfect day at sea',
-		icon: 'crown',
-	},
-	{
-		initials: 'EP',
-		name: 'Elena P.',
-		date: 'Aug 2025',
-		text: 'Morning lagoon tour with two kids under six — calm water, short day, and the crew was patient with every question. Exactly what we needed.',
-		tour: 'Blue Lagoon morning tour',
-		icon: 'swimming',
+		id: 'charter',
+		icon: 'anchor',
+		heading: 'Your own boat, your own itinerary',
+		subtext:
+			'Private charters for two or twenty. Set the route, set the pace, skip the crowds entirely.',
+		ctaLabel: 'Plan a private charter',
+		ctaHref: '/contact?tour=create-perfect-day-private',
+		dotLabel: 'Show private charter',
 	},
 ];
 ---
@@ -54,39 +52,26 @@ const reviews = [
 <SiteLayout title={HOME_PAGE_TITLE} description={SITE_DEFAULT_DESCRIPTION} solidNav={false} booking jsonLd={jsonLd}>
 	<main id="main">
 		<div class="page home-page">
-			<section class="hero hero--home" aria-labelledby="hero-heading">
-				<div class="hero-content">
-					<i class="ti ti-sailboat hero-icon" aria-hidden="true"></i>
-					<h1 id="hero-heading">Split boat tours &amp; private charters</h1>
-					<p class="hero-sub">
-						Group departures and private charters from Split — Blue Cave, islands, and hidden bays. Small boats,
-						local skippers, routes that follow the weather.
-					</p>
-					<div class="hero-btns">
-						<a class="btn-primary" href="/tours">Browse all tours</a>
-						<a class="btn-secondary" href="/contact?tour=create-perfect-day-private">Plan a private charter</a>
-					</div>
-				</div>
+			<HeroCarousel client:idle panels={heroPanels}>
+				<Picture
+					slot="media"
+					src={HERO_IMAGE.src}
+					alt={HERO_IMAGE.alt}
+					formats={['avif', 'webp']}
+					widths={[768, 1280, 1920, 2560, 3840]}
+					sizes="100vw"
+					layout="none"
+					priority
+					class="hero-banner"
+					pictureAttributes={{ class: 'hero-banner-picture' }}
+				/>
 				<div class="hero-badge">
 					<i class="ti ti-shield-check" aria-hidden="true"></i>
 					Free cancellation up to 48h
 				</div>
-				<QuickSearch client:idle destinations={destinationOptions} />
-			</section>
+			</HeroCarousel>
 
 			<div class="page-shell">
-				<section class="trust-bar" aria-label="Why guests trust us">
-					{
-						ABOUT.trustStats.map((stat) => (
-							<div class="trust-item">
-								<i class={`ti ti-${stat.icon}`} aria-hidden="true" />
-								<span class="trust-num">{stat.value}</span>
-								<span class="trust-label">{stat.label}</span>
-							</div>
-						))
-					}
-				</section>
-
 				<section aria-labelledby="featured-heading">
 					<div class="section-header">
 						<h2 id="featured-heading" class="section-title">Popular tours</h2>
@@ -195,31 +180,16 @@ const reviews = [
 					</div>
 				</section>
 
-				<section aria-labelledby="reviews-heading">
-					<div class="section-header">
-						<h2 id="reviews-heading" class="section-title">What guests say</h2>
-						<a class="section-link" href="/about">Read all reviews →</a>
-					</div>
-					<div class="reviews-grid">
-						{
-							reviews.map((review) => (
-								<article class="rev-card">
-									<div class="rev-head">
-										<div class="rev-avatar">{review.initials}</div>
-										<div>
-											<p class="rev-name">{review.name}</p>
-											<p class="rev-date rev-stars">★★★★★ · {review.date}</p>
-										</div>
-									</div>
-									<p class="rev-text">{review.text}</p>
-									<p class="rev-tour">
-										<i class={`ti ti-${review.icon}`} aria-hidden="true"></i>
-										{review.tour}
-									</p>
-								</article>
-							))
-						}
-					</div>
+				<section class="trust-bar" aria-label="Why guests trust us">
+					{
+						ABOUT.trustStats.map((stat) => (
+							<div class="trust-item">
+								<i class={`ti ti-${stat.icon}`} aria-hidden="true" />
+								<span class="trust-num">{stat.value}</span>
+								<span class="trust-label">{stat.label}</span>
+							</div>
+						))
+					}
 				</section>
 
 				<section aria-labelledby="faq-heading">
@@ -248,8 +218,6 @@ const reviews = [
 		padding: 0 var(--page-gutter);
 	}
 
-	.home-page .hero-btns .btn-primary,
-	.home-page .hero-btns .btn-secondary,
 	.home-page .cta-band-btns .btn-primary,
 	.home-page .cta-band-btns .btn-secondary {
 		min-height: unset;
@@ -262,11 +230,11 @@ const reviews = [
 	}
 
 	.type-icon--group {
-		color: #1d9e75;
+		color: var(--color-accent);
 	}
 
 	.type-icon--private {
-		color: #534ab7;
+		color: var(--color-category-private-icon);
 	}
 
 	.type-cta {
@@ -279,10 +247,6 @@ const reviews = [
 		font-size: 12px;
 		padding: 6px 14px;
 		min-height: unset;
-	}
-
-	.rev-tour .ti {
-		font-size: 11px;
 	}
 
 	.home-page .cards-scroll .tour-card.featured {

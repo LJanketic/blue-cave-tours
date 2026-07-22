@@ -3,6 +3,8 @@ export const prerender = true;
 
 import { pageTitle } from '../../../config/site';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
+import MiniNav from '../../../components/MiniNav.astro';
+import TrustStrip from '../../../components/TrustStrip.astro';
 import GroupBookingFlow from '../../../components/vue/GroupBookingFlow.vue';
 import { getAllTours } from '../../../lib/tours';
 import { supportsInstantBook } from '../../../lib/booking';
@@ -26,9 +28,10 @@ const meetingShort = standMatch
 	: (tour.meetingPoint.replace(/^Meet at /i, '').split('.')[0]?.trim() ?? tour.meetingPoint);
 ---
 
-<SiteLayout title={pageTitle(`Book — ${tour.title}`)} description={`Book ${tour.title} — choose date, guests, and contact details.`} booking robots="noindex, nofollow">
+<SiteLayout title={pageTitle(`Book — ${tour.title}`)} description={`Book ${tour.title} — choose date, guests, and contact details.`} booking checkout robots="noindex, nofollow">
 	<main id="main" class="page-shell page-shell--narrow">
 		<div class="page group-booking-page">
+			<MiniNav exitHref={`/tours/${tour.slug}`} exitLabel="Exit" />
 			<div class="step-bar" aria-label="Booking progress">
 				<div class="step done">
 					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
@@ -79,6 +82,8 @@ const meetingShort = standMatch
 				fromPrice={tour.fromPrice}
 				priceNotes={tour.priceNotes}
 			/>
+
+			<TrustStrip />
 		</div>
 	</main>
 </SiteLayout>

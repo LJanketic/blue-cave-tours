@@ -17,11 +17,11 @@ const props = defineProps<{
 }>();
 
 const CATEGORY_ICONS: Record<FaqCategory, { bg: string; color: string }> = {
-	booking: { bg: '#E1F5EE', color: '#085041' },
-	weather: { bg: '#E6F1FB', color: '#0C447C' },
-	onboard: { bg: '#EEEDFE', color: '#3C3489' },
-	guests: { bg: '#FAEEDA', color: '#633806' },
-	private: { bg: '#EEEDFE', color: '#3C3489' },
+	booking: { bg: 'var(--color-background-success)', color: 'var(--color-text-success)' },
+	weather: { bg: 'var(--color-background-info)', color: 'var(--color-category-info-icon)' },
+	onboard: { bg: 'var(--color-category-private-bg)', color: 'var(--color-category-private-text)' },
+	guests: { bg: 'var(--color-category-tip-bg)', color: 'var(--color-category-tip-text)' },
+	private: { bg: 'var(--color-category-private-bg)', color: 'var(--color-category-private-text)' },
 };
 
 const NAV_LABELS: Record<FaqCategory, string> = {
@@ -278,7 +278,7 @@ function answerId(item: FaqItem): string {
 
 .cat-nav {
 	position: sticky;
-	top: 16px;
+	top: calc(var(--site-header-height) + 16px);
 	display: flex;
 	flex-direction: column;
 	gap: 4px;

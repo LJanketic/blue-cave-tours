@@ -16,6 +16,13 @@ export type DestinationAttr = {
 	label: string;
 };
 
+/** Optional "tip"-styled highlight pill shown on the detail hero overlay. */
+export type DestinationTipTag = {
+	/** Tabler icon suffix, e.g. `sun` → `ti-sun` */
+	icon: string;
+	label: string;
+};
+
 export type Destination = {
 	slug: string;
 	name: string;
@@ -25,6 +32,8 @@ export type Destination = {
 	shortDescription: string;
 	intro: string;
 	tags: string[];
+	/** Optional single "tip" pill highlighted on the detail hero image. */
+	tipTag?: DestinationTipTag;
 	attrs: DestinationAttr[];
 	highlights: string[];
 	/** Month scores Jan–Dec: 0 off-season, 1 good, 2 very good, 3 peak */
@@ -49,6 +58,7 @@ export const destinations: Destination[] = [
 		intro:
 			'The Blue Cave on Biševo island is the Adriatic’s most photographed natural wonder. On calm mornings, sunlight refracts through an underwater opening and floods the chamber with luminous blue light. We reach it by speedboat from Split, timing the visit around official opening hours and sea conditions — because the cave is worth the planning.',
 		tags: ['Cave', 'Swimming', 'Must-see'],
+		tipTag: { icon: 'clock', label: 'Best in the morning calm' },
 		attrs: [
 			{ icon: 'droplet', label: 'Sea cave' },
 			{ icon: 'ticket', label: 'Ticket on-site' },
@@ -101,6 +111,7 @@ export const destinations: Destination[] = [
 		intro:
 			'Vis sits further from the mainland than Hvar or Brač, which kept it quieter for decades. Today it’s the anchor for Blue Cave visits and some of the clearest swim stops on our routes — think Stiniva’s emerald cove, hidden bays, and a town that still feels like a working island rather than a postcard set.',
 		tags: ['Island', 'Swimming', 'Hidden bays'],
+		tipTag: { icon: 'beach', label: 'Home to Stiniva Bay' },
 		attrs: [
 			{ icon: 'building-lighthouse', label: 'Remote island' },
 			{ icon: 'swimming', label: 'Swim stops' },
@@ -154,6 +165,7 @@ export const destinations: Destination[] = [
 		intro:
 			'Hvar town is the Adriatic at its most glamorous: a hilltop fortress, marble streets, and yachts lined along the riva. Our tours give you time ashore or in the harbour depending on the schedule — enough to wander, swim nearby, and feel the island’s energy without rushing the open-sea legs that get you there.',
 		tags: ['Island', 'Culture', 'Swimming'],
+		tipTag: { icon: 'sun', label: 'Sunniest island in Croatia' },
 		attrs: [
 			{ icon: 'building-castle', label: 'Historic town' },
 			{ icon: 'building-fortress', label: 'Fortress views' },
@@ -206,6 +218,7 @@ export const destinations: Destination[] = [
 		intro:
 			'The Pakleni (Paklinski) islands are where locals take their boats on weekends: shallow turquoise water, rocky coves, and pine trees down to the shore. Our Hvar-focused routes anchor here for extended swim breaks — the kind of stop where you forget about the clock until the crew calls everyone back aboard.',
 		tags: ['Swimming', 'Snorkelling', 'Island chain'],
+		tipTag: { icon: 'droplet', label: 'Best swimming near Hvar' },
 		attrs: [
 			{ icon: 'droplet', label: 'Turquoise bays' },
 			{ icon: 'swimming', label: 'Swim stops' },
@@ -258,6 +271,7 @@ export const destinations: Destination[] = [
 		intro:
 			'The Blue Lagoon at Budikovac is exactly what the name promises: shallow, luminous water over white sand, ringed by small islets. It’s close enough to Split for a relaxed half-day but feels worlds away from the city. Our morning and afternoon slots maximise swim time without the long open-sea legs of a full island-hopping day.',
 		tags: ['Swimming', 'Half-day', 'Snorkelling'],
+		tipTag: { icon: 'clock', label: 'Great for a relaxed half-day' },
 		attrs: [
 			{ icon: 'swimming', label: 'Shallow lagoon' },
 			{ icon: 'clock', label: 'Half-day tours' },
@@ -310,6 +324,7 @@ export const destinations: Destination[] = [
 		intro:
 			'Every Hello Blue Cave tour begins in Split, where Diocletian’s Palace meets a working harbour and the Riva promenade buzzes with cafés and boats. We meet at stand 14 — easy to find, right on the waterfront. Split is more than a transit point: it’s the gateway to the islands, and many guests add a day in the old town before or after their tour.',
 		tags: ['Departure', 'Historic city', 'Riva harbour'],
+		tipTag: { icon: 'map-pin', label: 'Meet at Riva, stand 14' },
 		attrs: [
 			{ icon: 'map-pin', label: 'Meeting point' },
 			{ icon: 'building-castle', label: 'UNESCO old town' },

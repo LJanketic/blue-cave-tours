@@ -388,7 +388,7 @@ function goToReview() {
 
 .card-title .ti {
 	font-size: 16px;
-	color: #1d9e75;
+	color: var(--color-accent);
 }
 
 .card-sub {
@@ -561,7 +561,7 @@ function goToReview() {
 	width: 4px;
 	height: 4px;
 	border-radius: 50%;
-	background: #1d9e75;
+	background: var(--color-accent);
 	margin-top: 1px;
 }
 
@@ -690,7 +690,7 @@ function goToReview() {
 }
 
 .hold-note .ti {
-	color: #1d9e75;
+	color: var(--color-accent);
 	font-size: 14px;
 	flex-shrink: 0;
 }

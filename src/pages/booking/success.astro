@@ -3,6 +3,8 @@ export const prerender = false;
 
 import { pageTitle, SITE_NAME } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import MiniNav from '../../components/MiniNav.astro';
+import TrustStrip from '../../components/TrustStrip.astro';
 import { getTourBySlug } from '../../lib/tours';
 
 const tourIdParam = Astro.url.searchParams.get('tourId');
@@ -22,9 +24,11 @@ const bringList =
 <SiteLayout
 	title={pageTitle('Booking confirmed')}
 	description={`Your booking with ${SITE_NAME} has been received.`}
+	checkout
 	robots="noindex, nofollow"
 >
 	<main id="main" class="status-page-narrow payment-success-page">
+		<MiniNav />
 		<div class="success-hero">
 			<div class="check-circle" aria-hidden="true">
 				<i class="ti ti-check"></i>
@@ -143,6 +147,8 @@ const bringList =
 			<i class="ti ti-sailboat" aria-hidden="true"></i>
 			Browse more tours
 		</a>
+
+		<TrustStrip />
 	</main>
 </SiteLayout>
 

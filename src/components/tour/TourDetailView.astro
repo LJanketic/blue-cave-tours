@@ -1,12 +1,36 @@
 ---
 import type { TourDetail } from '../../types/tour';
 import { contactHrefForTour, supportsInstantBook } from '../../lib/booking';
+import { tourTypes } from '../../lib/tour-filters';
 import ImageGallery from '../vue/ImageGallery.vue';
 
 type Props = { tour: TourDetail };
 
+type HeroTag = { icon: string; label: string; variant?: 'feat' | 'group' | 'private' | 'tip' };
+
 const { tour } = Astro.props;
 const instantBook = supportsInstantBook(tour);
+const types = tourTypes(tour);
+
+const heroTags: HeroTag[] = [];
+if (types.includes('group')) {
+	heroTags.push({ icon: 'users', label: 'Group tour', variant: 'group' });
+}
+if (types.includes('private')) {
+	heroTags.push({
+		icon: 'crown',
+		label: instantBook ? 'Private available' : 'Private charter',
+		variant: 'private',
+	});
+}
+if (tour.featured) {
+	heroTags.push({ icon: 'star', label: 'Best seller', variant: 'tip' });
+}
+
+const durationDisplay = tour.duration.replace(/Approx\.\s*/, '≈');
+const groupLabel = instantBook ? 'Small group' : 'Private charter';
+const groupIcon = instantBook ? 'users' : 'crown';
+const priceUnit = instantBook ? '/ person' : '/ boat';
 
 const galleryPhotos = [tour.image, ...tour.gallery].map((photo, index) => ({
 	color: photo.color,
@@ -39,23 +63,6 @@ const goodToKnow = [
 if (tour.caveTicketNote) {
 	goodToKnow.push({ label: 'Cave entry', value: tour.caveTicketNote });
 }
-
-const availPattern = [
-	'dot-ok',
-	'dot-ok',
-	'dot-ok',
-	'dot-few',
-	'dot-few',
-	'dot-no',
-	'dot-no',
-	'dot-ok',
-	'dot-ok',
-	'dot-ok',
-	'dot-few',
-	'dot-ok',
-	'dot-ok',
-	'dot-no',
-] as const;
 ---
 
 <article class="page tour-detail">
@@ -67,44 +74,15 @@ const availPattern = [
 		<span aria-current="page">{tour.title}</span>
 	</nav>
 
-	<ImageGallery client:visible hero={heroPhoto} gallery={thumbPhotos} />
-
-	<div class="tags">
-		{
-			instantBook ? (
-				<span class="tag tag-grp">
-					<i class="ti ti-users" aria-hidden="true"></i> Group tour
-				</span>
-			) : (
-				<span class="tag tag-priv">
-					<i class="ti ti-crown" aria-hidden="true"></i> Private charter
-				</span>
-			)
-		}
-		{
-			instantBook && (
-				<span class="tag tag-priv">
-					<i class="ti ti-crown" aria-hidden="true"></i> Private available
-				</span>
-			)
-		}
-		<span class="tag tag-dur">
-			<i class="ti ti-clock" aria-hidden="true"></i> {tour.duration}
-		</span>
-		{tour.featured && (
-			<span class="tag tag-dur">
-				<i class="ti ti-star" aria-hidden="true"></i> Best seller
-			</span>
-		)}
-	</div>
+	<ImageGallery client:visible hero={heroPhoto} gallery={thumbPhotos} tags={heroTags} />
 
 	<div class="layout">
 		<div>
 			<h1>{tour.title}</h1>
 			<p class="rating-row">
-				<span><strong>{tour.tagline}</strong></span>
+				<span><i class="ti ti-clock" aria-hidden="true"></i> {durationDisplay}</span>
 				<span aria-hidden="true">·</span>
-				<span>{tour.scheduleLabel}</span>
+				<span><i class={`ti ti-${groupIcon}`} aria-hidden="true"></i> {groupLabel}</span>
 			</p>
 
 			<section class="section" aria-labelledby="overview-heading">
@@ -203,12 +181,12 @@ const availPattern = [
 			}
 		</div>
 
-		<aside aria-label="Book this tour">
+		<aside id="book-panel" aria-label="Book this tour">
 			<div class="sticky-card">
 				<div class="price-row">
 					<span class="price-from">From</span>
 					<span class="price-val">{tour.fromPrice}</span>
-					<span class="price-per">{instantBook ? '/ person' : '/ boat'}</span>
+					<span class="price-per">{priceUnit}</span>
 				</div>
 				<p class="sticky-card__price-note">{tour.priceNotes}</p>
 
@@ -219,17 +197,6 @@ const availPattern = [
 				<div class="card-row">
 					<span class="card-label"><i class="ti ti-users" aria-hidden="true"></i> Season</span>
 					<span class="card-val">{tour.availability}</span>
-				</div>
-
-				<div class="avail-dots" aria-hidden="true">
-					{availPattern.map((state) => (
-						<div class={`dot ${state}`}></div>
-					))}
-				</div>
-				<div class="dot-legend" aria-hidden="true">
-					<span><span class="dot dot-ok"></span> Available</span>
-					<span><span class="dot dot-few"></span> Few spots</span>
-					<span><span class="dot dot-no"></span> Full</span>
 				</div>
 
 				<hr class="card-divider" />
@@ -265,6 +232,18 @@ const availPattern = [
 			</div>
 		</aside>
 	</div>
+
+	<div class="mobile-book-bar">
+		<div class="mbb-info">
+			<span class="mbb-price">
+				{tour.fromPrice}
+				<span class="mbb-per">{priceUnit}</span>
+			</span>
+		</div>
+		<a class="btn-primary mbb-btn" href="#book-panel">
+			{instantBook ? 'Book' : 'Request'}
+		</a>
+	</div>
 </article>
 
 <style>
@@ -278,8 +257,9 @@ const availPattern = [
 		margin-bottom: 16px;
 	}
 
-	.tour-detail .rating-row strong {
-		color: var(--color-text-primary);
+	.tour-detail .rating-row .ti {
+		font-size: 13px;
+		vertical-align: -1px;
 	}
 
 	.tour-detail .sticky-card .price-from {
@@ -287,8 +267,8 @@ const availPattern = [
 	}
 
 	.tour-detail .sticky-card .price-val {
-		font-size: 22px;
-		font-weight: 500;
+		font-size: 26px;
+		font-weight: 600;
 	}
 
 	.tour-detail .sticky-card .price-per {
@@ -299,53 +279,8 @@ const availPattern = [
 		margin-bottom: 0;
 	}
 
-	.tour-detail .avail-dots {
-		display: flex;
-		gap: 3px;
-		flex-wrap: wrap;
-		margin-top: 8px;
-	}
-
-	.tour-detail .dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		flex-shrink: 0;
-	}
-
-	.tour-detail .dot-ok {
-		background: #1d9e75;
-	}
-
-	.tour-detail .dot-few {
-		background: #ef9f27;
-	}
-
-	.tour-detail .dot-no {
-		background: var(--color-border-secondary);
-	}
-
-	.tour-detail .dot-legend {
-		display: flex;
-		gap: 10px;
-		margin-top: 6px;
-		font-size: 11px;
-		color: var(--color-text-tertiary);
-		flex-wrap: wrap;
-	}
-
-	.tour-detail .dot-legend span {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-	}
-
-	.tour-detail .dot-legend .dot {
-		display: inline-block;
-	}
-
 	.tour-detail .hl-item .ti {
-		color: #1d9e75;
+		color: var(--color-accent);
 	}
 
 	.tour-detail .itinerary-item--last {

@@ -4,7 +4,7 @@ export const prerender = true;
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import ImageGallery from '../../components/vue/ImageGallery.vue';
-import PlaceholderImage from '../../components/PlaceholderImage.astro';
+import TourImage from '../../components/TourImage.astro';
 import {
 	bestTimeBarStyle,
 	getAllDestinations,
@@ -51,16 +51,21 @@ function nearbyTourCount(slug: string): number {
 const { destination } = Astro.props;
 const tours = getToursForDestination(destination.slug);
 const heroPhoto = getDestinationPhoto(destination);
-const galleryPhotos = galleryFrom(
-	heroPhoto,
-	PHOTO.blueLagoon,
-	PHOTO.hvar,
-	PHOTO.pakleni,
-).map((photo, index) => ({
-	color: photo.color,
-	alt: photo.alt,
-	icon: index === 0 ? destination.icon : ['anchor', 'swimming', 'building-lighthouse', 'sunset'][index % 4],
-}));
+const galleryPhotos = galleryFrom(heroPhoto, PHOTO.blueLagoon, PHOTO.hvar, PHOTO.pakleni).map(
+	(photo, index) => ({
+		color: photo.color,
+		alt: photo.alt,
+		icon: index === 0 ? destination.icon : ['anchor', 'swimming', 'building-lighthouse', 'sunset'][index % 4],
+	}),
+);
+
+type HeroTag = { icon: string; label: string; variant: 'feat' | 'group' | 'private' | 'tip' };
+const heroTags: HeroTag[] = [
+	...destination.tags.map((tag): HeroTag => ({ icon: tagIcon(tag), label: tag, variant: 'feat' })),
+	...(destination.tipTag
+		? [{ icon: destination.tipTag.icon, label: destination.tipTag.label, variant: 'tip' } as HeroTag]
+		: []),
+];
 
 const mapUrl =
 	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
@@ -90,25 +95,15 @@ const mapStubLabel = distanceGeo
 				<span aria-current="page">{destination.name}</span>
 			</nav>
 
-			<ImageGallery client:visible hero={galleryPhotos[0]} gallery={galleryPhotos.slice(1)} />
+			<ImageGallery
+				client:visible
+				hero={galleryPhotos[0]}
+				gallery={galleryPhotos.slice(1)}
+				tags={heroTags}
+			/>
 
 			<div class="layout">
 				<div>
-					<div class="tags">
-						<span class="tag tag-region">
-							<i class="ti ti-map-pin" aria-hidden="true"></i>
-							{destination.region}
-						</span>
-						{
-							destination.tags.map((tag) => (
-								<span class="tag tag-feat">
-									<i class={`ti ti-${tagIcon(tag)}`} aria-hidden="true"></i>
-									{tag}
-								</span>
-							))
-						}
-					</div>
-
 					<h1 class="dest-title">{destination.name}</h1>
 					<p class="intro-text dest-intro">{destination.intro}</p>
 
@@ -126,6 +121,24 @@ const mapStubLabel = distanceGeo
 									</div>
 								))
 							}
+						</div>
+						<div class="highlights-marquee" aria-hidden="true">
+							<div class="marquee-track">
+								{
+									[...destination.highlights, ...destination.highlights].map((hl, index) => {
+										const originalIndex = index % destination.highlights.length;
+										return (
+											<div class="hl-item">
+												<i
+													class={`ti ti-${HIGHLIGHT_ICONS[originalIndex % HIGHLIGHT_ICONS.length]}`}
+													aria-hidden="true"
+												></i>
+												{hl}
+											</div>
+										);
+									})
+								}
+							</div>
 						</div>
 					</section>
 
@@ -221,7 +234,7 @@ const mapStubLabel = distanceGeo
 									<a class="tour-link-card" href={`/tours/${tour.slug}`}>
 										<div class="tc-head">
 											<div class="tc-thumb">
-												<PlaceholderImage photo={tour.image} layout="thumb" icon="sailboat" />
+												<TourImage photo={tour.image} layout="thumb" icon="sailboat" />
 											</div>
 											<div>
 												<h3 class="tc-name">{tour.title}</h3>
@@ -338,15 +351,6 @@ const mapStubLabel = distanceGeo
 		grid-template-columns: 1fr 260px;
 	}
 
-	.dest-detail-page .tags {
-		margin-bottom: 10px;
-	}
-
-	.dest-detail-page .tag-feat {
-		background: #e1f5ee;
-		color: #085041;
-	}
-
 	.dest-detail-page .dest-title {
 		font-size: 21px;
 		font-weight: 500;
@@ -368,7 +372,58 @@ const mapStubLabel = distanceGeo
 	}
 
 	.dest-detail-page .hl-item .ti {
-		color: #1d9e75;
+		color: var(--color-accent);
+	}
+
+	.dest-detail-page .highlights-marquee {
+		display: none;
+		overflow: hidden;
+		-webkit-mask-image: linear-gradient(
+			to right,
+			transparent,
+			#000 24px,
+			#000 calc(100% - 24px),
+			transparent
+		);
+		mask-image: linear-gradient(
+			to right,
+			transparent,
+			#000 24px,
+			#000 calc(100% - 24px),
+			transparent
+		);
+	}
+
+	.dest-detail-page .marquee-track {
+		display: flex;
+		gap: 8px;
+		width: max-content;
+		animation: dest-highlights-marquee 26s linear infinite;
+	}
+
+	.dest-detail-page .marquee-track .hl-item {
+		flex: 0 0 220px;
+		white-space: normal;
+	}
+
+	.dest-detail-page .highlights-marquee:active .marquee-track {
+		animation-play-state: paused;
+	}
+
+	@keyframes dest-highlights-marquee {
+		from {
+			transform: translateX(0);
+		}
+
+		to {
+			transform: translateX(-50%);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.dest-detail-page .marquee-track {
+			animation: none;
+		}
 	}
 
 	.dest-detail-page .best-time-note {
@@ -379,11 +434,11 @@ const mapStubLabel = distanceGeo
 	}
 
 	.dest-detail-page .legend-dot--peak {
-		background: #1d9e75;
+		background: var(--color-accent);
 	}
 
 	.dest-detail-page .map-stub .ti {
-		color: #1d9e75;
+		color: var(--color-accent);
 	}
 
 	.dest-detail-page .tc-name {
@@ -411,7 +466,7 @@ const mapStubLabel = distanceGeo
 	.dest-detail-page .conditions-weather .ti {
 		font-size: 14px;
 		vertical-align: -2px;
-		color: #ba7517;
+		color: var(--color-text-warning);
 		margin-right: 2px;
 	}
 
@@ -444,7 +499,7 @@ const mapStubLabel = distanceGeo
 	}
 
 	.dest-detail-page .tc-tag--featured .ti {
-		color: #ba7517;
+		color: var(--color-text-warning);
 	}
 
 	.dest-detail-page .tc-foot {
@@ -539,9 +594,16 @@ const mapStubLabel = distanceGeo
 			display: none;
 		}
 
-		.dest-detail-page .highlights,
 		.dest-detail-page .info-grid {
 			grid-template-columns: 1fr;
+		}
+
+		.dest-detail-page .highlights {
+			display: none;
+		}
+
+		.dest-detail-page .highlights-marquee {
+			display: block;
 		}
 
 		.dest-detail-page .best-time-grid {

@@ -1,10 +1,21 @@
 import type { TourDetail, ItineraryKind } from '../types/tour';
 import { supportsInstantBook } from './booking';
 
-export type TourFilter = 'all' | 'group' | 'private' | 'half-day' | 'swim';
+/** Multi-select filter ids used by the tours overview. OR logic across the set. */
+export type TourFilter = 'group' | 'private' | 'short' | 'sunset';
 
 export function isPrivateTour(tour: Pick<TourDetail, 'slug'>): boolean {
 	return !supportsInstantBook(tour);
+}
+
+/**
+ * The booking modes a tour offers. Explicit `types` on the tour win; otherwise
+ * quote-only tours are private and instant-book tours are group departures that
+ * can also be booked as a private charter.
+ */
+export function tourTypes(tour: TourDetail): ('group' | 'private')[] {
+	if (tour.types && tour.types.length) return tour.types;
+	return isPrivateTour(tour) ? ['private'] : ['group', 'private'];
 }
 
 export function tourTags(tour: TourDetail): string[] {
@@ -14,13 +25,45 @@ export function tourTags(tour: TourDetail): string[] {
 	return tags;
 }
 
+/** Parse the leading hour count from a duration string ("Approx. 8–10 hours" → 8). */
+export function parseDurationHours(duration: string): number | null {
+	const match = duration.match(/(\d+(?:\.\d+)?)/);
+	return match ? Number(match[1]) : null;
+}
+
+export function isShortTour(tour: TourDetail): boolean {
+	// Real catalog half-days are ~5h; also accept literal <4h if shorter products are added later.
+	if (tour.itineraryKind === 'morning' || tour.itineraryKind === 'afternoon') return true;
+	if (/half[- ]?day/i.test(`${tour.slug} ${tour.title} ${tour.tagline}`)) return true;
+	const hours = parseDurationHours(tour.duration);
+	return hours !== null && hours < 4;
+}
+
+export function isSunsetTour(tour: TourDetail): boolean {
+	const haystack = `${tour.title} ${tour.tagline} ${tour.slug} ${tour.shortDescription}`.toLowerCase();
+	return haystack.includes('sunset');
+}
+
 export function matchesFilter(tour: TourDetail, filter: TourFilter): boolean {
-	if (filter === 'all') return true;
-	if (filter === 'group') return supportsInstantBook(tour);
-	if (filter === 'private') return isPrivateTour(tour);
-	if (filter === 'half-day') return tour.itineraryKind === 'morning' || tour.itineraryKind === 'afternoon';
-	if (filter === 'swim') return tourTags(tour).includes('swim');
-	return true;
+	switch (filter) {
+		case 'group':
+			return tourTypes(tour).includes('group');
+		case 'private':
+			return tourTypes(tour).includes('private');
+		case 'short':
+			return isShortTour(tour);
+		case 'sunset':
+			return isSunsetTour(tour);
+		default:
+			return true;
+	}
+}
+
+/** OR logic — a tour passes when no filters are active or it matches any active filter. */
+export function matchesAnyFilter(tour: TourDetail, filters: Iterable<TourFilter>): boolean {
+	const active = [...filters];
+	if (active.length === 0) return true;
+	return active.some((filter) => matchesFilter(tour, filter));
 }
 
 export function parsePrice(price: string): number {
@@ -36,7 +79,9 @@ export function sortTours(tours: TourDetail[], sort: string): TourDetail[] {
 		case 'price-desc':
 			return copy.sort((a, b) => parsePrice(b.fromPrice) - parsePrice(a.fromPrice));
 		case 'duration':
-			return copy.sort((a, b) => a.duration.localeCompare(b.duration));
+			return copy.sort(
+				(a, b) => (parseDurationHours(a.duration) ?? 0) - (parseDurationHours(b.duration) ?? 0),
+			);
 		default:
 			return copy.sort((a, b) => Number(b.featured) - Number(a.featured));
 	}
