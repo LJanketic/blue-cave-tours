@@ -32,17 +32,10 @@ const groupLabel = instantBook ? 'Small group' : 'Private charter';
 const groupIcon = instantBook ? 'users' : 'crown';
 const priceUnit = instantBook ? '/ person' : '/ boat';
 
-const galleryPhotos = [tour.image, ...tour.gallery].map((photo, index) => ({
+const galleryPhotos = [tour.image, ...tour.gallery].map((photo) => ({
 	color: photo.color,
 	alt: photo.alt,
-	icon:
-		index === 0
-			? tour.slug.includes('lagoon')
-				? 'swimming'
-				: tour.slug.includes('private')
-					? 'crown'
-					: 'sailboat'
-			: ['anchor', 'sunset', 'fish', 'building-lighthouse'][index % 4],
+	icon: 'sailboat',
 }));
 
 const heroPhoto = galleryPhotos[0];

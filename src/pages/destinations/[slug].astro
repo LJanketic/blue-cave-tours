@@ -52,10 +52,10 @@ const { destination } = Astro.props;
 const tours = getToursForDestination(destination.slug);
 const heroPhoto = getDestinationPhoto(destination);
 const galleryPhotos = galleryFrom(heroPhoto, PHOTO.blueLagoon, PHOTO.hvar, PHOTO.pakleni).map(
-	(photo, index) => ({
+	(photo) => ({
 		color: photo.color,
 		alt: photo.alt,
-		icon: index === 0 ? destination.icon : ['anchor', 'swimming', 'building-lighthouse', 'sunset'][index % 4],
+		icon: 'sailboat',
 	}),
 );
 

@@ -87,14 +87,6 @@ function isActive(filter: TourFilter): boolean {
 	return activeFilters.value.has(filter);
 }
 
-function tourIcon(tour: TourDetail): string {
-	const instant = supportsInstantBook(tour);
-	if (!instant || tour.slug.includes('private')) return 'crown';
-	if (tour.slug.includes('lagoon')) return 'swimming';
-	if (tour.slug.includes('cave')) return 'droplet';
-	return 'sailboat';
-}
-
 function priceUnit(tour: TourDetail): string {
 	return supportsInstantBook(tour) ? '/ person' : '/ boat';
 }
@@ -180,7 +172,7 @@ onMounted(readUrlParams);
 				>
 					<a :href="`/tours/${tour.slug}`" class="tour-card" :class="{ featured: section.highlight }">
 						<div class="card-img" :style="{ '--placeholder-color': tour.image.color }">
-							<i :class="`ti ti-${tourIcon(tour)}`" aria-hidden="true"></i>
+							<i class="ti ti-sailboat" aria-hidden="true"></i>
 							<div class="img-badges">
 								<span v-if="tour.featured" class="img-badge badge-bestseller">Best seller</span>
 								<span v-if="tour.badge === 'new'" class="img-badge badge-new">New</span>

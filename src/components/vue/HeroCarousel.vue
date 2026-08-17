@@ -61,6 +61,14 @@ function prev() {
 	goTo(index.value - 1);
 }
 
+function scrollPastHero() {
+	const hero = document.querySelector('.hero--home');
+	if (!(hero instanceof HTMLElement)) return;
+
+	const top = hero.getBoundingClientRect().bottom + window.scrollY;
+	window.scrollTo({ top, behavior: reducedMotion ? 'auto' : 'smooth' });
+}
+
 onMounted(() => {
 	reducedMotion =
 		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -71,25 +79,20 @@ onBeforeUnmount(stopRotation);
 </script>
 
 <template>
-	<section
-		class="hero hero--home"
+	<div
+		class="hero-chrome"
 		role="region"
 		aria-roledescription="carousel"
 		aria-label="Featured highlights"
 		@mouseenter="stopRotation"
 		@mouseleave="startRotation"
 	>
-		<div class="hero-media">
-			<slot name="media" />
-			<div class="hero-banner-overlay" aria-hidden="true"></div>
-		</div>
-
 		<button
 			v-if="count > 1"
 			type="button"
 			class="hero-arrow hero-arrow-prev"
 			aria-label="Previous banner"
-			@click="prev"
+			@click.stop="prev"
 		>
 			<i class="ti ti-chevron-left" aria-hidden="true"></i>
 		</button>
@@ -98,7 +101,7 @@ onBeforeUnmount(stopRotation);
 			type="button"
 			class="hero-arrow hero-arrow-next"
 			aria-label="Next banner"
-			@click="next"
+			@click.stop="next"
 		>
 			<i class="ti ti-chevron-right" aria-hidden="true"></i>
 		</button>
@@ -116,12 +119,16 @@ onBeforeUnmount(stopRotation);
 				:aria-hidden="i !== index ? 'true' : 'false'"
 				:inert="i !== index ? true : undefined"
 			>
-				<i :class="`ti ti-${panel.icon} hero-icon`" aria-hidden="true"></i>
 				<component :is="i === index ? 'h1' : 'p'" class="hero-h">{{ panel.heading }}</component>
 				<p class="hero-sub">{{ panel.subtext }}</p>
 				<a class="btn-primary" :href="panel.ctaHref">{{ panel.ctaLabel }}</a>
 			</div>
 		</div>
+
+		<button type="button" class="hero-scroll" aria-label="Continue to tours" @click="scrollPastHero">
+			<span>Explore</span>
+			<i class="ti ti-chevron-down" aria-hidden="true"></i>
+		</button>
 
 		<div v-if="count > 1" class="hero-dots" role="tablist" aria-label="Choose banner">
 			<button
@@ -133,11 +140,8 @@ onBeforeUnmount(stopRotation);
 				role="tab"
 				:aria-label="panel.dotLabel"
 				:aria-selected="i === index ? 'true' : 'false'"
-				@click="goTo(i)"
+				@click.stop="goTo(i)"
 			></button>
 		</div>
-
-		<!-- Overlay content (e.g. the free-cancellation badge). -->
-		<slot />
-	</section>
+	</div>
 </template>

@@ -1,7 +1,7 @@
 ---
 export const prerender = true;
 
-import { Picture } from 'astro:assets';
+import { getImage, Picture } from 'astro:assets';
 import { HOME_PAGE_TITLE, SITE_DEFAULT_DESCRIPTION } from '../config/site';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import TourCard from '../components/TourCard.astro';
@@ -24,6 +24,21 @@ const featuredTours = getFeaturedTours();
 const allDestinations = getAllDestinations();
 const destinationStrip = allDestinations.slice(0, 6);
 const faqPreview = FAQ_ITEMS.slice(0, 4);
+
+const HERO_WIDTHS = [800, 1280, 1600, 1920] as const;
+
+const heroSources = await Promise.all(
+	HERO_WIDTHS.map((width) =>
+		getImage({
+			src: HERO_IMAGE.src,
+			width,
+			format: 'webp',
+			quality: 70,
+		}),
+	),
+);
+const heroLcp = heroSources[2] ?? heroSources[0];
+const heroSrcset = heroSources.map((img, i) => `${img.src} ${HERO_WIDTHS[i]}w`).join(', ');
 
 const heroPanels: HeroPanel[] = [
 	{
@@ -50,26 +65,40 @@ const heroPanels: HeroPanel[] = [
 ---
 
 <SiteLayout title={HOME_PAGE_TITLE} description={SITE_DEFAULT_DESCRIPTION} solidNav={false} booking jsonLd={jsonLd}>
+	<link
+		slot="head"
+		rel="preload"
+		as="image"
+		href={heroLcp.src}
+		type="image/webp"
+		imagesrcset={heroSrcset}
+		imagesizes="100vw"
+		fetchpriority="high"
+	/>
 	<main id="main">
 		<div class="page home-page">
-			<HeroCarousel client:idle panels={heroPanels}>
-				<Picture
-					slot="media"
-					src={HERO_IMAGE.src}
-					alt={HERO_IMAGE.alt}
-					formats={['avif', 'webp']}
-					widths={[768, 1280, 1920, 2560, 3840]}
-					sizes="100vw"
-					layout="none"
-					priority
-					class="hero-banner"
-					pictureAttributes={{ class: 'hero-banner-picture' }}
-				/>
-				<div class="hero-badge">
-					<i class="ti ti-shield-check" aria-hidden="true"></i>
-					Free cancellation up to 48h
+			<section class="hero hero--home">
+				<div class="hero-media">
+					<div class="hero-media-fallback" aria-hidden="true">
+						<i class="ti ti-sailboat"></i>
+					</div>
+					<Picture
+						src={HERO_IMAGE.src}
+						alt={HERO_IMAGE.alt}
+						formats={['webp']}
+						fallbackFormat="webp"
+						widths={[800, 1280, 1600, 1920]}
+						sizes="100vw"
+						quality={70}
+						layout="none"
+						priority
+						class="hero-banner"
+						pictureAttributes={{ class: 'hero-banner-picture' }}
+					/>
+					<div class="hero-banner-overlay" aria-hidden="true"></div>
 				</div>
-			</HeroCarousel>
+				<HeroCarousel client:load panels={heroPanels} />
+			</section>
 
 			<div class="page-shell">
 				<section aria-labelledby="featured-heading">
@@ -95,7 +124,7 @@ const heroPanels: HeroPanel[] = [
 						{
 							destinationStrip.map((dest) => (
 								<a class="dest-card" href={`/destinations/${dest.slug}`}>
-									<i class={`ti ti-${dest.icon} bg-icon`} aria-hidden="true" />
+									<i class="ti ti-sailboat bg-icon" aria-hidden="true" />
 									<h3 class="dest-name">{dest.name}</h3>
 									<span class="dest-count">
 										{dest.tourSlugs.length} tour{dest.tourSlugs.length === 1 ? '' : 's'}
@@ -215,7 +244,7 @@ const heroPanels: HeroPanel[] = [
 
 <style>
 	.home-page .page-shell {
-		padding: 0 var(--page-gutter);
+		padding: 3.5rem var(--page-gutter) 4rem;
 	}
 
 	.home-page .cta-band-btns .btn-primary,

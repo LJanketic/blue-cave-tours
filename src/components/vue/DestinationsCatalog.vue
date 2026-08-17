@@ -106,7 +106,7 @@ function destinationHref(slug: string): string {
 				>
 					<a class="dest-card__link" :href="destinationHref(dest.slug)">
 						<div class="card-img">
-							<i :class="`ti ti-${dest.icon}`" aria-hidden="true"></i>
+							<i class="ti ti-sailboat" aria-hidden="true"></i>
 							<span class="region-pill">{{ dest.region }}</span>
 						</div>
 						<div class="card-body">
@@ -143,10 +143,10 @@ function destinationHref(slug: string): string {
 				class="dest-card dest-card--rich"
 			>
 				<a class="dest-card__link" :href="destinationHref(dest.slug)">
-					<div class="card-img">
-						<i :class="`ti ti-${dest.icon}`" aria-hidden="true"></i>
-						<span class="region-pill">{{ dest.region }}</span>
-					</div>
+						<div class="card-img">
+							<i class="ti ti-sailboat" aria-hidden="true"></i>
+							<span class="region-pill">{{ dest.region }}</span>
+						</div>
 					<div class="card-body">
 						<h3 class="card-name">{{ dest.name }}</h3>
 						<p class="card-region">

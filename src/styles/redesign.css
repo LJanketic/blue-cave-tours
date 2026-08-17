@@ -184,6 +184,36 @@ a {
 	position: fixed;
 }
 
+.nav--floating:not(.nav-solid):not(.nav--open) {
+	background: transparent;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	border-bottom-color: transparent;
+	box-shadow: none;
+}
+
+.nav--floating:not(.nav-solid):not(.nav--open) .nav-logo,
+.nav--floating:not(.nav-solid):not(.nav--open) .nav-link,
+.nav--floating:not(.nav-solid):not(.nav--open) .nav-toggle {
+	color: var(--palette-white);
+	text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+
+.nav--floating:not(.nav-solid):not(.nav--open) .nav-logo .ti {
+	color: var(--palette-white);
+}
+
+.nav--floating:not(.nav-solid):not(.nav--open) .nav-link:hover,
+.nav--floating:not(.nav-solid):not(.nav--open) .nav-link:focus-visible,
+.nav--floating:not(.nav-solid):not(.nav--open) .nav-link--active {
+	color: var(--palette-white);
+}
+
+.nav--floating:not(.nav-solid):not(.nav--open) .nav-cta {
+	background: var(--palette-white);
+	color: var(--color-text-primary);
+}
+
 /* Scrolled past the top — grounded, opaque, subtle shadow. */
 .nav-solid {
 	background: rgb(255 255 255 / 97%);
@@ -377,8 +407,16 @@ body.nav-menu-open::before {
 	border: none;
 }
 
-.btn-primary:hover {
-	opacity: 0.88;
+a.btn-primary,
+a.btn-secondary {
+	text-decoration: none;
+}
+
+.btn-primary:hover,
+a.btn-primary:hover {
+	background: color-mix(in srgb, var(--color-text-primary) 92%, white);
+	color: var(--color-background-primary);
+	text-decoration: none;
 }
 
 .btn-secondary {
@@ -387,8 +425,11 @@ body.nav-menu-open::before {
 	border: 0.5px solid var(--color-border-secondary);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover,
+a.btn-secondary:hover {
 	background: var(--color-background-secondary);
+	color: var(--color-text-primary);
+	text-decoration: none;
 }
 
 /* ─── Hero ───────────────────────────────────────────────────────────── */
@@ -406,14 +447,14 @@ body.nav-menu-open::before {
 	gap: 0.35rem;
 }
 
-/* Full-bleed homepage hero — viewport heights match design HTML */
+/* Full-viewport homepage hero — first screen on load, then native scroll. */
 .hero--home {
-	height: 66.67vh;
-	margin-top: 0;
-	margin-bottom: 0;
-	width: 100vw;
-	margin-left: calc(50% - 50vw);
-	margin-right: calc(50% - 50vw);
+	height: 100svh;
+	height: 100dvh;
+	min-height: 100svh;
+	margin: 0;
+	width: 100%;
+	max-width: 100%;
 	box-sizing: border-box;
 	padding: 0;
 	gap: 0;
@@ -423,12 +464,44 @@ body.nav-menu-open::before {
 	color: var(--palette-white);
 }
 
+.hero-chrome {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	pointer-events: none;
+}
+
+.hero-chrome .btn-primary,
+.hero-chrome .hero-arrow,
+.hero-chrome .hero-dots,
+.hero-chrome .hero-dot,
+.hero-chrome .hero-scroll {
+	pointer-events: auto;
+}
+
 .hero-media {
 	position: absolute;
 	inset: 0;
 	z-index: 0;
 	overflow: hidden;
 	pointer-events: none;
+}
+
+.hero-media-fallback {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #0a3a6e;
+}
+
+.hero-media-fallback .ti {
+	font-size: 56px;
+	color: rgb(255 255 255 / 35%);
 }
 
 .hero-media picture,
@@ -467,9 +540,9 @@ body.nav-menu-open::before {
 
 .hero--home .hero-dots,
 .hero--home .hero-arrow,
-.hero--home .hero-badge {
+.hero--home .hero-scroll {
 	position: absolute;
-	z-index: 2;
+	z-index: 6;
 }
 
 .hero--home h1,
@@ -481,18 +554,6 @@ body.nav-menu-open::before {
 .hero--home .hero-sub {
 	color: rgb(255 255 255 / 88%);
 	text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
-}
-
-.hero--home .hero-icon {
-	color: rgb(255 255 255 / 75%);
-}
-
-.hero--home .hero-dot {
-	background: rgb(255 255 255 / 45%);
-}
-
-.hero--home .hero-dot.active {
-	background: var(--palette-white);
 }
 
 .hero-content {
@@ -513,16 +574,12 @@ body.nav-menu-open::before {
 .hero--home h1,
 .hero--home .hero-h {
 	margin-bottom: 0.5rem;
+	font-size: clamp(1.75rem, 3.6vw, 2.75rem);
+	max-width: 18ch;
 }
 
 .hero--home .hero-sub {
 	margin-bottom: 1.5rem;
-}
-
-.hero-icon {
-	font-size: 56px;
-	color: var(--color-border-secondary);
-	margin-bottom: 16px;
 }
 
 .hero h1,
@@ -553,40 +610,109 @@ body.nav-menu-open::before {
 
 .hero-dots {
 	position: absolute;
-	bottom: 24px;
+	bottom: 5.5rem;
 	left: 50%;
 	transform: translateX(-50%);
 	display: flex;
-	gap: 8px;
+	align-items: center;
+	gap: 0;
+	z-index: 6;
+}
+
+.hero-scroll {
+	position: absolute;
+	bottom: 1.25rem;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.2rem;
+	padding: 0.5rem 0.75rem;
+	color: rgb(255 255 255 / 90%);
+	text-decoration: none;
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	background: none;
+	border: none;
+	cursor: pointer;
+	z-index: 2;
+}
+
+.hero-scroll .ti {
+	font-size: 1.35rem;
+	animation: hero-scroll-nudge 1.8s ease-in-out infinite;
+}
+
+.hero-scroll:hover,
+.hero-scroll:focus-visible {
+	color: var(--palette-white);
+}
+
+@keyframes hero-scroll-nudge {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(6px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hero-scroll .ti {
+		animation: none;
+	}
 }
 
 .hero-dot {
+	width: 1.15rem;
+	height: 2.75rem;
+	padding: 0;
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.hero-dot::after {
+	content: '';
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	border: none;
-	background: var(--color-border-secondary);
-	cursor: pointer;
-	padding: 0;
-	transition: all 0.3s ease;
+	background: rgb(255 255 255 / 55%);
+	transition:
+		width 0.2s ease,
+		border-radius 0.2s ease,
+		background 0.2s ease;
 }
 
-.hero-dot.active {
-	background: var(--color-text-primary);
-	width: 20px;
+.hero-dot.active::after,
+.hero--home .hero-dot.active::after {
+	width: 18px;
 	border-radius: 4px;
+	background: var(--palette-white);
+}
+
+.hero-dot:hover::after,
+.hero-dot:focus-visible::after {
+	background: var(--palette-white);
 }
 
 .hero-arrow {
 	position: absolute;
 	top: 50%;
 	transform: translateY(-50%);
-	width: 40px;
-	height: 40px;
+	width: 2.75rem;
+	height: 2.75rem;
 	border-radius: 50%;
 	border: none;
-	background: var(--color-background-primary);
-	box-shadow: 0 2px 10px rgb(0 0 0 / 15%);
+	background: rgb(255 255 255 / 92%);
+	box-shadow: 0 2px 10px rgb(0 0 0 / 18%);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -594,19 +720,16 @@ body.nav-menu-open::before {
 	font-size: 18px;
 	color: var(--color-text-primary);
 	z-index: 6;
-	opacity: 0;
+	opacity: 0.9;
 	transition:
 		opacity 0.2s ease,
 		background 0.2s ease;
 }
 
-.hero:hover .hero-arrow,
+.hero-arrow:hover,
 .hero-arrow:focus-visible {
 	opacity: 1;
-}
-
-.hero-arrow:hover {
-	background: var(--color-background-secondary);
+	background: var(--palette-white);
 }
 
 .hero-arrow-prev {
@@ -657,25 +780,6 @@ body.nav-menu-open::before {
 	gap: 8px;
 	flex-wrap: wrap;
 	justify-content: center;
-}
-
-.hero-badge {
-	position: absolute;
-	bottom: 12px;
-	right: var(--page-gutter);
-	background: var(--color-background-primary);
-	border: 0.5px solid var(--color-border-tertiary);
-	border-radius: var(--radius-md);
-	padding: 6px 12px;
-	font-size: 12px;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.hero-badge .ti {
-	color: var(--color-accent-teal);
-	font-size: 13px;
 }
 
 .hero-bar {
@@ -3859,19 +3963,17 @@ h3.card-name {
 		position: static;
 	}
 
-	.hero-arrow {
-		display: none;
-	}
-
 	.hero h1,
 	.hero .hero-h {
 		font-size: 22px;
 	}
 
+	.hero--home h1,
+	.hero--home .hero-h {
+		font-size: clamp(1.75rem, 8vw, 2.25rem);
+	}
+
 	.hero--home {
-		/* Design: full viewport on mobile (≤768px). */
-		height: 100vh;
-		height: 100dvh;
 		padding-bottom: 0;
 	}
 

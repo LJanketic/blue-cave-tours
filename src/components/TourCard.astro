@@ -12,7 +12,6 @@ type Props = {
 const { tour, featured = false } = Astro.props;
 const instantBook = supportsInstantBook(tour);
 const types = tourTypes(tour);
-const photoIcon = tour.slug.includes('private') || !instantBook ? 'crown' : tour.slug.includes('lagoon') ? 'swimming' : 'sailboat';
 const metaIcon = types.includes('group') ? 'users' : 'crown';
 const metaLabel = types.map((type) => (type === 'group' ? 'Group' : 'Private')).join(' / ');
 ---
@@ -20,7 +19,7 @@ const metaLabel = types.map((type) => (type === 'group' ? 'Group' : 'Private')).
 <article class:list={['tour-card', featured && 'featured']}>
 	<a href={`/tours/${tour.slug}`} class="tour-card__link">
 		<div class="tc-img card-img">
-			<TourImage photo={tour.image} layout="card" icon={photoIcon} />
+			<TourImage photo={tour.image} layout="card" />
 			<div class="img-badges">
 				{featured && <span class="tc-badge img-badge badge-bestseller">Best seller</span>}
 				{tour.badge === 'new' && <span class="tc-badge img-badge badge-new">New</span>}
