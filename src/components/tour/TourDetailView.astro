@@ -1,6 +1,6 @@
 ---
 import type { TourDetail } from '../../types/tour';
-import { contactHrefForTour, supportsInstantBook } from '../../lib/booking';
+import { groupBookHref, supportsInstantBook } from '../../lib/booking';
 import { tourTypes } from '../../lib/tour-filters';
 import ImageGallery from '../vue/ImageGallery.vue';
 
@@ -194,29 +194,14 @@ if (tour.caveTicketNote) {
 
 				<hr class="card-divider" />
 
-				{
-					instantBook ? (
-						<form class="booking-form" data-tour-id={tour.slug}>
-							<button type="submit" class="cta-primary">
-								Book group tour
-								<i class="ti ti-arrow-right" aria-hidden="true"></i>
-							</button>
-						</form>
-					) : (
-						<a class="cta-primary cta-primary--link" href={contactHrefForTour(tour)}>
-							Request a quote
-							<i class="ti ti-arrow-right" aria-hidden="true"></i>
-						</a>
-					)
-				}
-				{
-					instantBook && (
-						<a class="cta-secondary" href="/contact?tour=create-perfect-day-private">
-							<i class="ti ti-crown" aria-hidden="true"></i>
-							Book as private charter
-						</a>
-					)
-				}
+				<a class="cta-primary cta-primary--link" href={groupBookHref(tour)}>
+					{instantBook ? 'Book group tour' : 'Book now'}
+					<i class="ti ti-arrow-right" aria-hidden="true"></i>
+				</a>
+				<a class="cta-secondary" href={groupBookHref(tour)}>
+					<i class="ti ti-crown" aria-hidden="true"></i>
+					Book as private charter
+				</a>
 
 				<p class="policy-pill">
 					<i class="ti ti-shield-check" aria-hidden="true"></i>
@@ -233,8 +218,8 @@ if (tour.caveTicketNote) {
 				<span class="mbb-per">{priceUnit}</span>
 			</span>
 		</div>
-		<a class="btn-primary mbb-btn" href="#book-panel">
-			{instantBook ? 'Book' : 'Request'}
+		<a class="btn-primary mbb-btn" href={groupBookHref(tour)}>
+			Book
 		</a>
 	</div>
 </article>

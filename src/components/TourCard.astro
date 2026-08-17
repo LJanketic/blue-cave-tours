@@ -1,6 +1,6 @@
 ---
 import type { TourDetail } from '../types/tour';
-import { contactHrefForTour, supportsInstantBook } from '../lib/booking';
+import { groupBookHref } from '../lib/booking';
 import { tourTypes } from '../lib/tour-filters';
 import TourImage from './TourImage.astro';
 
@@ -10,7 +10,6 @@ type Props = {
 };
 
 const { tour, featured = false } = Astro.props;
-const instantBook = supportsInstantBook(tour);
 const types = tourTypes(tour);
 const metaIcon = types.includes('group') ? 'users' : 'crown';
 const metaLabel = types.map((type) => (type === 'group' ? 'Group' : 'Private')).join(' / ');
@@ -51,14 +50,6 @@ const metaLabel = types.map((type) => (type === 'group' ? 'Group' : 'Private')).
 	</a>
 	<div class="tour-card__actions">
 		<a class="btn-secondary tour-card__details" href={`/tours/${tour.slug}`}>Details</a>
-		{
-			instantBook ? (
-				<form class="booking-form" data-tour-id={tour.slug}>
-					<button type="submit" class="btn-primary">Book now</button>
-				</form>
-			) : (
-				<a class="btn-primary" href={contactHrefForTour(tour)}>Request a quote</a>
-			)
-		}
+		<a class="btn-primary" href={groupBookHref(tour)}>Book now</a>
 	</div>
 </article>

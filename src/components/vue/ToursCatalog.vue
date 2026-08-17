@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { TourDetail } from '../../types/tour';
-import { contactHrefForTour, supportsInstantBook } from '../../lib/booking';
+import { groupBookHref, supportsInstantBook } from '../../lib/booking';
 import {
 	matchesAnyFilter,
 	searchTours,
@@ -211,21 +211,13 @@ onMounted(readUrlParams);
 					<button type="button" class="wishlist-btn" aria-label="Save tour" @click.stop>
 						<i class="ti ti-heart" aria-hidden="true"></i>
 					</button>
-					<form
-						v-if="supportsInstantBook(tour)"
-						class="booking-form tours-catalog__hook"
-						:data-tour-id="tour.slug"
-					>
-						<button type="submit" tabindex="-1">Book</button>
-					</form>
 					<a
-						v-else
 						class="tours-catalog__hook"
-						:href="contactHrefForTour(tour)"
+						:href="groupBookHref(tour)"
 						tabindex="-1"
 						aria-hidden="true"
 					>
-						Request a quote
+						Book
 					</a>
 				</div>
 			</div>

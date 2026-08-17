@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { bookingReviewPath, parseGroupBookingParams } from '../../lib/booking';
 
 type Props = {
 	tourSlug: string;
@@ -174,10 +175,55 @@ function bump(field: 'adults' | 'children', delta: number) {
 	children.value = next.children;
 }
 
-function goToReview() {
-	if (!canSubmit.value) return;
-	window.location.href = `/book/${props.tourSlug}/review`;
+function bookingPayload(): Record<string, string> {
+	if (selectedDay.value === null) return {};
+	const month = String(viewMonth.value + 1).padStart(2, '0');
+	const day = String(selectedDay.value).padStart(2, '0');
+	return {
+		tourId: props.tourSlug,
+		date: `${viewYear.value}-${month}-${day}`,
+		slot: selectedSlot.value,
+		adults: String(adults.value),
+		children: String(children.value),
+		firstName: firstName.value,
+		lastName: lastName.value,
+		email: email.value,
+		phone: phone.value,
+		notes: notes.value,
+		total: bookingTotalDisplay.value,
+		guests: guestSummary.value,
+	};
 }
+
+function goToReview() {
+	if (!canSubmit.value || selectedDay.value === null) return;
+	window.location.href = bookingReviewPath(props.tourSlug, bookingPayload());
+}
+
+function restoreFromQuery() {
+	if (typeof window === 'undefined') return;
+	const params = new URLSearchParams(window.location.search);
+	if (![...params.keys()].length) return;
+	const details = parseGroupBookingParams(params);
+	if (details.date) {
+		const [year, month, day] = details.date.split('-').map(Number);
+		if (year && month && day) {
+			viewYear.value = year;
+			viewMonth.value = month - 1;
+			selectedDay.value = day;
+		}
+	}
+	if (details.slot) selectedSlot.value = details.slot;
+	if (details.adults) adults.value = details.adults;
+	children.value = details.children;
+	if (details.firstName) firstName.value = details.firstName;
+	if (details.lastName) lastName.value = details.lastName;
+	if (details.email) email.value = details.email;
+	if (details.phone) phone.value = details.phone;
+	if (details.notes) notes.value = details.notes;
+}
+
+onMounted(restoreFromQuery);
 </script>
 
 <template>

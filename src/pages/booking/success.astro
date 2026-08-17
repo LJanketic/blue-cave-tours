@@ -6,6 +6,12 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import MiniNav from '../../components/MiniNav.astro';
 import TrustStrip from '../../components/TrustStrip.astro';
 import { getTourBySlug } from '../../lib/tours';
+import {
+	bookingRefFromDetails,
+	formatBookingDate,
+	guestSummaryFromCounts,
+	parseGroupBookingParams,
+} from '../../lib/booking';
 
 const tourIdParam = Astro.url.searchParams.get('tourId');
 const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
@@ -13,6 +19,15 @@ const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
 if (tourIdParam && !bookedTour) {
 	return Astro.redirect('/404');
 }
+
+const details = parseGroupBookingParams(Astro.url.searchParams);
+const guestName = [details.firstName, details.lastName].filter(Boolean).join(' ');
+const guestLine =
+	details.guests ??
+	(details.adults ? guestSummaryFromCounts(details.adults, details.children) : null);
+const dateLine = details.date ? formatBookingDate(details.date) : null;
+const departureLine = details.slot ?? bookedTour?.departure ?? null;
+const bookingRef = tourIdParam ? bookingRefFromDetails(tourIdParam, details) : null;
 
 const mapUrl =
 	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
@@ -35,13 +50,28 @@ const bringList =
 			</div>
 			<h1>You're booked!</h1>
 			<p>
-				We'll email your confirmation shortly. Check your inbox — including spam just in case.
+				{
+					details.email ? (
+						<>
+							Confirmation sent to <strong>{details.email}</strong>. Check your inbox — including spam
+							just in case.
+						</>
+					) : (
+						<>We'll email your confirmation shortly. Check your inbox — including spam just in case.</>
+					)
+				}
 			</p>
 		</div>
 
 		<div class="conf-ref">
 			<span class="conf-ref-label">Booking ref:</span>
-			<span class="conf-ref-placeholder">Included in your confirmation email</span>
+			{
+				bookingRef ? (
+					<strong class="conf-ref-value">{bookingRef}</strong>
+				) : (
+					<span class="conf-ref-placeholder">Included in your confirmation email</span>
+				)
+			}
 		</div>
 
 		{
@@ -56,20 +86,56 @@ const bringList =
 					</div>
 					<div class="b-row">
 						<span class="b-label">Date</span>
-						<span class="b-val b-val--placeholder">Confirmed by email</span>
+						{dateLine ? (
+							<span class="b-val">{dateLine}</span>
+						) : (
+							<span class="b-val b-val--placeholder">Confirmed by email</span>
+						)}
 					</div>
 					<div class="b-row">
 						<span class="b-label">Departure</span>
-						<span class="b-val">{bookedTour.departure}</span>
+						<span class="b-val">{departureLine ?? '—'}</span>
 					</div>
 					<div class="b-row">
 						<span class="b-label">Guests</span>
-						<span class="b-val b-val--placeholder">Confirmed by email</span>
+						{guestLine ? (
+							<span class="b-val">{guestLine}</span>
+						) : (
+							<span class="b-val b-val--placeholder">Confirmed by email</span>
+						)}
 					</div>
+					{guestName && (
+						<div class="b-row">
+							<span class="b-label">Name</span>
+							<span class="b-val">{guestName}</span>
+						</div>
+					)}
+					{details.email && (
+						<div class="b-row">
+							<span class="b-label">Email</span>
+							<span class="b-val">{details.email}</span>
+						</div>
+					)}
+					{details.phone && (
+						<div class="b-row">
+							<span class="b-label">Phone</span>
+							<span class="b-val">{details.phone}</span>
+						</div>
+					)}
+					{details.notes && (
+						<div class="b-row">
+							<span class="b-label">Special requests</span>
+							<span class="b-val">{details.notes}</span>
+						</div>
+					)}
 					<hr class="b-div" />
 					<div class="b-row">
-						<span class="b-label">Total paid</span>
-						<span class="b-val b-val--placeholder">Confirmed by email</span>
+						<span class="b-label">Total</span>
+						{details.total ? (
+							<span class="b-val">{details.total}</span>
+						) : (
+							<span class="b-val b-val--placeholder">Confirmed by email</span>
+						)}
 					</div>
 				</div>
 			)
@@ -114,7 +180,18 @@ const bringList =
 				<div>
 					<p class="next-title">Check your email</p>
 					<p class="next-desc">
-						Full booking details, meeting point, and what to bring — sent shortly after confirmation.
+						{
+							details.email ? (
+								<>
+									Full booking details, meeting point, and what to bring — sent to {details.email}.
+								</>
+							) : (
+								<>
+									Full booking details, meeting point, and what to bring — sent shortly after
+									confirmation.
+								</>
+							)
+						}
 					</p>
 				</div>
 			</div>
@@ -151,6 +228,7 @@ const bringList =
 		<TrustStrip />
 	</main>
 </SiteLayout>
+
 
 <style>
 	.payment-success-page {
@@ -195,6 +273,12 @@ const bringList =
 	.payment-success-page .conf-ref-label {
 		font-size: 12px;
 		color: var(--color-text-secondary);
+	}
+
+	.payment-success-page .conf-ref-value {
+		font-size: 15px;
+		font-weight: 500;
+		letter-spacing: 0.08em;
 	}
 
 	.payment-success-page .conf-ref-placeholder {

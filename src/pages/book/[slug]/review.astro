@@ -1,45 +1,70 @@
 ---
-export const prerender = true;
+export const prerender = false;
 
 import { pageTitle } from '../../../config/site';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
 import MiniNav from '../../../components/MiniNav.astro';
 import TrustStrip from '../../../components/TrustStrip.astro';
-import { getAllTours } from '../../../lib/tours';
-import type { TourDetail } from '../../../types/tour';
+import { getTourBySlug } from '../../../lib/tours';
+import {
+	formatBookingDate,
+	hasRequiredBookingDetails,
+	parseGroupBookingParams,
+} from '../../../lib/booking';
 
-export function getStaticPaths() {
-	return getAllTours().map((tour) => ({
-		params: { slug: tour.slug },
-		props: { tour },
-	}));
+const slug = Astro.params.slug;
+const tour = slug ? getTourBySlug(slug) : undefined;
+
+if (!tour) {
+	return Astro.redirect('/404');
 }
 
-type Props = { tour: TourDetail };
-const { tour } = Astro.props;
+const details = parseGroupBookingParams(Astro.url.searchParams);
+if (!hasRequiredBookingDetails(details)) {
+	return Astro.redirect(`/book/${tour.slug}/group`);
+}
 
-const isPrivate = tour.slug === 'create-perfect-day-private';
-const editHref = isPrivate ? `/book/${tour.slug}/private` : `/book/${tour.slug}/group`;
-const successUrl = `/booking/success?tourId=${encodeURIComponent(tour.slug)}`;
+const query = Astro.url.search;
+const editHref = `/book/${tour.slug}/group${query}`;
+const successHref = `/booking/success${query}`;
+
 const standMatch = tour.meetingPoint.match(/stand number (\d+)/i);
 const meetingShort = standMatch
 	? `Riva stand ${standMatch[1]}`
 	: (tour.meetingPoint.replace(/^Meet at /i, '').split('.')[0]?.trim() ?? tour.meetingPoint);
-const stepPlaceholder = 'As selected in previous step';
 
+const guestName = [details.firstName, details.lastName].filter(Boolean).join(' ');
+const dateLine = details.date ? formatBookingDate(details.date) : null;
+const adultsCount = details.adults ?? 0;
+const childrenCount = details.children;
 const childFromPrice = tour.priceNotes.match(/children[^€]*?(€\d+)/i)?.[1] ?? null;
 const adultUnit = tour.fromPrice.match(/€(\d+)/)?.[1] ?? null;
-const adultsCount = 2;
+const adultUnitPrice = adultUnit ? Number.parseInt(adultUnit, 10) : null;
+const childUnitMatch = childFromPrice?.match(/€(\d+)/);
+const childUnitPrice = childUnitMatch ? Number.parseInt(childUnitMatch[1], 10) : null;
+
 const adultsGuestLine = adultUnit ? `${adultsCount} × ${tour.fromPrice}` : `${adultsCount} adults`;
+const childrenGuestLine = childFromPrice
+	? `${childrenCount} × ${childFromPrice}`
+	: `${childrenCount} ${childrenCount === 1 ? 'child' : 'children'}`;
 const adultsBreakdownLabel = adultUnit
 	? `Adults (${adultsCount} × ${tour.fromPrice})`
 	: `Adults (${adultsCount})`;
-const adultsBreakdownTotal = adultUnit
-	? `€${Number.parseInt(adultUnit, 10) * adultsCount}`
-	: `from ${tour.fromPrice}`;
+const childrenBreakdownLabel = childFromPrice
+	? `Children (${childrenCount} × ${childFromPrice})`
+	: `Children (${childrenCount})`;
+const adultsBreakdownTotal =
+	adultUnitPrice !== null ? `€${adultUnitPrice * adultsCount}` : `from ${tour.fromPrice}`;
+const childrenBreakdownTotal =
+	childUnitPrice !== null ? `€${childUnitPrice * childrenCount}` : childFromPrice ?? '—';
+const totalLine =
+	details.total ??
+	(adultUnitPrice !== null
+		? `€${adultUnitPrice * adultsCount + (childUnitPrice !== null ? childUnitPrice * childrenCount : 0)}`
+		: `from ${tour.fromPrice}`);
 ---
 
-<SiteLayout title={pageTitle(`Review booking — ${tour.title}`)} description={`Review your booking for ${tour.title} before confirming.`} booking checkout robots="noindex, nofollow">
+<SiteLayout title={pageTitle(`Review booking — ${tour.title}`)} description={`Review your booking for ${tour.title} before confirming.`} checkout robots="noindex, nofollow">
 	<main id="main" class="page-shell page-shell--narrow">
 		<div class="page review-page">
 			<MiniNav exitHref={`/tours/${tour.slug}`} exitLabel="Exit" />
@@ -51,7 +76,7 @@ const adultsBreakdownTotal = adultUnit
 				<div class="step-line"></div>
 				<div class="step done">
 					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
-					<span class="step-lbl">{isPrivate ? 'Customise' : 'Date & guests'}</span>
+					<span class="step-lbl">Date &amp; guests</span>
 				</div>
 				<div class="step-line"></div>
 				<div class="step active">
@@ -79,21 +104,19 @@ const adultsBreakdownTotal = adultUnit
 					<div class="tour-detail-body">
 						<p class="tour-name">{tour.title}</p>
 						<div class="badge-row">
-							<span class={isPrivate ? 'badge-private' : 'badge-group'}>
-								{isPrivate ? 'Private tour' : 'Group tour'}
-							</span>
+							<span class="badge-group">Group tour</span>
 						</div>
 						<div class="row">
 							<span class="label">
 								<i class="ti ti-calendar" aria-hidden="true"></i>Date
 							</span>
-							<span class="value value--placeholder">{stepPlaceholder}</span>
+							<span class="value">{dateLine}</span>
 						</div>
 						<div class="row">
 							<span class="label">
 								<i class="ti ti-clock" aria-hidden="true"></i>Departure
 							</span>
-							<span class="value value--placeholder">{stepPlaceholder}</span>
+							<span class="value">{details.slot ?? tour.departure}</span>
 						</div>
 						<div class="row">
 							<span class="label">
@@ -113,40 +136,21 @@ const adultsBreakdownTotal = adultUnit
 
 			<div class="card">
 				<div class="section-title">
-					Guests &amp; extras
+					Guests
 					<a class="edit-btn" href={editHref}>
 						Edit <i class="ti ti-edit" aria-hidden="true"></i>
 					</a>
 				</div>
 				<div class="row">
 					<span class="label">Adults</span>
-					<span class="value">
-						{isPrivate ? (
-							<span class="value--placeholder">{stepPlaceholder}</span>
-						) : (
-							adultsGuestLine
-						)}
-					</span>
-				</div>
-				<div class="row">
-					<span class="label">Children (under 12)</span>
-					<span class="value">
-						{isPrivate ? (
-							<span class="value--placeholder">{stepPlaceholder}</span>
-						) : childFromPrice ? (
-							`0 × ${childFromPrice}`
-						) : (
-							'—'
-						)}
-					</span>
+					<span class="value">{adultsGuestLine}</span>
 				</div>
 				{
-					isPrivate && (
-						<>
-							<hr class="divider" />
-							<p class="addons-heading">Add-ons</p>
-							<p class="value value--placeholder">{stepPlaceholder}</p>
-						</>
+					childrenCount > 0 && (
+						<div class="row">
+							<span class="label">Children (under 12)</span>
+							<span class="value">{childrenGuestLine}</span>
+						</div>
 					)
 				}
 			</div>
@@ -160,32 +164,40 @@ const adultsBreakdownTotal = adultUnit
 				</div>
 				<div class="row">
 					<span class="label">Name</span>
-					<span class="value value--placeholder">{stepPlaceholder}</span>
+					<span class="value">{guestName}</span>
 				</div>
 				<div class="row">
 					<span class="label">Email</span>
-					<span class="value value--placeholder">{stepPlaceholder}</span>
+					<span class="value">{details.email}</span>
 				</div>
 				<div class="row">
 					<span class="label">Phone</span>
-					<span class="value value--placeholder">{stepPlaceholder}</span>
+					<span class="value">{details.phone ?? '—'}</span>
 				</div>
 				<div class="row">
 					<span class="label">Special requests</span>
-					<span class="value value--placeholder">{stepPlaceholder}</span>
+					<span class="value value--wrap">{details.notes ?? 'None'}</span>
 				</div>
 			</div>
 
 			<div class="card">
 				<div class="section-title">Price breakdown</div>
 				<div class="row">
-					<span class="label">{isPrivate ? 'Charter quote' : adultsBreakdownLabel}</span>
-					<span class="value">{isPrivate ? `From ${tour.fromPrice}` : adultsBreakdownTotal}</span>
+					<span class="label">{adultsBreakdownLabel}</span>
+					<span class="value">{adultsBreakdownTotal}</span>
 				</div>
+				{
+					childrenCount > 0 && (
+						<div class="row">
+							<span class="label">{childrenBreakdownLabel}</span>
+							<span class="value">{childrenBreakdownTotal}</span>
+						</div>
+					)
+				}
 				<hr class="divider" />
 				<div class="total-row">
 					<span class="total-label">Total</span>
-					<span class="total-amount">{isPrivate ? `From ${tour.fromPrice}` : adultsBreakdownTotal}</span>
+					<span class="total-amount">{totalLine}</span>
 				</div>
 				<p class="fees-note">{tour.priceNotes}</p>
 			</div>
@@ -200,7 +212,7 @@ const adultsBreakdownTotal = adultUnit
 				</div>
 			</div>
 
-			<a class="cta-btn" href={successUrl}>
+			<a class="cta-btn" href={successHref}>
 				Continue to payment
 				<i class="ti ti-arrow-right" aria-hidden="true"></i>
 			</a>
@@ -378,15 +390,6 @@ const adultsBreakdownTotal = adultUnit
 		margin-bottom: 8px;
 	}
 
-	.badge-private {
-		background: #eeedfe;
-		color: #3c3489;
-		font-size: 11px;
-		font-weight: 500;
-		padding: 3px 10px;
-		border-radius: 20px;
-	}
-
 	.badge-group {
 		background: var(--color-background-success);
 		color: var(--color-text-success);
@@ -425,12 +428,6 @@ const adultsBreakdownTotal = adultUnit
 		text-align: right;
 	}
 
-	.value--placeholder {
-		font-style: italic;
-		font-weight: 400;
-		color: var(--color-text-secondary);
-	}
-
 	.value--wrap {
 		max-width: 60%;
 		word-break: break-word;
@@ -440,34 +437,6 @@ const adultsBreakdownTotal = adultUnit
 		border: none;
 		border-top: 0.5px solid var(--color-border-tertiary);
 		margin: 12px 0;
-	}
-
-	.addons-heading {
-		font-size: 12px;
-		font-weight: 500;
-		color: var(--color-text-secondary);
-		margin: 0 0 8px;
-	}
-
-	.extra-row {
-		display: flex;
-		justify-content: space-between;
-		font-size: 13px;
-		padding: 4px 0;
-	}
-
-	.extra-label {
-		color: var(--color-text-secondary);
-	}
-
-	.extra-label .ti {
-		font-size: 13px;
-		vertical-align: -2px;
-		margin-right: 4px;
-	}
-
-	.extra-val {
-		font-weight: 500;
 	}
 
 	.total-row {

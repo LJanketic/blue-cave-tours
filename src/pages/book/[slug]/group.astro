@@ -7,16 +7,13 @@ import MiniNav from '../../../components/MiniNav.astro';
 import TrustStrip from '../../../components/TrustStrip.astro';
 import GroupBookingFlow from '../../../components/vue/GroupBookingFlow.vue';
 import { getAllTours } from '../../../lib/tours';
-import { supportsInstantBook } from '../../../lib/booking';
 import type { TourDetail } from '../../../types/tour';
 
 export function getStaticPaths() {
-	return getAllTours()
-		.filter((tour) => supportsInstantBook(tour))
-		.map((tour) => ({
-			params: { slug: tour.slug },
-			props: { tour },
-		}));
+	return getAllTours().map((tour) => ({
+		params: { slug: tour.slug },
+		props: { tour },
+	}));
 }
 
 type Props = { tour: TourDetail };
