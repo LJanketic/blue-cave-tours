@@ -1,10 +1,14 @@
-/** Placeholder photo registry — color blocks until real assets are wired. */
+import type { ImageMetadata } from 'astro';
+
+/** Photo registry — placeholders omit `src`; destination galleries include it. */
 export type PhotoRef = {
 	/** Registry key — matches docs/redesign/04-IMAGE-ASSETS.md */
 	id: string;
 	alt: string;
 	/** Dominant color for placeholder blocks (hex). */
 	color: string;
+	/** Present on destination-owned assets; omitted for hero placeholders. */
+	src?: ImageMetadata;
 };
 
 export const PHOTO = {
@@ -52,4 +56,20 @@ export const PHOTO = {
 
 export function galleryFrom(...items: PhotoRef[]): PhotoRef[] {
 	return items;
+}
+
+export type GalleryViewPhoto = {
+	color: string;
+	alt: string;
+	icon: string;
+	src?: string;
+};
+
+export function toGalleryView(photo: PhotoRef, icon = 'sailboat'): GalleryViewPhoto {
+	return {
+		color: photo.color,
+		alt: photo.alt,
+		icon,
+		src: photo.src?.src,
+	};
 }

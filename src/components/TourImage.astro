@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import type { PhotoRef } from '../data/tour-photos';
 
 type Layout = 'hero' | 'card' | 'thumb' | 'gallery' | 'dest';
@@ -11,13 +12,39 @@ type Props = {
 };
 
 const { photo, layout = 'card', icon = 'sailboat', class: className } = Astro.props;
+
+const LAYOUT_IMAGE = {
+	hero: { widths: [800, 1280, 1920], sizes: '100vw' },
+	card: { widths: [400, 800], sizes: '(max-width: 700px) 88vw, 380px' },
+	thumb: { widths: [120, 240], sizes: '72px' },
+	gallery: { widths: [200, 400], sizes: '(max-width: 700px) 22vw, 160px' },
+	dest: { widths: [400, 800], sizes: '(max-width: 700px) 88vw, 420px' },
+} as const;
+
+const imageLayout = LAYOUT_IMAGE[layout];
 ---
 
-<div
-	class:list={['placeholder-image', `placeholder-image--${layout}`, className]}
-	style={`--placeholder-color: ${photo.color}`}
-	role="img"
-	aria-label={photo.alt}
->
-	<i class={`ti ti-${icon}`} aria-hidden="true"></i>
-</div>
+{
+	photo.src ? (
+		<div class:list={['photo-frame', `photo-frame--${layout}`, className]}>
+			<Image
+				src={photo.src}
+				alt={photo.alt}
+				widths={[...imageLayout.widths]}
+				sizes={imageLayout.sizes}
+				quality={70}
+				format="webp"
+				class="photo-frame__img"
+			/>
+		</div>
+	) : (
+		<div
+			class:list={['placeholder-image', `placeholder-image--${layout}`, className]}
+			style={`--placeholder-color: ${photo.color}`}
+			role="img"
+			aria-label={photo.alt}
+		>
+			<i class={`ti ti-${icon}`} aria-hidden="true"></i>
+		</div>
+	)
+}

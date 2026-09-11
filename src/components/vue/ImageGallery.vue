@@ -5,6 +5,7 @@ type GalleryPhoto = {
 	color: string;
 	alt: string;
 	icon: string;
+	src?: string;
 };
 
 export type GalleryTag = {
@@ -24,15 +25,21 @@ const props = withDefaults(
 	{ tags: () => [] },
 );
 
-const allPhotos = computed(() => [props.hero, ...props.gallery]);
-const activeIndex = ref(0);
+/** Thumbs are destination-owned photos; the large hero stays a placeholder until selected. */
+const thumbPhotos = computed(() => props.gallery.slice(0, 4));
+const overflowCount = computed(() => Math.max(0, props.gallery.length - 4));
+const selectedIndex = ref<number | null>(null);
 
-const activePhoto = computed(() => allPhotos.value[activeIndex.value] ?? props.hero);
-const thumbPhotos = computed(() => allPhotos.value.slice(0, 4));
-const overflowCount = computed(() => Math.max(0, allPhotos.value.length - 4));
+const activePhoto = computed(() => {
+	if (selectedIndex.value === null) return props.hero;
+	return props.gallery[selectedIndex.value] ?? props.hero;
+});
+
+const totalCount = computed(() => props.gallery.length + 1);
+const displayIndex = computed(() => (selectedIndex.value === null ? 1 : selectedIndex.value + 2));
 
 function selectPhoto(index: number) {
-	activeIndex.value = index;
+	selectedIndex.value = index;
 }
 </script>
 
@@ -40,11 +47,22 @@ function selectPhoto(index: number) {
 	<div class="image-gallery">
 		<div
 			class="img-hero"
-			:style="{ background: activePhoto.color }"
+			:style="activePhoto.src ? undefined : { background: activePhoto.color }"
 			role="img"
 			:aria-label="activePhoto.alt"
 		>
-			<i class="image-gallery__hero-icon" :class="`ti ti-${activePhoto.icon}`" aria-hidden="true"></i>
+			<img
+				v-if="activePhoto.src"
+				class="img-hero__photo"
+				:src="activePhoto.src"
+				:alt="activePhoto.alt"
+			/>
+			<i
+				v-else
+				class="image-gallery__hero-icon"
+				:class="`ti ti-${activePhoto.icon}`"
+				aria-hidden="true"
+			></i>
 			<div v-if="tags.length" class="image-gallery__tags">
 				<span
 					v-for="tag in tags"
@@ -58,24 +76,36 @@ function selectPhoto(index: number) {
 			</div>
 			<div class="image-gallery__counter">
 				<i class="ti ti-photo" aria-hidden="true"></i>
-				{{ activeIndex + 1 }} / {{ allPhotos.length }}
+				{{ displayIndex }} / {{ totalCount }}
 			</div>
 		</div>
-		<div class="img-thumbs">
+		<div v-if="thumbPhotos.length" class="img-thumbs">
 			<button
 				v-for="(photo, index) in thumbPhotos"
 				:key="`${photo.alt}-${index}`"
 				type="button"
 				class="img-thumb"
-				:class="{ 'img-thumb--active': activeIndex === index }"
-				:style="{ background: photo.color }"
+				:class="{ 'img-thumb--active': selectedIndex === index }"
+				:style="photo.src ? undefined : { background: photo.color }"
 				:aria-label="`View image ${index + 1}: ${photo.alt}`"
-				:aria-current="activeIndex === index ? 'true' : undefined"
+				:aria-current="selectedIndex === index ? 'true' : undefined"
 				@click="selectPhoto(index)"
 			>
-				<i v-if="index < 3" :class="`ti ti-${photo.icon}`" aria-hidden="true"></i>
-				<span v-else-if="overflowCount > 0" class="img-thumb__more">+{{ overflowCount }}</span>
-				<i v-else :class="`ti ti-${photo.icon}`" aria-hidden="true"></i>
+				<img
+					v-if="photo.src"
+					class="img-thumb__photo"
+					:src="photo.src"
+					alt=""
+				/>
+				<template v-else>
+					<i v-if="index < 3" :class="`ti ti-${photo.icon}`" aria-hidden="true"></i>
+					<span v-else-if="overflowCount > 0" class="img-thumb__more">+{{ overflowCount }}</span>
+					<i v-else :class="`ti ti-${photo.icon}`" aria-hidden="true"></i>
+				</template>
+				<span
+					v-if="photo.src && index === 3 && overflowCount > 0"
+					class="img-thumb__more img-thumb__more--overlay"
+				>+{{ overflowCount }}</span>
 			</button>
 		</div>
 	</div>
@@ -178,9 +208,32 @@ function selectPhoto(index: number) {
 	color: rgb(255 255 255 / 85%);
 }
 
+.img-hero__photo,
+.img-thumb__photo {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.img-thumb {
+	position: relative;
+	overflow: hidden;
+	padding: 0;
+}
+
 .img-thumb__more {
 	font-size: 12px;
 	font-weight: 500;
 	color: rgb(255 255 255 / 90%);
+}
+
+.img-thumb__more--overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgb(0 0 0 / 45%);
 }
 </style>

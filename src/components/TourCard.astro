@@ -1,6 +1,7 @@
 ---
 import type { TourDetail } from '../types/tour';
 import { groupBookHref } from '../lib/booking';
+import { getTourCardPhoto } from '../lib/tours';
 import { tourTypes } from '../lib/tour-filters';
 import TourImage from './TourImage.astro';
 
@@ -13,12 +14,13 @@ const { tour, featured = false } = Astro.props;
 const types = tourTypes(tour);
 const metaIcon = types.includes('group') ? 'users' : 'crown';
 const metaLabel = types.map((type) => (type === 'group' ? 'Group' : 'Private')).join(' / ');
+const cardPhoto = getTourCardPhoto(tour);
 ---
 
 <article class:list={['tour-card', featured && 'featured']}>
 	<a href={`/tours/${tour.slug}`} class="tour-card__link">
 		<div class="tc-img card-img">
-			<TourImage photo={tour.image} layout="card" />
+			<TourImage photo={cardPhoto} layout="card" />
 			<div class="img-badges">
 				{featured && <span class="tc-badge img-badge badge-bestseller">Best seller</span>}
 				{tour.badge === 'new' && <span class="tc-badge img-badge badge-new">New</span>}
