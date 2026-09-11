@@ -52,6 +52,26 @@ export const PHOTO = {
 		alt: 'Tour boat at a sea cave entrance',
 		color: '#2a5060',
 	},
+	goldenHorn: {
+		id: 'goldenHorn',
+		alt: 'Golden Horn Beach on Brač, seen from the water',
+		color: '#4a7d6e',
+	},
+	trogir: {
+		id: 'trogir',
+		alt: 'Trogir Old Town waterfront',
+		color: '#5a6f8a',
+	},
+	korcula: {
+		id: 'korcula',
+		alt: 'Korčula Old Town walls from the sea',
+		color: '#3a5a78',
+	},
+	dubrovnik: {
+		id: 'dubrovnik',
+		alt: 'Dubrovnik city walls and harbour',
+		color: '#2a4a68',
+	},
 } as const satisfies Record<string, PhotoRef>;
 
 export function galleryFrom(...items: PhotoRef[]): PhotoRef[] {
