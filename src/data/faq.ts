@@ -40,7 +40,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'booking',
 		question: 'Is online payment secure?',
 		answer:
-			'Yes. All payments are processed securely by Stripe — card details go straight to Stripe and are never stored on our servers. Prices are shown in Euros with applicable taxes included.',
+			'Yes. All payments are processed securely by Stripe — card details go straight to Stripe and are never stored on our servers. Prices are shown in Euros, with the final total confirmed before you pay.',
 		link: { href: '/legal/privacy', label: 'Privacy policy' },
 	},
 	{
@@ -96,7 +96,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'guests',
 		question: 'Can I bring young children?',
 		answer:
-			'Children are welcome on group tours. Infants 0–3 often travel free; life jackets in children’s sizes are provided. Private charters suit families who want a flexible pace.',
+			'Children are welcome on group tours, with child pricing for ages 0–17 and life jackets in children’s sizes provided. Private charters suit families who want a flexible pace.',
 	},
 	{
 		category: 'guests',

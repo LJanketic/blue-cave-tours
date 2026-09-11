@@ -54,9 +54,9 @@ export const ABOUT = {
 		},
 		{
 			year: '2025',
-			title: 'Ten tours, one harbour',
+			title: 'Seven tours, one harbour',
 			description:
-				'Today we run ten scheduled routes from Split — from half-day lagoon escapes to six-island adventures — still with licensed local skippers on every departure.',
+				'Today we run seven scheduled routes from Split — from half-day lagoon escapes to full-day island-hopping — still with licensed local skippers on every departure.',
 		},
 	] satisfies TimelineEvent[],
 	crew: [
