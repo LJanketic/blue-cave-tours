@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { TourDetail } from '../../types/tour';
-import { groupBookHref, supportsInstantBook } from '../../lib/booking';
+import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../../lib/booking';
 import {
 	matchesAnyFilter,
 	searchTours,
@@ -85,6 +85,10 @@ function toggleFilter(filter: TourFilter) {
 
 function isActive(filter: TourFilter): boolean {
 	return activeFilters.value.has(filter);
+}
+
+function bookHref(tour: TourDetail): string {
+	return supportsInstantBook(tour) ? groupBookHref(tour) : contactHrefForTour(tour);
 }
 
 function priceUnit(tour: TourDetail): string {
@@ -232,7 +236,7 @@ onMounted(readUrlParams);
 					</button>
 					<a
 						class="tours-catalog__hook"
-						:href="groupBookHref(tour)"
+						:href="bookHref(tour)"
 						tabindex="-1"
 						aria-hidden="true"
 					>
