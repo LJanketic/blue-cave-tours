@@ -2681,15 +2681,13 @@ h3.card-name {
 	background: var(--color-background-secondary);
 	border: 0.5px solid var(--color-border-tertiary);
 	border-radius: var(--radius-lg);
-	height: 130px;
+	padding: 20px 24px;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	gap: 12px;
+	gap: 20px;
+	flex-wrap: wrap;
 	margin-bottom: 24px;
 	cursor: pointer;
-	position: relative;
-	overflow: hidden;
 	text-decoration: none;
 	color: inherit;
 }
@@ -2698,8 +2696,22 @@ h3.card-name {
 	border-color: var(--color-border-primary);
 }
 
+.map-dots {
+	display: flex;
+	align-items: flex-start;
+	gap: 20px;
+	flex: 1;
+	flex-wrap: wrap;
+}
+
+.map-point {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+}
+
 .map-dot {
-	position: absolute;
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
@@ -2708,7 +2720,6 @@ h3.card-name {
 }
 
 .map-label {
-	position: absolute;
 	font-size: 10px;
 	font-weight: 500;
 	color: var(--color-text-secondary);
@@ -4142,10 +4153,6 @@ h3.card-name {
 		min-height: 160px;
 	}
 
-	.map-dot {
-		opacity: 0.45;
-	}
-
 	.map-cta {
 		background: var(--color-background-primary);
 		padding: 6px 12px;
@@ -4182,10 +4189,6 @@ h3.card-name {
 
 	.best-time-grid {
 		grid-template-columns: repeat(4, 1fr);
-	}
-
-	.map-label {
-		display: none;
 	}
 
 	.filter-bar,

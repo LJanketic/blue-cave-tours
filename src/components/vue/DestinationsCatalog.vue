@@ -1,10 +1,21 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { Destination } from '../../data/destinations';
+import { galleryForDestination } from '../../data/destination-photos';
+import { PHOTO } from '../../data/tour-photos';
 
 type DestinationCard = Pick<
 	Destination,
-	'slug' | 'name' | 'region' | 'icon' | 'shortDescription' | 'tags' | 'attrs' | 'featured' | 'tourSlugs'
+	| 'slug'
+	| 'name'
+	| 'region'
+	| 'icon'
+	| 'shortDescription'
+	| 'tags'
+	| 'attrs'
+	| 'featured'
+	| 'tourSlugs'
+	| 'imagePhotoId'
 >;
 
 type DestinationFilter = 'all' | 'island' | 'coast' | 'cave' | 'swim';
@@ -76,6 +87,23 @@ function toursHref(dest: DestinationCard): string {
 function destinationHref(slug: string): string {
 	return `/destinations/${slug}`;
 }
+
+function cardPhoto(dest: DestinationCard) {
+	return (
+		galleryForDestination(dest.slug).find((photo) => photo.src) ??
+		PHOTO[dest.imagePhotoId as keyof typeof PHOTO]
+	);
+}
+
+function cardSrc(dest: DestinationCard): string | undefined {
+	const src = cardPhoto(dest)?.src;
+	if (!src) return undefined;
+	return typeof src === 'string' ? src : src.src;
+}
+
+function cardAlt(dest: DestinationCard): string {
+	return cardPhoto(dest)?.alt ?? dest.name;
+}
 </script>
 
 <template>
@@ -106,7 +134,14 @@ function destinationHref(slug: string): string {
 				>
 					<a class="dest-card__link" :href="destinationHref(dest.slug)">
 						<div class="card-img">
-							<i class="ti ti-sailboat" aria-hidden="true"></i>
+							<img
+								v-if="cardSrc(dest)"
+								class="card-img__photo"
+								:src="cardSrc(dest)"
+								:alt="cardAlt(dest)"
+								loading="lazy"
+							/>
+							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
 							<span class="region-pill">{{ dest.region }}</span>
 						</div>
 						<div class="card-body">
@@ -144,7 +179,14 @@ function destinationHref(slug: string): string {
 			>
 				<a class="dest-card__link" :href="destinationHref(dest.slug)">
 						<div class="card-img">
-							<i class="ti ti-sailboat" aria-hidden="true"></i>
+							<img
+								v-if="cardSrc(dest)"
+								class="card-img__photo"
+								:src="cardSrc(dest)"
+								:alt="cardAlt(dest)"
+								loading="lazy"
+							/>
+							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
 							<span class="region-pill">{{ dest.region }}</span>
 						</div>
 					<div class="card-body">
@@ -253,6 +295,7 @@ function destinationHref(slug: string): string {
 	align-items: center;
 	justify-content: center;
 	position: relative;
+	overflow: hidden;
 }
 
 .dest-card--rich.wide .card-img {

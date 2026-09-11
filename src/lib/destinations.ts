@@ -10,6 +10,8 @@ const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 export { MONTH_LABELS };
 
 export function getDestinationPhoto(destination: Destination): PhotoRef {
+	const realPhoto = galleryForDestination(destination.slug).find((photo) => photo.src);
+	if (realPhoto) return realPhoto;
 	const photo = PHOTO[destination.imagePhotoId as keyof typeof PHOTO];
 	return photo ?? PHOTO.boatSpeed;
 }
