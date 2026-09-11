@@ -22,7 +22,10 @@ const jsonLd = siteUrl
 
 const featuredTours = getFeaturedTours();
 const allDestinations = getAllDestinations();
-const destinationStrip = allDestinations.slice(0, 6);
+const homeDestinationOrder = ['blue-cave', 'hvar', 'zlatni-rat', 'pakleni', 'blue-lagoon', 'vis'];
+const destinationStrip = homeDestinationOrder
+	.map((slug) => allDestinations.find((d) => d.slug === slug))
+	.filter((d): d is (typeof allDestinations)[number] => Boolean(d));
 const faqPreview = FAQ_ITEMS.slice(0, 4);
 
 const HERO_WIDTHS = [800, 1280, 1600, 1920] as const;
@@ -182,7 +185,7 @@ const heroPanels: HeroPanel[] = [
 								anyone who likes meeting people on the water.
 							</p>
 							<div class="type-features">
-								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> From €89 per person</span>
+								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> From €75 per person</span>
 								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fixed departures, daily</span>
 								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Licensed skipper on every route</span>
 							</div>
@@ -231,7 +234,10 @@ const heroPanels: HeroPanel[] = [
 
 				<section class="cta-band" aria-labelledby="cta-heading">
 					<h2 id="cta-heading">Ready to get on the water?</h2>
-					<p>Tours depart daily from Split. Book early in July and August — popular routes fill 3–5 days ahead.</p>
+					<p>
+						Tours run daily from Split, 1 April to 30 November. Book early in July and August — popular
+						routes fill 3–5 days ahead.
+					</p>
 					<div class="cta-band-btns">
 						<a class="btn-primary" href="/tours">Browse all tours</a>
 						<a class="btn-secondary" href="/contact?tour=create-perfect-day-private">Plan a private charter</a>
