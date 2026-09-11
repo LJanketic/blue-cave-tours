@@ -37,7 +37,11 @@ const guestName = [details.firstName, details.lastName].filter(Boolean).join(' '
 const dateLine = details.date ? formatBookingDate(details.date) : null;
 const adultsCount = details.adults ?? 0;
 const childrenCount = details.children;
-const childFromPrice = tour.priceNotes.match(/children[^€]*?(€\d+)/i)?.[1] ?? null;
+// priceNotes reads "€X per adult, €Y per child" for low season, then peak season —
+// the price precedes the word "child", and the LAST match stays consistent with
+// fromPrice, which is always the peak-season adult figure.
+const childPriceMatches = [...tour.priceNotes.matchAll(/€(\d+)[^€]*?child/gi)];
+const childFromPrice = childPriceMatches.length ? `€${childPriceMatches[childPriceMatches.length - 1][1]}` : null;
 const adultUnit = tour.fromPrice.match(/€(\d+)/)?.[1] ?? null;
 const adultUnitPrice = adultUnit ? Number.parseInt(adultUnit, 10) : null;
 const childUnitMatch = childFromPrice?.match(/€(\d+)/);
@@ -148,7 +152,7 @@ const totalLine =
 				{
 					childrenCount > 0 && (
 						<div class="row">
-							<span class="label">Children (under 12)</span>
+							<span class="label">Children (0–17)</span>
 							<span class="value">{childrenGuestLine}</span>
 						</div>
 					)
