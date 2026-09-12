@@ -61,11 +61,14 @@ const adultsBreakdownTotal =
 	adultUnitPrice !== null ? `€${adultUnitPrice * adultsCount}` : `from ${tour.fromPrice}`;
 const childrenBreakdownTotal =
 	childUnitPrice !== null ? `€${childUnitPrice * childrenCount}` : childFromPrice ?? '—';
+// Recomputed from the tour's own price data rather than trusting `details.total`
+// from the URL, so the total can't disagree with the breakdown rows above it
+// (or be hand-edited via the query string) — falls back to the passed-through
+// value only for quote-only tours, where there's no numeric price to compute.
 const totalLine =
-	details.total ??
-	(adultUnitPrice !== null
+	adultUnitPrice !== null
 		? `€${adultUnitPrice * adultsCount + (childUnitPrice !== null ? childUnitPrice * childrenCount : 0)}`
-		: `from ${tour.fromPrice}`);
+		: (details.total ?? `from ${tour.fromPrice}`);
 ---
 
 <SiteLayout title={pageTitle(`Review booking — ${tour.title}`)} description={`Review your booking for ${tour.title} before confirming.`} checkout robots="noindex, nofollow">

@@ -18,10 +18,17 @@ const props = withDefaults(defineProps<Props>(), {
 
 const MAX_GUESTS = props.maxGuests;
 
-/** The tour's one real departure time, parsed from the "HH:MM check-in · HH:MM departure" style copy. */
+/**
+ * The tour's one real departure time, parsed only from the "HH:MM check-in ·
+ * HH:MM departure" style copy used by tours with a genuinely fixed daily time.
+ * Deliberately does NOT match approximate ranges ("Approx. 08:00–09:00
+ * departure") or flexible copy ("Flexible — typically 09:30...") — those
+ * aren't a single confirmed slot, so we fall back to an informational note
+ * instead of presenting a made-up time as fixed.
+ */
 const departureTime = computed(() => {
-	const matches = [...props.departure.matchAll(/\d{2}:\d{2}/g)];
-	return matches.length ? matches[matches.length - 1][0] : null;
+	const match = props.departure.match(/\d{2}:\d{2}\s+check-in.*?(\d{2}:\d{2})\s+departure/i);
+	return match ? match[1] : null;
 });
 
 const SLOTS = computed(() =>

@@ -66,18 +66,28 @@ export function matchesAnyFilter(tour: TourDetail, filters: Iterable<TourFilter>
 	return active.some((filter) => matchesFilter(tour, filter));
 }
 
-export function parsePrice(price: string): number {
+export function parsePrice(price: string): number | null {
 	const match = price.match(/€(\d+)/);
-	return match ? Number(match[1]) : 0;
+	return match ? Number(match[1]) : null;
+}
+
+/** Quote-only tours ("On request", "Price on request") always sort after priced ones. */
+function comparePrice(a: TourDetail, b: TourDetail, direction: 1 | -1): number {
+	const priceA = parsePrice(a.fromPrice);
+	const priceB = parsePrice(b.fromPrice);
+	if (priceA === null && priceB === null) return 0;
+	if (priceA === null) return 1;
+	if (priceB === null) return -1;
+	return (priceA - priceB) * direction;
 }
 
 export function sortTours(tours: TourDetail[], sort: string): TourDetail[] {
 	const copy = [...tours];
 	switch (sort) {
 		case 'price-asc':
-			return copy.sort((a, b) => parsePrice(a.fromPrice) - parsePrice(b.fromPrice));
+			return copy.sort((a, b) => comparePrice(a, b, 1));
 		case 'price-desc':
-			return copy.sort((a, b) => parsePrice(b.fromPrice) - parsePrice(a.fromPrice));
+			return copy.sort((a, b) => comparePrice(a, b, -1));
 		case 'duration':
 			return copy.sort(
 				(a, b) => (parseDurationHours(a.duration) ?? 0) - (parseDurationHours(b.duration) ?? 0),
