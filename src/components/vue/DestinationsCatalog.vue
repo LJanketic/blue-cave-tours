@@ -89,10 +89,7 @@ function destinationHref(slug: string): string {
 }
 
 function cardPhoto(dest: DestinationCard) {
-	return (
-		galleryForDestination(dest.slug).find((photo) => photo.src) ??
-		PHOTO[dest.imagePhotoId as keyof typeof PHOTO]
-	);
+	return galleryForDestination(dest.slug).find((photo) => photo.src) ?? PHOTO[dest.imagePhotoId];
 }
 
 function cardSrc(dest: DestinationCard): string | undefined {

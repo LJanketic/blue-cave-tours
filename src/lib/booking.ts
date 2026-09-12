@@ -1,6 +1,15 @@
 import type { TourDetail } from '../types/tour';
 
-const QUOTE_ONLY_SLUGS = new Set(['create-perfect-day-private', 'dubrovnik-one-way']);
+// hvar-red-rocks-pakleni has no confirmed price tier yet ('Price on request'),
+// so it's quote-only like the two private charters, not an instant-book tour.
+const QUOTE_ONLY_SLUGS = new Set([
+	'create-perfect-day-private',
+	'dubrovnik-one-way',
+	'hvar-red-rocks-pakleni',
+]);
+
+/** Guests per departure, enforced both client-side (GroupBookingFlow) and here. */
+export const MAX_GUESTS = 12;
 
 /** Tours with instant book (preview confirmation flow). Private charters use contact instead. */
 export function supportsInstantBook(tour: Pick<TourDetail, 'slug'>): boolean {
@@ -50,7 +59,15 @@ function bookingQuery(params: Record<string, string>): string {
 }
 
 export function hasRequiredBookingDetails(details: GroupBookingDetails): boolean {
-	return Boolean(details.date && details.firstName && details.lastName && details.email);
+	const adults = details.adults ?? 0;
+	return Boolean(
+		details.date &&
+			details.firstName &&
+			details.lastName &&
+			details.email &&
+			adults >= 1 &&
+			adults + details.children <= MAX_GUESTS,
+	);
 }
 
 function clip(value: string | null, max = 200): string | null {
@@ -72,8 +89,8 @@ export function parseGroupBookingParams(params: URLSearchParams): GroupBookingDe
 	const date = dateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : null;
 	const slotRaw = clip(params.get('slot'), 8);
 	const slot = slotRaw && /^\d{2}:\d{2}$/.test(slotRaw) ? slotRaw : null;
-	const adults = parseCount(params.get('adults'), 12);
-	const children = parseCount(params.get('children'), 12) ?? 0;
+	const adults = parseCount(params.get('adults'), MAX_GUESTS);
+	const children = parseCount(params.get('children'), MAX_GUESTS) ?? 0;
 
 	return {
 		date,

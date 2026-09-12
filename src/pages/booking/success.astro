@@ -8,10 +8,14 @@ import TrustStrip from '../../components/TrustStrip.astro';
 import { getTourBySlug } from '../../lib/tours';
 import {
 	bookingRefFromDetails,
+	contactHrefForTour,
 	formatBookingDate,
 	guestSummaryFromCounts,
+	hasRequiredBookingDetails,
 	parseGroupBookingParams,
+	supportsInstantBook,
 } from '../../lib/booking';
+import { computeBookingTotal } from '../../lib/price';
 
 const tourIdParam = Astro.url.searchParams.get('tourId');
 const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
@@ -21,6 +25,18 @@ if (tourIdParam && !bookedTour) {
 }
 
 const details = parseGroupBookingParams(Astro.url.searchParams);
+
+// A "confirmed" page for a specific booking should only render for a booking
+// that actually completed the review step — otherwise a hand-crafted URL
+// (or one for a quote-only tour, which has no instant-book flow at all) could
+// reach a confirmation screen for a booking that was never reviewed.
+if (bookedTour && !supportsInstantBook(bookedTour)) {
+	return Astro.redirect(contactHrefForTour(bookedTour));
+}
+if (bookedTour && !hasRequiredBookingDetails(details)) {
+	return Astro.redirect(`/book/${bookedTour.slug}/group`);
+}
+
 const guestName = [details.firstName, details.lastName].filter(Boolean).join(' ');
 const guestLine =
 	details.guests ??
@@ -28,6 +44,13 @@ const guestLine =
 const dateLine = details.date ? formatBookingDate(details.date) : null;
 const departureLine = details.slot ?? bookedTour?.departure ?? null;
 const bookingRef = tourIdParam ? bookingRefFromDetails(tourIdParam, details) : null;
+
+// Recomputed from the tour's own price data, never trusted from the URL, so
+// this "confirmation" can't be made to show an arbitrary total.
+const computedTotal = bookedTour
+	? computeBookingTotal(bookedTour.fromPrice, bookedTour.priceNotes, details.adults ?? 0, details.children)
+	: null;
+const totalLine = computedTotal !== null ? `€${computedTotal}` : null;
 
 const mapUrl =
 	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
@@ -131,8 +154,8 @@ const bringList =
 					<hr class="b-div" />
 					<div class="b-row">
 						<span class="b-label">Total</span>
-						{details.total ? (
-							<span class="b-val">{details.total}</span>
+						{totalLine ? (
+							<span class="b-val">{totalLine}</span>
 						) : (
 							<span class="b-val b-val--placeholder">Confirmed by email</span>
 						)}

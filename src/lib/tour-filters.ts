@@ -1,5 +1,6 @@
 import type { TourDetail, ItineraryKind } from '../types/tour';
 import { supportsInstantBook } from './booking';
+import { parseAdultPrice } from './price';
 
 /** Multi-select filter ids used by the tours overview. OR logic across the set. */
 export type TourFilter = 'group' | 'private' | 'short' | 'sunset';
@@ -66,15 +67,10 @@ export function matchesAnyFilter(tour: TourDetail, filters: Iterable<TourFilter>
 	return active.some((filter) => matchesFilter(tour, filter));
 }
 
-export function parsePrice(price: string): number | null {
-	const match = price.match(/€(\d+)/);
-	return match ? Number(match[1]) : null;
-}
-
 /** Quote-only tours ("On request", "Price on request") always sort after priced ones. */
 function comparePrice(a: TourDetail, b: TourDetail, direction: 1 | -1): number {
-	const priceA = parsePrice(a.fromPrice);
-	const priceB = parsePrice(b.fromPrice);
+	const priceA = parseAdultPrice(a.fromPrice);
+	const priceB = parseAdultPrice(b.fromPrice);
 	if (priceA === null && priceB === null) return 0;
 	if (priceA === null) return 1;
 	if (priceB === null) return -1;
