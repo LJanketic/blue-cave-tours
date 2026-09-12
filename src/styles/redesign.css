@@ -615,7 +615,7 @@ a.btn-secondary:hover {
 	transform: translateX(-50%);
 	display: flex;
 	align-items: center;
-	gap: 0;
+	gap: 4px;
 	z-index: 6;
 }
 
@@ -667,7 +667,7 @@ a.btn-secondary:hover {
 }
 
 .hero-dot {
-	width: 1.15rem;
+	width: 1.5rem;
 	height: 2.75rem;
 	padding: 0;
 	border: none;
@@ -1676,7 +1676,7 @@ h3.card-name {
 	color: var(--color-text-primary);
 }
 
-.footer-col h4 {
+.footer-col h3 {
 	font-size: 12px;
 	font-weight: 500;
 	margin: 0 0 10px;
