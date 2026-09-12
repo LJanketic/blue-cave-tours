@@ -7,7 +7,7 @@ const MEETING_POINT =
 	'Meet at Split’s Riva promenade, stand number 14. After booking you’ll receive the exact location, map link, and what time to arrive.';
 
 const WEATHER_COPY =
-	'We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate changes clearly.';
+	'We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate the changes.';
 
 const SAFETY_COPY =
 	'Follow crew instructions, wear a life jacket when asked, stay seated during manoeuvres, and tell us if you have conditions that affect swimming or sun exposure.';
@@ -32,13 +32,13 @@ const INCLUDED_DEFAULT = [
 const NOT_INCLUDED_DEFAULT = [
 	'Entrance tickets where applicable',
 	'Personal expenses',
-	'Lunch expenses — guests have free time ashore to eat at their own expense',
+	'Lunch expenses, since guests have free time ashore to eat at their own expense',
 ];
 
 const DISCLAIMERS = [
 	'Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.',
 	'National park and cave entry fees may be charged separately on-site where applicable.',
-	'Speedboat transportation, English-speaking crew, and VAT/taxes were marked as under review by the operator at time of writing — confirm exact inclusions when you book.',
+	'Speedboat transportation, English-speaking crew, and VAT/taxes were marked as under review by the operator at time of writing. Confirm exact inclusions when you book.',
 ];
 
 const CAVE_NOTE =
@@ -64,7 +64,7 @@ export const tours: TourDetail[] = [
 		title: 'Blue Cave, Hvar & 5 islands',
 		tagline: 'Full-day signature route',
 		shortDescription:
-			'Our flagship day — the Blue Cave on Biševo, a swim at Budikovac Blue Lagoon, Stiniva Cove on Vis, and free time in Hvar Town and the Pakleni Islands.',
+			'Our flagship day: the Blue Cave on Biševo, a swim at Budikovac Blue Lagoon, Stiniva Cove on Vis, and free time in Hvar Town and the Pakleni Islands.',
 		availability: 'Every day from 1 April to 30 November',
 		scheduleLabel: 'Full day: 07:20 – 18:00',
 		departure: '07:10 check-in · 07:20 departure',
@@ -80,7 +80,7 @@ export const tours: TourDetail[] = [
 			'18:00 Return along the Split channel with panoramic views.',
 		],
 		overviewHighlights:
-			'This full-day speedboat tour takes you to the magical Blue Cave on Biševo Island, where sunlight creates a glowing blue light beneath the cliffs, then on to swim at Budikovac Blue Lagoon and Stiniva Cove on Vis, before exploring the streets of Hvar Town and the turquoise bays of the Pakleni Islands. Along the way there’s plenty of time to dive into crystal-clear water, snorkel around hidden coves, or simply stretch out on a picturesque beach, before cruising back to Split as the sun dips over the islands.',
+			'This full-day speedboat tour takes you to the magical Blue Cave on Biševo Island, where sunlight creates a glowing blue light beneath the cliffs. From there you swim at Budikovac Blue Lagoon and Stiniva Cove on Vis, then explore the streets of Hvar Town and the turquoise bays of the Pakleni Islands. There’s plenty of time to dive into crystal-clear water, snorkel around hidden coves, or stretch out on a picturesque beach before cruising back to Split as the sun dips over the islands.',
 		meetingPoint: MEETING_POINT,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
@@ -117,7 +117,7 @@ export const tours: TourDetail[] = [
 			'18:00 Return along the Split channel with panoramic views.',
 		],
 		overviewHighlights:
-			'This full-day speedboat tour takes you to the iconic Golden Horn Beach on Brač Island, known for its striking shape and crystal-clear water, then on to the Pakleni Islands or Milna for a relaxed lunch stop, before spending time in the charming streets of Hvar Town. Along the way there’s time for a swim off the boat, some snorkelling over hidden reefs, or simply soaking up the sun on a scenic beach, before heading back to Split.',
+			'This full-day speedboat tour takes you to the iconic Golden Horn Beach on Brač Island, known for its striking shape and crystal-clear water. From there it’s on to the Pakleni Islands or Milna for a relaxed lunch stop, then time in the charming streets of Hvar Town. Along the way there’s room for a swim off the boat, some snorkelling over hidden reefs, or soaking up the sun on a scenic beach, before heading back to Split.',
 		meetingPoint: MEETING_POINT,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
@@ -146,7 +146,7 @@ export const tours: TourDetail[] = [
 		itineraryKind: 'full',
 		itineraryLabel: 'Full-day itinerary',
 		itinerary: [
-			'Departure from Split — exact time confirmed at booking.',
+			'Departure from Split, exact time confirmed at booking.',
 			'Time in Hvar Town, along the Red Rocks coastline, and around the Pakleni Islands.',
 			'Return to Split by approximately 16:00.',
 		],
@@ -158,7 +158,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: INCLUDED_DEFAULT,
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: 'Pricing confirmed at booking — contact us for current rates.',
+		priceNotes: 'Pricing confirmed at booking. Contact us for current rates.',
 		caveTicketNote: NOT_A_CAVE_TOUR,
 		disclaimers: DISCLAIMERS,
 		gallery: galleryFromDestinations('hvar', 'pakleni'),
@@ -187,7 +187,7 @@ export const tours: TourDetail[] = [
 			'14:00 Return to Split.',
 		],
 		overviewHighlights:
-			'This half-day morning speedboat tour takes you to Duga Bay on Čiovo Island, then on to swim in the turquoise waters of the Blue Lagoon, before strolling through the historic streets of Trogir Old Town. Along the way there’s time to cool off with a swim, try some snorkelling, or simply unwind on the beach, before heading back to Split in time for the afternoon.',
+			'This half-day morning speedboat tour takes you to Duga Bay on Čiovo Island, then to swim in the turquoise waters of the Blue Lagoon, before strolling through the historic streets of Trogir Old Town. There’s time to cool off with a swim, try some snorkelling, or unwind on the beach before heading back to Split in time for the afternoon.',
 		meetingPoint: MEETING_POINT,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
@@ -210,19 +210,19 @@ export const tours: TourDetail[] = [
 		shortDescription: 'The same Blue Lagoon half-day route as our morning tour, run as a later afternoon departure.',
 		availability: 'Every day from 1 April to 30 November',
 		scheduleLabel: 'Half day: afternoon departure (exact time confirmed at booking)',
-		departure: 'Afternoon departure — exact time confirmed at booking',
+		departure: 'Afternoon departure, exact time confirmed at booking',
 		duration: 'Approx. 5 hours',
 		returnTime: 'Early evening',
 		itineraryKind: 'afternoon',
 		itineraryLabel: 'Afternoon itinerary',
 		itinerary: [
-			'Afternoon departure from Split toward Čiovo Island and Duga Bay — exact time confirmed at booking.',
+			'Afternoon departure from Split toward Čiovo Island and Duga Bay, exact time confirmed at booking.',
 			'Swim stop at the turquoise Blue Lagoon, with scenic coastal cruising along the way.',
 			'Free time ashore in Trogir Old Town or Maslinica (Šolta Island) where the schedule allows.',
 			'Return to Split in the early evening.',
 		],
 		overviewHighlights:
-			'The same Duga Bay, Blue Lagoon, and Trogir Old Town route as our morning tour, run as a later afternoon departure — exact timing confirmed at booking.',
+			'The same Duga Bay, Blue Lagoon, and Trogir Old Town route as our morning tour, run as a later afternoon departure. Exact timing confirmed at booking.',
 		meetingPoint: MEETING_POINT,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
@@ -247,7 +247,7 @@ export const tours: TourDetail[] = [
 		scheduleLabel: 'One-way: approx. 08:00–09:00 – 16:00–17:00',
 		departure: 'Approx. 08:00–09:00 departure',
 		duration: 'Approx. 10 hours',
-		returnTime: 'No return leg — one-way to Dubrovnik',
+		returnTime: 'No return leg, one-way to Dubrovnik',
 		itineraryKind: 'full',
 		itineraryLabel: 'One-way itinerary',
 		itinerary: [
@@ -255,7 +255,7 @@ export const tours: TourDetail[] = [
 			'Swim stop in a secluded bay, with scenic coastal cruising toward Korčula.',
 			'Free time ashore in Korčula Old Town, with time for lunch.',
 			'Second swim stop or snorkelling among the islands (optional).',
-			'Approx. 16:00–17:00 Arrival in Dubrovnik (no return leg — one-way private charter).',
+			'Approx. 16:00–17:00 Arrival in Dubrovnik (no return leg, one-way private charter).',
 		],
 		overviewHighlights:
 			'This private one-way speedboat journey takes you from Split to historic Hvar Old Town, with a stop for a swim in a secluded bay, before exploring the walled town of Korčula with time for lunch. From there it’s a second swim or scenic snorkelling among the islands as you continue toward Dubrovnik, arriving by early evening.',
@@ -265,7 +265,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: INCLUDED_DEFAULT,
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: 'Priced as a private one-way charter — request a quote via the contact form or by phone.',
+		priceNotes: 'Priced as a private one-way charter. Request a quote via the contact form or by phone.',
 		caveTicketNote: NOT_A_CAVE_TOUR,
 		disclaimers: DISCLAIMERS,
 		gallery: galleryFromDestinations('hvar', 'korcula', 'dubrovnik'),
@@ -279,22 +279,22 @@ export const tours: TourDetail[] = [
 		title: 'Create Your Perfect Day at Sea',
 		tagline: 'Private charter · flexible itinerary',
 		shortDescription:
-			'A fully private charter — pick your own route from the Blue Cave, Hvar Town, Pakleni, Brač, Vis, or Šolta, or let your skipper plan the day.',
+			'A fully private charter: pick your own route from the Blue Cave, Hvar Town, Pakleni, Brač, Vis, or Šolta, or let your skipper plan the day.',
 		availability: 'On request',
 		scheduleLabel: 'Flexible · 1–10 hours',
-		departure: 'Flexible — typically 09:30 for half-day or full-day charters',
+		departure: 'Flexible, typically 09:30 for half-day or full-day charters',
 		duration: '1–10 hours, depending on your booking',
 		returnTime: 'Flexible',
 		itineraryKind: 'flexible',
 		itineraryLabel: 'Flexible itinerary',
 		itinerary: [
 			'Departure flexible, typically 09:30 for half-day or full-day charters, from Split’s Riva promenade (stand 14) or Zenta.',
-			'Route planning discussed with the captain before or at departure — pick from Blue Cave, Hvar Town, Pakleni Islands, Brač, Vis, and Šolta, or let the skipper recommend based on weather and conditions.',
+			'Route planning discussed with the captain before or at departure. Pick from Blue Cave, Hvar Town, Pakleni Islands, Brač, Vis, and Šolta, or let the skipper recommend based on weather and conditions.',
 			'On the water: swim, snorkel, or go ashore at each stop for as long as you like, fully flexible.',
 			'Return flexible, 1–10 hours after departure depending on half-day or full-day.',
 		],
 		overviewHighlights:
-			'This fully private charter puts you and the captain in complete control of the day at sea. Choose your own route to the Blue Cave, Hvar Town, the Pakleni Islands, Brač, Vis, or Šolta, or lean on the skipper’s local knowledge to shape a route around your group’s pace and interests. The boat is reserved exclusively for you, departure is flexible (typically 09:30 for both half-day and full-day charters), and there’s no fixed schedule to follow — just time to swim, snorkel, sunbathe, or relax on deck wherever the day takes you.',
+			'This fully private charter puts you and the captain in complete control of the day at sea. Choose your own route to the Blue Cave, Hvar Town, the Pakleni Islands, Brač, Vis, or Šolta, or lean on the skipper’s local knowledge to shape a route around your group’s pace and interests. The boat is reserved exclusively for you, and departure is flexible, typically 09:30 for both half-day and full-day charters. There’s no fixed schedule to follow, only time to swim, snorkel, sunbathe, or relax on deck wherever the day takes you.',
 		meetingPoint: MEETING_POINT,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,

@@ -33,14 +33,14 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'booking',
 		question: 'Will I receive a confirmation after booking?',
 		answer:
-			'Yes — immediately after payment. Check spam if it doesn’t arrive within a few minutes; contact us with your name and tour date if needed.',
+			'Yes, immediately after payment. Check spam if it doesn’t arrive within a few minutes; contact us with your name and tour date if needed.',
 		link: { href: '/contact', label: 'Contact us' },
 	},
 	{
 		category: 'booking',
 		question: 'Is online payment secure?',
 		answer:
-			'Yes. All payments are processed securely by Stripe — card details go straight to Stripe and are never stored on our servers. Prices are shown in Euros, with the final total confirmed before you pay.',
+			'Yes. Stripe processes all payments securely: card details go straight to Stripe, and we never store them on our servers. We show prices in Euros and confirm the final total before you pay.',
 		link: { href: '/legal/privacy', label: 'Privacy policy' },
 	},
 	{
@@ -54,13 +54,13 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'weather',
 		question: 'What if the weather is bad?',
 		answer:
-			'We monitor forecasts. Routes may be shortened, reordered, or rescheduled so the day stays safe and enjoyable.',
+			'We monitor forecasts and shorten, reorder, or reschedule routes to keep the day safe and enjoyable.',
 	},
 	{
 		category: 'weather',
 		question: 'How do you decide if conditions are safe to sail?',
 		answer:
-			'Our captains use official forecasts plus local knowledge — wind, wave height, and visibility. Guest safety always comes first.',
+			'Our captains use official forecasts plus local knowledge: wind, wave height, and visibility. Guest safety always comes first.',
 	},
 	{
 		category: 'weather',
@@ -78,68 +78,68 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'onboard',
 		question: 'What should I bring?',
 		answer:
-			'Sunscreen and hat, swimwear and towel, a light jacket, water, and sea-sickness remedy if you’re prone to it. Soft day bags only — limited space on board.',
+			'Sunscreen and hat, swimwear and towel, a light jacket, water, and sea-sickness remedy if you’re prone to it. Soft day bags only, limited space on board.',
 	},
 	{
 		category: 'onboard',
 		question: 'Are life jackets provided?',
 		answer:
-			'Yes — all sizes including children’s. A safety briefing is given at the start of every departure.',
+			'Yes, all sizes including children’s. We give a safety briefing at the start of every departure.',
 	},
 	{
 		category: 'onboard',
 		question: 'Is food and drink provided?',
 		answer:
-			'Water is available on board. Meals are not included on group tours unless stated — most full-day routes include time to eat ashore.',
+			'Water is available on board. We don’t include meals on group tours unless stated. Most full-day routes include time to eat ashore.',
 	},
 	{
 		category: 'guests',
 		question: 'Can I bring young children?',
 		answer:
-			'Children are welcome on group tours, with child pricing for ages 0–17 and life jackets in children’s sizes provided. Private charters suit families who want a flexible pace.',
+			'Children are welcome on group tours, with child pricing for ages 0–17. We also provide life jackets in children’s sizes. Private charters suit families who want a flexible pace.',
 	},
 	{
 		category: 'guests',
 		question: 'Is the tour suitable for non-swimmers?',
 		answer:
-			'Yes. Swimming stops are optional and life jackets are provided. Let the crew know if anyone in your group prefers to stay on the boat.',
+			'Yes. Swimming stops are optional, and we provide life jackets. Let the crew know if anyone in your group prefers to stay on the boat.',
 	},
 	{
 		category: 'guests',
 		question: 'Can you cater to food allergies or dietary needs?',
 		answer:
-			'Meals aren’t included on group tours, so you choose your own food during stops ashore — which makes allergies easy to manage. On private charters with catering, tell us about any allergies or dietary needs in advance and we’ll do our best to accommodate.',
+			'We don’t include meals on group tours, so you choose your own food during stops ashore, which makes allergies easy to manage. On private charters with catering, tell us about any allergies or dietary needs in advance and we’ll do our best to accommodate.',
 	},
 	{
 		category: 'guests',
 		question: 'What if I get seasick?',
 		answer:
-			'Open-sea legs can feel lively on windy days. Take remedy before departure, sit near the centre of the boat, and tell the crew — they’ll suggest the calmest spots.',
+			'Open-sea legs can feel lively on windy days. Take remedy before departure, sit near the centre of the boat, and tell the crew. They’ll suggest the calmest spots.',
 	},
 	{
 		category: 'private',
 		question: 'Private vs group tours?',
 		answer:
-			'Group tours follow a fixed timetable; private charters pick timing and pacing within operational limits — see',
+			'Group tours follow a fixed timetable; private charters pick timing and pacing within operational limits: see',
 		link: { href: '/tours/create-perfect-day-private', label: 'Create your perfect day at sea' },
 	},
 	{
 		category: 'private',
 		question: 'Can I choose my own route on a private charter?',
 		answer:
-			'Yes — within fuel and time limits. Describe your ideal day when you enquire and your skipper will help plan the best possible route.',
+			'Yes, within fuel and time limits. Describe your ideal day when you enquire and your skipper will help plan the best possible route.',
 		link: { href: '/contact?tour=create-perfect-day-private', label: 'Request a quote' },
 	},
 	{
 		category: 'private',
 		question: 'How far in advance should I book a private charter?',
 		answer:
-			'At least two weeks ahead in July and August; one week is often enough in shoulder season. Last-minute slots sometimes open — contact us directly.',
+			'At least two weeks ahead in July and August; one week is often enough in shoulder season. Last-minute slots sometimes open. Contact us directly.',
 		link: { href: '/contact', label: 'Contact us' },
 	},
 ];
 
-/** Items per category — useful for FAQ nav counts. */
+/** Items per category, useful for FAQ nav counts. */
 export function faqCountByCategory(category: FaqCategory): number {
 	return FAQ_ITEMS.filter((item) => item.category === category).length;
 }
