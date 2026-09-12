@@ -1,10 +1,14 @@
-/** Placeholder photo registry — color blocks until real assets are wired. */
+import type { ImageMetadata } from 'astro';
+
+/** Photo registry — placeholders omit `src`; destination galleries include it. */
 export type PhotoRef = {
 	/** Registry key — matches docs/redesign/04-IMAGE-ASSETS.md */
 	id: string;
 	alt: string;
 	/** Dominant color for placeholder blocks (hex). */
 	color: string;
+	/** Present on destination-owned assets; omitted for hero placeholders. */
+	src?: ImageMetadata;
 };
 
 export const PHOTO = {
@@ -48,8 +52,44 @@ export const PHOTO = {
 		alt: 'Tour boat at a sea cave entrance',
 		color: '#2a5060',
 	},
+	goldenHorn: {
+		id: 'goldenHorn',
+		alt: 'Golden Horn Beach on Brač, seen from the water',
+		color: '#4a7d6e',
+	},
+	trogir: {
+		id: 'trogir',
+		alt: 'Trogir Old Town waterfront',
+		color: '#5a6f8a',
+	},
+	korcula: {
+		id: 'korcula',
+		alt: 'Korčula Old Town walls from the sea',
+		color: '#3a5a78',
+	},
+	dubrovnik: {
+		id: 'dubrovnik',
+		alt: 'Dubrovnik city walls and harbour',
+		color: '#2a4a68',
+	},
 } as const satisfies Record<string, PhotoRef>;
 
 export function galleryFrom(...items: PhotoRef[]): PhotoRef[] {
 	return items;
+}
+
+export type GalleryViewPhoto = {
+	color: string;
+	alt: string;
+	icon: string;
+	src?: string;
+};
+
+export function toGalleryView(photo: PhotoRef, icon = 'sailboat'): GalleryViewPhoto {
+	return {
+		color: photo.color,
+		alt: photo.alt,
+		icon,
+		src: photo.src?.src,
+	};
 }

@@ -17,16 +17,31 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const MAX_GUESTS = props.maxGuests;
-const SLOTS = [
-	{ time: '09:00', label: 'Morning departure', icon: 'ti-sun', color: '#EF9F27' },
-	{ time: '18:00', label: 'Sunset departure', icon: 'ti-sunset', color: '#E05C34' },
-] as const;
+
+/**
+ * The tour's one real departure time, parsed only from the "HH:MM check-in ·
+ * HH:MM departure" style copy used by tours with a genuinely fixed daily time.
+ * Deliberately does NOT match approximate ranges ("Approx. 08:00–09:00
+ * departure") or flexible copy ("Flexible — typically 09:30...") — those
+ * aren't a single confirmed slot, so we fall back to an informational note
+ * instead of presenting a made-up time as fixed.
+ */
+const departureTime = computed(() => {
+	const match = props.departure.match(/\d{2}:\d{2}\s+check-in.*?(\d{2}:\d{2})\s+departure/i);
+	return match ? match[1] : null;
+});
+
+const SLOTS = computed(() =>
+	departureTime.value
+		? ([{ time: departureTime.value, label: 'Departure', icon: 'ti-sun', color: '#EF9F27' }] as const)
+		: ([] as const),
+);
 
 const today = new Date();
 const viewYear = ref(today.getFullYear());
 const viewMonth = ref(today.getMonth());
 const selectedDay = ref<number | null>(null);
-const selectedSlot = ref('09:00');
+const selectedSlot = ref(departureTime.value ?? '');
 const adults = ref(2);
 const children = ref(0);
 const firstName = ref('');
@@ -81,8 +96,11 @@ const guestSummary = computed(() => {
 });
 
 const childFromPrice = computed(() => {
-	const match = props.priceNotes.match(/children[^€]*?(€\d+)/i);
-	return match?.[1] ?? null;
+	// priceNotes reads "€X per adult, €Y per child" for low season, then peak season —
+	// the price precedes the word "child", and we take the LAST match so this stays
+	// consistent with fromPrice, which is always the peak-season adult figure.
+	const matches = [...props.priceNotes.matchAll(/€(\d+)[^€]*?child/gi)];
+	return matches.length ? `€${matches[matches.length - 1][1]}` : null;
 });
 
 const adultUnitPrice = computed(() => {
@@ -102,9 +120,9 @@ const childrenTotalDisplay = computed(() => {
 	return `€${children.value * Number.parseInt(match[1], 10)}`;
 });
 
-const adultPriceLabel = computed(() => `Age 11+ · ${props.fromPrice}`);
+const adultPriceLabel = computed(() => `Age 18+ · ${props.fromPrice}`);
 const childPriceLabel = computed(() =>
-	childFromPrice.value ? `Age 4–10 · ${childFromPrice.value}` : 'Age 4–10',
+	childFromPrice.value ? `Age 0–17 · ${childFromPrice.value}` : 'Age 0–17',
 );
 const adultsLineLabel = computed(() => `Adults (${adults.value} × ${props.fromPrice})`);
 const childrenLineLabel = computed(() =>
@@ -164,7 +182,7 @@ function nextMonth() {
 function selectDay(day: number, past: boolean) {
 	if (past) return;
 	selectedDay.value = day;
-	selectedSlot.value = '09:00';
+	selectedSlot.value = departureTime.value ?? '';
 }
 
 function bump(field: 'adults' | 'children', delta: number) {
@@ -256,8 +274,8 @@ onMounted(restoreFromQuery);
 					<span v-if="cell.day !== null && !cell.past" class="avail-dot" aria-hidden="true"></span>
 				</button>
 			</div>
-			<div v-if="selectedDay !== null" class="slot-section">
-				<p class="slot-heading">Choose a departure time</p>
+			<div v-if="selectedDay !== null && SLOTS.length" class="slot-section">
+				<p class="slot-heading">Departure time</p>
 				<div class="slots">
 					<button
 						v-for="slot in SLOTS"
@@ -278,11 +296,15 @@ onMounted(restoreFromQuery);
 					</button>
 				</div>
 			</div>
+			<div v-else-if="selectedDay !== null" class="slot-section">
+				<p class="slot-heading">Departure time</p>
+				<p class="card-sub">Exact departure time confirmed at booking.</p>
+			</div>
 		</div>
 
 		<div class="card">
 			<p class="card-title"><i class="ti ti-users" aria-hidden="true"></i> How many guests?</p>
-			<p class="card-sub">Max {{ MAX_GUESTS }} guests per departure. Children under 3 travel free.</p>
+			<p class="card-sub">Max {{ MAX_GUESTS }} guests per departure.</p>
 			<div class="guests-grid">
 				<div class="guest-row">
 					<div>
@@ -361,7 +383,7 @@ onMounted(restoreFromQuery);
 			</div>
 			<div class="sum-row">
 				<span class="sum-label">Departure</span>
-				<span class="sum-val">{{ selectedDay !== null ? selectedSlot : '—' }}</span>
+				<span class="sum-val">{{ selectedDay !== null ? selectedSlot || 'Confirmed at booking' : '—' }}</span>
 			</div>
 			<div class="sum-row">
 				<span class="sum-label">Guests</span>

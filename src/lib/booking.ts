@@ -1,6 +1,6 @@
 import type { TourDetail } from '../types/tour';
 
-const QUOTE_ONLY_SLUGS = new Set(['create-perfect-day-private']);
+const QUOTE_ONLY_SLUGS = new Set(['create-perfect-day-private', 'dubrovnik-one-way']);
 
 /** Tours with instant book (preview confirmation flow). Private charters use contact instead. */
 export function supportsInstantBook(tour: Pick<TourDetail, 'slug'>): boolean {

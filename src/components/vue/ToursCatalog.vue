@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { TourDetail } from '../../types/tour';
-import { groupBookHref, supportsInstantBook } from '../../lib/booking';
+import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../../lib/booking';
 import {
 	matchesAnyFilter,
 	searchTours,
@@ -87,6 +87,10 @@ function isActive(filter: TourFilter): boolean {
 	return activeFilters.value.has(filter);
 }
 
+function bookHref(tour: TourDetail): string {
+	return supportsInstantBook(tour) ? groupBookHref(tour) : contactHrefForTour(tour);
+}
+
 function priceUnit(tour: TourDetail): string {
 	return supportsInstantBook(tour) ? '/ person' : '/ boat';
 }
@@ -105,6 +109,18 @@ function typeMeta(tour: TourDetail): string {
 
 function typeMetaIcon(tour: TourDetail): string {
 	return tourTypes(tour).includes('group') ? 'users' : 'crown';
+}
+
+function cardSrc(tour: TourDetail): string | undefined {
+	const photo = tour.gallery.find((item) => item.src) ?? tour.image;
+	const src = photo.src;
+	if (!src) return undefined;
+	return typeof src === 'string' ? src : src.src;
+}
+
+function cardAlt(tour: TourDetail): string {
+	const photo = tour.gallery.find((item) => item.src) ?? tour.image;
+	return photo.alt;
 }
 
 function readUrlParams() {
@@ -172,7 +188,14 @@ onMounted(readUrlParams);
 				>
 					<a :href="`/tours/${tour.slug}`" class="tour-card" :class="{ featured: section.highlight }">
 						<div class="card-img" :style="{ '--placeholder-color': tour.image.color }">
-							<i class="ti ti-sailboat" aria-hidden="true"></i>
+							<img
+								v-if="cardSrc(tour)"
+								class="card-img__photo"
+								:src="cardSrc(tour)"
+								:alt="cardAlt(tour)"
+								loading="lazy"
+							/>
+							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
 							<div class="img-badges">
 								<span v-if="tour.featured" class="img-badge badge-bestseller">Best seller</span>
 								<span v-if="tour.badge === 'new'" class="img-badge badge-new">New</span>
@@ -213,7 +236,7 @@ onMounted(readUrlParams);
 					</button>
 					<a
 						class="tours-catalog__hook"
-						:href="groupBookHref(tour)"
+						:href="bookHref(tour)"
 						tabindex="-1"
 						aria-hidden="true"
 					>

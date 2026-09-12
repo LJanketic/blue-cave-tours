@@ -8,12 +8,14 @@ import TourImage from '../../components/TourImage.astro';
 import {
 	bestTimeBarStyle,
 	getAllDestinations,
+	getDestinationGallery,
 	getDestinationPhoto,
 	getToursForDestination,
 	MONTH_LABELS,
 } from '../../lib/destinations';
+import { getTourCardPhoto } from '../../lib/tours';
 import { supportsInstantBook } from '../../lib/booking';
-import { PHOTO, galleryFrom } from '../../data/tour-photos';
+import { toGalleryView } from '../../data/tour-photos';
 
 export function getStaticPaths() {
 	return getAllDestinations().map((destination) => ({
@@ -50,14 +52,8 @@ function nearbyTourCount(slug: string): number {
 
 const { destination } = Astro.props;
 const tours = getToursForDestination(destination.slug);
-const heroPhoto = getDestinationPhoto(destination);
-const galleryPhotos = galleryFrom(heroPhoto, PHOTO.blueLagoon, PHOTO.hvar, PHOTO.pakleni).map(
-	(photo) => ({
-		color: photo.color,
-		alt: photo.alt,
-		icon: 'sailboat',
-	}),
-);
+const heroPhoto = toGalleryView(getDestinationPhoto(destination));
+const galleryPhotos = getDestinationGallery(destination).map((photo) => toGalleryView(photo));
 
 type HeroTag = { icon: string; label: string; variant: 'feat' | 'group' | 'private' | 'tip' };
 const heroTags: HeroTag[] = [
@@ -97,8 +93,8 @@ const mapStubLabel = distanceGeo
 
 			<ImageGallery
 				client:visible
-				hero={galleryPhotos[0]}
-				gallery={galleryPhotos.slice(1)}
+				hero={heroPhoto}
+				gallery={galleryPhotos}
 				tags={heroTags}
 			/>
 
@@ -234,7 +230,7 @@ const mapStubLabel = distanceGeo
 									<a class="tour-link-card" href={`/tours/${tour.slug}`}>
 										<div class="tc-head">
 											<div class="tc-thumb">
-												<TourImage photo={tour.image} layout="thumb" icon="sailboat" />
+												<TourImage photo={getTourCardPhoto(tour)} layout="thumb" icon="sailboat" />
 											</div>
 											<div>
 												<h3 class="tc-name">{tour.title}</h3>
@@ -579,6 +575,12 @@ const mapStubLabel = distanceGeo
 		height: 44px;
 		min-height: 44px;
 		border-radius: var(--radius-md);
+	}
+
+	.dest-detail-page .tc-thumb :global(.photo-frame),
+	.dest-detail-page .tc-thumb :global(.photo-frame__img) {
+		width: 44px;
+		height: 44px;
 	}
 
 	.dest-detail-page .tc-thumb :global(.placeholder-image .ti) {

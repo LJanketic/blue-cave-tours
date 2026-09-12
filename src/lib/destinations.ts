@@ -1,5 +1,6 @@
 import { destinations } from '../data/destinations';
 import type { Destination } from '../data/destinations';
+import { galleryForDestination } from '../data/destination-photos';
 import { PHOTO, type PhotoRef } from '../data/tour-photos';
 import { getAllTours } from './tours';
 import type { TourDetail } from '../types/tour';
@@ -9,8 +10,14 @@ const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 export { MONTH_LABELS };
 
 export function getDestinationPhoto(destination: Destination): PhotoRef {
+	const realPhoto = galleryForDestination(destination.slug).find((photo) => photo.src);
+	if (realPhoto) return realPhoto;
 	const photo = PHOTO[destination.imagePhotoId as keyof typeof PHOTO];
 	return photo ?? PHOTO.boatSpeed;
+}
+
+export function getDestinationGallery(destination: Destination): PhotoRef[] {
+	return galleryForDestination(destination.slug);
 }
 
 export function bestTimeBarStyle(score: number): { height: string; background: string } {

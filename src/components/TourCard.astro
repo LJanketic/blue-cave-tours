@@ -1,6 +1,7 @@
 ---
 import type { TourDetail } from '../types/tour';
-import { groupBookHref } from '../lib/booking';
+import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../lib/booking';
+import { getTourCardPhoto } from '../lib/tours';
 import { tourTypes } from '../lib/tour-filters';
 import TourImage from './TourImage.astro';
 
@@ -13,12 +14,16 @@ const { tour, featured = false } = Astro.props;
 const types = tourTypes(tour);
 const metaIcon = types.includes('group') ? 'users' : 'crown';
 const metaLabel = types.map((type) => (type === 'group' ? 'Group' : 'Private')).join(' / ');
+const cardPhoto = getTourCardPhoto(tour);
+const instantBook = supportsInstantBook(tour);
+const bookHref = instantBook ? groupBookHref(tour) : contactHrefForTour(tour);
+const priceUnit = instantBook ? '/ person' : '/ boat';
 ---
 
 <article class:list={['tour-card', featured && 'featured']}>
 	<a href={`/tours/${tour.slug}`} class="tour-card__link">
 		<div class="tc-img card-img">
-			<TourImage photo={tour.image} layout="card" />
+			<TourImage photo={cardPhoto} layout="card" />
 			<div class="img-badges">
 				{featured && <span class="tc-badge img-badge badge-bestseller">Best seller</span>}
 				{tour.badge === 'new' && <span class="tc-badge img-badge badge-new">New</span>}
@@ -43,13 +48,13 @@ const metaLabel = types.map((type) => (type === 'group' ? 'Group' : 'Private')).
 				<div>
 					<span class="price-from">From </span>
 					<span class="tc-price price-val">{tour.fromPrice}</span>
-					<span class="price-per"> / person</span>
+					<span class="price-per"> {priceUnit}</span>
 				</div>
 			</div>
 		</div>
 	</a>
 	<div class="tour-card__actions">
 		<a class="btn-secondary tour-card__details" href={`/tours/${tour.slug}`}>Details</a>
-		<a class="btn-primary" href={groupBookHref(tour)}>Book now</a>
+		<a class="btn-primary" href={bookHref}>{instantBook ? 'Book now' : 'Enquire'}</a>
 	</div>
 </article>
