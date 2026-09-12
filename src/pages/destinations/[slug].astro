@@ -15,7 +15,7 @@ import {
 } from '../../lib/destinations';
 import { getTourCardPhoto } from '../../lib/tours';
 import { supportsInstantBook } from '../../lib/booking';
-import { toGalleryView } from '../../data/tour-photos';
+import { GALLERY_HERO_SIZE, GALLERY_THUMB_SIZE, toGalleryView } from '../../data/tour-photos';
 
 export function getStaticPaths() {
 	return getAllDestinations().map((destination) => ({
@@ -50,8 +50,10 @@ function nearbyTourCount(slug: string): number {
 
 const { destination } = Astro.props;
 const tours = getToursForDestination(destination.slug);
-const heroPhoto = toGalleryView(getDestinationPhoto(destination));
-const galleryPhotos = getDestinationGallery(destination).map((photo) => toGalleryView(photo));
+const heroPhoto = await toGalleryView(getDestinationPhoto(destination), 'sailboat', GALLERY_HERO_SIZE);
+const galleryPhotos = await Promise.all(
+	getDestinationGallery(destination).map((photo) => toGalleryView(photo, 'sailboat', GALLERY_THUMB_SIZE)),
+);
 
 type HeroTag = { icon: string; label: string; variant: 'feat' | 'group' | 'private' | 'tip' };
 const heroTags: HeroTag[] = [

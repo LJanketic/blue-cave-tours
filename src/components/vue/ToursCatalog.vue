@@ -10,10 +10,14 @@ import {
 	type TourFilter,
 } from '../../lib/tour-filters';
 
+type CardPhoto = { src?: string; srcset?: string; alt: string };
+
 const props = defineProps<{
 	tours: TourDetail[];
 	/** Destination slug → tour slugs that visit it (for `/tours?destination=`). */
 	toursByDestination?: Record<string, string[]>;
+	/** Tour slug → pre-optimized card photo (built at build time via astro:assets). */
+	cardPhotos: Record<string, CardPhoto>;
 }>();
 
 const FILTERS: { id: TourFilter; label: string; icon: string }[] = [
@@ -112,15 +116,15 @@ function typeMetaIcon(tour: TourDetail): string {
 }
 
 function cardSrc(tour: TourDetail): string | undefined {
-	const photo = tour.gallery.find((item) => item.src) ?? tour.image;
-	const src = photo.src;
-	if (!src) return undefined;
-	return typeof src === 'string' ? src : src.src;
+	return props.cardPhotos[tour.slug]?.src;
+}
+
+function cardSrcset(tour: TourDetail): string | undefined {
+	return props.cardPhotos[tour.slug]?.srcset;
 }
 
 function cardAlt(tour: TourDetail): string {
-	const photo = tour.gallery.find((item) => item.src) ?? tour.image;
-	return photo.alt;
+	return props.cardPhotos[tour.slug]?.alt ?? tour.title;
 }
 
 function readUrlParams() {
@@ -192,8 +196,10 @@ onMounted(readUrlParams);
 								v-if="cardSrc(tour)"
 								class="card-img__photo"
 								:src="cardSrc(tour)"
+								:srcset="cardSrcset(tour)"
 								:alt="cardAlt(tour)"
 								loading="lazy"
+								decoding="async"
 							/>
 							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
 							<div class="img-badges">

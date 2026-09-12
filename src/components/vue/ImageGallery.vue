@@ -6,6 +6,7 @@ type GalleryPhoto = {
 	alt: string;
 	icon: string;
 	src?: string;
+	srcset?: string;
 };
 
 export type GalleryTag = {
@@ -55,7 +56,11 @@ function selectPhoto(index: number) {
 				v-if="activePhoto.src"
 				class="img-hero__photo"
 				:src="activePhoto.src"
+				:srcset="activePhoto.srcset"
 				:alt="activePhoto.alt"
+				loading="eager"
+				fetchpriority="high"
+				decoding="async"
 			/>
 			<i
 				v-else
@@ -95,7 +100,10 @@ function selectPhoto(index: number) {
 					v-if="photo.src"
 					class="img-thumb__photo"
 					:src="photo.src"
+					:srcset="photo.srcset"
 					alt=""
+					loading="lazy"
+					decoding="async"
 				/>
 				<template v-else>
 					<i v-if="index < 3" :class="`ti ti-${photo.icon}`" aria-hidden="true"></i>

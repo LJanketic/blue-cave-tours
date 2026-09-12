@@ -1,27 +1,19 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { Destination } from '../../data/destinations';
-import { galleryForDestination } from '../../data/destination-photos';
-import { PHOTO } from '../../data/tour-photos';
 
 type DestinationCard = Pick<
 	Destination,
-	| 'slug'
-	| 'name'
-	| 'region'
-	| 'icon'
-	| 'shortDescription'
-	| 'tags'
-	| 'attrs'
-	| 'featured'
-	| 'tourSlugs'
-	| 'imagePhotoId'
+	'slug' | 'name' | 'region' | 'icon' | 'shortDescription' | 'tags' | 'attrs' | 'featured' | 'tourSlugs'
 >;
 
 type DestinationFilter = 'all' | 'island' | 'coast' | 'cave' | 'swim';
+type CardPhoto = { src?: string; srcset?: string; alt: string };
 
 const props = defineProps<{
 	destinations: DestinationCard[];
+	/** Destination slug → pre-optimized card photo (built at build time via astro:assets). */
+	cardPhotos: Record<string, CardPhoto>;
 }>();
 
 const FILTERS: { id: DestinationFilter; label: string; icon: string }[] = [
@@ -88,18 +80,16 @@ function destinationHref(slug: string): string {
 	return `/destinations/${slug}`;
 }
 
-function cardPhoto(dest: DestinationCard) {
-	return galleryForDestination(dest.slug).find((photo) => photo.src) ?? PHOTO[dest.imagePhotoId];
+function cardSrc(dest: DestinationCard): string | undefined {
+	return props.cardPhotos[dest.slug]?.src;
 }
 
-function cardSrc(dest: DestinationCard): string | undefined {
-	const src = cardPhoto(dest)?.src;
-	if (!src) return undefined;
-	return typeof src === 'string' ? src : src.src;
+function cardSrcset(dest: DestinationCard): string | undefined {
+	return props.cardPhotos[dest.slug]?.srcset;
 }
 
 function cardAlt(dest: DestinationCard): string {
-	return cardPhoto(dest)?.alt ?? dest.name;
+	return props.cardPhotos[dest.slug]?.alt ?? dest.name;
 }
 </script>
 
@@ -135,8 +125,10 @@ function cardAlt(dest: DestinationCard): string {
 								v-if="cardSrc(dest)"
 								class="card-img__photo"
 								:src="cardSrc(dest)"
+								:srcset="cardSrcset(dest)"
 								:alt="cardAlt(dest)"
 								loading="lazy"
+								decoding="async"
 							/>
 							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
 							<span class="region-pill">{{ dest.region }}</span>
@@ -180,8 +172,10 @@ function cardAlt(dest: DestinationCard): string {
 								v-if="cardSrc(dest)"
 								class="card-img__photo"
 								:src="cardSrc(dest)"
+								:srcset="cardSrcset(dest)"
 								:alt="cardAlt(dest)"
 								loading="lazy"
+								decoding="async"
 							/>
 							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
 							<span class="region-pill">{{ dest.region }}</span>

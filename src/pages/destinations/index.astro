@@ -4,9 +4,17 @@ export const prerender = true;
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import DestinationsCatalog from '../../components/vue/DestinationsCatalog.vue';
-import { getAllDestinations } from '../../lib/destinations';
+import { getAllDestinations, getDestinationPhoto } from '../../lib/destinations';
+import { GALLERY_CARD_SIZE, toGalleryView } from '../../data/tour-photos';
 
 const destinations = getAllDestinations();
+const cardPhotos = Object.fromEntries(
+	await Promise.all(
+		destinations.map(
+			async (dest) => [dest.slug, await toGalleryView(getDestinationPhoto(dest), 'sailboat', GALLERY_CARD_SIZE)] as const,
+		),
+	),
+);
 const mapUrl =
 	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
 ---
@@ -48,7 +56,7 @@ const mapUrl =
 				</span>
 			</a>
 
-			<DestinationsCatalog client:visible destinations={destinations} />
+			<DestinationsCatalog client:visible destinations={destinations} cardPhotos={cardPhotos} />
 
 			<div class="also-strip">
 				<div>
