@@ -12,8 +12,7 @@ export { MONTH_LABELS };
 export function getDestinationPhoto(destination: Destination): PhotoRef {
 	const realPhoto = galleryForDestination(destination.slug).find((photo) => photo.src);
 	if (realPhoto) return realPhoto;
-	const photo = PHOTO[destination.imagePhotoId as keyof typeof PHOTO];
-	return photo ?? PHOTO.boatSpeed;
+	return PHOTO[destination.imagePhotoId];
 }
 
 export function getDestinationGallery(destination: Destination): PhotoRef[] {

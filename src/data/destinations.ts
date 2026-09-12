@@ -1,3 +1,5 @@
+import { PHOTO } from './tour-photos';
+
 export type GeoFact = {
 	label: string;
 	value: string;
@@ -42,7 +44,7 @@ export type Destination = {
 	geo: GeoFact[];
 	nearby: NearbyStop[];
 	insiderTips: [string, string, string];
-	imagePhotoId: string;
+	imagePhotoId: keyof typeof PHOTO;
 	featured: boolean;
 	tourSlugs: string[];
 };
