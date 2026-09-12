@@ -1,4 +1,5 @@
 import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
 
 /** Photo registry — placeholders omit `src`; destination galleries include it. */
 export type PhotoRef = {
@@ -83,13 +84,46 @@ export type GalleryViewPhoto = {
 	alt: string;
 	icon: string;
 	src?: string;
+	srcset?: string;
 };
 
-export function toGalleryView(photo: PhotoRef, icon = 'sailboat'): GalleryViewPhoto {
+type GalleryImageSize = { widths: number[]; sizes: string };
+
+/** Matches ImageGallery.vue's fixed-height boxes (.img-hero / .img-thumb). */
+export const GALLERY_HERO_SIZE: GalleryImageSize = {
+	widths: [400, 800, 1200],
+	sizes: '(max-width: 700px) 100vw, 700px',
+};
+export const GALLERY_THUMB_SIZE: GalleryImageSize = {
+	widths: [80, 160],
+	sizes: '80px',
+};
+/** Matches the tour/destination card grids (ToursCatalog.vue / DestinationsCatalog.vue). */
+export const GALLERY_CARD_SIZE: GalleryImageSize = {
+	widths: [400, 800],
+	sizes: '(max-width: 700px) 88vw, 380px',
+};
+
+/** Runs a real photo through Astro's build-time image service (webp, resized, real srcset) instead of shipping the original file as-is. */
+export async function toGalleryView(
+	photo: PhotoRef,
+	icon = 'sailboat',
+	imageSize: GalleryImageSize = GALLERY_THUMB_SIZE,
+): Promise<GalleryViewPhoto> {
+	if (!photo.src) {
+		return { color: photo.color, alt: photo.alt, icon };
+	}
+	const optimized = await getImage({
+		src: photo.src,
+		widths: imageSize.widths,
+		format: 'webp',
+		quality: 70,
+	});
 	return {
 		color: photo.color,
 		alt: photo.alt,
 		icon,
-		src: photo.src?.src,
+		src: optimized.src,
+		srcset: optimized.srcSet.attribute,
 	};
 }

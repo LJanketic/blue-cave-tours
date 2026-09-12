@@ -5,11 +5,17 @@ import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import ToursCatalog from '../../components/vue/ToursCatalog.vue';
 import { getAllDestinations } from '../../lib/destinations';
-import { getAllTours } from '../../lib/tours';
+import { getAllTours, getTourCardPhoto } from '../../lib/tours';
+import { GALLERY_CARD_SIZE, toGalleryView } from '../../data/tour-photos';
 
 const all = getAllTours();
 const toursByDestination = Object.fromEntries(
 	getAllDestinations().map((destination) => [destination.slug, destination.tourSlugs]),
+);
+const cardPhotos = Object.fromEntries(
+	await Promise.all(
+		all.map(async (tour) => [tour.slug, await toGalleryView(getTourCardPhoto(tour), 'sailboat', GALLERY_CARD_SIZE)] as const),
+	),
 );
 ---
 
@@ -20,7 +26,7 @@ const toursByDestination = Object.fromEntries(
 >
 	<main id="main" class="page-shell">
 		<div class="page tours-page">
-			<ToursCatalog client:visible tours={all} toursByDestination={toursByDestination} />
+			<ToursCatalog client:visible tours={all} toursByDestination={toursByDestination} cardPhotos={cardPhotos} />
 		</div>
 	</main>
 </SiteLayout>

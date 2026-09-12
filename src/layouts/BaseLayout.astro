@@ -18,7 +18,12 @@ const ogImageUrl = new URL(ogImagePath, Astro.site ?? Astro.url).href;
 const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
 const TABLER_ICONS_VERSION = '3.44.0';
-const tablerIconsHref = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TABLER_ICONS_VERSION}/dist/tabler-icons.min.css`;
+const tablerIconsBase = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TABLER_ICONS_VERSION}/dist`;
+const tablerIconsHref = `${tablerIconsBase}/tabler-icons.min.css`;
+// Overrides the vendor CSS's missing font-display (defaults to `auto`, which
+// can render icon glyphs invisible while the font loads). Must stay declared
+// after the Tabler <link> below so it wins the cascade.
+const tablerFontDisplayOverride = `@font-face{font-family:'tabler-icons';font-style:normal;font-weight:400;font-display:swap;src:url('${tablerIconsBase}/fonts/tabler-icons.woff2?v${TABLER_ICONS_VERSION}') format('woff2'),url('${tablerIconsBase}/fonts/tabler-icons.woff?v${TABLER_ICONS_VERSION}') format('woff')}`;
 ---
 
 <!doctype html>
@@ -49,8 +54,23 @@ const tablerIconsHref = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TA
 		<meta name="twitter:image" content={ogImageUrl} />
 
 		<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-		<link rel="preload" href={tablerIconsHref} as="style" />
-		<link rel="stylesheet" href={tablerIconsHref} />
+		<!--
+			Loaded non-render-blocking: the icon font CSS is ~37KB from a third-party
+			CDN and was adding up to ~1s to first paint. `rel="preload"` fetches it in
+			parallel with the rest of the page; the onload handler then activates it
+			as a real stylesheet once it arrives, instead of the browser blocking
+			render until it downloads. `<noscript>` covers the no-JS case.
+		-->
+		<link
+			rel="preload"
+			href={tablerIconsHref}
+			as="style"
+			onload="this.onload=null;this.rel='stylesheet'"
+		/>
+		<noscript>
+			<link rel="stylesheet" href={tablerIconsHref} />
+		</noscript>
+		<style is:global set:html={tablerFontDisplayOverride} />
 
 		<title>{title}</title>
 

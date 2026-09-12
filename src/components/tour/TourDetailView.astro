@@ -2,7 +2,7 @@
 import type { TourDetail } from '../../types/tour';
 import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../../lib/booking';
 import { tourTypes } from '../../lib/tour-filters';
-import { toGalleryView } from '../../data/tour-photos';
+import { GALLERY_HERO_SIZE, GALLERY_THUMB_SIZE, toGalleryView } from '../../data/tour-photos';
 import ImageGallery from '../vue/ImageGallery.vue';
 
 type Props = { tour: TourDetail };
@@ -35,8 +35,8 @@ const groupLabel = instantBook ? 'Small group' : 'Private charter';
 const groupIcon = instantBook ? 'users' : 'crown';
 const priceUnit = instantBook ? '/ person' : '/ boat';
 
-const heroPhoto = toGalleryView(tour.image);
-const thumbPhotos = tour.gallery.map((photo) => toGalleryView(photo));
+const heroPhoto = await toGalleryView(tour.image, 'sailboat', GALLERY_HERO_SIZE);
+const thumbPhotos = await Promise.all(tour.gallery.map((photo) => toGalleryView(photo, 'sailboat', GALLERY_THUMB_SIZE)));
 
 const highlightIcons = ['sunset-2', 'swimming', 'bottle', 'binoculars', 'ship', 'accessible', 'sailboat', 'droplet'];
 const itineraryIcons = ['map-pin', 'sailboat', 'swimming', 'sunset', 'anchor', 'building-lighthouse', 'droplet'];

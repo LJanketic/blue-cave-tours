@@ -11,7 +11,25 @@ const NOINDEX_PATH_PREFIXES = ['/book/', '/booking/success', '/booking/error', '
 // https://astro.build/config — Netlify adapter for SSR + API routes.
 export default defineConfig({
 	output: 'server',
-	adapter: netlify(),
+	// imageCDN defaults to true, which silently routes every astro:assets image
+	// through Netlify's metered on-demand Image CDN — even on fully prerendered
+	// pages. Disabling it restores Astro's own Sharp-based image service, which
+	// optimizes images once at build time (free, uses the sharp dependency
+	// already installed) instead of paying per transformed image forever.
+	adapter: netlify({ imageCDN: false }),
+	// Every image-bearing page is prerendered, so `sharp` only ever runs during
+	// `astro build` — the deployed function never touches it at request time.
+	// Left un-externalized, the adapter's dependency tracer walks into sharp's
+	// own conditional requires for every platform's native binary and throws
+	// on whichever ones aren't installed locally (only one ever is). Marking
+	// it external stops the tracer from resolving those files at all; Node
+	// resolves the plain `require('sharp')` from node_modules at runtime,
+	// which never actually happens since no route renders an image.
+	vite: {
+		ssr: {
+			external: ['sharp'],
+		},
+	},
 	integrations: [
 		vue(),
 		...(site

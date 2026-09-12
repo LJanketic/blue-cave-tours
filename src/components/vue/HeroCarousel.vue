@@ -125,7 +125,7 @@ onBeforeUnmount(stopRotation);
 			</div>
 		</div>
 
-		<button type="button" class="hero-scroll" aria-label="Continue to tours" @click="scrollPastHero">
+		<button type="button" class="hero-scroll" @click="scrollPastHero">
 			<span>Explore</span>
 			<i class="ti ti-chevron-down" aria-hidden="true"></i>
 		</button>
