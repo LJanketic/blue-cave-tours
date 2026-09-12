@@ -1,7 +1,8 @@
 ---
 export const prerender = true;
 
-import { getAllTours } from '../../../lib/tours';
+import { getAllTours, getTourBySlug } from '../../../lib/tours';
+import { contactHrefForTour } from '../../../lib/booking';
 
 export function getStaticPaths() {
 	return getAllTours().map((tour) => ({
@@ -10,9 +11,13 @@ export function getStaticPaths() {
 }
 
 const slug = Astro.params.slug;
-if (!slug) {
+const tour = slug ? getTourBySlug(slug) : undefined;
+if (!tour) {
 	return Astro.redirect('/tours');
 }
 
-return Astro.redirect(`/book/${slug}/group`);
+// No real private-charter booking flow exists yet — send guests to the
+// contact form rather than the group flow, which would misrepresent a
+// private-charter request as an instant group booking.
+return Astro.redirect(contactHrefForTour(tour));
 ---

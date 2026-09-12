@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { bookingReviewPath, parseGroupBookingParams } from '../../lib/booking';
+import { MAX_GUESTS as DEFAULT_MAX_GUESTS, bookingReviewPath, parseGroupBookingParams } from '../../lib/booking';
+import { computeBookingTotal, parseAdultPrice, parseChildPrice } from '../../lib/price';
 
 type Props = {
 	tourSlug: string;
@@ -13,7 +14,7 @@ type Props = {
 };
 
 const props = withDefaults(defineProps<Props>(), {
-	maxGuests: 12,
+	maxGuests: DEFAULT_MAX_GUESTS,
 });
 
 const MAX_GUESTS = props.maxGuests;
@@ -95,18 +96,9 @@ const guestSummary = computed(() => {
 	return parts.join(', ');
 });
 
-const childFromPrice = computed(() => {
-	// priceNotes reads "€X per adult, €Y per child" for low season, then peak season —
-	// the price precedes the word "child", and we take the LAST match so this stays
-	// consistent with fromPrice, which is always the peak-season adult figure.
-	const matches = [...props.priceNotes.matchAll(/€(\d+)[^€]*?child/gi)];
-	return matches.length ? `€${matches[matches.length - 1][1]}` : null;
-});
-
-const adultUnitPrice = computed(() => {
-	const match = props.fromPrice.match(/€(\d+)/);
-	return match ? Number.parseInt(match[1], 10) : null;
-});
+const adultUnitPrice = computed(() => parseAdultPrice(props.fromPrice));
+const childUnitPrice = computed(() => parseChildPrice(props.priceNotes));
+const childFromPrice = computed(() => (childUnitPrice.value !== null ? `€${childUnitPrice.value}` : null));
 
 const adultsTotalDisplay = computed(() => {
 	if (adultUnitPrice.value === null) return `from ${props.fromPrice}`;
@@ -114,10 +106,8 @@ const adultsTotalDisplay = computed(() => {
 });
 
 const childrenTotalDisplay = computed(() => {
-	if (!childFromPrice.value) return 'see price notes';
-	const match = childFromPrice.value.match(/€(\d+)/);
-	if (!match) return childFromPrice.value;
-	return `€${children.value * Number.parseInt(match[1], 10)}`;
+	if (childUnitPrice.value === null) return 'see price notes';
+	return `€${children.value * childUnitPrice.value}`;
 });
 
 const adultPriceLabel = computed(() => `Age 18+ · ${props.fromPrice}`);
@@ -131,23 +121,10 @@ const childrenLineLabel = computed(() =>
 		: `Children (${children.value})`,
 );
 
-const bookingTotalDisplay = computed(() => {
-	let total = 0;
-	let hasNumeric = false;
-	if (adultUnitPrice.value !== null) {
-		total += adults.value * adultUnitPrice.value;
-		hasNumeric = true;
-	}
-	if (childFromPrice.value && children.value > 0) {
-		const match = childFromPrice.value.match(/€(\d+)/);
-		if (match) {
-			total += children.value * Number.parseInt(match[1], 10);
-			hasNumeric = true;
-		}
-	}
-	if (!hasNumeric) return `from ${props.fromPrice}`;
-	return `€${total}`;
-});
+const bookingTotal = computed(() => computeBookingTotal(props.fromPrice, props.priceNotes, adults.value, children.value));
+const bookingTotalDisplay = computed(() =>
+	bookingTotal.value !== null ? `€${bookingTotal.value}` : `from ${props.fromPrice}`,
+);
 
 const totalGuests = computed(() => adults.value + children.value);
 const atCapacity = computed(() => totalGuests.value >= MAX_GUESTS);
@@ -232,8 +209,19 @@ function restoreFromQuery() {
 		}
 	}
 	if (details.slot) selectedSlot.value = details.slot;
-	if (details.adults) adults.value = details.adults;
-	children.value = details.children;
+	// Each field is already capped individually by parseGroupBookingParams, but
+	// a URL could still combine two individually-valid counts into a total over
+	// the per-departure limit (e.g. adults=12&children=12) — re-enforce the
+	// combined cap here the same way the on-page +/- steppers do via bump().
+	const restoredAdults = details.adults ?? adults.value;
+	const restoredChildren = details.children;
+	if (restoredAdults + restoredChildren > MAX_GUESTS) {
+		adults.value = Math.min(restoredAdults, MAX_GUESTS);
+		children.value = Math.max(0, Math.min(restoredChildren, MAX_GUESTS - adults.value));
+	} else {
+		if (details.adults) adults.value = details.adults;
+		children.value = details.children;
+	}
 	if (details.firstName) firstName.value = details.firstName;
 	if (details.lastName) lastName.value = details.lastName;
 	if (details.email) email.value = details.email;
