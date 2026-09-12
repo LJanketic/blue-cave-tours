@@ -1,6 +1,7 @@
 import type { TourDetail } from '../types/tour';
 import type { FaqItem } from '../data/faq';
 import { SITE_NAME, SITE_EMAIL, SITE_PHONE, SITE_DEFAULT_DESCRIPTION } from '../config/site';
+import { parseAdultPrice } from './price';
 
 export const DEFAULT_OG_IMAGE = '/og-default.svg';
 
@@ -49,7 +50,7 @@ export function websiteJsonLd(siteUrl: string) {
 
 export function tourJsonLd(tour: TourDetail, siteUrl: string) {
 	const tourUrl = `${siteUrl.replace(/\/$/, '')}/tours/${tour.slug}`;
-	const priceMatch = tour.fromPrice.match(/€(\d+)/);
+	const adultPrice = parseAdultPrice(tour.fromPrice);
 
 	return {
 		'@context': 'https://schema.org',
@@ -58,11 +59,11 @@ export function tourJsonLd(tour: TourDetail, siteUrl: string) {
 		description: tour.shortDescription,
 		url: tourUrl,
 		touristType: tour.slug.includes('private') ? 'Private tour' : 'Group tour',
-		...(priceMatch
+		...(adultPrice !== null
 			? {
 					offers: {
 						'@type': 'Offer',
-						price: priceMatch[1],
+						price: adultPrice,
 						priceCurrency: 'EUR',
 						url: tourUrl,
 						availability: 'https://schema.org/InStock',
