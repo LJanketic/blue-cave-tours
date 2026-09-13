@@ -16,6 +16,7 @@ import {
 	supportsInstantBook,
 } from '../../lib/booking';
 import { computeBookingTotal } from '../../lib/price';
+import { WEATHER_CANCELLATION_FAQ } from '../../config/cancellation';
 
 const tourIdParam = Astro.url.searchParams.get('tourId');
 const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
@@ -224,10 +225,7 @@ const bringList =
 				</div>
 				<div>
 					<p class="next-title">Weather update</p>
-					<p class="next-desc">
-						We'll email you 24h before departure if conditions change. If cancelled, you get a full refund or
-						free rescheduling.
-					</p>
+					<p class="next-desc">{WEATHER_CANCELLATION_FAQ}</p>
 				</div>
 			</div>
 			<div class="next-item">

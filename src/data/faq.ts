@@ -1,3 +1,5 @@
+import { WEATHER_CANCELLATION_FAQ } from '../config/cancellation';
+
 export type FaqCategory = 'booking' | 'weather' | 'onboard' | 'guests' | 'private';
 
 export type FaqItem = {
@@ -53,8 +55,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 	{
 		category: 'weather',
 		question: 'What if the weather is bad?',
-		answer:
-			'We monitor forecasts and shorten, reorder, or reschedule routes to keep the day safe and enjoyable.',
+		answer: `We monitor forecasts and shorten, reorder, or reschedule routes to keep the day safe and enjoyable. ${WEATHER_CANCELLATION_FAQ}`,
 	},
 	{
 		category: 'weather',

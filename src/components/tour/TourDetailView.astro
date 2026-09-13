@@ -2,6 +2,7 @@
 import type { TourDetail } from '../../types/tour';
 import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../../lib/booking';
 import { tourTypes } from '../../lib/tour-filters';
+import { CANCELLATION_SHORT } from '../../config/cancellation';
 import { GALLERY_HERO_SIZE, GALLERY_THUMB_SIZE, toGalleryView } from '../../data/tour-photos';
 import ImageGallery from '../vue/ImageGallery.vue';
 
@@ -204,7 +205,7 @@ if (tour.caveTicketNote) {
 
 				<p class="policy-pill">
 					<i class="ti ti-shield-check" aria-hidden="true"></i>
-					Free cancellation up to 48h before
+					{CANCELLATION_SHORT}
 				</p>
 			</div>
 		</aside>

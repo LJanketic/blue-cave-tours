@@ -3552,6 +3552,10 @@ h3.card-name {
 	margin: 10px 0 0;
 }
 
+.policy-note .ti {
+	font-size: 13px;
+}
+
 /* ─── Booking success / error ────────────────────────────────────────── */
 
 .status-page-narrow {
@@ -3932,6 +3936,10 @@ h3.card-name {
 	text-align: center;
 	padding-inline: 0.5rem;
 	margin: 10px 0 0;
+}
+
+.lock-note .ti {
+	font-size: 13px;
 }
 
 /* ─── Responsive: tablet (≤768px) ────────────────────────────────────── */
