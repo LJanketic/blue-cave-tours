@@ -4,6 +4,7 @@ import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../../li
 import { tourTypes } from '../../lib/tour-filters';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 import { GALLERY_HERO_SIZE, GALLERY_THUMB_SIZE, toGalleryView } from '../../data/tour-photos';
+import { getDestinationsForTour } from '../../lib/destinations';
 import ImageGallery from '../vue/ImageGallery.vue';
 
 type Props = { tour: TourDetail };
@@ -54,13 +55,22 @@ const goodToKnow = [
 if (tour.caveTicketNote) {
 	goodToKnow.push({ label: 'Cave entry', value: tour.caveTicketNote });
 }
+
+const tourDestinations = getDestinationsForTour(tour.slug);
+const primaryDestination = tourDestinations[0];
 ---
 
 <article class="page tour-detail">
 	<nav class="breadcrumb" aria-label="Breadcrumb">
 		<a href="/tours">Tours</a>
 		<span aria-hidden="true"> › </span>
-		<a href="/tours">{tour.tagline}</a>
+		{
+			primaryDestination ? (
+				<a href={`/destinations/${primaryDestination.slug}`}>{primaryDestination.name}</a>
+			) : (
+				<a href="/tours">{tour.tagline}</a>
+			)
+		}
 		<span aria-hidden="true"> › </span>
 		<span aria-current="page">{tour.title}</span>
 	</nav>
@@ -157,6 +167,24 @@ if (tour.caveTicketNote) {
 				</div>
 				<p class="prose tour-detail__note">{tour.importantInfo}</p>
 			</section>
+
+			{
+				tourDestinations.length > 0 && (
+					<section class="section" aria-labelledby="destinations-heading">
+						<h2 id="destinations-heading" class="section-title">
+							Destinations on this tour
+						</h2>
+						<div class="tour-detail__dest-chips">
+							{tourDestinations.map((destination) => (
+								<a class="filter-chip" href={`/destinations/${destination.slug}`}>
+									<i class={`ti ti-${destination.icon}`} aria-hidden="true" />
+									{destination.name}
+								</a>
+							))}
+						</div>
+					</section>
+				)
+			}
 
 			{
 				tour.disclaimers.length > 0 && (
@@ -272,6 +300,12 @@ if (tour.caveTicketNote) {
 
 	.tour-detail__note {
 		margin-top: 12px;
+	}
+
+	.tour-detail__dest-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
 	}
 
 	.tour-detail__disclaimers {
