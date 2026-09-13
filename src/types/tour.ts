@@ -42,4 +42,12 @@ export type TourDetail = {
 	types?: ('group' | 'private')[];
 	/** Optional marketing badge shown on cards (e.g. a newly added route). */
 	badge?: 'new';
+	/**
+	 * Slug of this tour's headline destination (see src/data/destinations.ts),
+	 * for the breadcrumb and structured data. Not inferred from
+	 * getDestinationsForTour's result order, which reflects declaration order
+	 * in the destinations file, not relevance to this specific tour. Omit for
+	 * tours with no single namesake destination (e.g. a custom/flexible route).
+	 */
+	primaryDestinationSlug?: string;
 };

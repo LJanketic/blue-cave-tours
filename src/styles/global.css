@@ -1,4 +1,23 @@
-@import './redesign.css';
+/**
+ * Hello Blue Cave redesign — shared component styles, split by area.
+ * Tokens: src/styles/tokens/redesign.css
+ * Icons: Tabler Icons webfont (.ti), loaded externally.
+ *
+ * All modules are still loaded on every page (Phase A of the split —
+ * see docs/post-mobile-implementation-plan.md item 3.4). `_responsive.css`
+ * MUST stay last: it holds the ≤768px/≤480px overrides, and CSS gives a
+ * later same-specificity rule priority regardless of which file it's in —
+ * importing it earlier would let the non-responsive modules win instead.
+ */
+@import './tokens/redesign.css';
+@import './modules/_base.css';
+@import './modules/_home.css';
+@import './modules/_catalog.css';
+@import './modules/_tour-detail.css';
+@import './modules/_destination-detail.css';
+@import './modules/_booking.css';
+@import './modules/_legal-about.css';
+@import './modules/_responsive.css';
 
 :focus-visible {
 	outline: 2px solid var(--color-accent-teal);

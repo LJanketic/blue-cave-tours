@@ -14,6 +14,13 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # 'unsafe-inline' on script-src/style-src is required: the site has inline
+    # <script> (BookingScript, Header, contact form) and inline style="" (the
+    # destination "best time to visit" bar chart), and none of it is nonced.
+    # cdn.jsdelivr.net is the only third-party origin loaded (Tabler icon
+    # webfont CSS + woff/woff2). Tighten script-src/style-src if that inline
+    # usage is ever migrated to external files or nonces.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
 
 [[headers]]
   for = "/fonts/*"

@@ -47,6 +47,12 @@ export type Destination = {
 	imagePhotoId: keyof typeof PHOTO;
 	featured: boolean;
 	tourSlugs: string[];
+	/**
+	 * True for the departure point (Split) — every tour lists it in
+	 * `tourSlugs` since every tour leaves from there, but it isn't a
+	 * touristic stop. Excluded from "destinations this tour visits" UI.
+	 */
+	isDepartureHub?: boolean;
 };
 
 export const destinations: Destination[] = [
@@ -350,6 +356,7 @@ export const destinations: Destination[] = [
 			'dubrovnik-one-way',
 			'create-perfect-day-private',
 		],
+		isDepartureHub: true,
 	},
 	{
 		slug: 'zlatni-rat',
