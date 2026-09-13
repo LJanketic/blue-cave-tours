@@ -15,6 +15,11 @@ import {
 	supportsInstantBook,
 } from '../../../lib/booking';
 import { computeBookingTotal, parseAdultPrice, parseChildPrice } from '../../../lib/price';
+import {
+	CANCELLATION_FULL_PREFIX,
+	CANCELLATION_FULL_SUFFIX,
+	CANCELLATION_WINDOW,
+} from '../../../config/cancellation';
 
 const slug = Astro.params.slug;
 const tour = slug ? getTourBySlug(slug) : undefined;
@@ -233,8 +238,7 @@ const successHref = bookingSuccessPath({
 					<i class="ti ti-shield-check" aria-hidden="true"></i>Cancellation policy
 				</div>
 				<div class="policy-box">
-					Free cancellation up to <strong>48 hours</strong> before departure. Cancellations within 48 hours are
-					non-refundable. In case of bad weather, you'll receive a full refund or free rescheduling.
+					{CANCELLATION_FULL_PREFIX}<strong>{CANCELLATION_WINDOW}</strong>{CANCELLATION_FULL_SUFFIX}
 				</div>
 			</div>
 
@@ -258,70 +262,6 @@ const successHref = bookingSuccessPath({
 		margin: 0 auto;
 		padding: 1.5rem 0 2rem;
 		font-size: 14px;
-	}
-
-	.review-page .step-bar {
-		display: flex;
-		align-items: center;
-		margin-bottom: 28px;
-	}
-
-	.review-page .step {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 12px;
-	}
-
-	.review-page .step-dot {
-		width: 22px;
-		height: 22px;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 11px;
-		font-weight: 500;
-		flex-shrink: 0;
-	}
-
-	.review-page .step.done .step-dot {
-		background: var(--color-background-success);
-		color: var(--color-text-success);
-	}
-
-	.review-page .step.done .step-lbl {
-		color: var(--color-text-secondary);
-	}
-
-	.review-page .step.active .step-dot {
-		background: var(--color-text-primary);
-		color: var(--color-background-primary);
-	}
-
-	.review-page .step.active .step-lbl {
-		font-weight: 500;
-	}
-
-	.review-page .step.next .step-dot {
-		background: var(--color-background-secondary);
-		color: var(--color-text-tertiary);
-		border: 0.5px solid var(--color-border-secondary);
-	}
-
-	.review-page .step.next .step-lbl {
-		color: var(--color-text-tertiary);
-	}
-
-	.review-page .step-line {
-		flex: 1;
-		height: 0.5px;
-		background: var(--color-border-secondary);
-		margin: 0 8px;
-	}
-
-	.review-page .step-dot .ti {
-		font-size: 11px;
 	}
 
 	.card {
@@ -488,15 +428,6 @@ const successHref = bookingSuccessPath({
 		text-align: right;
 	}
 
-	.policy-box {
-		background: var(--color-background-secondary);
-		border-radius: var(--radius-md);
-		padding: 10px 14px;
-		font-size: 12px;
-		color: var(--color-text-secondary);
-		line-height: 1.6;
-	}
-
 	.policy-box strong {
 		color: var(--color-text-primary);
 	}
@@ -526,23 +457,6 @@ const successHref = bookingSuccessPath({
 	.cta-btn .ti {
 		font-size: 14px;
 		vertical-align: -2px;
-	}
-
-	.lock-note {
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 4px 6px;
-		font-size: 12px;
-		color: var(--color-text-tertiary);
-		text-align: center;
-		padding-inline: 0.5rem;
-		margin: 10px 0 0;
-	}
-
-	.lock-note .ti {
-		font-size: 13px;
 	}
 
 	@media (max-width: 480px) {

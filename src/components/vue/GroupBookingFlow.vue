@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { MAX_GUESTS as DEFAULT_MAX_GUESTS, bookingReviewPath, parseGroupBookingParams } from '../../lib/booking';
 import { computeBookingTotal, parseAdultPrice, parseChildPrice } from '../../lib/price';
+import { CANCELLATION_SHORT } from '../../config/cancellation';
 
 type Props = {
 	tourSlug: string;
@@ -401,7 +402,7 @@ onMounted(restoreFromQuery);
 		<a class="back-btn" :href="`/tours/${tourSlug}`">← Back to tour type</a>
 		<p class="policy-note">
 			<i class="ti ti-shield-check" aria-hidden="true"></i>
-			Free cancellation up to 48h before departure
+			{{ CANCELLATION_SHORT }}
 		</p>
 	</div>
 </template>
@@ -842,23 +843,6 @@ onMounted(restoreFromQuery);
 
 .back-btn:hover {
 	background: var(--color-background-secondary);
-}
-
-.policy-note {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: 4px 6px;
-	font-size: 12px;
-	color: var(--color-text-success);
-	text-align: center;
-	padding-inline: 0.5rem;
-	margin: 10px 0 0;
-}
-
-.policy-note .ti {
-	font-size: 13px;
 }
 
 @media (max-width: 768px) {
