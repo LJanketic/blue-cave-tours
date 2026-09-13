@@ -1,4 +1,4 @@
-import { WEATHER_CANCELLATION_FAQ } from '../config/cancellation';
+import { CANCELLATION_FULL, CANCELLATION_WEATHER } from '../config/cancellation';
 
 export type FaqCategory = 'booking' | 'weather' | 'onboard' | 'guests' | 'private';
 
@@ -48,14 +48,13 @@ export const FAQ_ITEMS: FaqItem[] = [
 	{
 		category: 'booking',
 		question: 'Can I cancel or reschedule?',
-		answer:
-			'Free cancellation up to 48 hours before departure. Cancellations within 48 hours are non-refundable. To reschedule, contact us as early as possible and we\'ll do our best to move you to another date, subject to availability.',
+		answer: `${CANCELLATION_FULL} To reschedule instead, contact us as early as possible. We'll do our best to move you to another date, subject to availability.`,
 		link: { href: '/legal/cancellation', label: 'Cancellation policy' },
 	},
 	{
 		category: 'weather',
 		question: 'What if the weather is bad?',
-		answer: `We monitor forecasts and shorten, reorder, or reschedule routes to keep the day safe and enjoyable. ${WEATHER_CANCELLATION_FAQ}`,
+		answer: `We monitor forecasts and shorten, reorder, or reschedule routes to keep the day safe and enjoyable. ${CANCELLATION_WEATHER}`,
 	},
 	{
 		category: 'weather',

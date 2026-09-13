@@ -15,7 +15,11 @@ import {
 	supportsInstantBook,
 } from '../../../lib/booking';
 import { computeBookingTotal, parseAdultPrice, parseChildPrice } from '../../../lib/price';
-import { CANCELLATION_FULL } from '../../../config/cancellation';
+import {
+	CANCELLATION_FULL_PREFIX,
+	CANCELLATION_FULL_SUFFIX,
+	CANCELLATION_WINDOW,
+} from '../../../config/cancellation';
 
 const slug = Astro.params.slug;
 const tour = slug ? getTourBySlug(slug) : undefined;
@@ -233,7 +237,9 @@ const successHref = bookingSuccessPath({
 				<div class="section-title section-title--policy">
 					<i class="ti ti-shield-check" aria-hidden="true"></i>Cancellation policy
 				</div>
-				<div class="policy-box">{CANCELLATION_FULL}</div>
+				<div class="policy-box">
+					{CANCELLATION_FULL_PREFIX}<strong>{CANCELLATION_WINDOW}</strong>{CANCELLATION_FULL_SUFFIX}
+				</div>
 			</div>
 
 			<a class="cta-btn" href={successHref}>
@@ -420,6 +426,10 @@ const successHref = bookingSuccessPath({
 		color: var(--color-text-tertiary);
 		margin: 6px 0 0;
 		text-align: right;
+	}
+
+	.policy-box strong {
+		color: var(--color-text-primary);
 	}
 
 	.cta-btn {
