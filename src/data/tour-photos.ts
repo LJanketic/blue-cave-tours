@@ -123,11 +123,17 @@ export const GALLERY_CARD_SIZE: GalleryImageSize = {
 	sizes: '(max-width: 700px) 88vw, 380px',
 };
 
-/** Runs a real photo through Astro's build-time image service (webp, resized, real srcset) instead of shipping the original file as-is. */
+/**
+ * Runs a real photo through Astro's build-time image service (webp, resized, real srcset)
+ * instead of shipping the original file as-is. `imageSize` has no default on purpose: every
+ * call site must pick the ladder that matches where the result is actually rendered (see the
+ * quality-floor/cost-ceiling rule above `GalleryImageSize`) rather than silently inheriting
+ * whichever constant happened to be the default.
+ */
 export async function toGalleryView(
 	photo: PhotoRef,
-	icon = 'sailboat',
-	imageSize: GalleryImageSize = GALLERY_PHOTO_SIZE,
+	icon: string,
+	imageSize: GalleryImageSize,
 ): Promise<GalleryViewPhoto> {
 	if (!photo.src) {
 		return { color: photo.color, alt: photo.alt, icon };
