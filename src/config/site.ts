@@ -13,6 +13,10 @@ export const SITE_DEFAULT_DESCRIPTION =
 /** Brand teal — used for the `theme-color` meta tag and the web app manifest. */
 export const SITE_THEME_COLOR = '#1d9e75';
 
+/** Icon paths — shared by BaseLayout's <link> tags and the web app manifest. */
+export const FAVICON_PATH = '/favicon.svg';
+export const APPLE_TOUCH_ICON_PATH = '/apple-touch-icon.png';
+
 /** Default HTML `<title>` for the home page */
 export const HOME_PAGE_TITLE = `${SITE_NAME} — Split boat tours & private charters`;
 

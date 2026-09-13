@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { NOINDEX_PATH_PREFIXES } from '../config/noindex';
+import { absoluteUrl } from '../lib/seo';
 
 export const prerender = true;
 
@@ -12,7 +13,7 @@ export const GET: APIRoute = ({ site }) => {
 	];
 
 	if (site) {
-		lines.push('', `Sitemap: ${new URL('sitemap-index.xml', site).toString()}`);
+		lines.push('', `Sitemap: ${absoluteUrl('sitemap-index.xml', site)}`);
 	}
 
 	return new Response(lines.join('\n') + '\n', {

@@ -1,6 +1,12 @@
 ---
 import '../styles/global.css';
-import { SITE_DEFAULT_DESCRIPTION, SITE_NAME, SITE_THEME_COLOR } from '../config/site';
+import {
+	APPLE_TOUCH_ICON_PATH,
+	FAVICON_PATH,
+	SITE_DEFAULT_DESCRIPTION,
+	SITE_NAME,
+	SITE_THEME_COLOR,
+} from '../config/site';
 import { DEFAULT_OG_IMAGE } from '../lib/seo';
 
 type Props = {
@@ -30,8 +36,8 @@ const tablerFontDisplayOverride = `@font-face{font-family:'tabler-icons';font-st
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<link rel="icon" type="image/svg+xml" href={FAVICON_PATH} />
+		<link rel="apple-touch-icon" href={APPLE_TOUCH_ICON_PATH} />
 		<link rel="manifest" href="/site.webmanifest" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="theme-color" content={SITE_THEME_COLOR} />

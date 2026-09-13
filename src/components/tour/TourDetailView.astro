@@ -4,7 +4,7 @@ import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../../li
 import { tourTypes } from '../../lib/tour-filters';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 import { GALLERY_HERO_SIZE, GALLERY_THUMB_SIZE, toGalleryView } from '../../data/tour-photos';
-import { getDestinationsForTour } from '../../lib/destinations';
+import { getDestinationsForTour, getPrimaryDestinationForTour } from '../../lib/destinations';
 import ImageGallery from '../vue/ImageGallery.vue';
 
 type Props = { tour: TourDetail };
@@ -57,7 +57,7 @@ if (tour.caveTicketNote) {
 }
 
 const tourDestinations = getDestinationsForTour(tour.slug);
-const primaryDestination = tourDestinations[0];
+const primaryDestination = getPrimaryDestinationForTour(tour);
 ---
 
 <article class="page tour-detail">

@@ -10,8 +10,11 @@ const site = process.env.PUBLIC_SITE_URL;
 // Canonical URLs, the sitemap integration, and OG tags all depend on `site`.
 // Fail loudly on a production build rather than silently shipping a site
 // with none of those — `astro dev`/`astro check` are left alone so local
-// work doesn't need the env var set.
-if (process.env.npm_lifecycle_event === 'build' && !site) {
+// work doesn't need the env var set. Checking argv (Astro's own CLI
+// subcommand) rather than npm_lifecycle_event, which only gets set when a
+// package.json script is invoked by that exact name — argv still says
+// "build" under `npx astro build`, `pnpm exec astro build`, etc.
+if (process.argv.includes('build') && !site) {
 	throw new Error(
 		'PUBLIC_SITE_URL is not set. Set it before building for production, ' +
 			'e.g. `PUBLIC_SITE_URL=https://hellobluecave.com pnpm run build` ' +

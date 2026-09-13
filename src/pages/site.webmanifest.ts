@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { SITE_NAME, SITE_THEME_COLOR } from '../config/site';
+import { APPLE_TOUCH_ICON_PATH, FAVICON_PATH, SITE_NAME, SITE_THEME_COLOR } from '../config/site';
 
 export const prerender = true;
 
@@ -12,8 +12,8 @@ export const GET: APIRoute = () => {
 		background_color: '#ffffff',
 		theme_color: SITE_THEME_COLOR,
 		icons: [
-			{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' },
-			{ src: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+			{ src: FAVICON_PATH, sizes: 'any', type: 'image/svg+xml' },
+			{ src: APPLE_TOUCH_ICON_PATH, sizes: '180x180', type: 'image/png' },
 		],
 	};
 

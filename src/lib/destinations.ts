@@ -34,8 +34,20 @@ export function getDestinationBySlug(slug: string): Destination | undefined {
 	return destinations.find((d) => d.slug === slug);
 }
 
+/** Touristic destinations a tour visits — excludes the Split departure hub. */
 export function getDestinationsForTour(tourSlug: string): Destination[] {
-	return destinations.filter((d) => d.tourSlugs.includes(tourSlug));
+	return destinations.filter((d) => !d.isDepartureHub && d.tourSlugs.includes(tourSlug));
+}
+
+/**
+ * A tour's headline destination, from its explicit `primaryDestinationSlug`
+ * — not guessed from getDestinationsForTour's order, which reflects
+ * declaration order in destinations.ts rather than relevance to this tour.
+ * Undefined for tours with no single namesake destination.
+ */
+export function getPrimaryDestinationForTour(tour: TourDetail): Destination | undefined {
+	if (!tour.primaryDestinationSlug) return undefined;
+	return getDestinationBySlug(tour.primaryDestinationSlug);
 }
 
 export function getToursForDestination(destSlug: string): TourDetail[] {

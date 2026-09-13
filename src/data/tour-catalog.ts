@@ -61,6 +61,7 @@ const PRICE_PRIVATE =
 export const tours: TourDetail[] = [
 	{
 		slug: 'blue-cave-hvar-5-islands',
+		primaryDestinationSlug: 'blue-cave',
 		title: 'Blue Cave, Hvar & 5 islands',
 		tagline: 'Full-day signature route',
 		shortDescription:
@@ -98,6 +99,7 @@ export const tours: TourDetail[] = [
 	},
 	{
 		slug: 'golden-horn-brac-hvar',
+		primaryDestinationSlug: 'zlatni-rat',
 		title: 'Golden Horn, Brač and Hvar Tour',
 		tagline: 'Full-day · Golden Horn & Hvar',
 		shortDescription:
@@ -135,6 +137,7 @@ export const tours: TourDetail[] = [
 	},
 	{
 		slug: 'hvar-red-rocks-pakleni',
+		primaryDestinationSlug: 'hvar',
 		title: 'Hvar, Red Rocks & Pakleni islands',
 		tagline: 'Full-day · Hvar & Pakleni',
 		shortDescription: 'A day exploring Hvar Town, the Red Rocks coastline, and the turquoise bays of the Pakleni islands.',
@@ -169,6 +172,7 @@ export const tours: TourDetail[] = [
 	},
 	{
 		slug: 'blue-lagoon-morning',
+		primaryDestinationSlug: 'blue-lagoon',
 		title: 'Blue Lagoon Morning Tour',
 		tagline: 'Half day · Blue Lagoon & Trogir',
 		shortDescription:
@@ -205,6 +209,7 @@ export const tours: TourDetail[] = [
 	},
 	{
 		slug: 'blue-lagoon-afternoon',
+		primaryDestinationSlug: 'blue-lagoon',
 		title: 'Blue Lagoon Afternoon Tour',
 		tagline: 'Half day · Blue Lagoon & Trogir',
 		shortDescription: 'The same Blue Lagoon half-day route as our morning tour, run as a later afternoon departure.',
@@ -240,6 +245,7 @@ export const tours: TourDetail[] = [
 	},
 	{
 		slug: 'dubrovnik-one-way',
+		primaryDestinationSlug: 'dubrovnik',
 		title: 'Dubrovnik One Way Tour',
 		tagline: 'Private · one-way to Dubrovnik',
 		shortDescription: 'A one-way private transfer from Split to Dubrovnik, calling at Hvar Old Town and Korčula along the way.',

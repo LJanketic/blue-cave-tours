@@ -6,6 +6,7 @@ import TourDetailView from '../../components/tour/TourDetailView.astro';
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getAllTours, getTourBySlug } from '../../lib/tours';
+import { getPrimaryDestinationForTour } from '../../lib/destinations';
 import { breadcrumbJsonLd, tourJsonLd } from '../../lib/seo';
 
 export function getStaticPaths() {
@@ -20,6 +21,9 @@ if (!tour) {
 }
 
 const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
+// Matches the visible breadcrumb in TourDetailView.astro, which also routes
+// its middle crumb through the tour's primary destination when it has one.
+const primaryDestination = tour ? getPrimaryDestinationForTour(tour) : undefined;
 const jsonLd =
 	tour && siteUrl
 		? [
@@ -27,6 +31,9 @@ const jsonLd =
 				breadcrumbJsonLd([
 					{ name: 'Home', url: siteUrl },
 					{ name: 'Tours', url: `${siteUrl}/tours` },
+					...(primaryDestination
+						? [{ name: primaryDestination.name, url: `${siteUrl}/destinations/${primaryDestination.slug}` }]
+						: []),
 					{ name: tour.title, url: `${siteUrl}/tours/${tour.slug}` },
 				]),
 			]
