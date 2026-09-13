@@ -3,7 +3,7 @@ import type { TourDetail } from '../../types/tour';
 import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../../lib/booking';
 import { tourTypes } from '../../lib/tour-filters';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
-import { GALLERY_HERO_SIZE, GALLERY_THUMB_SIZE, toGalleryView } from '../../data/tour-photos';
+import { GALLERY_HERO_SIZE, GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
 import { getDestinationsForTour, getPrimaryDestinationForTour } from '../../lib/destinations';
 import ImageGallery from '../vue/ImageGallery.vue';
 
@@ -38,7 +38,7 @@ const groupIcon = instantBook ? 'users' : 'crown';
 const priceUnit = instantBook ? '/ person' : '/ boat';
 
 const heroPhoto = await toGalleryView(tour.image, 'sailboat', GALLERY_HERO_SIZE);
-const thumbPhotos = await Promise.all(tour.gallery.map((photo) => toGalleryView(photo, 'sailboat', GALLERY_THUMB_SIZE)));
+const thumbPhotos = await Promise.all(tour.gallery.map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)));
 
 const highlightIcons = ['sunset-2', 'swimming', 'bottle', 'binoculars', 'ship', 'accessible', 'sailboat', 'droplet'];
 const itineraryIcons = ['map-pin', 'sailboat', 'swimming', 'sunset', 'anchor', 'building-lighthouse', 'droplet'];

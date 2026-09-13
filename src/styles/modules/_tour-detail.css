@@ -36,6 +36,7 @@
 
 .img-thumbs {
 	display: flex;
+	justify-content: flex-start;
 	gap: 8px;
 	margin-bottom: 20px;
 	min-width: 0;
@@ -43,7 +44,11 @@
 
 .img-thumb {
 	height: 60px;
-	flex: 1 1 0;
+	/* Bounded, not `1 1 0`: a gallery with 1-2 photos (e.g. the Blue Lagoon
+	   tours) would otherwise flex-grow a single thumbnail to fill the whole
+	   row, stretching an ~160px-max source image across ~900px. */
+	flex: 0 1 160px;
+	max-width: 160px;
 	min-width: 0;
 	background: var(--color-background-secondary);
 	border-radius: var(--radius-md);
