@@ -197,6 +197,7 @@ onMounted(readUrlParams);
 								class="card-img__photo"
 								:src="cardSrc(tour)"
 								:srcset="cardSrcset(tour)"
+								sizes="(max-width: 700px) 88vw, 380px"
 								:alt="cardAlt(tour)"
 								loading="lazy"
 								decoding="async"
