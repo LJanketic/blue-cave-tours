@@ -2,7 +2,7 @@
 
 Client showcase site for **Hello Blue Cave** — boat tours and private charters from Split, Croatia. Built with [Astro 6](https://astro.build), deployed to Netlify.
 
-**Brand:** Adriatic Blue `#003D84`, Linen White `#F6F1F2`, Glorich + Playfair Display, H·B·C monogram, HELLO BLUE CAVE wordmark.
+**Brand:** teal accent `#1d9e75` (`--color-accent` in `src/styles/tokens/redesign.css`) on white/gray neutrals, system font stack (`--font-sans`), text wordmark "Hello Blue Cave" — no custom typeface or monogram.
 
 ## Commands
 
@@ -30,7 +30,7 @@ Client showcase site for **Hello Blue Cave** — boat tours and private charters
 ```text
 src/
   components/     Header, Hero, tours, booking CTAs
-  config/         Site name, typography
+  config/         Site name, cancellation copy, noindex rules
   data/           Tour catalog, FAQ
   layouts/        Base + site shell
   client/         Booking redirect + contact form
