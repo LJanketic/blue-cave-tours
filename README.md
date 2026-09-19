@@ -22,8 +22,8 @@ Client showcase site for **Hello Blue Cave** — boat tours and private charters
 
 - **Book now** on tour cards → confirmation page (`/booking/success?tourId=…`). No payment — for client review.
 - **Private charter** → contact / quote flow.
-- **Contact form** → validates with honeypot + min submit time; returns success (no email yet).
-- **Before production:** wire email delivery, add Cloudflare Turnstile (or similar) + rate limiting — honeypot alone is not enough for a live public form.
+- **Contact form** → validates with honeypot + min submit time, then Cloudflare Turnstile + a per-IP rate limit (5 requests / 10 min, backed by Netlify Blobs); returns success (no email yet).
+- **Before production:** set `PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in Netlify (see `.env.example`) — the widget and server-side verification are skipped until both are set. Email delivery still isn't wired.
 
 ## Structure
 

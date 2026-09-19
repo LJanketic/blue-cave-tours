@@ -4,6 +4,16 @@ import {
 	validateContactSubmission,
 } from '../lib/contact-validation';
 
+/** Minimal surface of the Cloudflare Turnstile widget API we call into. */
+type TurnstileApi = {
+	getResponse: (widgetId?: string) => string | undefined;
+	reset: (widgetId?: string) => void;
+};
+
+function getTurnstile(): TurnstileApi | undefined {
+	return (window as unknown as { turnstile?: TurnstileApi }).turnstile;
+}
+
 /** Contact page: POST JSON to `/api/contact`, update status, reset on success. */
 export function initContactForm(): void {
 	const form = document.getElementById('contact-form');
@@ -51,11 +61,13 @@ export function initContactForm(): void {
 			return;
 		}
 
+		const turnstileToken = getTurnstile()?.getResponse() ?? '';
+
 		try {
 			const res = await fetch('/api/contact', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(data),
+				body: JSON.stringify({ ...data, turnstileToken }),
 			});
 			const json = (await res.json().catch(() => ({}))) as { error?: string };
 			if (!res.ok) throw new Error(json.error || 'Failed to send');
@@ -67,6 +79,7 @@ export function initContactForm(): void {
 			statusEl.textContent = err instanceof Error ? err.message : 'Something went wrong';
 		} finally {
 			if (btn instanceof HTMLButtonElement) btn.disabled = false;
+			getTurnstile()?.reset();
 		}
 	});
 }

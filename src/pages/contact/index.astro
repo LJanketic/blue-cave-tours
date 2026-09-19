@@ -17,6 +17,7 @@ const selectedTour = tours.some((t) => t.slug === tourFromQuery) ? tourFromQuery
 const mapUrl =
 	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
 const whatsappUrl = `https://wa.me/${SITE_PHONE.replace(/\D/g, '')}`;
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 ---
 
 <SiteLayout
@@ -159,6 +160,11 @@ const whatsappUrl = `https://wa.me/${SITE_PHONE.replace(/\D/g, '')}`;
 							></textarea>
 						</div>
 					</div>
+					{
+						turnstileSiteKey && (
+							<div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-theme="light" />
+						)
+					}
 					<button type="submit" class="btn-primary contact-submit">
 						Send message
 						<i class="ti ti-arrow-right" aria-hidden="true"></i>
@@ -181,6 +187,10 @@ const whatsappUrl = `https://wa.me/${SITE_PHONE.replace(/\D/g, '')}`;
 		</div>
 	</main>
 </SiteLayout>
+
+{turnstileSiteKey && (
+	<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+)}
 
 <script>
 	import { initContactForm } from '../../client/contact-form';
