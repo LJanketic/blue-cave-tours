@@ -69,10 +69,10 @@ When the design introduces new pages (e.g. About, Gallery, Blog, single landing 
 
 ### `[BRAND]` — Identity
 
-| Component | File | Role |
-|-----------|------|------|
-| `Logo` | `src/components/Logo.astro` | SVG monogram "HBC" |
-| `Wordmark` | `src/components/Wordmark.astro` | SVG "HELLO BLUE CAVE" text |
+No monogram or wordmark component exists. `Logo.astro` (an "HBC" monogram) and
+`Wordmark.astro` were part of an earlier brand direction (Adriatic Blue +
+Glorich, see `05-SITE-COPY.md`) that never shipped. The header and hero render
+"Hello Blue Cave" as plain text in the system font instead.
 
 ### `[MARKETING]` — Homepage sections
 

@@ -36,17 +36,16 @@ All tour photos live in `src/assets/tours/`. Processed at build time via `astro:
 | Asset | Path | Role |
 |-------|------|------|
 | Favicon | `public/favicon.svg` | Browser tab icon |
-| Glorich Light | `public/fonts/glorich/Glorich-Light.ttf` | Display font 300 |
-| Glorich Medium | `public/fonts/glorich/Glorich-Medium.ttf` | Display font 500 |
-| Glorich Bold | `public/fonts/glorich/Glorich-Bold.ttf` | Display font 700 |
+
+The Glorich `.ttf` files listed here previously (`public/fonts/glorich/`) were
+part of the abandoned Adriatic Blue + Glorich brand direction (see
+`05-SITE-COPY.md`) — never referenced by any stylesheet, removed from the repo.
 
 ### Inline SVG (not raster)
 
-| Component | Role |
-|-----------|------|
-| `Logo.astro` | HBC monogram |
-| `Wordmark.astro` | HELLO BLUE CAVE text |
-| `WaveDivider.astro` | Decorative waves |
+No `Logo.astro`, `Wordmark.astro`, or `WaveDivider.astro` component exists —
+these were part of the same abandoned brand direction. "Hello Blue Cave"
+renders as plain text.
 
 ---
 

@@ -93,17 +93,20 @@
 
 ---
 
-## Typography (current — may be replaced by redesign)
+## Typography & brand (as shipped)
+
+This section originally specified a Glorich/Playfair Display + Adriatic Blue
+(`#003D84`) brand kit for the redesign; that direction was never implemented.
+The redesign that shipped (`531d297`, 2026-07-02) uses a teal accent and the
+system font stack instead, with no custom display face:
 
 | Token | Value |
 |-------|-------|
-| Display font | Glorich (self-hosted, `/public/fonts/glorich/`) |
-| Body font | Playfair Display (Google Fonts) |
-| Brand primary | `#003D84` (Adriatic Blue) |
-| Surface | `#F6F1F2` (Linen White) |
-| CTA accent | `#f97316` (orange) |
+| Font (all text) | System stack — `-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif` (`--font-sans`) |
+| Brand accent | `#1d9e75` teal (`--color-accent`) |
+| Background | `#fff` / `#f5f5f4` neutrals |
 
-See `src/styles/tokens/` for full token set. Redesign may replace entirely.
+See `src/styles/tokens/redesign.css` for the full token set.
 
 ---
 
