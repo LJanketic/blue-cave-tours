@@ -138,8 +138,11 @@
 		grid-template-columns: 1fr 1fr;
 	}
 
+	/* minmax(0, …), not a bare 1fr: 1fr has an auto minimum, so any max-content
+	   child (the destination highlights marquee, a long URL) would stretch the
+	   column and the whole page past the viewport. */
 	.layout {
-		grid-template-columns: 1fr;
+		grid-template-columns: minmax(0, 1fr);
 	}
 
 	.highlights,

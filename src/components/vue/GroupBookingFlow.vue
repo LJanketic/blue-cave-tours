@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { MAX_GUESTS as DEFAULT_MAX_GUESTS, bookingReviewPath, parseGroupBookingParams } from '../../lib/booking';
+import {
+	MAX_GUESTS as DEFAULT_MAX_GUESTS,
+	bookingReviewPath,
+	parseGroupBookingParams,
+	parseIsoDate,
+	startOfDay,
+	toIsoDate,
+} from '../../lib/booking';
 import { computeBookingTotal, parseAdultPrice, parseChildPrice } from '../../lib/price';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 
@@ -12,6 +19,8 @@ type Props = {
 	fromPrice: string;
 	priceNotes: string;
 	maxGuests?: number;
+	/** YYYY-MM-DD the page was rendered on, so hydration starts from the same calendar as the HTML. */
+	renderedOn: string;
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -39,10 +48,17 @@ const SLOTS = computed(() =>
 		: ([] as const),
 );
 
-const today = new Date();
-const viewYear = ref(today.getFullYear());
-const viewMonth = ref(today.getMonth());
-const selectedDay = ref<number | null>(null);
+// This page is prerendered, so the HTML's calendar is from the build date. The
+// first client render must use that same date: Vue doesn't repair class
+// mismatches during hydration, so starting from the visitor's date would leave
+// the build-time "today" and past-day styling in place. onMounted then moves
+// to the visitor's real date as a normal reactive update.
+const today = ref(parseIsoDate(props.renderedOn) ?? startOfDay(new Date()));
+const viewYear = ref(today.value.getFullYear());
+const viewMonth = ref(today.value.getMonth());
+// The full YYYY-MM-DD, not just a day number: browsing to another month must
+// not silently move the selection to the same day in that month.
+const selectedDate = ref<string | null>(null);
 const selectedSlot = ref(departureTime.value ?? '');
 const adults = ref(2);
 const children = ref(0);
@@ -63,29 +79,36 @@ const calendarCells = computed(() => {
 	const first = new Date(viewYear.value, viewMonth.value, 1);
 	const startPad = (first.getDay() + 6) % 7;
 	const daysInMonth = new Date(viewYear.value, viewMonth.value + 1, 0).getDate();
-	const cells: Array<{ key: string; day: number | null; past: boolean; today: boolean }> = [];
+	const cells: Array<{
+		key: string;
+		day: number | null;
+		iso: string | null;
+		past: boolean;
+		today: boolean;
+	}> = [];
 
 	for (let i = 0; i < startPad; i++) {
-		cells.push({ key: `empty-${i}`, day: null, past: false, today: false });
+		cells.push({ key: `empty-${i}`, day: null, iso: null, past: false, today: false });
 	}
 
+	const todayTime = today.value.getTime();
 	for (let d = 1; d <= daysInMonth; d++) {
 		const date = new Date(viewYear.value, viewMonth.value, d);
-		const past =
-			date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-		const isToday =
-			date.getFullYear() === today.getFullYear() &&
-			date.getMonth() === today.getMonth() &&
-			date.getDate() === today.getDate();
-		cells.push({ key: `day-${d}`, day: d, past, today: isToday });
+		cells.push({
+			key: `day-${d}`,
+			day: d,
+			iso: toIsoDate(date),
+			past: date.getTime() < todayTime,
+			today: date.getTime() === todayTime,
+		});
 	}
 
 	return cells;
 });
 
 const selectedDateLabel = computed(() => {
-	if (selectedDay.value === null) return '— select a date';
-	const date = new Date(viewYear.value, viewMonth.value, selectedDay.value);
+	const date = selectedDate.value ? parseIsoDate(selectedDate.value) : null;
+	if (!date) return '— select a date';
 	return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 });
 
@@ -132,7 +155,7 @@ const atCapacity = computed(() => totalGuests.value >= MAX_GUESTS);
 
 const canSubmit = computed(
 	() =>
-		selectedDay.value !== null &&
+		selectedDate.value !== null &&
 		totalGuests.value >= 1 &&
 		firstName.value.trim().length >= 1 &&
 		lastName.value.trim().length >= 1 &&
@@ -157,9 +180,9 @@ function nextMonth() {
 	}
 }
 
-function selectDay(day: number, past: boolean) {
+function selectDay(iso: string, past: boolean) {
 	if (past) return;
-	selectedDay.value = day;
+	selectedDate.value = iso;
 	selectedSlot.value = departureTime.value ?? '';
 }
 
@@ -172,12 +195,10 @@ function bump(field: 'adults' | 'children', delta: number) {
 }
 
 function bookingPayload(): Record<string, string> {
-	if (selectedDay.value === null) return {};
-	const month = String(viewMonth.value + 1).padStart(2, '0');
-	const day = String(selectedDay.value).padStart(2, '0');
+	if (selectedDate.value === null) return {};
 	return {
 		tourId: props.tourSlug,
-		date: `${viewYear.value}-${month}-${day}`,
+		date: selectedDate.value,
 		slot: selectedSlot.value,
 		adults: String(adults.value),
 		children: String(children.value),
@@ -192,7 +213,7 @@ function bookingPayload(): Record<string, string> {
 }
 
 function goToReview() {
-	if (!canSubmit.value || selectedDay.value === null) return;
+	if (!canSubmit.value || selectedDate.value === null) return;
 	window.location.href = bookingReviewPath(props.tourSlug, bookingPayload());
 }
 
@@ -201,13 +222,13 @@ function restoreFromQuery() {
 	const params = new URLSearchParams(window.location.search);
 	if (![...params.keys()].length) return;
 	const details = parseGroupBookingParams(params);
-	if (details.date) {
-		const [year, month, day] = details.date.split('-').map(Number);
-		if (year && month && day) {
-			viewYear.value = year;
-			viewMonth.value = month - 1;
-			selectedDay.value = day;
-		}
+	// A saved or back-navigated link can carry a date that has since passed;
+	// drop it so the guest picks again rather than booking a day already gone.
+	const restoredDate = details.date ? parseIsoDate(details.date) : null;
+	if (details.date && restoredDate && restoredDate >= today.value) {
+		viewYear.value = restoredDate.getFullYear();
+		viewMonth.value = restoredDate.getMonth();
+		selectedDate.value = details.date;
 	}
 	if (details.slot) selectedSlot.value = details.slot;
 	// Each field is already capped individually by parseGroupBookingParams, but
@@ -230,7 +251,16 @@ function restoreFromQuery() {
 	if (details.notes) notes.value = details.notes;
 }
 
-onMounted(restoreFromQuery);
+function syncToday() {
+	today.value = startOfDay(new Date());
+	viewYear.value = today.value.getFullYear();
+	viewMonth.value = today.value.getMonth();
+}
+
+onMounted(() => {
+	syncToday();
+	restoreFromQuery();
+});
 </script>
 
 <template>
@@ -254,16 +284,16 @@ onMounted(restoreFromQuery);
 						empty: cell.day === null,
 						past: cell.past,
 						today: cell.today,
-						sel: cell.day !== null && selectedDay === cell.day,
+						sel: cell.iso !== null && selectedDate === cell.iso,
 					}"
 					:disabled="cell.day === null || cell.past"
-					@click="cell.day !== null && selectDay(cell.day, cell.past)"
+					@click="cell.iso !== null && selectDay(cell.iso, cell.past)"
 				>
 					<span v-if="cell.day !== null">{{ cell.day }}</span>
 					<span v-if="cell.day !== null && !cell.past" class="avail-dot" aria-hidden="true"></span>
 				</button>
 			</div>
-			<div v-if="selectedDay !== null && SLOTS.length" class="slot-section">
+			<div v-if="selectedDate !== null && SLOTS.length" class="slot-section">
 				<p class="slot-heading">Departure time</p>
 				<div class="slots">
 					<button
@@ -285,7 +315,7 @@ onMounted(restoreFromQuery);
 					</button>
 				</div>
 			</div>
-			<div v-else-if="selectedDay !== null" class="slot-section">
+			<div v-else-if="selectedDate !== null" class="slot-section">
 				<p class="slot-heading">Departure time</p>
 				<p class="card-sub">Exact departure time confirmed at booking.</p>
 			</div>
@@ -372,7 +402,7 @@ onMounted(restoreFromQuery);
 			</div>
 			<div class="sum-row">
 				<span class="sum-label">Departure</span>
-				<span class="sum-val">{{ selectedDay !== null ? selectedSlot || 'Confirmed at booking' : '—' }}</span>
+				<span class="sum-val">{{ selectedDate !== null ? selectedSlot || 'Confirmed at booking' : '—' }}</span>
 			</div>
 			<div class="sum-row">
 				<span class="sum-label">Guests</span>

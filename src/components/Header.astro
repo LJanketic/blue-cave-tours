@@ -7,7 +7,9 @@ type Props = {
 };
 
 const { solid = false } = Astro.props;
-const currentPath = Astro.url.pathname;
+// Production serves directory-style URLs (/about/), dev serves /about — strip the
+// trailing slash so exact-match checks work in both.
+const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
 ---
 
 <header class:list={['nav', !solid && 'nav--floating']} id="site-header" data-floating={String(!solid)}>

@@ -344,7 +344,7 @@ const mapStubLabel = distanceGeo
 	}
 
 	.dest-detail-page .layout {
-		grid-template-columns: 1fr 260px;
+		grid-template-columns: minmax(0, 1fr) 260px;
 	}
 
 	.dest-detail-page .dest-title {
@@ -589,7 +589,7 @@ const mapStubLabel = distanceGeo
 
 	@media (max-width: 768px) {
 		.dest-detail-page .layout {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 
 		.dest-detail-page .sidebar-nearby-block {

@@ -86,7 +86,7 @@ function parseCount(value: string | null, max: number): number | null {
 
 export function parseGroupBookingParams(params: URLSearchParams): GroupBookingDetails {
 	const dateRaw = clip(params.get('date'), 10);
-	const date = dateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : null;
+	const date = dateRaw && parseIsoDate(dateRaw) ? dateRaw : null;
 	const slotRaw = clip(params.get('slot'), 8);
 	const slot = slotRaw && /^\d{2}:\d{2}$/.test(slotRaw) ? slotRaw : null;
 	const adults = parseCount(params.get('adults'), MAX_GUESTS);
@@ -107,10 +107,30 @@ export function parseGroupBookingParams(params: URLSearchParams): GroupBookingDe
 	};
 }
 
+/** Local calendar date as YYYY-MM-DD (toISOString would use UTC and can shift the day). */
+export function toIsoDate(date: Date): string {
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** YYYY-MM-DD → local midnight, or null when malformed or not a real day (e.g. 2026-02-31). */
+export function parseIsoDate(iso: string): Date | null {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+	if (!match) return null;
+	const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+	return toIsoDate(date) === iso ? date : null;
+}
+
+/** Local midnight of the given moment, for day-level comparisons. */
+export function startOfDay(date: Date): Date {
+	return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 export function formatBookingDate(iso: string): string {
-	const [year, month, day] = iso.split('-').map(Number);
-	if (!year || !month || !day) return iso;
-	return new Date(year, month - 1, day).toLocaleDateString('en-GB', {
+	const date = parseIsoDate(iso);
+	if (!date) return iso;
+	return date.toLocaleDateString('en-GB', {
 		weekday: 'long',
 		day: 'numeric',
 		month: 'short',
