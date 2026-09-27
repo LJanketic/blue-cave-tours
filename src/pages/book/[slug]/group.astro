@@ -7,7 +7,7 @@ import MiniNav from '../../../components/MiniNav.astro';
 import TrustStrip from '../../../components/TrustStrip.astro';
 import GroupBookingFlow from '../../../components/vue/GroupBookingFlow.vue';
 import { getAllTours } from '../../../lib/tours';
-import { supportsInstantBook } from '../../../lib/booking';
+import { supportsInstantBook, toIsoDate } from '../../../lib/booking';
 import type { TourDetail } from '../../../types/tour';
 
 // Quote-only tours have no instant-book price to charge — they're routed to
@@ -24,6 +24,7 @@ export function getStaticPaths() {
 
 type Props = { tour: TourDetail };
 const { tour } = Astro.props;
+const renderedOn = toIsoDate(new Date());
 
 const standMatch = tour.meetingPoint.match(/stand number (\d+)/i);
 const meetingShort = standMatch
@@ -84,6 +85,7 @@ const meetingShort = standMatch
 				departure={tour.departure}
 				fromPrice={tour.fromPrice}
 				priceNotes={tour.priceNotes}
+				renderedOn={renderedOn}
 			/>
 
 			<TrustStrip />
