@@ -343,6 +343,14 @@ body.nav-menu-open::before {
 		overflow-y: auto;
 	}
 
+	/* backdrop-filter and transform both make the header the containing block for
+	   fixed descendants, which would squeeze the full-screen panel into the bar. */
+	.nav--open {
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+		transform: none;
+	}
+
 	.nav--open .nav-links {
 		display: flex;
 	}
