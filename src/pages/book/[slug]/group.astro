@@ -7,7 +7,7 @@ import MiniNav from '../../../components/MiniNav.astro';
 import TrustStrip from '../../../components/TrustStrip.astro';
 import GroupBookingFlow from '../../../components/vue/GroupBookingFlow.vue';
 import { getAllTours } from '../../../lib/tours';
-import { supportsInstantBook, toIsoDate } from '../../../lib/booking';
+import { meetingPointShort, supportsInstantBook, toIsoDate } from '../../../lib/booking';
 import type { TourDetail } from '../../../types/tour';
 
 // Quote-only tours have no instant-book price to charge — they're routed to
@@ -26,23 +26,21 @@ type Props = { tour: TourDetail };
 const { tour } = Astro.props;
 const renderedOn = toIsoDate(new Date());
 
-const standMatch = tour.meetingPoint.match(/stand number (\d+)/i);
-const meetingShort = standMatch
-	? `Riva stand ${standMatch[1]}`
-	: (tour.meetingPoint.replace(/^Meet at /i, '').split('.')[0]?.trim() ?? tour.meetingPoint);
+const meetingShort = meetingPointShort(tour.meetingPoint);
 ---
 
-<SiteLayout title={pageTitle(`Book — ${tour.title}`)} description={`Book ${tour.title} — choose date, guests, and contact details.`} booking checkout robots="noindex, nofollow">
+<SiteLayout title={pageTitle(`Book — ${tour.title}`)} description={`Book ${tour.title} — choose date, guests, and contact details.`} checkout robots="noindex, nofollow">
 	<main id="main" class="page-shell page-shell--narrow">
 		<div class="page group-booking-page">
-			<MiniNav exitHref={`/tours/${tour.slug}`} exitLabel="Exit" />
-			<div class="step-bar" aria-label="Booking progress">
+			<MiniNav exitHref={`/tours/${tour.slug}/`} exitLabel="Exit" />
+			<h1 class="sr-only">Book {tour.title}</h1>
+			<div class="step-bar" role="group" aria-label="Booking progress">
 				<div class="step done">
 					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
 					<span class="step-lbl">Tour type</span>
 				</div>
 				<div class="step-line"></div>
-				<div class="step active">
+				<div class="step active" aria-current="step">
 					<div class="step-dot">2</div>
 					<span class="step-lbl">Date &amp; guests</span>
 				</div>

@@ -13,7 +13,7 @@
 	/* ---------- 1. Palette (raw values) ---------- */
 	--palette-black: #111;
 	--palette-gray-700: #555;
-	--palette-gray-550: #767676; /* AA-contrast tertiary text (a11y) */
+	--palette-gray-550: #696969; /* 4.5:1+ on white and on --palette-gray-100 (#767676 was only 4.2:1 on the grey) */
 	--palette-gray-500: #999;
 	--palette-gray-400: #ccc;
 	--palette-gray-300: #aaa;
@@ -34,6 +34,7 @@
 	--palette-amber-900: #633806;
 	--palette-amber-500: #ef9f27;
 	--palette-amber-400: #ba7517;
+	--palette-amber-700: #8f5a12; /* amber text that passes 4.5:1 on amber-100 */
 	--palette-amber-100: #faeeda;
 	--palette-amber-50: #fef3e2;
 
@@ -55,7 +56,9 @@
 	--color-text-info: var(--palette-blue-500);
 	--color-text-success: var(--palette-teal-900);
 	--color-text-danger: var(--palette-red-900);
-	--color-text-warning: var(--palette-amber-400);
+	--color-text-warning: var(--palette-amber-700);
+	/* Teal for text: --color-accent (teal-500) is only 3.4:1 on white, fine for icons, not for words. */
+	--color-text-accent: #137556;
 
 	/* Backgrounds */
 	--color-background-primary: var(--palette-white);
@@ -93,7 +96,6 @@
 
 	/* ---------- 3. Legacy aliases (back-compat) ---------- */
 	--color-accent-teal: var(--color-accent);
-	--color-star: var(--color-text-warning);
 	--badge-group-bg: var(--color-background-success);
 	--badge-group-text: var(--color-text-success);
 	--badge-private-bg: var(--color-category-private-bg);

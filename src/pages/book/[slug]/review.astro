@@ -11,6 +11,7 @@ import {
 	contactHrefForTour,
 	formatBookingDate,
 	hasRequiredBookingDetails,
+	meetingPointShort,
 	parseGroupBookingParams,
 	supportsInstantBook,
 } from '../../../lib/booking';
@@ -36,16 +37,13 @@ if (!supportsInstantBook(tour)) {
 
 const details = parseGroupBookingParams(Astro.url.searchParams);
 if (!hasRequiredBookingDetails(details)) {
-	return Astro.redirect(`/book/${tour.slug}/group`);
+	return Astro.redirect(`/book/${tour.slug}/group/`);
 }
 
 const query = Astro.url.search;
-const editHref = `/book/${tour.slug}/group${query}`;
+const editHref = `/book/${tour.slug}/group/${query}`;
 
-const standMatch = tour.meetingPoint.match(/stand number (\d+)/i);
-const meetingShort = standMatch
-	? `Riva stand ${standMatch[1]}`
-	: (tour.meetingPoint.replace(/^Meet at /i, '').split('.')[0]?.trim() ?? tour.meetingPoint);
+const meetingShort = meetingPointShort(tour.meetingPoint);
 
 const guestName = [details.firstName, details.lastName].filter(Boolean).join(' ');
 const dateLine = details.date ? formatBookingDate(details.date) : null;
@@ -98,8 +96,9 @@ const successHref = bookingSuccessPath({
 <SiteLayout title={pageTitle(`Review booking — ${tour.title}`)} description={`Review your booking for ${tour.title} before confirming.`} checkout robots="noindex, nofollow">
 	<main id="main" class="page-shell page-shell--narrow">
 		<div class="page review-page">
-			<MiniNav exitHref={`/tours/${tour.slug}`} exitLabel="Exit" />
-			<div class="step-bar" aria-label="Booking progress">
+			<MiniNav exitHref={`/tours/${tour.slug}/`} exitLabel="Exit" />
+			<h1 class="sr-only">Review your booking</h1>
+			<div class="step-bar" role="group" aria-label="Booking progress">
 				<div class="step done">
 					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
 					<span class="step-lbl">Tour type</span>
@@ -110,7 +109,7 @@ const successHref = bookingSuccessPath({
 					<span class="step-lbl">Date &amp; guests</span>
 				</div>
 				<div class="step-line"></div>
-				<div class="step active">
+				<div class="step active" aria-current="step">
 					<div class="step-dot">3</div>
 					<span class="step-lbl">Review</span>
 				</div>

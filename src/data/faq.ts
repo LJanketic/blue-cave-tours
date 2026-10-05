@@ -23,7 +23,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		question: 'How do I book a tour?',
 		answer:
 			'Choose a tour on our website, pick your date and guest count, and complete checkout. You’ll receive confirmation with meeting time, stand location, and what to bring.',
-		link: { href: '/tours', label: 'Browse tours' },
+		link: { href: '/tours/', label: 'Browse tours' },
 	},
 	{
 		category: 'booking',
@@ -36,20 +36,20 @@ export const FAQ_ITEMS: FaqItem[] = [
 		question: 'Will I receive a confirmation after booking?',
 		answer:
 			'Yes, immediately after payment. Check spam if it doesn’t arrive within a few minutes; contact us with your name and tour date if needed.',
-		link: { href: '/contact', label: 'Contact us' },
+		link: { href: '/contact/', label: 'Contact us' },
 	},
 	{
 		category: 'booking',
 		question: 'Is online payment secure?',
 		answer:
 			'Yes. Stripe processes all payments securely: card details go straight to Stripe, and we never store them on our servers. We show prices in Euros and confirm the final total before you pay.',
-		link: { href: '/legal/privacy', label: 'Privacy policy' },
+		link: { href: '/legal/privacy/', label: 'Privacy policy' },
 	},
 	{
 		category: 'booking',
 		question: 'Can I cancel or reschedule?',
 		answer: `${CANCELLATION_FULL} To reschedule instead, contact us as early as possible. We'll do our best to move you to another date, subject to availability.`,
-		link: { href: '/legal/cancellation', label: 'Cancellation policy' },
+		link: { href: '/legal/cancellation/', label: 'Cancellation policy' },
 	},
 	{
 		category: 'weather',
@@ -121,21 +121,21 @@ export const FAQ_ITEMS: FaqItem[] = [
 		question: 'Private vs group tours?',
 		answer:
 			'Group tours follow a fixed timetable; private charters pick timing and pacing within operational limits: see',
-		link: { href: '/tours/create-perfect-day-private', label: 'Create your perfect day at sea' },
+		link: { href: '/tours/create-perfect-day-private/', label: 'Create your perfect day at sea' },
 	},
 	{
 		category: 'private',
 		question: 'Can I choose my own route on a private charter?',
 		answer:
 			'Yes, within fuel and time limits. Describe your ideal day when you enquire and your skipper will help plan the best possible route.',
-		link: { href: '/contact?tour=create-perfect-day-private', label: 'Request a quote' },
+		link: { href: '/contact/?tour=create-perfect-day-private', label: 'Request a quote' },
 	},
 	{
 		category: 'private',
 		question: 'How far in advance should I book a private charter?',
 		answer:
 			'At least two weeks ahead in July and August; one week is often enough in shoulder season. Last-minute slots sometimes open. Contact us directly.',
-		link: { href: '/contact', label: 'Contact us' },
+		link: { href: '/contact/', label: 'Contact us' },
 	},
 ];
 

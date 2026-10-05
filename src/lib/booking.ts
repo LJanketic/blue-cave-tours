@@ -1,27 +1,38 @@
 import type { TourDetail } from '../types/tour';
-
-// hvar-red-rocks-pakleni has no confirmed price tier yet ('Price on request'),
-// so it's quote-only like the two private charters, not an instant-book tour.
-const QUOTE_ONLY_SLUGS = new Set([
-	'create-perfect-day-private',
-	'dubrovnik-one-way',
-	'hvar-red-rocks-pakleni',
-]);
+import { parseAdultPrice } from './price';
 
 /** Guests per departure, enforced both client-side (GroupBookingFlow) and here. */
 export const MAX_GUESTS = 12;
 
-/** Tours with instant book (preview confirmation flow). Private charters use contact instead. */
-export function supportsInstantBook(tour: Pick<TourDetail, 'slug'>): boolean {
-	return !QUOTE_ONLY_SLUGS.has(tour.slug);
+/** Group departure (shared boat, per-person price) vs private-only charter. */
+export function isGroupTour(tour: Pick<TourDetail, 'types'>): boolean {
+	return tour.types.includes('group');
+}
+
+/**
+ * Instant book (the group booking flow) needs a group departure with a real
+ * per-person price. Private-only charters and tours priced "on request" (e.g.
+ * hvar-red-rocks-pakleni until its price is confirmed) go to the contact form.
+ */
+export function supportsInstantBook(tour: Pick<TourDetail, 'types' | 'fromPrice'>): boolean {
+	return isGroupTour(tour) && parseAdultPrice(tour.fromPrice) !== null;
+}
+
+/**
+ * Price unit next to "From …": per person for group departures, per boat for
+ * private-only charters, and none when the price isn't a number ("On request").
+ */
+export function tourPriceUnit(tour: Pick<TourDetail, 'types' | 'fromPrice'>): string {
+	if (parseAdultPrice(tour.fromPrice) === null) return '';
+	return isGroupTour(tour) ? '/ person' : '/ boat';
 }
 
 export function contactHrefForTour(tour: Pick<TourDetail, 'slug'>): string {
-	return `/contact?tour=${encodeURIComponent(tour.slug)}`;
+	return `/contact/?tour=${encodeURIComponent(tour.slug)}`;
 }
 
 export function groupBookHref(tour: Pick<TourDetail, 'slug'>): string {
-	return `/book/${encodeURIComponent(tour.slug)}/group`;
+	return `/book/${encodeURIComponent(tour.slug)}/group/`;
 }
 
 export type GroupBookingDetails = {
@@ -40,12 +51,12 @@ export type GroupBookingDetails = {
 
 export function bookingSuccessPath(params: Record<string, string>): string {
 	const query = bookingQuery(params);
-	return query ? `/booking/success?${query}` : '/booking/success';
+	return query ? `/booking/success/?${query}` : '/booking/success/';
 }
 
 export function bookingReviewPath(slug: string, params: Record<string, string>): string {
 	const query = bookingQuery(params);
-	const path = `/book/${encodeURIComponent(slug)}/review`;
+	const path = `/book/${encodeURIComponent(slug)}/review/`;
 	return query ? `${path}?${query}` : path;
 }
 
@@ -136,6 +147,13 @@ export function formatBookingDate(iso: string): string {
 		month: 'short',
 		year: 'numeric',
 	});
+}
+
+/** Short meeting-point label for the booking pages ("Riva stand 14"). */
+export function meetingPointShort(meetingPoint: string): string {
+	const stand = meetingPoint.match(/stand number (\d+)/i);
+	if (stand) return `Riva stand ${stand[1]}`;
+	return meetingPoint.replace(/^Meet at /i, '').split('.')[0]?.trim() || meetingPoint;
 }
 
 export function guestSummaryFromCounts(adults: number, children: number): string {

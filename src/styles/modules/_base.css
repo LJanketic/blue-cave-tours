@@ -481,7 +481,7 @@ a.btn-secondary:hover {
 	color: var(--color-text-primary);
 }
 
-.footer-col h3 {
+.footer-col h2 {
 	font-size: 12px;
 	font-weight: 500;
 	margin: 0 0 10px;

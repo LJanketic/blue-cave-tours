@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import type { TourDetail } from '../../types/tour';
-import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../../lib/booking';
+import { isGroupTour, tourPriceUnit } from '../../lib/booking';
 import {
 	matchesAnyFilter,
 	searchTours,
 	sortTours,
-	tourTypes,
 	type TourFilter,
 } from '../../lib/tour-filters';
 
@@ -14,7 +13,7 @@ type CardPhoto = { src?: string; srcset?: string; alt: string };
 
 const props = defineProps<{
 	tours: TourDetail[];
-	/** Destination slug → tour slugs that visit it (for `/tours?destination=`). */
+	/** Destination slug → tour slugs that visit it (for `/tours/?destination=`). */
 	toursByDestination?: Record<string, string[]>;
 	/** Tour slug → pre-optimized card photo (built at build time via astro:assets). */
 	cardPhotos: Record<string, CardPhoto>;
@@ -26,6 +25,9 @@ const FILTERS: { id: TourFilter; label: string; icon: string }[] = [
 	{ id: 'short', label: 'Half day', icon: 'clock' },
 	{ id: 'sunset', label: 'Sunset', icon: 'sunset' },
 ];
+
+/** Tour slug → price unit ('' when the price isn't a number), computed once. */
+const priceUnits = computed(() => new Map(props.tours.map((tour) => [tour.slug, tourPriceUnit(tour)])));
 
 const activeFilters = ref<Set<TourFilter>>(new Set());
 const sort = ref('popular');
@@ -80,6 +82,12 @@ const catalogSections = computed(() => {
 	return sections;
 });
 
+// The first card's photo is the page's largest paint: load it straight away.
+// The prerendered HTML can only boost the unfiltered first card; once URL
+// filters apply on mount this follows the list, so the first visible card
+// switches to eager.
+const firstTourSlug = computed(() => catalogSections.value[0]?.tours[0]?.slug);
+
 function toggleFilter(filter: TourFilter) {
 	const next = new Set(activeFilters.value);
 	if (next.has(filter)) next.delete(filter);
@@ -91,14 +99,6 @@ function isActive(filter: TourFilter): boolean {
 	return activeFilters.value.has(filter);
 }
 
-function bookHref(tour: TourDetail): string {
-	return supportsInstantBook(tour) ? groupBookHref(tour) : contactHrefForTour(tour);
-}
-
-function priceUnit(tour: TourDetail): string {
-	return supportsInstantBook(tour) ? '/ person' : '/ boat';
-}
-
 function typeBadgeClass(type: 'group' | 'private'): string {
 	return type === 'group' ? 'badge-group' : 'badge-private';
 }
@@ -108,11 +108,11 @@ function typeBadgeLabel(type: 'group' | 'private'): string {
 }
 
 function typeMeta(tour: TourDetail): string {
-	return tourTypes(tour).map(typeBadgeLabel).join(' / ');
+	return tour.types.map(typeBadgeLabel).join(' / ');
 }
 
 function typeMetaIcon(tour: TourDetail): string {
-	return tourTypes(tour).includes('group') ? 'users' : 'crown';
+	return isGroupTour(tour) ? 'users' : 'crown';
 }
 
 function cardSrc(tour: TourDetail): string | undefined {
@@ -145,11 +145,36 @@ function readUrlParams() {
 	if (q) searchQuery.value = q;
 }
 
-onMounted(readUrlParams);
+// Results count for screen readers. Left empty until filters applied from the
+// URL on load have settled, so it only speaks after the visitor changes something.
+const statusText = ref('');
+let announce = false;
+// Watches the set of shown tours, not just its size, so a different result of
+// the same length is still announced. Clearing first makes the live region
+// repeat an unchanged count.
+watch(
+	() => filteredTours.value.map((tour) => tour.slug).join(),
+	() => {
+		if (!announce) return;
+		const n = filteredTours.value.length;
+		statusText.value = '';
+		nextTick(() => {
+			statusText.value = `${n} ${n === 1 ? 'tour' : 'tours'} shown`;
+		});
+	},
+);
+
+onMounted(() => {
+	readUrlParams();
+	nextTick(() => {
+		announce = true;
+	});
+});
 </script>
 
 <template>
 	<div class="tours-catalog">
+		<p class="sr-only" role="status">{{ statusText }}</p>
 		<div class="tours-header">
 			<h1 class="tours-title">Our tours</h1>
 			<p class="tours-desc">
@@ -183,14 +208,14 @@ onMounted(readUrlParams);
 		</div>
 
 		<template v-for="section in catalogSections" :key="section.label">
-			<p class="section-label">{{ section.label }}</p>
+			<h2 class="section-label">{{ section.label }}</h2>
 			<div class="tour-grid" :class="{ 'tour-grid--featured': section.highlight }">
 				<div
 					v-for="tour in section.tours"
 					:key="`${section.label}-${tour.slug}`"
 					class="tour-cell"
 				>
-					<a :href="`/tours/${tour.slug}`" class="tour-card" :class="{ featured: section.highlight }">
+					<a :href="`/tours/${tour.slug}/`" class="tour-card" :class="{ featured: section.highlight }">
 						<div class="card-img" :style="{ '--placeholder-color': tour.image.color }">
 							<img
 								v-if="cardSrc(tour)"
@@ -199,7 +224,8 @@ onMounted(readUrlParams);
 								:srcset="cardSrcset(tour)"
 								sizes="(max-width: 700px) 88vw, 380px"
 								:alt="cardAlt(tour)"
-								loading="lazy"
+								:loading="tour.slug === firstTourSlug ? 'eager' : 'lazy'"
+								:fetchpriority="tour.slug === firstTourSlug ? 'high' : undefined"
 								decoding="async"
 							/>
 							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
@@ -207,7 +233,7 @@ onMounted(readUrlParams);
 								<span v-if="tour.featured" class="img-badge badge-bestseller">Best seller</span>
 								<span v-if="tour.badge === 'new'" class="img-badge badge-new">New</span>
 								<span
-									v-for="type in tourTypes(tour)"
+									v-for="type in tour.types"
 									:key="type"
 									class="img-badge"
 									:class="typeBadgeClass(type)"
@@ -231,23 +257,12 @@ onMounted(readUrlParams);
 							<p class="card-desc">{{ tour.shortDescription }}</p>
 							<div class="card-footer">
 								<div>
-									<span class="price-from">From </span>
+									<span v-if="priceUnits.get(tour.slug)" class="price-from">From </span>
 									<span class="price-val">{{ tour.fromPrice }}</span>
-									<span class="price-per"> {{ priceUnit(tour) }}</span>
+									<span v-if="priceUnits.get(tour.slug)" class="price-per"> {{ priceUnits.get(tour.slug) }}</span>
 								</div>
 							</div>
 						</div>
-					</a>
-					<button type="button" class="wishlist-btn" aria-label="Save tour" @click.stop>
-						<i class="ti ti-heart" aria-hidden="true"></i>
-					</button>
-					<a
-						class="tours-catalog__hook"
-						:href="bookHref(tour)"
-						tabindex="-1"
-						aria-hidden="true"
-					>
-						Book
 					</a>
 				</div>
 			</div>

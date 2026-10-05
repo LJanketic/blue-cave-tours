@@ -35,7 +35,7 @@ if (bookedTour && !supportsInstantBook(bookedTour)) {
 	return Astro.redirect(contactHrefForTour(bookedTour));
 }
 if (bookedTour && !hasRequiredBookingDetails(details)) {
-	return Astro.redirect(`/book/${bookedTour.slug}/group`);
+	return Astro.redirect(`/book/${bookedTour.slug}/group/`);
 }
 
 const guestName = [details.firstName, details.lastName].filter(Boolean).join(' ');
@@ -241,7 +241,7 @@ const bringList =
 			</div>
 		</div>
 
-		<a class="btn-browse" href="/tours">
+		<a class="btn-browse" href="/tours/">
 			<i class="ti ti-sailboat" aria-hidden="true"></i>
 			Browse more tours
 		</a>

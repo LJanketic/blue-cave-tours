@@ -1,6 +1,15 @@
-# Retired tour slugs (strict photo match) → catalog
-/tours/golden-horn-brac-hvar    /tours    301
-/tours/brac-golden-horn         /tours    301
-/tours/blue-lagoon-trogir       /tours    301
-/tours/hvar-red-rocks-pakleni   /tours    301
-/tours/three-islands-trogir     /tours    301
+# Retired tour slugs (REMOVED_TOUR_SLUGS in src/data/tour-catalog.ts) → catalog.
+# Trailing-slash targets so it's a single hop. src/data/catalog.test.ts keeps
+# this list and REMOVED_TOUR_SLUGS in sync.
+/tours/three-islands            /tours/    301
+/tours/blue-cave-open-boat      /tours/    301
+/tours/blue-cave-luxury-cabin   /tours/    301
+/tours/blue-cave-6-islands      /tours/    301
+/tours/blue-lagoon-half-day     /tours/    301
+/tours/blue-lagoon-trogir       /tours/    301
+/tours/three-islands-trogir     /tours/    301
+/tours/brac-golden-horn         /tours/    301
+
+# No private-charter booking flow: private requests go through the contact form.
+# Netlify matches with or without the trailing slash.
+/book/:slug/private             /contact/?tour=:slug    301

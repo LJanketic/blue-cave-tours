@@ -265,24 +265,6 @@ h3.dest-name {
 	font-size: 30px;
 }
 
-.tc-rating,
-.card-rating {
-	font-size: 11px;
-	color: var(--color-text-secondary);
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.card-rating {
-	font-size: 12px;
-}
-
-.tc-stars,
-.stars {
-	color: var(--color-star);
-}
-
 /* ─── Destination cards ────────────────────────────────────────────────── */
 
 .dest-grid {
@@ -433,20 +415,6 @@ h3.card-name {
 	border-color: var(--color-text-primary);
 }
 
-.sort-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 16px;
-	gap: 12px;
-	flex-wrap: wrap;
-}
-
-.result-count {
-	font-size: 13px;
-	color: var(--color-text-secondary);
-}
-
 /* ─── Tours overview (catalog header, sort chip, cards) ───────────────── */
 
 .tours-header {
@@ -481,53 +449,10 @@ h3.card-name {
 	cursor: pointer;
 }
 
-.sort-chip select:focus {
-	outline: none;
-}
-
-/* Card wrapper: positions the wishlist button + booking hook over each card. */
+/* Grid cell wrapping each tour card. */
 .tour-cell {
 	position: relative;
 	min-width: 0;
-}
-
-.wishlist-btn {
-	position: absolute;
-	top: 8px;
-	right: 8px;
-	z-index: 1;
-	width: 30px;
-	height: 30px;
-	border-radius: 50%;
-	background: var(--color-background-primary);
-	border: 0.5px solid var(--color-border-tertiary);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	padding: 0;
-}
-
-.wishlist-btn .ti {
-	font-size: 14px;
-	color: var(--color-text-secondary);
-}
-
-.wishlist-btn:hover {
-	border-color: var(--color-border-primary);
-}
-
-/* Progressive-enhancement booking hook — visually hidden, drives booking-forms.ts. */
-.tours-catalog__hook {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	white-space: nowrap;
-	border: 0;
 }
 
 .no-results {

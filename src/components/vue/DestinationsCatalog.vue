@@ -64,6 +64,11 @@ const otherDestinations = computed(() =>
 	filteredDestinations.value.filter((d) => !d.featured),
 );
 
+// The first card's photo is the page's largest paint: load it straight away.
+const firstDestinationSlug = computed(
+	() => (featuredDestinations.value[0] ?? otherDestinations.value[0])?.slug,
+);
+
 function setFilter(filter: DestinationFilter) {
 	activeFilter.value = filter;
 }
@@ -73,11 +78,11 @@ function tourCount(dest: DestinationCard): number {
 }
 
 function toursHref(dest: DestinationCard): string {
-	return `/tours?destination=${dest.slug}`;
+	return `/tours/?destination=${dest.slug}`;
 }
 
 function destinationHref(slug: string): string {
-	return `/destinations/${slug}`;
+	return `/destinations/${slug}/`;
 }
 
 function cardSrc(dest: DestinationCard): string | undefined {
@@ -95,6 +100,10 @@ function cardAlt(dest: DestinationCard): string {
 
 <template>
 	<div class="destinations-catalog">
+		<p class="sr-only" role="status">
+			{{ filteredDestinations.length }}
+			{{ filteredDestinations.length === 1 ? 'destination' : 'destinations' }} shown
+		</p>
 		<div class="filter-row" role="group" aria-label="Filter destinations">
 			<button
 				v-for="chip in FILTERS"
@@ -111,7 +120,7 @@ function cardAlt(dest: DestinationCard): string {
 		</div>
 
 		<template v-if="featuredDestinations.length">
-			<p class="section-label">Not to miss ({{ featuredDestinations.length }})</p>
+			<h2 class="section-label">Not to miss ({{ featuredDestinations.length }})</h2>
 			<div class="dest-grid dest-grid--listing">
 				<article
 					v-for="(dest, index) in featuredDestinations"
@@ -128,7 +137,8 @@ function cardAlt(dest: DestinationCard): string {
 								:srcset="cardSrcset(dest)"
 								sizes="(max-width: 700px) 88vw, 380px"
 								:alt="cardAlt(dest)"
-								loading="lazy"
+								:loading="dest.slug === firstDestinationSlug ? 'eager' : 'lazy'"
+								:fetchpriority="dest.slug === firstDestinationSlug ? 'high' : undefined"
 								decoding="async"
 							/>
 							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
@@ -160,7 +170,7 @@ function cardAlt(dest: DestinationCard): string {
 			</div>
 		</template>
 
-		<p v-if="otherDestinations.length" class="section-label">More destinations ({{ otherDestinations.length }})</p>
+		<h2 v-if="otherDestinations.length" class="section-label">More destinations ({{ otherDestinations.length }})</h2>
 		<div v-if="otherDestinations.length" class="dest-grid dest-grid--listing">
 			<article
 				v-for="dest in otherDestinations"
@@ -176,7 +186,8 @@ function cardAlt(dest: DestinationCard): string {
 								:srcset="cardSrcset(dest)"
 								sizes="(max-width: 700px) 88vw, 380px"
 								:alt="cardAlt(dest)"
-								loading="lazy"
+								:loading="dest.slug === firstDestinationSlug ? 'eager' : 'lazy'"
+								:fetchpriority="dest.slug === firstDestinationSlug ? 'high' : undefined"
 								decoding="async"
 							/>
 							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
