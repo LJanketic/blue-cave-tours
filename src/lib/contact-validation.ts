@@ -39,33 +39,38 @@ export type ContactFields = {
 	startedAt: number | null;
 };
 
+/** Form fields a validation error can point at (ids match contact/index.astro). */
+export type ContactFieldName = 'name' | 'email' | 'message' | 'phone' | 'tourSlug';
+
 export type ContactValidationResult =
 	| { ok: true; silent?: boolean }
-	| { ok: false; error: string; status?: number };
+	| { ok: false; error: string; status?: number; fields?: ContactFieldName[] };
 
 export function validateContactSubmission(fields: ContactFields): ContactValidationResult {
 	if (fields.honeypot) {
 		return { ok: true, silent: true };
 	}
 
-	if (!fields.name || !fields.email || !fields.message) {
-		return { ok: false, error: 'Name, email, and message are required', status: 400 };
+	const missing = (['name', 'email', 'message'] as const).filter((field) => !fields[field]);
+	if (missing.length) {
+		return { ok: false, error: 'Name, email, and message are required', status: 400, fields: [...missing] };
 	}
 	if (fields.name.length < CONTACT_MIN_NAME_LEN) {
-		return { ok: false, error: 'Enter your full name', status: 400 };
+		return { ok: false, error: 'Enter your full name', status: 400, fields: ['name'] };
 	}
 	if (!EMAIL_RE.test(fields.email)) {
-		return { ok: false, error: 'Enter a valid email address', status: 400 };
+		return { ok: false, error: 'Enter a valid email address', status: 400, fields: ['email'] };
 	}
 	if (fields.message.length < CONTACT_MIN_MESSAGE_LEN) {
 		return {
 			ok: false,
 			error: `Message must be at least ${CONTACT_MIN_MESSAGE_LEN} characters`,
 			status: 400,
+			fields: ['message'],
 		};
 	}
 	if (fields.phone && !PHONE_RE.test(fields.phone)) {
-		return { ok: false, error: 'Enter a valid phone number', status: 400 };
+		return { ok: false, error: 'Enter a valid phone number', status: 400, fields: ['phone'] };
 	}
 
 	const now = Date.now();
