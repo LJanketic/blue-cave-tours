@@ -1,5 +1,9 @@
 # Functional behaviors
 
+> **Partly outdated (September 2026).** The booking flow no longer uses `?tourId=` hand-offs from
+> cards: it runs `/book/<tour>/group/` → `/book/<tour>/review/` → `/booking/success/`. See
+> README.md "Booking flow" for the current behaviour.
+
 > Preserve these behaviors in the redesign unless the design explicitly removes a feature. Markup and component structure may change freely.
 
 ---
@@ -11,24 +15,22 @@
 ```
 TourCard / TourDetailView
         │
-        ├─ supportsInstantBook(tour) === true
-        │       └─ <form class="booking-form" data-tour-id="{slug}">
-        │               └─ submit → /booking/success?tourId={slug}
+        ├─ supportsInstantBook(tour) === true   (group tour with a per-person price)
+        │       └─ link → /book/{slug}/group/ → /book/{slug}/review/ → /booking/success/
         │
-        └─ supportsInstantBook(tour) === false  (private charter only)
-                └─ link → /contact?tour={slug}
+        └─ supportsInstantBook(tour) === false  (private-only, or "price on request")
+                └─ link → /contact/?tour={slug}
 ```
 
 ### Rules (`src/lib/booking.ts`)
 
-| Tour slug | Instant book? | CTA |
-|-----------|---------------|-----|
-| All except `create-perfect-day-private` | ✅ Yes | "Book now" form |
-| `create-perfect-day-private` | ❌ No | "Request a quote" → contact |
+Decided from data, not a list: `supportsInstantBook(tour)` is true when the tour's
+`types` include `'group'` and `fromPrice` has a number (see `src/lib/booking.ts`).
+Private-only charters and "price on request" tours link to the contact form.
 
 ### Implementation
 
-**Client:** `src/client/booking-forms.ts`
+**Client:** ~~`src/client/booking-forms.ts`~~ (removed Sept 2026)
 
 ```ts
 // Listens for submit on .booking-form
@@ -36,7 +38,7 @@ TourCard / TourDetailView
 // Redirects to /booking/success?tourId={slug}
 ```
 
-**Script loading:** `SiteLayout` with `booking={true}` → `BookingScript.astro`
+**Script loading:** removed Sept 2026 along with `BookingScript.astro`.
 
 **Pages that need booking script today:**
 
@@ -109,9 +111,9 @@ Informational only — explains what data is collected. No form, no API. Include
 
 ### Production TODO (not redesign scope, but note for later)
 
-- Wire email delivery
-- Add Cloudflare Turnstile or similar
-- Add rate limiting
+- Wire email delivery (still open)
+- ~~Add Cloudflare Turnstile or similar~~ done (activates once both keys are set in Netlify)
+- ~~Add rate limiting~~ done (5 requests / 10 min per IP, Netlify Blobs)
 
 ---
 
@@ -153,7 +155,7 @@ Must survive redesign. Slugs listed in `REMOVED_TOUR_SLUGS` in tour catalog.
 |----------|---------|
 | `PUBLIC_SITE_URL` | Canonical URLs, OG tags (optional locally) |
 
-Set to `https://hellobluecave.com` in Netlify production.
+Set to `https://hello-blue-cave.netlify.app` in Netlify production.
 
 ---
 
@@ -175,8 +177,6 @@ Redesign should maintain equivalent a11y — exact markup may differ.
 
 | Hook | Used by |
 |------|---------|
-| `.booking-form` | `booking-forms.ts` |
-| `data-tour-id` | `booking-forms.ts` |
 | Contact form IDs/classes | `contact-form.ts` — read `src/pages/contact/index.astro` and `src/client/contact-form.ts` when wiring |
 
 If redesign changes form markup, update client scripts to match selectors.

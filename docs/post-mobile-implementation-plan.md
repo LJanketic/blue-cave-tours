@@ -147,7 +147,7 @@ Tighten after future Tabler → inline SVG migration (explicitly deferred).
 - `twitter:site`, SearchAction schema, AggregateRating schema
 
 ### Test plan
-- [ ] `PUBLIC_SITE_URL=https://hellobluecave.com pnpm build` succeeds; build fails without env in CI mode
+- [ ] `PUBLIC_SITE_URL=https://hello-blue-cave.netlify.app pnpm build` succeeds; build fails without env in CI mode
 - [ ] `/booking/details` — `noindex` in meta; excluded from sitemap
 - [ ] `/tours/blue-cave-hvar-5-islands` — destination chips link to `/destinations/*`; breadcrumb sane
 - [ ] All page templates visually unchanged after CSS split (spot-check 10 routes)
@@ -174,10 +174,12 @@ PR 1 and PR 2 can be developed **in parallel** on separate branches. PR 3 should
 Run once after PR 3 lands:
 
 ```bash
-PUBLIC_SITE_URL=https://hellobluecave.com pnpm run check
-PUBLIC_SITE_URL=https://hellobluecave.com pnpm run build
-pnpm run preview
+PUBLIC_SITE_URL=https://hello-blue-cave.netlify.app pnpm run check
+PUBLIC_SITE_URL=https://hello-blue-cave.netlify.app pnpm run build
 ```
+
+There is no `preview` script: the Netlify adapter doesn't support `astro preview`.
+Spot-check with `pnpm dev`, or on a Netlify deploy preview.
 
 **Mobile spot-check (390px):** `/`, `/tours`, `/destinations`, `/faq`, `/book/blue-cave-hvar-5-islands/group`, `/tours/blue-cave-hvar-5-islands`, `/destinations/vis`
 

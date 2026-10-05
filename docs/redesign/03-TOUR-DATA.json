@@ -2,7 +2,7 @@
   "$schema": "internal/tour-data-v1",
   "meta": {
     "sourceOfTruth": "src/data/tour-catalog.ts",
-    "description": "Canonical tour catalog for redesign agent. Photo IDs reference docs/redesign/04-IMAGE-ASSETS.md — use design placeholders in phase 1, not real files.",
+    "description": "HISTORICAL snapshot from the redesign brief; the live catalog is src/data/tour-catalog.ts. Originally: tour catalog for redesign agent. Photo IDs reference docs/redesign/04-IMAGE-ASSETS.md — use design placeholders in phase 1, not real files.",
     "tourCount": 10,
     "featuredCount": 5,
     "instantBookCount": 9,
