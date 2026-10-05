@@ -5,9 +5,9 @@ import NotFoundPanel from '../../components/NotFoundPanel.astro';
 import TourDetailView from '../../components/tour/TourDetailView.astro';
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { getAllTours, getTourBySlug } from '../../lib/tours';
+import { getAllTours, getTourBySlug, getTourCardPhoto } from '../../lib/tours';
 import { getPrimaryDestinationForTour } from '../../lib/destinations';
-import { breadcrumbJsonLd, tourJsonLd } from '../../lib/seo';
+import { breadcrumbJsonLd, socialImageFor, tourJsonLd } from '../../lib/seo';
 
 export function getStaticPaths() {
 	return getAllTours().map((tour) => ({ params: { slug: tour.slug } }));
@@ -29,22 +29,25 @@ const jsonLd =
 		? [
 				tourJsonLd(tour, siteUrl),
 				breadcrumbJsonLd([
-					{ name: 'Home', url: siteUrl },
-					{ name: 'Tours', url: `${siteUrl}/tours` },
+					{ name: 'Home', url: `${siteUrl}/` },
+					{ name: 'Tours', url: `${siteUrl}/tours/` },
 					...(primaryDestination
-						? [{ name: primaryDestination.name, url: `${siteUrl}/destinations/${primaryDestination.slug}` }]
+						? [{ name: primaryDestination.name, url: `${siteUrl}/destinations/${primaryDestination.slug}/` }]
 						: []),
-					{ name: tour.title, url: `${siteUrl}/tours/${tour.slug}` },
+					{ name: tour.title, url: `${siteUrl}/tours/${tour.slug}/` },
 				]),
 			]
 		: undefined;
+const sharePhoto = tour ? getTourCardPhoto(tour) : undefined;
+const shareImage = sharePhoto ? await socialImageFor(sharePhoto) : undefined;
 ---
 
 <SiteLayout
 	title={tour ? pageTitle(tour.title) : pageTitle('Tour not found')}
 	description={tour?.shortDescription ?? 'The requested tour does not exist.'}
-	booking={Boolean(tour)}
 	jsonLd={jsonLd}
+	ogImage={shareImage?.src}
+	ogImageAlt={shareImage?.alt}
 >
 	<main id="main" class="page-shell">
 		{
@@ -55,7 +58,7 @@ const jsonLd =
 					title="Tour not found"
 					description="The requested tour does not exist or the link may be outdated."
 				>
-					<a href="/tours">View all tours</a>
+					<a href="/tours/">View all tours</a>
 					{' · '}
 					<a href="/">Home</a>
 				</NotFoundPanel>

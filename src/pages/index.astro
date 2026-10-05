@@ -51,7 +51,7 @@ const heroPanels: HeroPanel[] = [
 		subtext:
 			'Group departures along the Dalmatian coast. Small boats, real skippers, no tourist conveyor belts.',
 		ctaLabel: 'Browse all tours',
-		ctaHref: '/tours',
+		ctaHref: '/tours/',
 		dotLabel: 'Show all tours',
 	},
 	{
@@ -61,13 +61,13 @@ const heroPanels: HeroPanel[] = [
 		subtext:
 			'Private charters for two or twenty. Set the route, set the pace, skip the crowds entirely.',
 		ctaLabel: 'Plan a private charter',
-		ctaHref: '/contact?tour=create-perfect-day-private',
+		ctaHref: '/contact/?tour=create-perfect-day-private',
 		dotLabel: 'Show private charter',
 	},
 ];
 ---
 
-<SiteLayout title={HOME_PAGE_TITLE} description={SITE_DEFAULT_DESCRIPTION} solidNav={false} booking jsonLd={jsonLd}>
+<SiteLayout title={HOME_PAGE_TITLE} description={SITE_DEFAULT_DESCRIPTION} solidNav={false} jsonLd={jsonLd}>
 	<link
 		slot="head"
 		rel="preload"
@@ -80,6 +80,7 @@ const heroPanels: HeroPanel[] = [
 	/>
 	<main id="main">
 		<div class="page home-page">
+			<h1 class="sr-only">Hello Blue Cave: speedboat tours and private charters from Split</h1>
 			<section class="hero hero--home">
 				<div class="hero-media">
 					<div class="hero-media-fallback" aria-hidden="true">
@@ -107,7 +108,7 @@ const heroPanels: HeroPanel[] = [
 				<section aria-labelledby="featured-heading">
 					<div class="section-header">
 						<h2 id="featured-heading" class="section-title">Popular tours</h2>
-						<a class="section-link" href="/tours">See all tours →</a>
+						<a class="section-link" href="/tours/">See all tours →</a>
 					</div>
 					<div class="cards-scroll">
 						{
@@ -121,12 +122,12 @@ const heroPanels: HeroPanel[] = [
 				<section aria-labelledby="destinations-heading">
 					<div class="section-header">
 						<h2 id="destinations-heading" class="section-title">Where we go</h2>
-						<a class="section-link" href="/destinations">All destinations →</a>
+						<a class="section-link" href="/destinations/">All destinations →</a>
 					</div>
 					<div class="dest-grid">
 						{
 							destinationStrip.map((dest) => (
-								<a class="dest-card" href={`/destinations/${dest.slug}`}>
+								<a class="dest-card" href={`/destinations/${dest.slug}/`}>
 									<i class="ti ti-sailboat bg-icon" aria-hidden="true" />
 									<h3 class="dest-name">{dest.name}</h3>
 									<span class="dest-count">
@@ -189,7 +190,7 @@ const heroPanels: HeroPanel[] = [
 								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fixed departures, daily</span>
 								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Licensed skipper on every route</span>
 							</div>
-							<a class="type-cta" href="/tours">Browse group tours</a>
+							<a class="type-cta" href="/tours/">Browse group tours</a>
 						</div>
 						<div class="type-card featured">
 							<div class="type-icon type-icon--private">
@@ -205,7 +206,7 @@ const heroPanels: HeroPanel[] = [
 								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fully customisable route</span>
 								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Flexible departure time</span>
 							</div>
-							<a class="btn-primary btn-primary--compact" href="/contact?tour=create-perfect-day-private">
+							<a class="btn-primary btn-primary--compact" href="/contact/?tour=create-perfect-day-private">
 								Plan a private charter
 							</a>
 						</div>
@@ -227,7 +228,7 @@ const heroPanels: HeroPanel[] = [
 				<section aria-labelledby="faq-heading">
 					<div class="section-header">
 						<h2 id="faq-heading" class="section-title">Common questions</h2>
-						<a class="section-link" href="/faq">All FAQs →</a>
+						<a class="section-link" href="/faq/">All FAQs →</a>
 					</div>
 					<FAQAccordion client:visible items={faqPreview} />
 				</section>
@@ -239,8 +240,8 @@ const heroPanels: HeroPanel[] = [
 						routes fill 3–5 days ahead.
 					</p>
 					<div class="cta-band-btns">
-						<a class="btn-primary" href="/tours">Browse all tours</a>
-						<a class="btn-secondary" href="/contact?tour=create-perfect-day-private">Plan a private charter</a>
+						<a class="btn-primary" href="/tours/">Browse all tours</a>
+						<a class="btn-secondary" href="/contact/?tour=create-perfect-day-private">Plan a private charter</a>
 					</div>
 				</section>
 			</div>
