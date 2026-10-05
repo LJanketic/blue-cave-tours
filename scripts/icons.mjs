@@ -1,0 +1,120 @@
+#!/usr/bin/env node
+// Builds a self-hosted subset of the Tabler icon webfont containing only the
+// icons this site uses (the full font is ~450 KB; the subset is ~12 KB).
+//
+//   node scripts/icons.mjs          regenerate the subset (needs network)
+//   node scripts/icons.mjs --check  fail if src/ uses an icon the subset lacks
+//
+// Icon names are found by scanning src/ for `ti-<name>`, plus quoted Tabler
+// names in "icon context": a line that mentions "icon" (`icon: 'anchor'`,
+// `const metaIcon = … 'users'`), or any line inside an object/array literal
+// opened on such a line (`const TAG_ICONS = { Swimming: 'swimming', … }`).
+// Names rendered as `ti-${icon}` at runtime are found this way. Plain words
+// elsewhere ('location', 'mouse') are ignored even though Tabler has icons
+// with those names.
+
+import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const TABLER_VERSION = '3.44.0';
+const CDN = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TABLER_VERSION}/dist`;
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const NAMES_FILE = path.join(root, 'scripts/tabler-icon-names.txt');
+const CSS_OUT = path.join(root, 'src/styles/icons.css');
+// Lives under src/ so Vite fingerprints it into /_astro/ (cached immutably by netlify.toml).
+const FONT_OUT = path.join(root, 'src/assets/fonts/tabler-icons-subset.woff2');
+const FONT_URL = '../assets/fonts/tabler-icons-subset.woff2';
+
+async function sourceFiles(dir) {
+	const out = [];
+	for (const entry of await readdir(dir, { withFileTypes: true })) {
+		const full = path.join(dir, entry.name);
+		if (entry.isDirectory()) out.push(...(await sourceFiles(full)));
+		else if (/\.(astro|vue|ts|js|mjs)$/.test(entry.name)) out.push(full);
+	}
+	return out;
+}
+
+/**
+ * Every icon name src/ may render, given the set of valid Tabler names.
+ * Explicit `ti-<name>` classes that aren't Tabler icons (a typo, or an icon
+ * newer than the pinned version) are returned in `unknown` so --check fails.
+ */
+async function usedIcons(validNames) {
+	const used = new Set();
+	const unknown = new Set();
+	for (const file of await sourceFiles(path.join(root, 'src'))) {
+		const text = await readFile(file, 'utf8');
+		for (const [, name] of text.matchAll(/\bti-([a-z0-9]+(?:-[a-z0-9]+)*)/g)) {
+			(validNames.has(name) ? used : unknown).add(name);
+		}
+		let depth = 0; // open brackets of an icon-context literal still spanning lines
+		for (const line of text.split('\n')) {
+			const opens = (line.match(/[[{(]/g) ?? []).length;
+			const closes = (line.match(/[\]})]/g) ?? []).length;
+			const iconLine = /icon/i.test(line);
+			if (iconLine || depth > 0) {
+				for (const [, name] of line.matchAll(/['"`]([a-z0-9]+(?:-[a-z0-9]+)*)['"`]/g)) {
+					if (validNames.has(name)) used.add(name);
+				}
+			}
+			if (depth > 0) depth = Math.max(0, depth + opens - closes);
+			else if (iconLine && opens > closes) depth = opens - closes;
+		}
+	}
+	return { used: [...used].sort(), unknown: [...unknown].sort() };
+}
+
+async function check() {
+	const validNames = new Set((await readFile(NAMES_FILE, 'utf8')).split('\n').filter(Boolean));
+	const css = await readFile(CSS_OUT, 'utf8');
+	const inSubset = new Set([...css.matchAll(/\.ti-([a-z0-9-]+):before/g)].map((m) => m[1]));
+	const { used, unknown } = await usedIcons(validNames);
+	if (unknown.length) {
+		console.error(`Not Tabler ${TABLER_VERSION} icons (typo, or newer than the pinned version): ${unknown.join(', ')}`);
+		process.exit(1);
+	}
+	const missing = used.filter((name) => !inSubset.has(name));
+	if (missing.length) {
+		console.error(`Icons used in src/ but missing from the subset: ${missing.join(', ')}`);
+		console.error('Run `pnpm icons` to regenerate it.');
+		process.exit(1);
+	}
+	console.log(`icons: all ${inSubset.size} subset icons cover src/`);
+}
+
+async function generate() {
+	const { default: subsetFont } = await import('subset-font');
+	const [css, font] = await Promise.all([
+		fetch(`${CDN}/tabler-icons.min.css`).then((r) => r.text()),
+		fetch(`${CDN}/fonts/tabler-icons.woff2`).then((r) => r.arrayBuffer()),
+	]);
+	const codepoints = new Map(
+		[...css.matchAll(/\.ti-([a-z0-9-]+):before\{content:"\\([0-9a-f]+)"\}/g)].map((m) => [m[1], m[2]]),
+	);
+	if (codepoints.size < 1000) throw new Error(`Parsed only ${codepoints.size} icons from the Tabler CSS`);
+
+	const { used, unknown } = await usedIcons(new Set(codepoints.keys()));
+	if (unknown.length) throw new Error(`Not Tabler ${TABLER_VERSION} icons: ${unknown.join(', ')}`);
+	const text = used.map((name) => String.fromCodePoint(parseInt(codepoints.get(name), 16))).join('');
+	const subset = await subsetFont(Buffer.from(font), text, { targetFormat: 'woff2' });
+
+	await mkdir(path.dirname(FONT_OUT), { recursive: true });
+	await writeFile(FONT_OUT, subset);
+	await writeFile(NAMES_FILE, `${[...codepoints.keys()].sort().join('\n')}\n`);
+	await writeFile(
+		CSS_OUT,
+		[
+			`/* Generated by scripts/icons.mjs from Tabler Icons ${TABLER_VERSION} (MIT). Do not edit. */`,
+			`@font-face{font-family:"tabler-icons";font-style:normal;font-weight:400;font-display:block;src:url("${FONT_URL}") format("woff2")}`,
+			'.ti{font-family:"tabler-icons" !important;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}',
+			...used.map((name) => `.ti-${name}:before{content:"\\${codepoints.get(name)}"}`),
+			'',
+		].join('\n'),
+	);
+	console.log(`icons: ${used.length} icons, ${subset.length} bytes → ${path.relative(root, FONT_OUT)}`);
+}
+
+await (process.argv.includes('--check') ? check() : generate());
