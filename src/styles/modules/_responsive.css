@@ -87,18 +87,13 @@
 		padding: 0 20px;
 	}
 
-	.quick-search {
-		grid-template-columns: 1fr 1fr;
-	}
-
 	.trust-bar {
 		margin-top: 28px;
 		grid-template-columns: repeat(2, 1fr);
 	}
 
 	.cards-scroll,
-	.dest-grid:not(.dest-grid--listing),
-	.reviews-grid {
+	.dest-grid:not(.dest-grid--listing) {
 		display: flex;
 		overflow-x: auto;
 		scroll-snap-type: x mandatory;
@@ -110,13 +105,11 @@
 	}
 
 	.cards-scroll::-webkit-scrollbar,
-	.dest-grid:not(.dest-grid--listing)::-webkit-scrollbar,
-	.reviews-grid::-webkit-scrollbar {
+	.dest-grid:not(.dest-grid--listing)::-webkit-scrollbar {
 		display: none;
 	}
 
-	.cards-scroll > *,
-	.reviews-grid > * {
+	.cards-scroll > * {
 		flex: 0 0 45%;
 		scroll-snap-align: start;
 	}
@@ -316,8 +309,7 @@
 		margin-top: 28px;
 	}
 
-	.cards-scroll > *,
-	.reviews-grid > * {
+	.cards-scroll > * {
 		flex: 0 0 82%;
 	}
 

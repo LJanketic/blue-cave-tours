@@ -9,7 +9,7 @@ import { getTourBySlug } from '../../lib/tours';
 
 const tourIdParam = Astro.url.searchParams.get('tourId');
 const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
-const retryHref = bookedTour ? `/book/${bookedTour.slug}/group` : '/tours';
+const retryHref = bookedTour ? `/book/${bookedTour.slug}/group/` : '/tours/';
 ---
 
 <SiteLayout
@@ -70,7 +70,7 @@ const retryHref = bookedTour ? `/book/${bookedTour.slug}/group` : '/tours';
 			<div>
 				<p class="help-title">Need help?</p>
 				<p class="help-desc">If the problem persists, we can take your booking manually.</p>
-				<a class="help-link" href="/contact">Contact us →</a>
+				<a class="help-link" href="/contact/">Contact us →</a>
 			</div>
 		</div>
 
@@ -78,7 +78,7 @@ const retryHref = bookedTour ? `/book/${bookedTour.slug}/group` : '/tours';
 			<i class="ti ti-refresh" aria-hidden="true"></i>
 			Try payment again
 		</a>
-		<a class="btn-back" href="/tours">Back to tours</a>
+		<a class="btn-back" href="/tours/">Back to tours</a>
 
 		<TrustStrip />
 	</main>

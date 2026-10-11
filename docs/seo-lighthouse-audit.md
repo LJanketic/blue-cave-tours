@@ -21,7 +21,7 @@ This audit identified **22 prioritized items**. **P0 and high-value P1 fixes hav
 | Accessibility | 80–88 | 90–95 | FAQ keyboard support, contrast fix |
 | Best Practices | 90+ | 90+ | Already strong Netlify headers |
 
-*Run `pnpm build && pnpm preview` then Lighthouse in Chrome DevTools for live scores.*
+*Run Lighthouse in Chrome DevTools against the deployed site (or a Netlify deploy preview); `astro preview` isn't supported by the Netlify adapter.*
 
 ---
 
@@ -47,7 +47,7 @@ This audit identified **22 prioritized items**. **P0 and high-value P1 fixes hav
 | 1 | No `sitemap.xml` | ✅ Fixed — `@astrojs/sitemap` |
 | 2 | No `robots.txt` | ✅ Fixed — `public/robots.txt` |
 | 3 | Incomplete OG/Twitter tags | ✅ Fixed — `BaseLayout.astro` |
-| 4 | No default `og:image` | ✅ Fixed — `public/og-default.svg` |
+| 4 | No default `og:image` | ✅ Fixed — `public/og-default.jpg` (SVG replaced: social platforms don't render SVG previews) |
 | 5 | No JSON-LD structured data | ✅ Fixed — Organization, WebSite, TouristTrip, FAQPage, BreadcrumbList |
 | 6 | Booking funnel indexed | ✅ Fixed — `noindex` on book/*, booking/success, booking/error |
 | 7 | Destinations catalog not crawlable | ✅ Fixed — real `<a href>` in `DestinationsCatalog.vue` |
@@ -93,7 +93,7 @@ This audit identified **22 prioritized items**. **P0 and high-value P1 fixes hav
 
 ### Meta & social
 - **`BaseLayout.astro`** — full Open Graph + Twitter Card tags on every page
-- **`public/og-default.svg`** — 1200×630 branded fallback image
+- **`public/og-default.jpg`**: 1200×630 fallback share image; tour and destination pages use their own photo (`socialImageFor` in `src/lib/seo.ts`)
 
 ### Structured data
 - **Homepage** — Organization, WebSite, FAQPage (preview items)
@@ -128,7 +128,7 @@ Sitemap, robots, OG tags, JSON-LD, noindex funnel, crawlable links, FAQ a11y, hy
 4. Cross-link tour itineraries to destination pages
 
 ### Phase 3 — Pre-launch polish (0.5–1 day)
-1. Verify `PUBLIC_SITE_URL=https://hellobluecave.com` in Netlify env
+1. Verify `PUBLIC_SITE_URL=https://hello-blue-cave.netlify.app` in Netlify env
 2. Run Lighthouse on all key page templates
 3. Submit sitemap in Google Search Console
 4. Add `apple-touch-icon` and web manifest
@@ -139,10 +139,10 @@ Sitemap, robots, OG tags, JSON-LD, noindex funnel, crawlable links, FAQ a11y, hy
 
 ```bash
 # Build with production site URL
-PUBLIC_SITE_URL=https://hellobluecave.com pnpm build
+PUBLIC_SITE_URL=https://hello-blue-cave.netlify.app pnpm build
 
-# Preview locally
-pnpm preview
+# (No local preview: the Netlify adapter doesn't support `astro preview`.
+#  Check the Netlify deploy preview instead.)
 
 # Check outputs
 ls dist/sitemap*.xml   # sitemap generated when site URL set

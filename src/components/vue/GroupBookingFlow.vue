@@ -83,12 +83,13 @@ const calendarCells = computed(() => {
 		key: string;
 		day: number | null;
 		iso: string | null;
+		label: string;
 		past: boolean;
 		today: boolean;
 	}> = [];
 
 	for (let i = 0; i < startPad; i++) {
-		cells.push({ key: `empty-${i}`, day: null, iso: null, past: false, today: false });
+		cells.push({ key: `empty-${i}`, day: null, iso: null, label: '', past: false, today: false });
 	}
 
 	const todayTime = today.value.getTime();
@@ -98,6 +99,8 @@ const calendarCells = computed(() => {
 			key: `day-${d}`,
 			day: d,
 			iso: toIsoDate(date),
+			// Screen readers otherwise hear a bare "15" with no month.
+			label: date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
 			past: date.getTime() < todayTime,
 			today: date.getTime() === todayTime,
 		});
@@ -153,14 +156,18 @@ const bookingTotalDisplay = computed(() =>
 const totalGuests = computed(() => adults.value + children.value);
 const atCapacity = computed(() => totalGuests.value >= MAX_GUESTS);
 
-const canSubmit = computed(
-	() =>
-		selectedDate.value !== null &&
-		totalGuests.value >= 1 &&
-		firstName.value.trim().length >= 1 &&
-		lastName.value.trim().length >= 1 &&
-		email.value.includes('@'),
-);
+/** What still blocks "Review booking", shown next to the disabled button. */
+const missingDetails = computed(() => {
+	const missing: string[] = [];
+	if (selectedDate.value === null) missing.push('a date');
+	if (!firstName.value.trim()) missing.push('your first name');
+	if (!lastName.value.trim()) missing.push('your last name');
+	if (!email.value.trim()) missing.push('your email');
+	else if (!email.value.includes('@')) missing.push('a valid email');
+	return missing;
+});
+
+const canSubmit = computed(() => missingDetails.value.length === 0);
 
 function prevMonth() {
 	if (viewMonth.value === 0) {
@@ -266,15 +273,21 @@ onMounted(() => {
 <template>
 	<div class="group-booking">
 		<div class="card">
-			<p class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Choose a date</p>
+			<h2 class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Choose a date</h2>
 			<p class="card-sub">Tours run daily. Select your preferred day.</p>
 			<div class="cal-header">
 				<button type="button" class="cal-nav" aria-label="Previous month" @click="prevMonth">‹</button>
-				<span class="cal-month">{{ monthLabel }}</span>
+				<span id="cal-month" class="cal-month" aria-live="polite">{{ monthLabel }}</span>
 				<button type="button" class="cal-nav" aria-label="Next month" @click="nextMonth">›</button>
 			</div>
-			<div class="cal-grid" role="grid" aria-label="Calendar">
-				<span v-for="dow in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']" :key="dow" class="cal-dow">{{ dow }}</span>
+			<div class="cal-grid" role="group" aria-labelledby="cal-month">
+				<span
+					v-for="dow in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']"
+					:key="dow"
+					class="cal-dow"
+					aria-hidden="true"
+					>{{ dow }}</span
+				>
 				<button
 					v-for="cell in calendarCells"
 					:key="cell.key"
@@ -287,6 +300,10 @@ onMounted(() => {
 						sel: cell.iso !== null && selectedDate === cell.iso,
 					}"
 					:disabled="cell.day === null || cell.past"
+					:aria-hidden="cell.day === null ? 'true' : undefined"
+					:aria-label="cell.label ? `${cell.label}${cell.today ? ', today' : ''}` : undefined"
+					:aria-pressed="cell.iso !== null && !cell.past ? selectedDate === cell.iso : undefined"
+					:aria-current="cell.today ? 'date' : undefined"
 					@click="cell.iso !== null && selectDay(cell.iso, cell.past)"
 				>
 					<span v-if="cell.day !== null">{{ cell.day }}</span>
@@ -322,7 +339,7 @@ onMounted(() => {
 		</div>
 
 		<div class="card">
-			<p class="card-title"><i class="ti ti-users" aria-hidden="true"></i> How many guests?</p>
+			<h2 class="card-title"><i class="ti ti-users" aria-hidden="true"></i> How many guests?</h2>
 			<p class="card-sub">Max {{ MAX_GUESTS }} guests per departure.</p>
 			<div class="guests-grid">
 				<div class="guest-row">
@@ -331,9 +348,13 @@ onMounted(() => {
 						<p class="guest-sub-label">{{ adultPriceLabel }}</p>
 					</div>
 					<div class="stepper">
-						<button type="button" class="step-btn" aria-label="Fewer adults" @click="bump('adults', -1)">−</button>
+						<button type="button" class="step-btn" aria-label="Fewer adults" :aria-disabled="adults <= 1" @click="bump('adults', -1)">
+							−
+						</button>
 						<span class="step-val">{{ adults }}</span>
-						<button type="button" class="step-btn" aria-label="More adults" @click="bump('adults', 1)">+</button>
+						<button type="button" class="step-btn" aria-label="More adults" :aria-disabled="atCapacity" @click="bump('adults', 1)">
+							+
+						</button>
 					</div>
 				</div>
 				<div class="guest-row">
@@ -342,16 +363,23 @@ onMounted(() => {
 						<p class="guest-sub-label">{{ childPriceLabel }}</p>
 					</div>
 					<div class="stepper">
-						<button type="button" class="step-btn" aria-label="Fewer children" @click="bump('children', -1)">−</button>
+						<button type="button" class="step-btn" aria-label="Fewer children" :aria-disabled="children <= 0" @click="bump('children', -1)">
+							−
+						</button>
 						<span class="step-val">{{ children }}</span>
-						<button type="button" class="step-btn" aria-label="More children" @click="bump('children', 1)">+</button>
+						<button type="button" class="step-btn" aria-label="More children" :aria-disabled="atCapacity" @click="bump('children', 1)">
+							+
+						</button>
 					</div>
 				</div>
 			</div>
-			<p v-if="atCapacity" class="cap-warn">
-				<i class="ti ti-alert-triangle" aria-hidden="true"></i>
-				Maximum {{ MAX_GUESTS }} guests per departure reached.
-			</p>
+			<div role="status">
+				<span class="sr-only">{{ guestSummary }}</span>
+				<p v-if="atCapacity" class="cap-warn">
+					<i class="ti ti-alert-triangle" aria-hidden="true"></i>
+					Maximum {{ MAX_GUESTS }} guests per departure reached.
+				</p>
+			</div>
 			<div class="hold-note">
 				<i class="ti ti-lock" aria-hidden="true"></i>
 				Your spots are held for 12 minutes once you proceed to review.
@@ -359,20 +387,20 @@ onMounted(() => {
 		</div>
 
 		<div class="card">
-			<p class="card-title"><i class="ti ti-user" aria-hidden="true"></i> Your details</p>
-			<p class="card-sub">We'll send your confirmation and any updates here.</p>
+			<h2 class="card-title"><i class="ti ti-user" aria-hidden="true"></i> Your details</h2>
+			<p class="card-sub">We'll send your confirmation and any updates here. Fields marked * are required.</p>
 			<div class="details-grid">
 				<div class="field">
-					<label for="book-first">First name</label>
-					<input id="book-first" v-model="firstName" type="text" autocomplete="given-name" placeholder="Ivan" />
+					<label for="book-first">First name <span aria-hidden="true">*</span></label>
+					<input id="book-first" v-model="firstName" type="text" autocomplete="given-name" placeholder="Ivan" required />
 				</div>
 				<div class="field">
-					<label for="book-last">Last name</label>
-					<input id="book-last" v-model="lastName" type="text" autocomplete="family-name" placeholder="Kovač" />
+					<label for="book-last">Last name <span aria-hidden="true">*</span></label>
+					<input id="book-last" v-model="lastName" type="text" autocomplete="family-name" placeholder="Kovač" required />
 				</div>
 				<div class="field">
-					<label for="book-email">Email</label>
-					<input id="book-email" v-model="email" type="email" autocomplete="email" placeholder="ivan@example.com" />
+					<label for="book-email">Email <span aria-hidden="true">*</span></label>
+					<input id="book-email" v-model="email" type="email" autocomplete="email" placeholder="ivan@example.com" required />
 				</div>
 				<div class="field">
 					<label for="book-phone">Phone</label>
@@ -425,11 +453,20 @@ onMounted(() => {
 			<p class="sum-note">{{ priceNotes }}</p>
 		</div>
 
-		<button type="button" class="cta-btn" :disabled="!canSubmit" @click="goToReview">
+		<button
+			type="button"
+			class="cta-btn"
+			:aria-disabled="!canSubmit"
+			aria-describedby="cta-hint"
+			@click="goToReview"
+		>
 			Review booking
 			<i class="ti ti-arrow-right" aria-hidden="true"></i>
 		</button>
-		<a class="back-btn" :href="`/tours/${tourSlug}`">← Back to tour type</a>
+		<p id="cta-hint" class="cta-hint" aria-live="polite">
+			<template v-if="missingDetails.length">To continue, add {{ missingDetails.join(', ') }}.</template>
+		</p>
+		<a class="back-btn" :href="`/tours/${tourSlug}/`">← Back to tour type</a>
 		<p class="policy-note">
 			<i class="ti ti-shield-check" aria-hidden="true"></i>
 			{{ CANCELLATION_SHORT }}
@@ -447,7 +484,6 @@ onMounted(() => {
 	border-radius: var(--radius-md);
 	background: var(--color-background-primary);
 	color: var(--color-text-primary);
-	outline: none;
 	width: 100%;
 }
 
@@ -757,7 +793,7 @@ onMounted(() => {
 
 .cap-warn {
 	font-size: 11px;
-	color: #ba7517;
+	color: var(--color-text-warning);
 	margin-top: 8px;
 	display: flex;
 	align-items: center;
@@ -846,12 +882,32 @@ onMounted(() => {
 	gap: 6px;
 }
 
-.cta-btn:hover:not(:disabled) {
+.cta-btn:hover:not([aria-disabled='true']) {
 	opacity: 0.88;
 }
 
-.cta-btn:disabled {
+/* aria-disabled so keyboard users can still reach the button and hear the
+   hint explaining what's missing; goToReview() ignores clicks until then. */
+.cta-btn[aria-disabled='true'] {
 	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.cta-hint {
+	font-size: 12px;
+	color: var(--color-text-secondary);
+	text-align: center;
+	margin: 8px 0 0;
+}
+
+.cta-hint:empty {
+	display: none;
+}
+
+/* aria-disabled, not disabled: a native disabled button drops keyboard focus
+   to <body> the moment you reach the limit. bump() enforces the limits. */
+.step-btn[aria-disabled='true'] {
+	opacity: 0.4;
 	cursor: not-allowed;
 }
 

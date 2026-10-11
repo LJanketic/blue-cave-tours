@@ -11,7 +11,7 @@
 |------|---------|--------------|
 | [01-AGENT-BRIEF.md](./01-AGENT-BRIEF.md) | Rules, constraints, workflow, placeholder policy | **First — always** |
 | [02-PAGES-AND-COMPONENTS.md](./02-PAGES-AND-COMPONENTS.md) | Current page & component inventory with roles | When mapping design frames to code |
-| [03-TOUR-DATA.json](./03-TOUR-DATA.json) | Canonical tour catalog (machine-readable) | When filling tour cards, detail pages, forms |
+| [03-TOUR-DATA.json](./03-TOUR-DATA.json) | Historical tour snapshot from the redesign brief; the live catalog is `src/data/tour-catalog.ts` | When filling tour cards, detail pages, forms |
 | [04-IMAGE-ASSETS.md](./04-IMAGE-ASSETS.md) | Real image inventory + tour assignments | **Phase 2 only** — not for initial build |
 | [05-SITE-COPY.md](./05-SITE-COPY.md) | Site config, FAQ, shared copy blocks | When wiring global copy |
 | [06-FUNCTIONAL-BEHAVIORS.md](./06-FUNCTIONAL-BEHAVIORS.md) | Booking flow, contact API, redirects | When preserving interactive behavior |
@@ -77,7 +77,7 @@ src/
   data/           Tour catalog, FAQ, photos
   config/         Site name, email, phone
   lib/            tours, booking, validation helpers
-  client/         booking-forms.ts, contact-form.ts
+  client/         contact-form.ts
   types/          TourDetail schema
   styles/tokens/  Design tokens (may be replaced by redesign)
 ```

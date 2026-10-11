@@ -2,9 +2,19 @@
 [build]
 	command = "pnpm run build"
 	publish = "dist"
+	# Each production deploy costs 15 of the Free plan's 300 monthly credits.
+	# Skip the build when a push only touches files that don't affect the site
+	# (docs, design files, README). `git diff --quiet` exits 0 (skip) when none of
+	# the listed paths changed since the last build. A redeploy of the SAME commit
+	# (e.g. "Trigger deploy" after changing env vars) always builds: the refs are
+	# equal, so the test fails and the command exits non-zero. An empty
+	# CACHED_COMMIT_REF also builds: `git diff <one ref>` would otherwise compare
+	# against the clean checkout and wrongly report "no changes".
+	ignore = "[ -n \"$CACHED_COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- src public scripts package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc .nvmrc astro.config.mjs tsconfig.json netlify.toml"
 
 [build.environment]
-	NODE_VERSION = "22.12.0"
+	# Track the latest Node 22.x; .nvmrc matches for local development.
+	NODE_VERSION = "22"
 
 [[headers]]
   for = "/*"
@@ -14,25 +24,22 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    # 'unsafe-inline' on script-src/style-src is required: the site has inline
-    # <script> (BookingScript, Header, contact form) and inline style="" (the
-    # destination "best time to visit" bar chart), and none of it is nonced.
-    # cdn.jsdelivr.net is the only third-party origin loaded (Tabler icon
-    # webfont CSS + woff/woff2). Tighten script-src/style-src if that inline
-    # usage is ever migrated to external files or nonces.
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
-
-[[headers]]
-  for = "/fonts/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/assets/tours/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    # 'unsafe-inline' on script-src/style-src is required, and none of it is
+    # nonced: Astro inlines small page scripts (Header menu, contact form, about
+    # and destination pages) and the island hydration bootstrap, and pages set
+    # inline style="" (image placeholder colours, the destination "best time to
+    # visit" bars, the booking calendar and FAQ components).
+    # challenges.cloudflare.com is the Turnstile widget on the contact form (a
+    # script plus an iframe); it only loads once PUBLIC_TURNSTILE_SITE_KEY is set.
+    # Everything else, including the icon font, is served from this origin.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'"
 
 [[headers]]
   for = "/_astro/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/site.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

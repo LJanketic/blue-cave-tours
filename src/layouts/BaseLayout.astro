@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import '../styles/icons.css';
+import iconFontUrl from '../assets/fonts/tabler-icons-subset.woff2?url';
 import {
 	APPLE_TOUCH_ICON_PATH,
 	FAVICON_PATH,
@@ -13,23 +15,26 @@ type Props = {
 	title: string;
 	description?: string;
 	ogImage?: string;
+	ogImageAlt?: string;
+	/** False on pages that shouldn't declare a canonical URL (the 404 page). */
+	canonical?: boolean;
 	robots?: string;
 	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 };
 
-const { title, description = SITE_DEFAULT_DESCRIPTION, ogImage, robots, jsonLd } = Astro.props;
+const {
+	title,
+	description = SITE_DEFAULT_DESCRIPTION,
+	ogImage,
+	ogImageAlt = `${SITE_NAME} — Split boat tours`,
+	canonical: showCanonical = true,
+	robots,
+	jsonLd,
+} = Astro.props;
 const canonical = new URL(Astro.url.pathname, String(Astro.site ?? Astro.url));
 const ogImagePath = ogImage ?? DEFAULT_OG_IMAGE;
 const ogImageUrl = new URL(ogImagePath, Astro.site ?? Astro.url).href;
 const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
-
-const TABLER_ICONS_VERSION = '3.44.0';
-const tablerIconsBase = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TABLER_ICONS_VERSION}/dist`;
-const tablerIconsHref = `${tablerIconsBase}/tabler-icons.min.css`;
-// Overrides the vendor CSS's missing font-display (defaults to `auto`, which
-// can render icon glyphs invisible while the font loads). Must stay declared
-// after the Tabler <link> below so it wins the cascade.
-const tablerFontDisplayOverride = `@font-face{font-family:'tabler-icons';font-style:normal;font-weight:400;font-display:swap;src:url('${tablerIconsBase}/fonts/tabler-icons.woff2?v${TABLER_ICONS_VERSION}') format('woff2'),url('${tablerIconsBase}/fonts/tabler-icons.woff?v${TABLER_ICONS_VERSION}') format('woff')}`;
 ---
 
 <!doctype html>
@@ -43,42 +48,31 @@ const tablerFontDisplayOverride = `@font-face{font-family:'tabler-icons';font-st
 		<meta name="theme-color" content={SITE_THEME_COLOR} />
 		<meta name="description" content={description} />
 		{robots && <meta name="robots" content={robots} />}
-		<link rel="canonical" href={canonical.href} />
+		{showCanonical && <link rel="canonical" href={canonical.href} />}
 
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content={SITE_NAME} />
 		<meta property="og:locale" content="en_GB" />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
-		<meta property="og:url" content={canonical.href} />
+		{showCanonical && <meta property="og:url" content={canonical.href} />}
 		<meta property="og:image" content={ogImageUrl} />
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />
-		<meta property="og:image:alt" content={`${SITE_NAME} — Split boat tours`} />
+		<meta property="og:image:alt" content={ogImageAlt} />
+		<meta property="og:image:type" content="image/jpeg" />
 
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={ogImageUrl} />
+		<meta name="twitter:image:alt" content={ogImageAlt} />
 
-		<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 		<!--
-			Loaded non-render-blocking: the icon font CSS is ~37KB from a third-party
-			CDN and was adding up to ~1s to first paint. `rel="preload"` fetches it in
-			parallel with the rest of the page; the onload handler then activates it
-			as a real stylesheet once it arrives, instead of the browser blocking
-			render until it downloads. `<noscript>` covers the no-JS case.
+			Self-hosted subset of the Tabler icon font (scripts/icons.mjs): ~13 KB
+			instead of ~450 KB from a CDN. Preloaded so icons don't pop in late.
 		-->
-		<link
-			rel="preload"
-			href={tablerIconsHref}
-			as="style"
-			onload="this.onload=null;this.rel='stylesheet'"
-		/>
-		<noscript>
-			<link rel="stylesheet" href={tablerIconsHref} />
-		</noscript>
-		<style is:global set:html={tablerFontDisplayOverride} />
+		<link rel="preload" href={iconFontUrl} as="font" type="font/woff2" crossorigin />
 
 		<title>{title}</title>
 

@@ -2,16 +2,17 @@
 import BaseLayout from './BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import BookingScript from '../components/BookingScript.astro';
 
 type Props = {
 	title: string;
 	description?: string;
-	booking?: boolean;
 	/** Checkout mode — hides the full site Header/Footer so pages can use the
 	 * minimal MiniNav + TrustStrip chrome instead (reduces mid-funnel fall-off). */
 	checkout?: boolean;
 	ogImage?: string;
+	ogImageAlt?: string;
+	/** False on pages that shouldn't declare a canonical URL (the 404 page). */
+	canonical?: boolean;
 	solidNav?: boolean;
 	robots?: string;
 	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
@@ -20,22 +21,30 @@ type Props = {
 const {
 	title,
 	description,
-	booking = false,
 	checkout = false,
 	ogImage,
+	ogImageAlt,
+	canonical = true,
 	solidNav = true,
 	robots,
 	jsonLd,
 } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description} ogImage={ogImage} robots={robots} jsonLd={jsonLd}>
+<BaseLayout
+	title={title}
+	description={description}
+	ogImage={ogImage}
+	ogImageAlt={ogImageAlt}
+	canonical={canonical}
+	robots={robots}
+	jsonLd={jsonLd}
+>
 	<slot name="head" slot="head" />
 	<div class:list={['site-shell', checkout && 'site-shell--checkout']}>
 		<a class="skip-link" href="#main">Skip to content</a>
 		{!checkout && <Header solid={solidNav} />}
 		<slot />
 		{!checkout && <Footer />}
-		{booking && <BookingScript />}
 	</div>
 </BaseLayout>

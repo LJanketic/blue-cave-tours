@@ -1,6 +1,3 @@
 allowBuilds:
-  a: true
-  h: true
-  p: true
-  r: true
-  s: true
+  esbuild: true
+  sharp: true

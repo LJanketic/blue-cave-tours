@@ -16,6 +16,35 @@ export const prerender = false;
 const MAX_BODY_BYTES = 16_384;
 const MAX_TURNSTILE_TOKEN_LEN = 2048;
 
+/**
+ * Reads the body as text, stopping as soon as it passes `limit` bytes. The
+ * content-length check above can't catch chunked requests that omit the
+ * header, and `request.text()` would buffer the whole body before any check.
+ */
+async function readBodyWithLimit(request: Request, limit: number): Promise<string | null> {
+	if (!request.body) return '';
+	const reader = request.body.getReader();
+	const chunks: Uint8Array[] = [];
+	let size = 0;
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		size += value.byteLength;
+		if (size > limit) {
+			await reader.cancel();
+			return null;
+		}
+		chunks.push(value);
+	}
+	const bytes = new Uint8Array(size);
+	let offset = 0;
+	for (const chunk of chunks) {
+		bytes.set(chunk, offset);
+		offset += chunk.byteLength;
+	}
+	return new TextDecoder().decode(bytes);
+}
+
 export const POST: APIRoute = async ({ request }) => {
 	const contentLength = request.headers.get('content-length');
 	if (contentLength && Number.parseInt(contentLength, 10) > MAX_BODY_BYTES) {
@@ -32,12 +61,28 @@ export const POST: APIRoute = async ({ request }) => {
 		return jsonResponse({ error: 'Too many requests — please try again later' }, 429);
 	}
 
-	let body: Record<string, unknown>;
+	let raw: string | null;
 	try {
-		body = await request.json();
+		raw = await readBodyWithLimit(request, MAX_BODY_BYTES);
+	} catch {
+		// Aborted or broken upload.
+		return jsonResponse({ error: 'Invalid request body' }, 400);
+	}
+	if (raw === null) {
+		return jsonResponse({ error: 'Request too large' }, 413);
+	}
+
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw);
 	} catch {
 		return jsonResponse({ error: 'Invalid JSON' }, 400);
 	}
+	// `null`, arrays and primitives are valid JSON but not a form submission.
+	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+		return jsonResponse({ error: 'Invalid JSON' }, 400);
+	}
+	const body = parsed as Record<string, unknown>;
 
 	const fields = {
 		name: trimField(body.name, CONTACT_LIMITS.name),
@@ -52,14 +97,14 @@ export const POST: APIRoute = async ({ request }) => {
 
 	const result = validateContactSubmission(fields);
 	if (!result.ok) {
-		return jsonResponse({ error: result.error }, result.status ?? 400);
+		return jsonResponse({ error: result.error, fields: result.fields }, result.status ?? 400);
 	}
 	if (result.silent) {
 		return jsonResponse({ ok: true });
 	}
 
 	if (fields.tourSlug && !getTourBySlug(fields.tourSlug)) {
-		return jsonResponse({ error: 'Invalid tour selection' }, 400);
+		return jsonResponse({ error: 'Invalid tour selection', fields: ['tourSlug'] }, 400);
 	}
 
 	const turnstile = await verifyTurnstileToken(turnstileToken, clientIp);

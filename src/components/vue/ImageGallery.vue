@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 type GalleryPhoto = {
 	color: string;
@@ -31,6 +31,13 @@ const thumbPhotos = computed(() => props.gallery.slice(0, 4));
 const overflowCount = computed(() => Math.max(0, props.gallery.length - 4));
 const selectedIndex = ref<number | null>(null);
 
+// The last thumb shows "+N" when photos overflow; its accessible name has to
+// include that visible text (WCAG 2.5.3).
+function thumbLabel(photo: { alt: string }, index: number): string {
+	const more = index === thumbPhotos.value.length - 1 && overflowCount.value > 0 ? `+${overflowCount.value} more photos. ` : '';
+	return `${more}View image ${index + 2} of ${totalCount.value}: ${photo.alt}`;
+}
+
 const activePhoto = computed(() => {
 	if (selectedIndex.value === null) return props.hero;
 	return props.gallery[selectedIndex.value] ?? props.hero;
@@ -42,10 +49,25 @@ const displayIndex = computed(() => (selectedIndex.value === null ? 1 : selected
 function selectPhoto(index: number) {
 	selectedIndex.value = index;
 }
+
+// Steps through hero + every gallery photo (null = hero), wrapping at both
+// ends. The thumbs only show the first four, so this is the way to the rest.
+function step(delta: number) {
+	const position = selectedIndex.value === null ? 0 : selectedIndex.value + 1;
+	const next = (position + delta + totalCount.value) % totalCount.value;
+	selectedIndex.value = next === 0 ? null : next - 1;
+}
+
+// Announced after an arrow or thumb press; empty on load so nothing speaks.
+const liveText = ref('');
+watch(selectedIndex, () => {
+	liveText.value = `Image ${displayIndex.value} of ${totalCount.value}: ${activePhoto.value.alt}`;
+});
 </script>
 
 <template>
 	<div class="image-gallery">
+		<div class="image-gallery__stage">
 		<div
 			class="img-hero"
 			:style="activePhoto.src ? undefined : { background: activePhoto.color }"
@@ -85,6 +107,17 @@ function selectPhoto(index: number) {
 				{{ displayIndex }} / {{ totalCount }}
 			</div>
 		</div>
+		<!-- Outside .img-hero: its role="img" would hide these buttons from screen readers. -->
+		<template v-if="totalCount > 1">
+			<button type="button" class="image-gallery__arrow image-gallery__arrow--prev" aria-label="Previous photo" @click="step(-1)">
+				<i class="ti ti-chevron-left" aria-hidden="true"></i>
+			</button>
+			<button type="button" class="image-gallery__arrow image-gallery__arrow--next" aria-label="Next photo" @click="step(1)">
+				<i class="ti ti-chevron-right" aria-hidden="true"></i>
+			</button>
+		</template>
+		<p class="sr-only" aria-live="polite">{{ liveText }}</p>
+		</div>
 		<div v-if="thumbPhotos.length" class="img-thumbs">
 			<button
 				v-for="(photo, index) in thumbPhotos"
@@ -93,7 +126,7 @@ function selectPhoto(index: number) {
 				class="img-thumb"
 				:class="{ 'img-thumb--active': selectedIndex === index }"
 				:style="photo.src ? undefined : { background: photo.color }"
-				:aria-label="`View image ${index + 1}: ${photo.alt}`"
+				:aria-label="thumbLabel(photo, index)"
 				:aria-current="selectedIndex === index ? 'true' : undefined"
 				@click="selectPhoto(index)"
 			>
@@ -102,7 +135,7 @@ function selectPhoto(index: number) {
 					class="img-thumb__photo"
 					:src="photo.src"
 					:srcset="photo.srcset"
-					sizes="160px"
+					sizes="(max-width: 700px) 90px, 160px"
 					alt=""
 					loading="lazy"
 					decoding="async"
@@ -122,6 +155,44 @@ function selectPhoto(index: number) {
 </template>
 
 <style scoped>
+.image-gallery__stage {
+	position: relative;
+	margin-bottom: 10px;
+}
+
+.image-gallery__stage .img-hero {
+	margin-bottom: 0;
+}
+
+.image-gallery__arrow {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 36px;
+	height: 36px;
+	border: 0;
+	border-radius: 50%;
+	background: var(--color-background-primary);
+	color: var(--color-text-primary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	box-shadow: 0 1px 4px rgb(0 0 0 / 20%);
+}
+
+.image-gallery__arrow--prev {
+	left: 10px;
+}
+
+.image-gallery__arrow--next {
+	right: 10px;
+}
+
+.image-gallery__arrow .ti {
+	font-size: 20px;
+}
+
 .image-gallery__hero-icon {
 	font-size: 48px;
 	color: rgb(255 255 255 / 85%);

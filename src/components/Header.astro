@@ -10,6 +10,15 @@ const { solid = false } = Astro.props;
 // Production serves directory-style URLs (/about/), dev serves /about — strip the
 // trailing slash so exact-match checks work in both.
 const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+
+// `exact`: only highlight on the page itself, not on pages below it.
+const NAV_LINKS = [
+	{ href: '/tours/', label: 'Tours', exact: false },
+	{ href: '/destinations/', label: 'Destinations', exact: false },
+	{ href: '/about/', label: 'About', exact: true },
+	{ href: '/faq/', label: 'FAQ', exact: false },
+	{ href: '/contact/', label: 'Contact', exact: false },
+];
 ---
 
 <header class:list={['nav', !solid && 'nav--floating']} id="site-header" data-floating={String(!solid)}>
@@ -22,13 +31,24 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
 			<button type="button" class="nav-close" id="menu-close" aria-label="Close menu">
 				<i class="ti ti-x" aria-hidden="true"></i>
 			</button>
-			<a class:list={['nav-link', currentPath.startsWith('/tours') && 'nav-link--active']} href="/tours">Tours</a>
-			<a class:list={['nav-link', currentPath.startsWith('/destinations') && 'nav-link--active']} href="/destinations">Destinations</a>
-			<a class:list={['nav-link', currentPath === '/about' && 'nav-link--active']} href="/about">About</a>
-			<a class:list={['nav-link', currentPath.startsWith('/faq') && 'nav-link--active']} href="/faq">FAQ</a>
-			<a class:list={['nav-link', currentPath.startsWith('/contact') && 'nav-link--active']} href="/contact">Contact</a>
+			{
+				NAV_LINKS.map(({ href, label, exact }) => {
+					const path = href.replace(/\/$/, '');
+					const isPage = currentPath === path;
+					const inSection = !exact && currentPath.startsWith(`${path}/`);
+					return (
+						<a
+							class:list={['nav-link', (isPage || inSection) && 'nav-link--active']}
+							aria-current={isPage ? 'page' : inSection ? 'location' : undefined}
+							href={href}
+						>
+							{label}
+						</a>
+					);
+				})
+			}
 		</nav>
-		<a class="btn-primary nav-cta" href="/tours">Book now</a>
+		<a class="btn-primary nav-cta" href="/tours/">Book now</a>
 		<button type="button" class="nav-toggle" id="menu-toggle" aria-expanded="false" aria-controls="primary-nav">
 			<span class="sr-only">Menu</span>
 			<i class="ti ti-menu-2" aria-hidden="true"></i>
@@ -50,23 +70,38 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
 		const focusableSelector =
 			'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+		// The open menu covers the whole screen, so the trap cycles through the panel
+		// only (close button + links). getClientRects() also counts the close button,
+		// which is position: fixed and so has no offsetParent.
 		function getFocusables(): HTMLElement[] {
-			return Array.from(headerEl.querySelectorAll<HTMLElement>(focusableSelector)).filter(
-				(el) => !el.hasAttribute('disabled') && el.offsetParent !== null,
+			return Array.from(navEl.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+				(el) => !el.hasAttribute('disabled') && el.getClientRects().length > 0,
 			);
+		}
+
+		// Everything the panel covers is taken out of the tab order and the
+		// accessibility tree while it's open.
+		function coveredElements(): HTMLElement[] {
+			const covered = [
+				...headerEl.querySelectorAll<HTMLElement>('.nav-logo, .nav-cta, #menu-toggle'),
+				...document.querySelectorAll<HTMLElement>('main, .footer-shell, .skip-link'),
+			];
+			return covered.filter((el) => !navEl.contains(el));
 		}
 
 		function setOpen(open: boolean) {
 			headerEl.classList.toggle('nav--open', open);
 			document.body.classList.toggle('nav-menu-open', open);
 			toggleEl.setAttribute('aria-expanded', String(open));
-			navEl.setAttribute('aria-modal', open ? 'true' : 'false');
 			document.body.style.overflow = open ? 'hidden' : '';
+			for (const el of coveredElements()) el.inert = open;
 
 			if (open) {
 				const firstNavLink = navEl.querySelector<HTMLElement>('a.nav-link');
 				firstNavLink?.focus();
-			} else {
+			} else if (toggleEl.getClientRects().length > 0) {
+				// Skipped when the menu closes because the window widened past the
+				// mobile breakpoint: the toggle is hidden there and can't take focus.
 				toggleEl.focus();
 			}
 		}
@@ -82,6 +117,14 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
 		});
 
 		closeBtn?.addEventListener('click', closeMenu);
+
+		// The overlay only exists below the mobile breakpoint. If the window grows
+		// past it while open (rotation, resize), close it so the page isn't left
+		// inert with scrolling locked. Same query as the mobile block in _base.css,
+		// negated, so fractional widths (e.g. 768.4px when zoomed) can't fall between.
+		window.matchMedia('(max-width: 768px)').addEventListener('change', (event) => {
+			if (!event.matches) closeMenu();
+		});
 
 		document.addEventListener('click', (event) => {
 			if (!headerEl.contains(event.target as Node)) {

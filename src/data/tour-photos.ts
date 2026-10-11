@@ -75,10 +75,6 @@ export const PHOTO = {
 	},
 } as const satisfies Record<string, PhotoRef>;
 
-export function galleryFrom(...items: PhotoRef[]): PhotoRef[] {
-	return items;
-}
-
 export type GalleryViewPhoto = {
 	color: string;
 	alt: string;
@@ -114,12 +110,13 @@ export const GALLERY_HERO_SIZE: GalleryImageSize = {
  * ladder must cover both, hence hero-grade widths included here too.
  */
 export const GALLERY_PHOTO_SIZE: GalleryImageSize = {
-	widths: [80, 160, 400, 800, 1200],
+	widths: [80, 160, 240, 400, 800, 1200],
 	sizes: '80px', // unused directly — sizes is hardcoded per <img> instead, since the same photo renders in two different boxes depending on template
 };
 /** Matches the tour/destination card grids (ToursCatalog.vue / DestinationsCatalog.vue). */
 export const GALLERY_CARD_SIZE: GalleryImageSize = {
-	widths: [400, 800],
+	// 600 serves phones (88vw ≈ 340px at 1.75–2x) without jumping to the 800 file.
+	widths: [400, 600, 800],
 	sizes: '(max-width: 700px) 88vw, 380px',
 };
 

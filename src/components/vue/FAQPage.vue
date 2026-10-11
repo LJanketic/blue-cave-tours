@@ -96,7 +96,9 @@ function answerId(item: FaqItem): string {
 			<p>Everything you need to know before you book. Can't find the answer? We're happy to help directly.</p>
 		</div>
 
-		<div class="search-bar">
+		<!-- Results filter as you type. Not a <form>: before this island hydrates,
+		     Enter or the button would submit natively and reload the page. -->
+		<div class="search-bar" role="search">
 			<input
 				v-model="searchQuery"
 				type="text"
@@ -107,6 +109,11 @@ function answerId(item: FaqItem): string {
 				<i class="ti ti-search search-icon" aria-hidden="true"></i>
 				Search
 			</button>
+			<p class="sr-only" role="status">
+				<template v-if="searchQuery.trim()">
+					{{ filteredItems.length }} {{ filteredItems.length === 1 ? 'question matches' : 'questions match' }}
+				</template>
+			</p>
 		</div>
 
 		<div class="faq-layout">
@@ -246,7 +253,6 @@ function answerId(item: FaqItem): string {
 	border-radius: var(--radius-md);
 	background: var(--color-background-primary);
 	color: var(--color-text-primary);
-	outline: none;
 	font-family: inherit;
 }
 

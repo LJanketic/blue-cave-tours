@@ -1,30 +1,9 @@
-import type { TourDetail, ItineraryKind } from '../types/tour';
-import { supportsInstantBook } from './booking';
+import type { TourDetail } from '../types/tour';
+import { isGroupTour } from './booking';
 import { parseAdultPrice } from './price';
 
 /** Multi-select filter ids used by the tours overview. OR logic across the set. */
 export type TourFilter = 'group' | 'private' | 'short' | 'sunset';
-
-export function isPrivateTour(tour: Pick<TourDetail, 'slug'>): boolean {
-	return !supportsInstantBook(tour);
-}
-
-/**
- * The booking modes a tour offers. Explicit `types` on the tour win; otherwise
- * quote-only tours are private and instant-book tours are group departures that
- * can also be booked as a private charter.
- */
-export function tourTypes(tour: TourDetail): ('group' | 'private')[] {
-	if (tour.types && tour.types.length) return tour.types;
-	return isPrivateTour(tour) ? ['private'] : ['group', 'private'];
-}
-
-export function tourTags(tour: TourDetail): string[] {
-	const tags: string[] = [];
-	if (tour.itineraryKind === 'morning' || tour.itineraryKind === 'afternoon') tags.push('half-day');
-	if (tour.slug.includes('lagoon') || tour.itinerary.some((s) => /swim/i.test(s))) tags.push('swim');
-	return tags;
-}
 
 /** Parse the leading hour count from a duration string ("Approx. 8–10 hours" → 8). */
 export function parseDurationHours(duration: string): number | null {
@@ -48,9 +27,9 @@ export function isSunsetTour(tour: TourDetail): boolean {
 export function matchesFilter(tour: TourDetail, filter: TourFilter): boolean {
 	switch (filter) {
 		case 'group':
-			return tourTypes(tour).includes('group');
+			return isGroupTour(tour);
 		case 'private':
-			return tourTypes(tour).includes('private');
+			return tour.types.includes('private');
 		case 'short':
 			return isShortTour(tour);
 		case 'sunset':
@@ -104,14 +83,3 @@ export function searchTours(tours: TourDetail[], query: string): TourDetail[] {
 	);
 }
 
-export function durationLabel(kind: ItineraryKind): string {
-	switch (kind) {
-		case 'morning':
-		case 'afternoon':
-			return 'Half day';
-		case 'full':
-			return 'Full day';
-		default:
-			return 'Flexible';
-	}
-}

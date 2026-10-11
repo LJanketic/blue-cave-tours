@@ -7,7 +7,7 @@ import { ABOUT } from '../../data/about';
 ---
 
 <SiteLayout
-	title={pageTitle('About us')}
+	title={pageTitle('About us: Split locals running boat tours')}
 	description="Split locals running small-group boat tours and private charters — Blue Cave, islands, and routes that follow the weather."
 >
 	<main id="main" class="page-shell about-page">
@@ -59,7 +59,7 @@ import { ABOUT } from '../../data/about';
 
 			<section class="section" aria-labelledby="crew-heading">
 				<h2 id="crew-heading" class="sec-title">Meet the crew</h2>
-				<div class="crew-grid">
+				<div class="crew-grid" data-scroll-region="Our crew">
 					{
 						ABOUT.crew.map((member) => (
 							<article class="crew-card">
@@ -96,7 +96,7 @@ import { ABOUT } from '../../data/about';
 
 			<section class="section" aria-labelledby="press-heading">
 				<h2 id="press-heading" class="sec-title">What guests say</h2>
-				<div class="press-grid">
+				<div class="press-grid" data-scroll-region="Press mentions">
 					{
 						ABOUT.pressMentions.map((item) => (
 							<blockquote class="press-card">
@@ -116,13 +116,34 @@ import { ABOUT } from '../../data/about';
 				<h2 id="about-cta-heading">Ready to get on the water?</h2>
 				<p>Tours depart daily from Split. Book early in peak season — popular routes fill quickly.</p>
 				<div class="cta-band-btns">
-					<a class="btn-primary" href="/tours">Browse all tours</a>
-					<a class="btn-secondary" href="/contact?tour=create-perfect-day-private">Plan a private charter</a>
+					<a class="btn-primary" href="/tours/">Browse all tours</a>
+					<a class="btn-secondary" href="/contact/?tour=create-perfect-day-private">Plan a private charter</a>
 				</div>
 			</section>
 		</div>
 	</main>
 </SiteLayout>
+
+<script>
+	// The crew and press rows only scroll sideways on narrow screens; make them
+	// keyboard-scrollable regions then (WCAG 2.1.1), and plain blocks otherwise
+	// so desktop keyboard users don't get empty tab stops.
+	for (const el of document.querySelectorAll<HTMLElement>('[data-scroll-region]')) {
+		const sync = () => {
+			if (el.scrollWidth > el.clientWidth) {
+				el.tabIndex = 0;
+				el.setAttribute('role', 'region');
+				el.setAttribute('aria-label', el.dataset.scrollRegion ?? '');
+			} else {
+				el.removeAttribute('tabindex');
+				el.removeAttribute('role');
+				el.removeAttribute('aria-label');
+			}
+		};
+		sync();
+		new ResizeObserver(sync).observe(el);
+	}
+</script>
 
 <style>
 	.about-page h1 {

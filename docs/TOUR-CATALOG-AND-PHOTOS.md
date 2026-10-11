@@ -1,5 +1,10 @@
 # Tour catalog & photo mapping
 
+> **Historical (June 2026).** This records the photo-match trim at the time. The live catalog is
+> `src/data/tour-catalog.ts` (7 tours as of September 2026). Retired slugs are listed in
+> `REMOVED_TOUR_SLUGS` there and redirected in `public/_redirects`; `src/data/catalog.test.ts`
+> keeps the two in sync. `public/assets/tours/` no longer exists; photos live in `src/assets/`.
+
 Summary of the **strict photo-match** catalog trim (June 2026).  
 Source photos: `~/Downloads/Materijali Vedran` → optimized copies in `public/assets/tours/`.
 

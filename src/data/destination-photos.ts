@@ -108,6 +108,3 @@ export function galleryFromDestinations(...slugs: string[]): PhotoRef[] {
 	return photos;
 }
 
-export function photoUrl(photo: PhotoRef | undefined): string | undefined {
-	return photo?.src?.src;
-}

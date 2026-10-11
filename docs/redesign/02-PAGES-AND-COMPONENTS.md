@@ -45,7 +45,7 @@ When the design introduces new pages (e.g. About, Gallery, Blog, single landing 
 | File | Role | Responsibility |
 |------|------|----------------|
 | `src/layouts/BaseLayout.astro` | `[SHELL]` | HTML document, meta/SEO, OG tags, font preload, `global.css`, no chrome |
-| `src/layouts/SiteLayout.astro` | `[SHELL]` | Wraps `BaseLayout` + `Header` + `<slot>` + `Footer` + optional `BookingScript` |
+| `src/layouts/SiteLayout.astro` | `[SHELL]` | Wraps `BaseLayout` + `Header` + `<slot>` + `Footer` |
 
 ### SiteLayout props
 
@@ -53,7 +53,7 @@ When the design introduces new pages (e.g. About, Gallery, Blog, single landing 
 |------|------|--------|
 | `title` | `string` | `<title>` and OG title |
 | `description?` | `string` | Meta description |
-| `booking?` | `boolean` | Loads `BookingScript` (book-now redirect) |
+| ~~`booking?`~~ | — | Removed Sept 2026 (BookingScript did nothing: no `.booking-form` existed) |
 | `ogImage?` | `string` | Open Graph image URL |
 
 ---
@@ -101,7 +101,7 @@ Glorich, see `05-SITE-COPY.md`) that never shipped. The header and hero render
 
 | Component | File | Role |
 |-----------|------|------|
-| `BookingScript` | `src/components/BookingScript.astro` | `[SCRIPT]` Loader for `src/client/booking-forms.ts` |
+| ~~`BookingScript`~~ | removed Sept 2026 | |
 | `NotFoundPanel` | `src/components/NotFoundPanel.astro` | Reusable 404 content block with action links |
 
 ### Shared media
@@ -116,7 +116,7 @@ Glorich, see `05-SITE-COPY.md`) that never shipped. The header and hero render
 
 | File | Loaded from | Role |
 |------|-------------|------|
-| `src/client/booking-forms.ts` | `BookingScript.astro` | Intercepts `.booking-form` submit → redirect `/booking/success?tourId={slug}` |
+| ~~`src/client/booking-forms.ts`~~ | removed Sept 2026 | |
 | `src/client/contact-form.ts` | `contact/index.astro` inline script | `initContactForm()`: timestamp, tour preselect, client validation, POST `/api/contact` |
 
 ### Inline component scripts (not in `src/client/`)
@@ -145,7 +145,7 @@ Glorich, see `05-SITE-COPY.md`) that never shipped. The header and hero render
 | File | Role | Exports |
 |------|------|---------|
 | `src/data/tour-catalog.ts` | **Canonical tour content** | `tours[]`, `REMOVED_TOUR_SLUGS` |
-| `src/data/tour-photos.ts` | Photo registry (deferred in redesign) | `PHOTO`, `HERO_IMAGE`, `galleryFrom()` |
+| `src/data/tour-photos.ts` | Photo registry (deferred in redesign) | `PHOTO`, `HERO_IMAGE`, `toGalleryView()` |
 | `src/data/hero-image.ts` | Homepage hero re-export | `HERO_IMAGE` |
 | `src/data/faq.ts` | FAQ content | `FAQ_ITEMS` |
 | `src/config/site.ts` | Site identity | `SITE_NAME`, email, phone, `pageTitle()` |

@@ -48,3 +48,7 @@ Desktop.ini
 # VS Code — uncomment if you do NOT want to share workspace settings with the team
 .vscode/
 .gstack/
+
+# local Claude Code state and vendored agent skills
+.claude/
+skills-lock.json

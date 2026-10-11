@@ -1,0 +1,105 @@
+import { describe, expect, it } from 'vitest';
+import {
+	bookingRefFromDetails,
+	bookingReviewPath,
+	bookingSuccessPath,
+	contactHrefForTour,
+	groupBookHref,
+	hasRequiredBookingDetails,
+	meetingPointShort,
+	parseGroupBookingParams,
+	parseIsoDate,
+	startOfDay,
+	supportsInstantBook,
+	toIsoDate,
+	tourPriceUnit,
+} from './booking';
+
+describe('ISO dates', () => {
+	it('formats a local date without shifting the day', () => {
+		expect(toIsoDate(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
+	});
+
+	it('round-trips real dates and rejects impossible or malformed ones', () => {
+		expect(parseIsoDate('2026-02-28')?.getDate()).toBe(28);
+		expect(parseIsoDate('2026-02-31')).toBeNull();
+		expect(parseIsoDate('2026-2-3')).toBeNull();
+		expect(parseIsoDate('not a date')).toBeNull();
+	});
+
+	it('startOfDay drops the time of day', () => {
+		expect(startOfDay(new Date(2026, 4, 1, 17, 30)).getTime()).toBe(new Date(2026, 4, 1).getTime());
+	});
+});
+
+describe('parseGroupBookingParams', () => {
+	it('keeps valid values and drops invalid ones', () => {
+		const details = parseGroupBookingParams(
+			new URLSearchParams('date=2026-02-31&slot=9am&adults=2&children=x&firstName=%20Jane%20'),
+		);
+		expect(details.date).toBeNull();
+		expect(details.slot).toBeNull();
+		expect(details.adults).toBe(2);
+		expect(details.children).toBe(0);
+		expect(details.firstName).toBe('Jane');
+	});
+
+	it('rejects guest counts above the per-departure cap', () => {
+		expect(parseGroupBookingParams(new URLSearchParams('adults=99')).adults).toBeNull();
+	});
+});
+
+describe('hasRequiredBookingDetails', () => {
+	const base = parseGroupBookingParams(
+		new URLSearchParams('date=2027-07-15&adults=2&firstName=Jane&lastName=Smith&email=jane@example.com'),
+	);
+
+	it('accepts a complete booking', () => {
+		expect(hasRequiredBookingDetails(base)).toBe(true);
+	});
+
+	it('rejects a booking over the combined guest cap', () => {
+		expect(hasRequiredBookingDetails({ ...base, adults: 8, children: 8 })).toBe(false);
+	});
+
+	it('rejects a booking without a date', () => {
+		expect(hasRequiredBookingDetails({ ...base, date: null })).toBe(false);
+	});
+});
+
+describe('booking paths', () => {
+	it('uses trailing-slash URLs so links skip the 301', () => {
+		expect(groupBookHref({ slug: 'blue-lagoon-morning' })).toBe('/book/blue-lagoon-morning/group/');
+		expect(contactHrefForTour({ slug: 'a b' })).toBe('/contact/?tour=a%20b');
+		expect(bookingReviewPath('x', { date: '2027-07-15', notes: ' ' })).toBe('/book/x/review/?date=2027-07-15');
+		expect(bookingSuccessPath({})).toBe('/booking/success/');
+	});
+
+	it('derives a stable booking reference', () => {
+		const details = parseGroupBookingParams(new URLSearchParams('date=2027-07-15&email=a@b.co'));
+		expect(bookingRefFromDetails('x', details)).toBe(bookingRefFromDetails('x', details));
+		expect(bookingRefFromDetails('x', details)).toMatch(/^HBC-\d+$/);
+	});
+});
+
+describe('instant book and price unit', () => {
+	it('only group tours with a real price book instantly', () => {
+		expect(supportsInstantBook({ types: ['group'], fromPrice: '€75' })).toBe(true);
+		expect(supportsInstantBook({ types: ['group'], fromPrice: 'Price on request' })).toBe(false);
+		expect(supportsInstantBook({ types: ['private'], fromPrice: 'On request' })).toBe(false);
+	});
+
+	it('labels the unit by tour type, not by bookability', () => {
+		expect(tourPriceUnit({ types: ['group', 'private'], fromPrice: '€169' })).toBe('/ person');
+		expect(tourPriceUnit({ types: ['group'], fromPrice: 'Price on request' })).toBe('');
+		expect(tourPriceUnit({ types: ['private'], fromPrice: '€900' })).toBe('/ boat');
+		expect(tourPriceUnit({ types: ['private'], fromPrice: 'On request' })).toBe('');
+	});
+});
+
+describe('meetingPointShort', () => {
+	it('shortens stand-number copy and falls back to the first sentence', () => {
+		expect(meetingPointShort('Meet at Split Riva, stand number 14. Arrive early.')).toBe('Riva stand 14');
+		expect(meetingPointShort('Meet at Trogir marina. Look for our flag.')).toBe('Trogir marina');
+	});
+});

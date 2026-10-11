@@ -21,7 +21,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 ---
 
 <SiteLayout
-	title={pageTitle('Contact')}
+	title={pageTitle('Contact us: Riva stand 14, Split')}
 	description={`Reach ${SITE_NAME} on Split’s Riva — stand 14 — or send a message about tours and private charters.`}
 >
 	<main id="main" class="page-shell">
@@ -107,9 +107,10 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 						<label for="company">Company</label>
 						<input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
 					</div>
+					<p class="form-note">Fields marked * are required.</p>
 					<div class="form-grid">
 						<div class="form-field form-field--name">
-							<label for="name">Name <span class="sr-only">(required)</span></label>
+							<label for="name">Name <span aria-hidden="true">*</span></label>
 							<input
 								id="name"
 								name="name"
@@ -121,7 +122,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 							/>
 						</div>
 						<div class="form-field form-field--email">
-							<label for="email">Email <span class="sr-only">(required)</span></label>
+							<label for="email">Email <span aria-hidden="true">*</span></label>
 							<input
 								id="email"
 								name="email"
@@ -150,7 +151,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 							</select>
 						</div>
 						<div class="form-field full">
-							<label for="message">Message <span class="sr-only">(required)</span></label>
+							<label for="message">Message <span aria-hidden="true">*</span></label>
 							<textarea
 								id="message"
 								name="message"
@@ -265,6 +266,17 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 	.contact-page .form-field textarea {
 		resize: vertical;
 		min-height: 80px;
+	}
+
+	.form-note {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+		margin: 0 0 12px;
+	}
+
+	.contact-submit[aria-disabled='true'] {
+		opacity: 0.6;
+		cursor: progress;
 	}
 
 	.contact-submit {

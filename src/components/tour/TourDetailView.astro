@@ -1,7 +1,6 @@
 ---
 import type { TourDetail } from '../../types/tour';
-import { contactHrefForTour, groupBookHref, supportsInstantBook } from '../../lib/booking';
-import { tourTypes } from '../../lib/tour-filters';
+import { contactHrefForTour, groupBookHref, isGroupTour, supportsInstantBook, tourPriceUnit } from '../../lib/booking';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 import { GALLERY_HERO_SIZE, GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
 import { getDestinationsForTour, getPrimaryDestinationForTour } from '../../lib/destinations';
@@ -13,12 +12,13 @@ type HeroTag = { icon: string; label: string; variant?: 'feat' | 'group' | 'priv
 
 const { tour } = Astro.props;
 const instantBook = supportsInstantBook(tour);
-const types = tourTypes(tour);
+const types = tour.types;
+const isGroup = isGroupTour(tour);
 const primaryBookHref = instantBook ? groupBookHref(tour) : contactHrefForTour(tour);
 const showPrivateCta = instantBook && types.includes('private');
 
 const heroTags: HeroTag[] = [];
-if (types.includes('group')) {
+if (isGroup) {
 	heroTags.push({ icon: 'users', label: 'Group tour', variant: 'group' });
 }
 if (types.includes('private')) {
@@ -33,9 +33,9 @@ if (tour.featured) {
 }
 
 const durationDisplay = tour.duration.replace(/Approx\.\s*/, '≈');
-const groupLabel = instantBook ? 'Small group' : 'Private charter';
-const groupIcon = instantBook ? 'users' : 'crown';
-const priceUnit = instantBook ? '/ person' : '/ boat';
+const groupLabel = isGroup ? 'Small group' : 'Private charter';
+const groupIcon = isGroup ? 'users' : 'crown';
+const priceUnit = tourPriceUnit(tour);
 
 const heroPhoto = await toGalleryView(tour.image, 'sailboat', GALLERY_HERO_SIZE);
 const thumbPhotos = await Promise.all(tour.gallery.map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)));
@@ -62,13 +62,13 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 
 <article class="page tour-detail">
 	<nav class="breadcrumb" aria-label="Breadcrumb">
-		<a href="/tours">Tours</a>
+		<a href="/tours/">Tours</a>
 		<span aria-hidden="true"> › </span>
 		{
 			primaryDestination ? (
-				<a href={`/destinations/${primaryDestination.slug}`}>{primaryDestination.name}</a>
+				<a href={`/destinations/${primaryDestination.slug}/`}>{primaryDestination.name}</a>
 			) : (
-				<a href="/tours">{tour.tagline}</a>
+				<a href="/tours/">{tour.tagline}</a>
 			)
 		}
 		<span aria-hidden="true"> › </span>
@@ -176,7 +176,7 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 						</h2>
 						<div class="tour-detail__dest-chips">
 							{tourDestinations.map((destination) => (
-								<a class="filter-chip" href={`/destinations/${destination.slug}`}>
+								<a class="filter-chip" href={`/destinations/${destination.slug}/`}>
 									<i class={`ti ti-${destination.icon}`} aria-hidden="true" />
 									{destination.name}
 								</a>
@@ -203,9 +203,9 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 		<aside id="book-panel" aria-label="Book this tour">
 			<div class="sticky-card">
 				<div class="price-row">
-					<span class="price-from">From</span>
+					{priceUnit && <span class="price-from">From</span>}
 					<span class="price-val">{tour.fromPrice}</span>
-					<span class="price-per">{priceUnit}</span>
+					{priceUnit && <span class="price-per">{priceUnit}</span>}
 				</div>
 				<p class="sticky-card__price-note">{tour.priceNotes}</p>
 
@@ -243,7 +243,7 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 		<div class="mbb-info">
 			<span class="mbb-price">
 				{tour.fromPrice}
-				<span class="mbb-per">{priceUnit}</span>
+				{priceUnit && <span class="mbb-per">{priceUnit}</span>}
 			</span>
 		</div>
 		<a class="btn-primary mbb-btn" href={primaryBookHref}>
@@ -291,11 +291,6 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 
 	.tour-detail .itinerary-item--last {
 		padding-bottom: 0;
-	}
-
-	.tour-detail .booking-form {
-		margin: 0;
-		width: 100%;
 	}
 
 	.tour-detail__note {

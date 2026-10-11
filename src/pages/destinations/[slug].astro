@@ -1,6 +1,7 @@
 ---
 export const prerender = true;
 
+import { isGroupTour, tourPriceUnit } from '../../lib/booking';
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import ImageGallery from '../../components/vue/ImageGallery.vue';
@@ -14,7 +15,7 @@ import {
 	MONTH_LABELS,
 } from '../../lib/destinations';
 import { getTourCardPhoto } from '../../lib/tours';
-import { supportsInstantBook } from '../../lib/booking';
+import { breadcrumbJsonLd, destinationJsonLd, socialImageFor } from '../../lib/seo';
 import { GALLERY_HERO_SIZE, GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
 
 export function getStaticPaths() {
@@ -50,7 +51,8 @@ function nearbyTourCount(slug: string): number {
 
 const { destination } = Astro.props;
 const tours = getToursForDestination(destination.slug);
-const heroPhoto = await toGalleryView(getDestinationPhoto(destination), 'sailboat', GALLERY_HERO_SIZE);
+const destinationPhoto = getDestinationPhoto(destination);
+const heroPhoto = await toGalleryView(destinationPhoto, 'sailboat', GALLERY_HERO_SIZE);
 const galleryPhotos = await Promise.all(
 	getDestinationGallery(destination).map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)),
 );
@@ -77,16 +79,37 @@ const fromLabel = distanceGeo
 const mapStubLabel = distanceGeo
 	? `View on map — ${distanceGeo.value}`
 	: 'View on map — depart from Split Riva';
+
+// Split is where every tour leaves from, not a stop, so it gets its own title.
+const titleSegment = destination.isDepartureHub
+	? `${destination.name} Riva: boat tour departure point`
+	: `${destination.name} boat trips from Split`;
+const shareImage = await socialImageFor(destinationPhoto);
+const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
+// Matches the visible breadcrumb above the gallery (Destinations › name), with Home first.
+const jsonLd = siteUrl
+	? [
+			destinationJsonLd(destination, siteUrl),
+			breadcrumbJsonLd([
+				{ name: 'Home', url: `${siteUrl}/` },
+				{ name: 'Destinations', url: `${siteUrl}/destinations/` },
+				{ name: destination.name, url: `${siteUrl}/destinations/${destination.slug}/` },
+			]),
+		]
+	: undefined;
 ---
 
 <SiteLayout
-	title={pageTitle(destination.name)}
+	title={pageTitle(titleSegment)}
 	description={destination.shortDescription}
+	ogImage={shareImage.src}
+	ogImageAlt={shareImage.alt}
+	jsonLd={jsonLd}
 >
 	<main id="main" class="page-shell dest-detail-page">
 		<article class="page">
 			<nav class="breadcrumb" aria-label="Breadcrumb">
-				<a href="/destinations">Destinations</a>
+				<a href="/destinations/">Destinations</a>
 				<span aria-hidden="true"> › </span>
 				<span aria-current="page">{destination.name}</span>
 			</nav>
@@ -136,6 +159,7 @@ const mapStubLabel = distanceGeo
 								}
 							</div>
 						</div>
+						<button type="button" class="marquee-toggle" aria-label="Pause highlights animation">Pause</button>
 					</section>
 
 					<section class="section" aria-labelledby="best-time-heading">
@@ -197,7 +221,7 @@ const mapStubLabel = distanceGeo
 						<h2 id="nearby-heading" class="sec-title">Also nearby</h2>
 						{
 							destination.nearby.map((stop) => (
-								<a class="nearby-item" href={`/destinations/${stop.slug}`}>
+								<a class="nearby-item" href={`/destinations/${stop.slug}/`}>
 									<i class={`ti ti-${stop.icon}`} aria-hidden="true"></i>
 									{stop.name}
 									<span class="nearby-dist">{stop.distance}</span>
@@ -225,9 +249,10 @@ const mapStubLabel = distanceGeo
 						</h2>
 						{
 							tours.map((tour) => {
-								const instant = supportsInstantBook(tour);
+								const isGroup = isGroupTour(tour);
+								const priceUnit = tourPriceUnit(tour);
 								return (
-									<a class="tour-link-card" href={`/tours/${tour.slug}`}>
+									<a class="tour-link-card" href={`/tours/${tour.slug}/`}>
 										<div class="tc-head">
 											<div class="tc-thumb">
 												<TourImage photo={getTourCardPhoto(tour)} layout="thumb" icon="sailboat" />
@@ -240,8 +265,8 @@ const mapStubLabel = distanceGeo
 														{tour.duration}
 													</span>
 													<span class="tc-tag">
-														<i class={`ti ti-${instant ? 'users' : 'crown'}`} aria-hidden="true"></i>
-														{instant ? 'Group' : 'Private'}
+														<i class={`ti ti-${isGroup ? 'users' : 'crown'}`} aria-hidden="true"></i>
+														{isGroup ? 'Group' : 'Private'}
 													</span>
 													<span class="tc-tag">
 														<i class="ti ti-map-pin" aria-hidden="true"></i>
@@ -260,9 +285,9 @@ const mapStubLabel = distanceGeo
 										</div>
 										<div class="tc-foot">
 											<div>
-												<span class="tc-from">From </span>
+												{priceUnit && <span class="tc-from">From </span>}
 												<span class="tc-price">{tour.fromPrice}</span>
-												<span class="tc-per"> / person</span>
+												{priceUnit && <span class="tc-per"> {priceUnit}</span>}
 											</div>
 											<span class="tc-cta">View tour</span>
 										</div>
@@ -304,11 +329,11 @@ const mapStubLabel = distanceGeo
 					</div>
 					<p class="conditions-note">Sea temp varies · Light winds typical in season</p>
 					<hr class="sc-divider" />
-					<a class="cta-primary" href={`/tours?destination=${destination.slug}`}>
+					<a class="cta-primary" href={`/tours/?destination=${destination.slug}`}>
 						<i class="ti ti-sailboat" aria-hidden="true"></i>
 						Browse {visitLabel} tours
 					</a>
-					<a class="cta-secondary" href="/contact?tour=create-perfect-day-private">
+					<a class="cta-secondary" href="/contact/?tour=create-perfect-day-private">
 						<i class="ti ti-crown" aria-hidden="true"></i>
 						Plan a private charter
 					</a>
@@ -320,7 +345,7 @@ const mapStubLabel = distanceGeo
 								destination.nearby.slice(0, 3).map((stop) => {
 									const count = nearbyTourCount(stop.slug);
 									return (
-										<a class="sidebar-link" href={`/destinations/${stop.slug}`}>
+										<a class="sidebar-link" href={`/destinations/${stop.slug}/`}>
 											<span>{stop.name}</span>
 											<span>
 												{count} tour{count === 1 ? '' : 's'} →
@@ -336,6 +361,18 @@ const mapStubLabel = distanceGeo
 		</article>
 	</main>
 </SiteLayout>
+
+<script>
+	// Moving content that runs longer than 5 s needs a pause control (WCAG 2.2.2).
+	for (const button of document.querySelectorAll<HTMLButtonElement>('.marquee-toggle')) {
+		const marquee = button.closest('section')?.querySelector('.highlights-marquee');
+		button.addEventListener('click', () => {
+			const paused = marquee?.classList.toggle('is-paused') ?? false;
+			button.textContent = paused ? 'Play' : 'Pause';
+			button.setAttribute('aria-label', `${button.textContent} highlights animation`);
+		});
+	}
+</script>
 
 <style>
 	.dest-detail-page .page {
@@ -402,8 +439,22 @@ const mapStubLabel = distanceGeo
 		white-space: normal;
 	}
 
-	.dest-detail-page .highlights-marquee:active .marquee-track {
+	.dest-detail-page .highlights-marquee:active .marquee-track,
+	.dest-detail-page .highlights-marquee.is-paused .marquee-track {
 		animation-play-state: paused;
+	}
+
+	.dest-detail-page .marquee-toggle {
+		display: none;
+		margin: 8px 0 0 auto;
+		padding: 6px 12px;
+		min-height: 32px;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+		background: var(--color-background-primary);
+		border: 0.5px solid var(--color-border-secondary);
+		border-radius: var(--radius-md);
+		cursor: pointer;
 	}
 
 	@keyframes dest-highlights-marquee {
@@ -600,8 +651,18 @@ const mapStubLabel = distanceGeo
 			grid-template-columns: 1fr;
 		}
 
+		/* The moving strip is aria-hidden, so keep the list for screen readers. */
 		.dest-detail-page .highlights {
-			display: none;
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+		}
+
+		.dest-detail-page .marquee-toggle {
+			display: block;
 		}
 
 		.dest-detail-page .highlights-marquee {
@@ -625,6 +686,23 @@ const mapStubLabel = distanceGeo
 
 		.dest-detail-page .tc-cta {
 			margin-left: auto;
+		}
+	}
+
+	/* Without motion the strip would stay cut off after two items: show the list. */
+	@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+		.dest-detail-page .highlights {
+			position: static;
+			width: auto;
+			height: auto;
+			overflow: visible;
+			clip-path: none;
+			white-space: normal;
+		}
+
+		.dest-detail-page .highlights-marquee,
+		.dest-detail-page .marquee-toggle {
+			display: none;
 		}
 	}
 </style>

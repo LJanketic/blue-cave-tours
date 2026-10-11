@@ -35,11 +35,11 @@ export type TourDetail = {
 	fromPrice: string;
 	featured?: boolean;
 	/**
-	 * Which booking modes this tour offers. When omitted it is derived from
-	 * booking support (instant-book tours default to group + private available,
-	 * quote-only tours default to private).
+	 * Which booking modes this tour offers. Drives the Group/Private labels and
+	 * price unit; together with a numeric `fromPrice` it also decides whether the
+	 * tour can be booked instantly (see supportsInstantBook).
 	 */
-	types?: ('group' | 'private')[];
+	types: ('group' | 'private')[];
 	/** Optional marketing badge shown on cards (e.g. a newly added route). */
 	badge?: 'new';
 	/**

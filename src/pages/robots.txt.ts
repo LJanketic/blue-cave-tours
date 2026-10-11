@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { NOINDEX_PATH_PREFIXES } from '../config/noindex';
+import { ROBOTS_DISALLOW } from '../config/noindex';
 import { absoluteUrl } from '../lib/seo';
 
 export const prerender = true;
@@ -9,7 +9,7 @@ export const GET: APIRoute = ({ site }) => {
 		'User-agent: *',
 		'Allow: /',
 		'',
-		...NOINDEX_PATH_PREFIXES.map((prefix) => `Disallow: ${prefix}`),
+		...ROBOTS_DISALLOW.map((rule) => `Disallow: ${rule}`),
 	];
 
 	if (site) {
