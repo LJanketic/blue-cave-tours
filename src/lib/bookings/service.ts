@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { MAX_GUESTS, parseIsoDate, supportsInstantBook } from '../booking';
 import { computeBookingTotal } from '../price';
 import { EMAIL_RE } from '../contact-validation';
-import { adminEmail, sendEmail } from '../email/send';
+import { adminEmail, sendEmail, type EmailMessage } from '../email/send';
 import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail } from '../email/templates';
 import type { TourDetail } from '../../types/tour';
 import { businessDate } from './dates';
@@ -16,6 +16,7 @@ import {
 	type DemoInvoice,
 	type Enquiry,
 	type PaymentProvider,
+	type UpdateResult,
 } from './store';
 
 export type NewBookingInput = {
@@ -158,10 +159,27 @@ export async function finalizePaidBooking(
 	});
 	const booking = record ?? { ...paid.record, invoice };
 
-	await sendEmail(bookingConfirmationEmail(booking));
-	await sendEmail(adminBookingEmail(booking, adminEmail(), `${siteOrigin}/admin/bookings/${booking.id}/`));
+	await sendBookingEmail(booking.id, bookingConfirmationEmail(booking, siteOrigin), at);
+	await sendBookingEmail(booking.id, adminBookingEmail(booking, adminEmail(), `${siteOrigin}/admin/bookings/${booking.id}/`), at);
 	return booking;
 }
+
+/**
+ * Sends one of a booking's emails and notes it on the booking: its id (so the
+ * admin page loads just this booking's emails) and, for the customer
+ * confirmation, whether it went out (read by the public success page).
+ */
+async function sendBookingEmail(bookingId: string, message: EmailMessage, at: string): Promise<void> {
+	const email = await sendEmail(message);
+	await bookings().update(bookingId, (current) => ({
+		...current,
+		emailIds: [...(current.emailIds ?? []), email.id],
+		...(message.kind === 'booking_confirmation' ? { confirmationEmail: { delivery: email.delivery, at } } : {}),
+	}));
+}
+
+/** A second "Resend confirmation" this soon after the last one is a double click, and is ignored. */
+const RESEND_COOLDOWN_MS = 60_000;
 
 export async function recordFailedPayment(id: string, provider: PaymentProvider, now: Date = new Date()): Promise<void> {
 	const at = now.toISOString();
@@ -186,7 +204,8 @@ export type AdminAction =
 	| { type: 'status'; status: BookingStatus }
 	| { type: 'refund' }
 	| { type: 'note'; text: string }
-	| { type: 'resend' };
+	/** `siteOrigin`: the website address shown in the email's signature. */
+	| { type: 'resend'; siteOrigin: string };
 
 /** Statuses that only make sense for a booking that was paid. */
 const PAID_ONLY_STATUSES: BookingStatus[] = ['confirmed', 'completed', 'no_show'];
@@ -194,9 +213,16 @@ const PAID_ONLY_STATUSES: BookingStatus[] = ['confirmed', 'completed', 'no_show'
 /**
  * Applies one admin action and logs it. The server enforces the same rules
  * the buttons follow (e.g. no confirmation email for an unpaid booking).
- * Returns the booking, or null if it doesn't exist.
+ * Returns the booking (null if it doesn't exist) and whether this action
+ * changed it; `written: false` means it was refused or ignored, e.g. a resend
+ * within a minute of the last confirmation.
  */
-export async function applyAdminAction(id: string, action: AdminAction, by: string, now: Date = new Date()): Promise<Booking | null> {
+export async function applyAdminAction(
+	id: string,
+	action: AdminAction,
+	by: string,
+	now: Date = new Date(),
+): Promise<UpdateResult<Booking>> {
 	const at = now.toISOString();
 	const { record, written } = await bookings().update(id, (booking) => {
 		const paid = booking.paymentStatus === 'paid';
@@ -205,6 +231,8 @@ export async function applyAdminAction(id: string, action: AdminAction, by: stri
 				if (booking.status === action.status) return null;
 				if (PAID_ONLY_STATUSES.includes(action.status) && !paid) return null;
 				booking.history.push({ at, by, action: `Status: ${STATUS_LABELS[booking.status]} → ${STATUS_LABELS[action.status]}` });
+				// Reinstated: it takes its seats now, so it counts as the latest one in when checking for overbooking.
+				if (booking.status === 'cancelled') booking.seatsSince = at;
 				booking.status = action.status;
 				break;
 			case 'refund':
@@ -218,16 +246,22 @@ export async function applyAdminAction(id: string, action: AdminAction, by: stri
 				booking.staffNotes.push({ at, by, text });
 				break;
 			}
-			case 'resend':
+			case 'resend': {
 				if (!paid) return null;
+				// Double clicks and repeated form posts send once: the compare-and-swap lets only one request
+				// record the resend, and another within a minute of the last confirmation is ignored.
+				const last = booking.confirmationEmail ? Date.parse(booking.confirmationEmail.at) : Number.NaN;
+				if (now.getTime() - last < RESEND_COOLDOWN_MS) return null;
+				booking.confirmationEmail = { delivery: 'outbox', at };
 				booking.history.push({ at, by, action: `Confirmation email created again for ${booking.email}` });
 				break;
+			}
 		}
 		booking.updatedAt = at;
 		return booking;
 	});
-	if (written && record && action.type === 'resend') await sendEmail(bookingConfirmationEmail(record));
-	return record;
+	if (written && record && action.type === 'resend') await sendBookingEmail(record.id, bookingConfirmationEmail(record, action.siteOrigin), at);
+	return { record, written };
 }
 
 export async function recordEnquiry(

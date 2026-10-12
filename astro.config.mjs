@@ -36,6 +36,35 @@ const requireSiteUrlOnBuild = {
 	},
 };
 
+/**
+ * Server code reads its settings from `process.env` (that's where Netlify puts
+ * them), but `astro dev` only exposes `.env` through `import.meta.env`. In dev
+ * only, copy `.env` values into `process.env` so ADMIN_PASSWORD, ADMIN_EMAIL,
+ * RESEND_API_KEY etc. work locally. Values already set in the shell win.
+ * Builds are untouched: no secrets from a local `.env` reach a deploy.
+ * Vitest also loads this config (as "dev"), so tests are skipped explicitly:
+ * a test run must never see real keys or addresses.
+ *
+ * Node never overwrites a variable that's already set, so after editing
+ * `.env`, stop the dev server and start it again (Astro's own automatic
+ * restart keeps the old values).
+ */
+/** @type {import('astro').AstroIntegration} */
+const loadDotenvInDev = {
+	name: 'load-dotenv-in-dev',
+	hooks: {
+		'astro:config:setup': ({ command }) => {
+			if (command !== 'dev' || process.env.VITEST) return;
+			try {
+				// Node's own .env parser; it never overwrites a variable that's already set.
+				process.loadEnvFile('.env');
+			} catch {
+				// No .env file: nothing to load.
+			}
+		},
+	},
+};
+
 // https://astro.build/config — Netlify adapter for SSR + API routes.
 export default defineConfig({
 	output: 'server',
@@ -61,6 +90,7 @@ export default defineConfig({
 	},
 	integrations: [
 		requireSiteUrlOnBuild,
+		loadDotenvInDev,
 		vue(),
 		...(site
 			? [

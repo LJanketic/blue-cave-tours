@@ -1,12 +1,15 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTourBySlug } from '../tours';
 import type { TourDetail } from '../../types/tour';
 import { applyAdminAction, createPendingBooking, finalizePaidBooking, isPayable, recordEnquiry, recordFailedPayment } from './service';
 import { businessDate } from './dates';
 import { bookings, outbox, resetMemoryStore } from './store';
 import { newBookingRef } from './ids';
+import { MEETING_POINT_MAP_URL } from '../../config/site';
+import { meetingPointMapUrl } from '../email/templates';
 
 const NOW = new Date('2027-06-01T10:00:00Z');
+const LATER = new Date('2027-06-01T10:05:00Z');
 const tour = getTourBySlug('blue-cave-hvar-5-islands') as TourDetail;
 
 const input = {
@@ -75,6 +78,31 @@ describe('finalizePaidBooking', () => {
 		const admin = emails.find((e) => e.kind === 'admin_booking');
 		expect(admin?.replyTo).toBe('jane@example.com');
 		expect(admin?.html).toContain(`https://example.test/admin/bookings/${booking.id}/`);
+
+		// The owner's wording (2026-10-12), with the meeting point as a link to the stand 14 pin.
+		const customer = emails.find((e) => e.kind === 'booking_confirmation');
+		expect(customer?.subject).toBe('Your Hello Blue Cave booking confirmation – Blue Cave, Hvar & 5 islands, Thursday, 15 Jul 2027');
+		expect(customer?.html).toContain(`<a href="${MEETING_POINT_MAP_URL.replace(/&/g, '&amp;')}"`);
+		expect(customer?.html).toContain('Open in Google Maps');
+		const text = customer?.text ?? '';
+		for (const line of [
+			'Dear Jane,',
+			'Thank you for booking with Hello Blue Cave! Here are your booking details:',
+			`Booking ref: ${booking.ref}`,
+			'Departure: 07:20',
+			`Meeting point: Riva promenade, stand 14, Split — ${MEETING_POINT_MAP_URL}`,
+			"As you'll be joining a group, please be on time at the meeting point so we don't keep your fellow travelers waiting.",
+			'Guests: 2 adults, 1 child',
+			`Total: €${booking.total} — Paid (demo, no money taken)`,
+			'Bring: Swimsuit and towel, Sunscreen and sunglasses, Hat or cap, Light jacket for cooler sea breezes',
+			"In case of bad weather we may reschedule or refund — we'll contact you directly.",
+			'See you aboard!',
+			'The Hello Blue Cave team · Hello Blue Cave · Split, Croatia',
+			'example.test · +385 91 988 88 38 · info@hellobluecave.com',
+		]) {
+			expect(text).toContain(line);
+		}
+		expect(text.startsWith('This is a demo booking. No payment was taken.')).toBe(true);
 	});
 
 	it('does nothing the second time (duplicate webhook or double click)', async () => {
@@ -142,9 +170,9 @@ describe('applyAdminAction', () => {
 		await applyAdminAction(booking.id, { type: 'status', status: 'no_show' }, 'Admin', NOW);
 		await applyAdminAction(booking.id, { type: 'note', text: '  Called, no answer  ' }, 'Admin', NOW);
 		await applyAdminAction(booking.id, { type: 'note', text: '   ' }, 'Admin', NOW);
-		await applyAdminAction(booking.id, { type: 'resend' }, 'Admin', NOW);
+		await applyAdminAction(booking.id, { type: 'resend', siteOrigin: 'https://example.test' }, 'Admin', LATER);
 		await applyAdminAction(booking.id, { type: 'refund' }, 'Admin', NOW);
-		await applyAdminAction(booking.id, { type: 'resend' }, 'Admin', NOW); // refunded: ignored
+		await applyAdminAction(booking.id, { type: 'resend', siteOrigin: 'https://example.test' }, 'Admin', NOW); // refunded: ignored
 
 		const stored = await bookings().get(booking.id);
 		expect(stored?.status).toBe('no_show');
@@ -158,13 +186,67 @@ describe('applyAdminAction', () => {
 describe('applyAdminAction guards', () => {
 	it('ignores actions that only make sense for paid bookings', async () => {
 		const booking = await pending();
-		await applyAdminAction(booking.id, { type: 'resend' }, 'Admin', NOW);
+		await applyAdminAction(booking.id, { type: 'resend', siteOrigin: 'https://example.test' }, 'Admin', NOW);
 		await applyAdminAction(booking.id, { type: 'status', status: 'confirmed' }, 'Admin', NOW);
 		await applyAdminAction(booking.id, { type: 'refund' }, 'Admin', NOW);
 		const stored = await bookings().get(booking.id);
 		expect(stored?.status).toBe('pending_payment');
 		expect(stored?.paymentStatus).toBe('unpaid');
 		expect(await outbox().list()).toHaveLength(0);
+	});
+
+	it('sends a resend once on a double click, and records each confirmation on the booking', async () => {
+		const booking = await pending();
+		await finalizePaidBooking(booking.id, 'teya', 'T-1', 'https://example.test', NOW);
+		expect((await bookings().get(booking.id))?.confirmationEmail).toEqual({ delivery: 'outbox', at: NOW.toISOString() });
+
+		// Within a minute of the payment's confirmation: ignored.
+		await applyAdminAction(booking.id, { type: 'resend', siteOrigin: 'https://example.test' }, 'Admin', new Date('2027-06-01T10:00:30Z'));
+		// Two clicks landing together later: only one gets through.
+		await Promise.all([
+			applyAdminAction(booking.id, { type: 'resend', siteOrigin: 'https://example.test' }, 'Admin', LATER),
+			applyAdminAction(booking.id, { type: 'resend', siteOrigin: 'https://example.test' }, 'Admin', LATER),
+		]);
+		const confirmations = (await outbox().list()).filter((e) => e.kind === 'booking_confirmation');
+		expect(confirmations).toHaveLength(2);
+		// The booking lists exactly its own emails (payment: confirmation + admin; one resend).
+		const ids = (await bookings().get(booking.id))?.emailIds ?? [];
+		expect(ids).toHaveLength(3);
+		expect(new Set(ids)).toEqual(new Set((await outbox().list()).filter((e) => e.relatedId === booking.id).map((e) => e.id)));
+		expect((await bookings().get(booking.id))?.confirmationEmail?.at).toBe(LATER.toISOString());
+	});
+
+	it('records "sent" on the booking only when the confirmation really went out', async () => {
+		process.env.RESEND_API_KEY = 're_test';
+		process.env.EMAIL_SENDING = 'on';
+		process.env.EMAIL_DEMO_ALLOWLIST = 'jane@example.com';
+		vi.stubGlobal('fetch', vi.fn(async () => new Response('{"id":"x"}', { status: 200 })));
+		const booking = await pending();
+		await finalizePaidBooking(booking.id, 'teya', 'T-1', 'https://example.test', NOW);
+		expect((await bookings().get(booking.id))?.confirmationEmail?.delivery).toBe('sent');
+	});
+
+	it('never sends admin notifications without ADMIN_EMAIL, even with sending on', async () => {
+		process.env.RESEND_API_KEY = 're_test';
+		process.env.EMAIL_SENDING = 'on';
+		const fetchMock = vi.fn(async () => new Response('{"id":"x"}', { status: 200 }));
+		vi.stubGlobal('fetch', fetchMock);
+		const booking = await pending();
+		await finalizePaidBooking(booking.id, 'teya', 'T-1', 'https://example.test', NOW);
+		const admin = (await outbox().list()).find((e) => e.kind === 'admin_booking');
+		expect(admin?.to).toBe('');
+		expect(admin?.delivery).toBe('outbox');
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it('records when a cancelled, paid booking is put back, so it counts as the latest to take seats', async () => {
+		const booking = await pending();
+		await finalizePaidBooking(booking.id, 'teya', 'T-1', 'https://example.com', NOW);
+		await applyAdminAction(booking.id, { type: 'status', status: 'cancelled' }, 'Admin', NOW);
+		expect((await bookings().get(booking.id))?.seatsSince).toBeUndefined();
+		const later = new Date('2027-06-03T09:00:00Z');
+		await applyAdminAction(booking.id, { type: 'status', status: 'confirmed' }, 'Admin', later);
+		expect((await bookings().get(booking.id))?.seatsSince).toBe(later.toISOString());
 	});
 });
 
@@ -195,5 +277,14 @@ describe('recordEnquiry', () => {
 describe('newBookingRef', () => {
 	it('avoids look-alike characters', () => {
 		for (let i = 0; i < 200; i++) expect(newBookingRef()).not.toMatch(/[01IO]/);
+	});
+});
+
+describe('meetingPointMapUrl', () => {
+	it('uses the website link for Riva tours and searches other meeting points by name', () => {
+		expect(meetingPointMapUrl('Meet at Split’s Riva promenade, stand number 14.')).toBe(MEETING_POINT_MAP_URL);
+		expect(meetingPointMapUrl('Meet at Trogir marina. Look for our flag.')).toBe(
+			'https://www.google.com/maps/search/?api=1&query=Trogir%20marina%2C%20Split%2C%20Croatia',
+		);
 	});
 });

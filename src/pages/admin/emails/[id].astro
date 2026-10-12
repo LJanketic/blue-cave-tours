@@ -18,6 +18,11 @@ const related =
 		: email.relatedId
 			? { href: `/admin/bookings/${email.relatedId}/`, label: 'Open booking' }
 			: null;
+
+// Links in the preview open in a new tab, like in a mail app. The frame still runs no scripts
+// and has no access to the admin; only "open a new tab" is allowed. Older emails show exactly as
+// they were sent, so ones created before a template change won't have newer links.
+const previewHtml = email.html.replace(/<head>/i, '<head><base target="_blank">');
 ---
 
 <AdminLayout title={email.subject} heading="Email" section="emails" back={{ href: '/admin/emails/', label: 'Emails' }}>
@@ -26,7 +31,7 @@ const related =
 	<section class="a-card" aria-label="Details">
 		<p class="subject">{email.subject}</p>
 		<dl class="a-rows">
-			<div><dt>To</dt><dd>{email.to}</dd></div>
+			<div><dt>To</dt><dd>{email.to || 'No address (ADMIN_EMAIL not set)'}</dd></div>
 			{email.replyTo && <div><dt>Replies go to</dt><dd>{email.replyTo}</dd></div>}
 			<div><dt>Created</dt><dd>{formatTimestamp(email.createdAt)}</dd></div>
 			<div>
@@ -43,10 +48,11 @@ const related =
 		<a class:list={['filter-chip', { active: view === 'html' }]} href="?" aria-current={view === 'html' ? 'page' : undefined}>As sent</a>
 		<a class:list={['filter-chip', { active: view === 'text' }]} href="?view=text" aria-current={view === 'text' ? 'page' : undefined}>Plain text</a>
 	</nav>
+	{view === 'html' && <p class="a-muted preview-note">Links open in a new tab, so you can check them (e.g. the meeting point map).</p>}
 
 	{
 		view === 'html' ? (
-			<iframe class="preview" title="Email preview" sandbox="" srcdoc={email.html} loading="lazy" />
+			<iframe class="preview" title="Email preview" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc={previewHtml} loading="lazy" />
 		) : (
 			<pre class="a-card text">{email.text}</pre>
 		)
@@ -74,6 +80,11 @@ const related =
 		font-size: 12px;
 		font-weight: 400;
 		color: var(--color-text-danger);
+	}
+
+	.preview-note {
+		margin: 0 0 8px;
+		font-size: 12px;
 	}
 
 	.preview {

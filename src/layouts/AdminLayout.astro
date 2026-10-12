@@ -654,6 +654,16 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		margin: 0;
 	}
 
+	.a-danger-box strong,
+	.admin .a-danger-box a {
+		font-weight: 500;
+	}
+
+	/* Same weight as .admin a:not([class]), so the link keeps the box's colour. */
+	.admin .a-danger-box a {
+		color: inherit;
+	}
+
 	/* "Needs attention": the success page's .next-item, as links. */
 	.admin a.next-item {
 		align-items: center;
@@ -672,6 +682,14 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 
 	.admin .next-icon--warn .ti {
 		color: var(--color-text-warning);
+	}
+
+	.admin .next-icon--danger {
+		background: var(--color-background-danger);
+	}
+
+	.admin .next-icon--danger .ti {
+		color: var(--color-text-danger);
 	}
 
 	/* Stat tiles: the home page's trust bar. */

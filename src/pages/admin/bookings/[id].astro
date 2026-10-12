@@ -6,8 +6,8 @@ import { formatBookingDate, guestSummaryFromCounts } from '../../../lib/booking'
 import { departureHasLeft, formatTimestamp } from '../../../lib/bookings/dates';
 import { isRecordId } from '../../../lib/bookings/ids';
 import { applyAdminAction, STATUS_LABELS, type AdminAction } from '../../../lib/bookings/service';
-import { byCreatedDesc, outbox, bookings, type BookingStatus, type PaymentStatus } from '../../../lib/bookings/store';
-import { whatsappNumber } from '../../../lib/admin/manifest';
+import { byCreatedDesc, outbox, bookings, type BookingStatus, type OutboxEmail, type PaymentStatus } from '../../../lib/bookings/store';
+import { overbookingsById, whatsappNumber } from '../../../lib/admin/manifest';
 import { DELIVERY_LABELS } from '../../../lib/email/send';
 import TourThumb from '../../../components/admin/TourThumb.astro';
 
@@ -26,6 +26,7 @@ const FLASH: Record<string, string> = {
 	refund: 'Marked as refunded.',
 	note: 'Note added.',
 	resend: 'Confirmation email created again. Check Emails to see whether it was sent.',
+	'resend-skipped': 'Not sent again: a confirmation went out less than a minute ago.',
 };
 
 if (Astro.request.method === 'POST') {
@@ -35,20 +36,28 @@ if (Astro.request.method === 'POST') {
 	if (type === 'status') {
 		const status = String(form.get('status') ?? '') as BookingStatus;
 		if (Object.hasOwn(STATUS_LABELS, status)) action = { type: 'status', status };
-	} else if (type === 'refund' || type === 'resend') {
+	} else if (type === 'refund') {
 		action = { type };
+	} else if (type === 'resend') {
+		action = { type, siteOrigin: Astro.url.origin };
 	} else if (type === 'note') {
 		action = { type: 'note', text: String(form.get('text') ?? '') };
 	}
-	if (action) await applyAdminAction(id, action, STAFF);
-	return Astro.redirect(`/admin/bookings/${id}/?done=${encodeURIComponent(type)}`, 303);
+	const result = action ? await applyAdminAction(id, action, STAFF) : null;
+	// A resend that the double-click guard ignored says so, instead of claiming an email was created.
+	const done = type === 'resend' && !result?.written ? 'resend-skipped' : type;
+	return Astro.redirect(`/admin/bookings/${id}/?done=${encodeURIComponent(done)}`, 303);
 }
 
 const booking = await bookings().get(id);
 if (!booking) return Astro.redirect('/admin/bookings/', 303);
 
 const flash = FLASH[Astro.url.searchParams.get('done') ?? ''] ?? '';
-const emails = (await outbox().list()).filter((e) => e.relatedId === booking.id).sort(byCreatedDesc);
+const overbooking = overbookingsById((await bookings().list()).filter((b) => b.date === booking.date)).get(booking.id);
+// Only this booking's emails, by id: never a scan of the whole outbox.
+const emails = (await Promise.all((booking.emailIds ?? []).map((emailId) => outbox().get(emailId))))
+	.filter((email): email is OutboxEmail => email !== null)
+	.sort(byCreatedDesc);
 const wa = whatsappNumber(booking.phone);
 const paid = booking.paymentStatus === 'paid';
 const tripStarted = departureHasLeft(booking.date, booking.slot);
@@ -99,6 +108,20 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 				<p>
 					<strong>Not paid yet.</strong> The seats aren't held until the customer pays. Contact them to finish the booking, or
 					cancel it.
+				</p>
+			</div>
+		)
+	}
+
+	{
+		overbooking && (
+			<div class="a-danger-box" role="note">
+				<i class="ti ti-alert-triangle" aria-hidden="true" />
+				<p>
+					<strong>This booking overbooked the boat by {overbooking.seatsOver}.</strong> {overbooking.seatsBefore} of{' '}
+					{overbooking.capacity} seats were taken when it {booking.seatsSince ? 'was put back' : 'was paid'}; its{' '}
+					{booking.adults + booking.children} guests made it {overbooking.seatsAfter}. Move it to another departure or
+					contact the guest. <a href={`/admin/?from=${booking.date}#day`}>See the departure</a>
 				</p>
 			</div>
 		)
@@ -220,7 +243,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 										<span class="a-item-main">
 											<span class="a-item-title">{email.subject}</span>
 											<span class="a-item-sub">
-												{email.to} · {formatTimestamp(email.createdAt)}
+												{email.to || 'No address'} · {formatTimestamp(email.createdAt)}
 											</span>
 										</span>
 										<span class={`a-badge a-badge--${email.delivery}`}>{DELIVERY_LABELS[email.delivery]}</span>

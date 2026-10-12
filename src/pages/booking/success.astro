@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 
-import { pageTitle, SITE_NAME } from '../../config/site';
+import { MEETING_POINT_MAP_URL, pageTitle, SITE_NAME } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import MiniNav from '../../components/MiniNav.astro';
 import TrustStrip from '../../components/TrustStrip.astro';
@@ -11,7 +11,6 @@ import { isRecordId } from '../../lib/bookings/ids';
 import { bookings } from '../../lib/bookings/store';
 import { CANCELLATION_WEATHER } from '../../config/cancellation';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
-import { emailDeliveryEnabled } from '../../lib/email/send';
 
 // Everything shown here comes from the stored booking, looked up by its id.
 // Only a paid, active booking gets a confirmation page. Anything else goes to the
@@ -36,10 +35,11 @@ const departureLine = booking.slot || bookedTour?.departure || null;
 const bookingRef = booking.ref;
 const totalLine = `€${booking.total}`;
 const paidWith = booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card';
-const emailSent = emailDeliveryEnabled();
+// Say "sent" only if this booking's confirmation really went out. Read from the booking itself:
+// this page is public, so it must not search the whole email outbox on every view.
+const emailSent = booking.confirmationEmail?.delivery === 'sent';
 
-const mapUrl =
-	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
+const mapUrl = MEETING_POINT_MAP_URL;
 const meetingLocation = 'Riva promenade, stand 14, Split';
 const bringList =
 	bookedTour?.whatToBring.slice(0, 3).join(', ') ?? 'Sunscreen, swimwear, towel';

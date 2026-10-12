@@ -8,6 +8,7 @@ import { businessDate, formatShortDate, formatTimestamp } from '../../lib/bookin
 import { STATUS_LABELS } from '../../lib/bookings/service';
 import { bookings, byCreatedDesc, enquiries } from '../../lib/bookings/store';
 import { addDays, isIsoDate, summarizeDay, weekFrom } from '../../lib/admin/schedule';
+import { overbookedDepartures } from '../../lib/admin/manifest';
 
 const FLASH: Record<string, string> = {
 	loaded: 'Demo bookings and enquiries loaded.',
@@ -47,8 +48,20 @@ const unpaidSoon = [today, tomorrow].flatMap((d) =>
 const newEnquiries = (await enquiries().list()).filter((e) => e.status === 'new').length;
 const toWrapUp = all.filter((b) => b.status === 'confirmed' && b.date < today).length;
 
-type Todo = { warn?: boolean; icon: string; title: string; sub: string; href: string };
+type Todo = { warn?: boolean; danger?: boolean; icon: string; title: string; sub: string; href: string };
 const todos: Todo[] = [];
+// Overbooked boats first: someone has to be moved or told before the trip.
+for (const { date, departure: d } of overbookedDepartures(all, today)) {
+	const culprits = d.overbookings.map((o) => `${o.booking.firstName} ${o.booking.lastName}`).join(', ');
+	const only = d.overbookings.length === 1 ? d.overbookings[0].booking : null;
+	todos.push({
+		danger: true,
+		icon: 'ti-alert-triangle',
+		title: `Overbooked by ${d.overBy}: ${dayName(date) ?? formatShortDate(date)} ${d.slot || '(time TBC)'}`,
+		sub: `${d.tourTitle} · ${d.seatsTaken}/${d.capacity} · pushed over by ${culprits}`,
+		href: only ? `/admin/bookings/${only.id}/` : `/admin/?from=${date}#day`,
+	});
+}
 if (unpaidSoon.length === 1) {
 	const { booking: b, departure: d, date } = unpaidSoon[0];
 	todos.push({
@@ -123,7 +136,7 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 					{todos.length > 0 ? (
 						todos.map((t) => (
 							<a class="next-item" href={t.href}>
-								<span class:list={['next-icon', { 'next-icon--warn': t.warn }]} aria-hidden="true">
+								<span class:list={['next-icon', { 'next-icon--warn': t.warn, 'next-icon--danger': t.danger }]} aria-hidden="true">
 									<i class={`ti ${t.icon}`} />
 								</span>
 								<span class="next-main">
@@ -134,7 +147,7 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 							</a>
 						))
 					) : (
-						<p class="a-muted calm">Nothing needs you right now. Unpaid bookings, new enquiries and trips to wrap up show here.</p>
+						<p class="a-muted calm">Nothing needs you right now. Overbooked boats, unpaid bookings, new enquiries and trips to wrap up show here.</p>
 					)}
 				</section>
 
@@ -157,12 +170,12 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 
 						<ol class="week">
 							{week.map((d) => {
-								const fill = d.capacity ? Math.round((d.guests / d.capacity) * 100) : 0;
+								const fill = d.overbooked ? 100 : d.capacity ? Math.min(100, Math.round((d.guests / d.capacity) * 100)) : 0;
 								const label = `${formatBookingDate(d.date)}: ${
 									d.departures.length
 										? `${plural(d.guests, 'guest', 'guests')} on ${plural(d.departures.length, 'departure', 'departures')}`
 										: 'no bookings'
-								}${d.unpaid ? `, ${d.unpaid} unpaid` : ''}`;
+								}${d.overbooked ? `, ${plural(d.overbooked, 'boat', 'boats')} overbooked` : ''}${d.unpaid ? `, ${d.unpaid} unpaid` : ''}`;
 								return (
 									<li>
 										<a
@@ -174,7 +187,7 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 											<span class="wd-name">{formatShortDate(d.date).split(' ')[0]}</span>
 											<span class="wd-num a-tnum">{Number(d.date.slice(8))}</span>
 											<span class="wd-guests a-tnum">{d.departures.length ? d.guests : '–'}</span>
-											<span class="wd-bar">
+											<span class:list={['wd-bar', { 'wd-bar--over': d.overbooked > 0 }]}>
 												<span style={`width:${fill}%`} />
 											</span>
 											{d.unpaid > 0 && <span class="wd-dot" />}
@@ -185,6 +198,7 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 						</ol>
 						<p class="week-key a-muted">
 							Number = guests booked. <span class="wd-dot wd-dot--key" aria-hidden="true" /> = someone hasn't paid.
+							{week.some((d) => d.overbooked > 0) && <> Red bar = a boat is overbooked.</>}
 						</p>
 					</section>
 
@@ -196,7 +210,8 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 							{selected.departures.length > 0 && (
 								<p class="a-muted day-sum">
 									{plural(selected.departures.length, 'departure', 'departures')} · {plural(selected.guests, 'guest', 'guests')}
-									{selected.capacity > 0 && <> · {selected.capacity - selected.guests} seats free</>}
+									{selected.capacity > 0 && <> · {plural(selected.free, 'seat', 'seats')} free</>}
+									{selected.overbooked > 0 && <span class="day-over"> · {plural(selected.overbooked, 'boat', 'boats')} overbooked</span>}
 								</p>
 							)}
 						</div>
@@ -381,6 +396,15 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 		display: block;
 		height: 100%;
 		background: var(--color-accent-teal);
+	}
+
+	.wd-bar--over span {
+		background: var(--color-text-danger);
+	}
+
+	.day-over {
+		color: var(--color-text-danger);
+		font-weight: 500;
 	}
 
 	.wd--today .wd-name {

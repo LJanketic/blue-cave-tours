@@ -7,6 +7,7 @@ import { businessDate, formatShortDate } from '../../../lib/bookings/dates';
 import { STATUS_LABELS, takesSeats } from '../../../lib/bookings/service';
 import { bookings, type Booking, type BookingStatus } from '../../../lib/bookings/store';
 import { addDays } from '../../../lib/admin/schedule';
+import { overbookingsById } from '../../../lib/admin/manifest';
 
 const params = Astro.url.searchParams;
 // "Next 7 days" by default keeps the list short; the dashboard's week strip covers browsing further ahead.
@@ -44,7 +45,9 @@ const matches = (b: Booking) =>
 		field.toLowerCase().includes(needle),
 	);
 
-const rows = (await bookings().list())
+const all = await bookings().list();
+const overbooked = overbookingsById(all);
+const rows = all
 	.filter((b) => inRange(b.date))
 	.filter((b) => !status || b.status === status)
 	.filter(matches)
@@ -149,6 +152,7 @@ const rangeNote =
 									<span class="line">
 										<span class="a-item-title name">{b.firstName} {b.lastName}</span>
 										<span class={`a-badge a-badge--${b.status}`}>{STATUS_LABELS[b.status]}</span>
+										{overbooked.has(b.id) && <span class="a-badge a-badge--full">Overbooked +{overbooked.get(b.id)?.seatsOver}</span>}
 									</span>
 									<span class="line">
 										<span class="a-item-sub tour">{b.tourTitle}</span>

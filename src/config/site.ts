@@ -7,6 +7,18 @@ export const SITE_EMAIL = 'info@hellobluecave.com';
 export const SITE_PHONE = '+385919888838';
 export const SITE_PHONE_DISPLAY = '+385 91 988 88 38';
 
+/** Where every tour starts. One place for the website and the emails. */
+export const MEETING_POINT_LABEL = 'Riva promenade, stand 14, Split';
+/**
+ * Pin on stand 14 (from the owner's map link, maps.app.goo.gl/ERYyiPtg45ux4DWL7).
+ * A plain coordinates link rather than the short link, so it doesn't depend on
+ * Google's link shortener; it opens the Maps app on phones.
+ */
+export const MEETING_POINT_MAP_URL = 'https://www.google.com/maps/search/?api=1&query=43.5072282%2C16.4391746';
+
+/** Who signs the booking confirmation email. */
+export const EMAIL_SIGN_OFF = 'The Hello Blue Cave team';
+
 export const SITE_DEFAULT_DESCRIPTION =
 	'Boat tours and private charters from Split — Blue Cave, islands, and the best of the Adriatic.';
 
