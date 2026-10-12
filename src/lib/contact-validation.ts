@@ -16,7 +16,7 @@ export const CONTACT_MAX_FORM_AGE_MS = 86_400_000;
 /** Honeypot field name — must match the hidden input in contact/index.astro */
 export const HONEYPOT_FIELD = 'company';
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_RE = /^[\d\s+().-]{7,30}$/;
 
 export function trimField(value: unknown, max: number): string {

@@ -6,52 +6,37 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import MiniNav from '../../components/MiniNav.astro';
 import TrustStrip from '../../components/TrustStrip.astro';
 import { getTourBySlug } from '../../lib/tours';
-import {
-	bookingRefFromDetails,
-	contactHrefForTour,
-	formatBookingDate,
-	guestSummaryFromCounts,
-	hasRequiredBookingDetails,
-	parseGroupBookingParams,
-	supportsInstantBook,
-} from '../../lib/booking';
-import { computeBookingTotal } from '../../lib/price';
+import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
+import { isRecordId } from '../../lib/bookings/ids';
+import { bookings } from '../../lib/bookings/store';
 import { CANCELLATION_WEATHER } from '../../config/cancellation';
+import { PAYMENTS_ARE_DEMO } from '../../config/payments';
+import { emailDeliveryEnabled } from '../../lib/email/send';
 
-const tourIdParam = Astro.url.searchParams.get('tourId');
-const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
-
-if (tourIdParam && !bookedTour) {
-	return Astro.redirect('/404');
+// Everything shown here comes from the stored booking, looked up by its id.
+// Only a paid, active booking gets a confirmation page. Anything else goes to the
+// payment page, which offers payment or explains why the booking is closed.
+const id = Astro.url.searchParams.get('id');
+const booking = isRecordId(id) ? await bookings().get(id) : null;
+if (!booking) return Astro.redirect('/tours/', 303);
+if (booking.paymentStatus !== 'paid' || booking.status === 'cancelled') {
+	return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
 }
 
-const details = parseGroupBookingParams(Astro.url.searchParams);
-
-// A "confirmed" page for a specific booking should only render for a booking
-// that actually completed the review step — otherwise a hand-crafted URL
-// (or one for a quote-only tour, which has no instant-book flow at all) could
-// reach a confirmation screen for a booking that was never reviewed.
-if (bookedTour && !supportsInstantBook(bookedTour)) {
-	return Astro.redirect(contactHrefForTour(bookedTour));
-}
-if (bookedTour && !hasRequiredBookingDetails(details)) {
-	return Astro.redirect(`/book/${bookedTour.slug}/group/`);
-}
-
-const guestName = [details.firstName, details.lastName].filter(Boolean).join(' ');
-const guestLine =
-	details.guests ??
-	(details.adults ? guestSummaryFromCounts(details.adults, details.children) : null);
-const dateLine = details.date ? formatBookingDate(details.date) : null;
-const departureLine = details.slot ?? bookedTour?.departure ?? null;
-const bookingRef = tourIdParam ? bookingRefFromDetails(tourIdParam, details) : null;
-
-// Recomputed from the tour's own price data, never trusted from the URL, so
-// this "confirmation" can't be made to show an arbitrary total.
-const computedTotal = bookedTour
-	? computeBookingTotal(bookedTour.fromPrice, bookedTour.priceNotes, details.adults ?? 0, details.children)
-	: null;
-const totalLine = computedTotal !== null ? `€${computedTotal}` : null;
+const bookedTour = getTourBySlug(booking.tourSlug);
+const details = {
+	email: booking.email,
+	phone: booking.phone || null,
+	notes: booking.customerNotes || null,
+};
+const guestName = `${booking.firstName} ${booking.lastName}`;
+const guestLine = guestSummaryFromCounts(booking.adults, booking.children);
+const dateLine = formatBookingDate(booking.date);
+const departureLine = booking.slot || bookedTour?.departure || null;
+const bookingRef = booking.ref;
+const totalLine = `€${booking.total}`;
+const paidWith = booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card';
+const emailSent = emailDeliveryEnabled();
 
 const mapUrl =
 	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
@@ -75,95 +60,90 @@ const bringList =
 			<h1>You're booked!</h1>
 			<p>
 				{
-					details.email ? (
+					emailSent ? (
 						<>
-							Confirmation sent to <strong>{details.email}</strong>. Check your inbox — including spam
+							Confirmation sent to <strong>{details.email}</strong>. Check your inbox, and your spam folder
 							just in case.
 						</>
 					) : (
-						<>We'll email your confirmation shortly. Check your inbox — including spam just in case.</>
+						<>Demo: your confirmation email is saved in the admin, not sent to {details.email}.</>
 					)
 				}
 			</p>
 		</div>
 
-		<div class="conf-ref">
-			<span class="conf-ref-label">Booking ref:</span>
-			{
-				bookingRef ? (
-					<strong class="conf-ref-value">{bookingRef}</strong>
-				) : (
-					<span class="conf-ref-placeholder">Included in your confirmation email</span>
-				)
-			}
-		</div>
-
 		{
-			bookedTour && (
-				<div class="flow-card booking-card">
-					<p class="card-title">
-						<i class="ti ti-sailboat" aria-hidden="true"></i> Your booking
-					</p>
-					<div class="b-row">
-						<span class="b-label">Tour</span>
-						<span class="b-val">{bookedTour.title}</span>
-					</div>
-					<div class="b-row">
-						<span class="b-label">Date</span>
-						{dateLine ? (
-							<span class="b-val">{dateLine}</span>
-						) : (
-							<span class="b-val b-val--placeholder">Confirmed by email</span>
-						)}
-					</div>
-					<div class="b-row">
-						<span class="b-label">Departure</span>
-						<span class="b-val">{departureLine ?? '—'}</span>
-					</div>
-					<div class="b-row">
-						<span class="b-label">Guests</span>
-						{guestLine ? (
-							<span class="b-val">{guestLine}</span>
-						) : (
-							<span class="b-val b-val--placeholder">Confirmed by email</span>
-						)}
-					</div>
-					{guestName && (
-						<div class="b-row">
-							<span class="b-label">Name</span>
-							<span class="b-val">{guestName}</span>
-						</div>
-					)}
-					{details.email && (
-						<div class="b-row">
-							<span class="b-label">Email</span>
-							<span class="b-val">{details.email}</span>
-						</div>
-					)}
-					{details.phone && (
-						<div class="b-row">
-							<span class="b-label">Phone</span>
-							<span class="b-val">{details.phone}</span>
-						</div>
-					)}
-					{details.notes && (
-						<div class="b-row">
-							<span class="b-label">Special requests</span>
-							<span class="b-val">{details.notes}</span>
-						</div>
-					)}
-					<hr class="b-div" />
-					<div class="b-row">
-						<span class="b-label">Total</span>
-						{totalLine ? (
-							<span class="b-val">{totalLine}</span>
-						) : (
-							<span class="b-val b-val--placeholder">Confirmed by email</span>
-						)}
-					</div>
-				</div>
+			PAYMENTS_ARE_DEMO && (
+				<p class="demo-note" role="note">
+					<i class="ti ti-info-circle" aria-hidden="true"></i> Demo booking. No payment was taken.
+				</p>
 			)
 		}
+
+		<div class="conf-ref">
+			<span class="conf-ref-label">Booking ref:</span>
+			<strong class="conf-ref-value">{bookingRef}</strong>
+		</div>
+
+		<div class="flow-card booking-card">
+			<p class="card-title">
+				<i class="ti ti-sailboat" aria-hidden="true"></i> Your booking
+			</p>
+			<div class="b-row">
+				<span class="b-label">Tour</span>
+				<span class="b-val">{booking.tourTitle}</span>
+			</div>
+			<div class="b-row">
+				<span class="b-label">Date</span>
+				<span class="b-val">{dateLine}</span>
+			</div>
+			<div class="b-row">
+				<span class="b-label">Departure</span>
+				<span class="b-val">{departureLine ?? '—'}</span>
+			</div>
+			<div class="b-row">
+				<span class="b-label">Guests</span>
+				<span class="b-val">{guestLine}</span>
+			</div>
+			<div class="b-row">
+				<span class="b-label">Name</span>
+				<span class="b-val">{guestName}</span>
+			</div>
+			<div class="b-row">
+				<span class="b-label">Email</span>
+				<span class="b-val">{details.email}</span>
+			</div>
+			{details.phone && (
+				<div class="b-row">
+					<span class="b-label">Phone</span>
+					<span class="b-val">{details.phone}</span>
+				</div>
+			)}
+			{details.notes && (
+				<div class="b-row">
+					<span class="b-label">Special requests</span>
+					<span class="b-val">{details.notes}</span>
+				</div>
+			)}
+			<hr class="b-div" />
+			<div class="b-row">
+				<span class="b-label">Total</span>
+				<span class="b-val">{totalLine}</span>
+			</div>
+			<div class="b-row">
+				<span class="b-label">Paid with</span>
+				<span class="b-val">{paidWith}</span>
+			</div>
+			{booking.invoice && (
+				<div class="b-row">
+					<span class="b-label">Invoice (račun)</span>
+					<span class="b-val">
+								{booking.invoice.number}
+								{PAYMENTS_ARE_DEMO && ' (demo, not a valid receipt)'}
+							</span>
+				</div>
+			)}
+		</div>
 
 		<div class="meetup-card">
 			<p class="card-title card-title--meetup">
@@ -204,18 +184,9 @@ const bringList =
 				<div>
 					<p class="next-title">Check your email</p>
 					<p class="next-desc">
-						{
-							details.email ? (
-								<>
-									Full booking details, meeting point, and what to bring — sent to {details.email}.
-								</>
-							) : (
-								<>
-									Full booking details, meeting point, and what to bring — sent shortly after
-									confirmation.
-								</>
-							)
-						}
+						{emailSent
+							? `We emailed your booking details, meeting point and what to bring to ${details.email}.`
+							: 'Your booking details, meeting point and what to bring are in the confirmation email.'}
 					</p>
 				</div>
 			</div>
@@ -277,6 +248,24 @@ const bringList =
 		margin-bottom: 10px;
 	}
 
+	.payment-success-page .demo-note {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+		justify-content: center;
+		font-size: 13px;
+		padding: 8px 12px;
+		margin: 16px 0 0;
+		border-radius: var(--radius-md);
+		background: var(--color-background-info);
+		/* Primary text: the info blue on its own tint is just under 4.5:1. */
+		color: var(--color-text-primary);
+	}
+
+	.payment-success-page .demo-note .ti {
+		color: var(--color-text-info);
+	}
+
 	.payment-success-page .conf-ref {
 		display: flex;
 		align-items: center;
@@ -302,13 +291,6 @@ const bringList =
 		letter-spacing: 0.08em;
 	}
 
-	.payment-success-page .conf-ref-placeholder {
-		font-size: 15px;
-		font-weight: 500;
-		color: var(--color-text-tertiary);
-		font-style: italic;
-	}
-
 	.payment-success-page .b-row {
 		display: flex;
 		justify-content: space-between;
@@ -325,12 +307,6 @@ const bringList =
 	.payment-success-page .b-val {
 		font-weight: 500;
 		text-align: right;
-	}
-
-	.payment-success-page .b-val--placeholder {
-		font-weight: 400;
-		font-style: italic;
-		color: var(--color-text-tertiary);
 	}
 
 	.payment-success-page .b-div {

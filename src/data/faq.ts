@@ -42,7 +42,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'booking',
 		question: 'Is online payment secure?',
 		answer:
-			'Yes. Stripe processes all payments securely: card details go straight to Stripe, and we never store them on our servers. We show prices in Euros and confirm the final total before you pay.',
+			'Yes. You pay by card through Teya, or with PayPal. Your card details go straight to them, so we never see or store them. We show prices in Euros and confirm the final total before you pay.',
 		link: { href: '/legal/privacy/', label: 'Privacy policy' },
 	},
 	{

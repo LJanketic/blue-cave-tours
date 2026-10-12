@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-	bookingRefFromDetails,
 	bookingReviewPath,
-	bookingSuccessPath,
 	contactHrefForTour,
 	groupBookHref,
 	hasRequiredBookingDetails,
@@ -72,13 +70,6 @@ describe('booking paths', () => {
 		expect(groupBookHref({ slug: 'blue-lagoon-morning' })).toBe('/book/blue-lagoon-morning/group/');
 		expect(contactHrefForTour({ slug: 'a b' })).toBe('/contact/?tour=a%20b');
 		expect(bookingReviewPath('x', { date: '2027-07-15', notes: ' ' })).toBe('/book/x/review/?date=2027-07-15');
-		expect(bookingSuccessPath({})).toBe('/booking/success/');
-	});
-
-	it('derives a stable booking reference', () => {
-		const details = parseGroupBookingParams(new URLSearchParams('date=2027-07-15&email=a@b.co'));
-		expect(bookingRefFromDetails('x', details)).toBe(bookingRefFromDetails('x', details));
-		expect(bookingRefFromDetails('x', details)).toMatch(/^HBC-\d+$/);
 	});
 });
 

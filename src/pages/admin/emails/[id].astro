@@ -1,0 +1,95 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { formatTimestamp } from '../../../lib/bookings/dates';
+import { isRecordId } from '../../../lib/bookings/ids';
+import { outbox } from '../../../lib/bookings/store';
+import { DELIVERY_LABELS } from '../../../lib/email/send';
+
+const id = Astro.params.id;
+const email = isRecordId(id) ? await outbox().get(id) : null;
+if (!email) return Astro.redirect('/admin/emails/', 303);
+
+const view = Astro.url.searchParams.get('view') === 'text' ? 'text' : 'html';
+const related =
+	email.kind === 'admin_enquiry'
+		? { href: '/admin/enquiries/', label: 'Open enquiries' }
+		: email.relatedId
+			? { href: `/admin/bookings/${email.relatedId}/`, label: 'Open booking' }
+			: null;
+---
+
+<AdminLayout title={email.subject} heading="Email" section="emails" back={{ href: '/admin/emails/', label: 'Emails' }}>
+	{related && <a slot="top-actions" class="btn-secondary related" href={related.href}>{related.label} <i class="ti ti-chevron-right" aria-hidden="true"></i></a>}
+
+	<section class="a-card" aria-label="Details">
+		<p class="subject">{email.subject}</p>
+		<dl class="a-rows">
+			<div><dt>To</dt><dd>{email.to}</dd></div>
+			{email.replyTo && <div><dt>Replies go to</dt><dd>{email.replyTo}</dd></div>}
+			<div><dt>Created</dt><dd>{formatTimestamp(email.createdAt)}</dd></div>
+			<div>
+				<dt>Delivery</dt>
+				<dd>
+					<span class={`a-badge a-badge--${email.delivery}`}>{DELIVERY_LABELS[email.delivery]}</span>
+					{email.deliveryError && <span class="err">{email.deliveryError}</span>}
+				</dd>
+			</div>
+		</dl>
+	</section>
+
+	<nav class="filter-bar" aria-label="View">
+		<a class:list={['filter-chip', { active: view === 'html' }]} href="?" aria-current={view === 'html' ? 'page' : undefined}>As sent</a>
+		<a class:list={['filter-chip', { active: view === 'text' }]} href="?view=text" aria-current={view === 'text' ? 'page' : undefined}>Plain text</a>
+	</nav>
+
+	{
+		view === 'html' ? (
+			<iframe class="preview" title="Email preview" sandbox="" srcdoc={email.html} loading="lazy" />
+		) : (
+			<pre class="a-card text">{email.text}</pre>
+		)
+	}
+</AdminLayout>
+
+<style>
+	.related {
+		min-height: 36px;
+		padding: 6px 12px;
+		font-size: 13px;
+	}
+
+	.subject {
+		margin: 0 0 14px;
+		font-size: 15px;
+		font-weight: 500;
+		line-height: 1.4;
+		overflow-wrap: anywhere;
+	}
+
+	.err {
+		display: block;
+		margin-top: 4px;
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--color-text-danger);
+	}
+
+	.preview {
+		display: block;
+		width: 100%;
+		height: 75vh;
+		min-height: 480px;
+		border: 0.5px solid var(--color-border-tertiary);
+		border-radius: var(--radius-lg);
+		background: var(--color-background-primary);
+	}
+
+	.text {
+		margin: 0;
+		white-space: pre-wrap;
+		font-size: 13px;
+		overflow-wrap: anywhere;
+	}
+</style>

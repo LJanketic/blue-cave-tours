@@ -1,0 +1,348 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { formatBookingDate, guestSummaryFromCounts } from '../../../lib/booking';
+import { businessDate, formatShortDate } from '../../../lib/bookings/dates';
+import { STATUS_LABELS, takesSeats } from '../../../lib/bookings/service';
+import { bookings, type Booking, type BookingStatus } from '../../../lib/bookings/store';
+import { addDays } from '../../../lib/admin/schedule';
+
+const params = Astro.url.searchParams;
+// "Next 7 days" by default keeps the list short; the dashboard's week strip covers browsing further ahead.
+const WHEN = { week: 'Next 7 days', later: 'Later', past: 'Past', all: 'All dates' } as const;
+type When = keyof typeof WHEN;
+const statusParam = params.get('status') ?? '';
+const status = (Object.keys(STATUS_LABELS) as BookingStatus[]).find((s) => s === statusParam) ?? '';
+const q = (params.get('q') ?? '').trim().slice(0, 100);
+// A search or a status filter looks across all dates unless a date range was picked explicitly.
+const when = (Object.keys(WHEN) as When[]).find((w) => w === params.get('when')) ?? (q || status ? 'all' : 'week');
+const defaultWhen = (search: string, s: string): When => (search || s ? 'all' : 'week');
+
+/** Link to this page with one filter changed and the others kept. */
+const href = (change: { when?: When; status?: BookingStatus | ''; q?: string }) => {
+	const next = new URLSearchParams();
+	const search = change.q ?? q;
+	const s = change.status ?? status;
+	const w = change.when ?? when;
+	if (search) next.set('q', search);
+	if (w !== defaultWhen(search, s)) next.set('when', w);
+	if (s) next.set('status', s);
+	const query = next.toString();
+	return `/admin/bookings/${query ? `?${query}` : ''}`;
+};
+
+const today = businessDate();
+const tomorrow = addDays(today, 1);
+const weekEnd = addDays(today, 6);
+const inRange = (date: string) =>
+	when === 'week' ? date >= today && date <= weekEnd : when === 'later' ? date > weekEnd : when === 'past' ? date < today : true;
+const needle = q.toLowerCase();
+const matches = (b: Booking) =>
+	!needle ||
+	[b.ref, b.firstName, b.lastName, `${b.firstName} ${b.lastName}`, b.email, b.phone, b.tourTitle].some((field) =>
+		field.toLowerCase().includes(needle),
+	);
+
+const rows = (await bookings().list())
+	.filter((b) => inRange(b.date))
+	.filter((b) => !status || b.status === status)
+	.filter(matches)
+	.sort((a, b) =>
+		when === 'past'
+			? b.date.localeCompare(a.date) || b.slot.localeCompare(a.slot)
+			: a.date.localeCompare(b.date) || a.slot.localeCompare(b.slot),
+	);
+
+// Group by day so the date is said once, not on every booking.
+const groups: { date: string; items: Booking[] }[] = [];
+for (const row of rows) {
+	const last = groups.at(-1);
+	if (last?.date === row.date) last.items.push(row);
+	else groups.push({ date: row.date, items: [row] });
+}
+const dayLabel = (iso: string) =>
+	iso === today ? `Today · ${formatShortDate(iso)}` : iso === tomorrow ? `Tomorrow · ${formatShortDate(iso)}` : formatShortDate(iso);
+/** "3 bookings · 9 guests": guests count only bookings that still take seats. */
+const daySummary = (items: Booking[]) => {
+	const guests = items.filter(takesSeats).reduce((sum, b) => sum + b.adults + b.children, 0);
+	return `${items.length} ${items.length === 1 ? 'booking' : 'bookings'} · ${guests} ${guests === 1 ? 'guest' : 'guests'}`;
+};
+const filtered = Boolean(q || status || when !== 'week');
+const rangeNote =
+	when === 'week' ? ` from ${formatShortDate(today, false)} to ${formatShortDate(weekEnd, false)}` : when === 'later' ? ` after ${formatShortDate(weekEnd, false)}` : '';
+---
+
+<AdminLayout title="Bookings" section="bookings">
+	<a slot="top-actions" class="btn-secondary export" href="/admin/export.csv"><i class="ti ti-list" aria-hidden="true"></i> Export</a>
+
+	<form class="search" method="get" role="search">
+		<label class="sr-only" for="q">Search bookings</label>
+		<i class="ti ti-search" aria-hidden="true"></i>
+		<input class="a-input" id="q" type="search" name="q" value={q} placeholder="Name, email, phone or ref" enterkeyhint="search" />
+		{/* Searching from the default view looks across all dates; an explicitly picked range is kept. */}
+		{params.has('when') && <input type="hidden" name="when" value={when} />}
+		{status && <input type="hidden" name="status" value={status} />}
+		{q && <a class="clear" href={href({ q: '' })} aria-label="Clear search"><i class="ti ti-x" aria-hidden="true"></i></a>}
+	</form>
+
+	<nav class="filter-bar" aria-label="Dates">
+		{(Object.keys(WHEN) as When[]).map((w) => (
+			<a class:list={['filter-chip', { active: when === w }]} href={href({ when: w })} aria-current={when === w ? 'page' : undefined}>{WHEN[w]}</a>
+		))}
+	</nav>
+
+	<details class="status-filter" open={Boolean(status)}>
+		<summary>
+			<span>Status: <strong>{status ? STATUS_LABELS[status] : 'Any'}</strong></span>
+			<i class="ti ti-chevron-down" aria-hidden="true"></i>
+		</summary>
+		<nav class="filter-bar" aria-label="Status">
+			<a class:list={['filter-chip', { active: !status }]} href={href({ status: '' })} aria-current={!status ? 'page' : undefined}>Any</a>
+			{(Object.entries(STATUS_LABELS) as [BookingStatus, string][]).map(([value, label]) => (
+				<a class:list={['filter-chip', { active: status === value }]} href={href({ status: value })} aria-current={status === value ? 'page' : undefined}>{label}</a>
+			))}
+		</nav>
+	</details>
+
+	<p class="count" role="status">
+		<span>{rows.length} {rows.length === 1 ? 'booking' : 'bookings'}{rangeNote}{q && <> matching “{q}”</>}</span>
+		{filtered && <a href="/admin/bookings/">Reset</a>}
+	</p>
+
+	{
+		rows.length === 0 && (
+			<div class="a-tile a-empty">
+				<div class="nf-icon">
+					<i class="ti ti-ticket" aria-hidden="true" />
+				</div>
+				<h2>No bookings found</h2>
+				<p>
+					{q || status
+						? 'Try another search or reset the filters.'
+						: when === 'week'
+							? 'Nothing booked for the next 7 days yet.'
+							: 'Nothing here yet.'}
+				</p>
+				{when === 'week' && !q && !status ? (
+					<a class="btn-secondary" href={href({ when: 'later' })}>See later dates</a>
+				) : (
+					filtered && <a class="btn-secondary" href="/admin/bookings/">Reset filters</a>
+				)}
+			</div>
+		)
+	}
+
+	{
+		groups.map((group) => (
+			<section class="day" aria-label={formatBookingDate(group.date)}>
+				<h2 class="section-label day-head">
+					<span>{dayLabel(group.date)}</span>
+					<span>{daySummary(group.items)}</span>
+				</h2>
+				<ul class="a-list">
+					{group.items.map((b) => (
+						<li>
+							<a class="a-item" href={`/admin/bookings/${b.id}/`}>
+								<span class:list={['time a-tnum', { tbc: !b.slot }]}>{b.slot || 'TBC'}</span>
+								<span class="a-item-main">
+									<span class="line">
+										<span class="a-item-title name">{b.firstName} {b.lastName}</span>
+										<span class={`a-badge a-badge--${b.status}`}>{STATUS_LABELS[b.status]}</span>
+									</span>
+									<span class="line">
+										<span class="a-item-sub tour">{b.tourTitle}</span>
+									</span>
+									<span class="line">
+										<span class="a-item-sub guests">{guestSummaryFromCounts(b.adults, b.children)}</span>
+										<span class="total a-tnum">€{b.total}</span>
+									</span>
+								</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			</section>
+		))
+	}
+</AdminLayout>
+
+<style>
+	.export {
+		min-height: 36px;
+		padding: 6px 12px;
+		font-size: 13px;
+	}
+
+	.search {
+		position: relative;
+		margin-bottom: 12px;
+	}
+
+	.search > .ti {
+		position: absolute;
+		left: 12px;
+		top: 50%;
+		transform: translateY(-50%);
+		font-size: 16px;
+		color: var(--color-text-tertiary);
+		pointer-events: none;
+	}
+
+	.search .a-input {
+		padding-left: 38px;
+		padding-right: 44px;
+	}
+
+	.clear {
+		position: absolute;
+		right: 0;
+		top: 0;
+		display: grid;
+		place-items: center;
+		width: var(--touch-min);
+		height: var(--touch-min);
+		color: var(--color-text-secondary);
+		text-decoration: none;
+	}
+
+	.status-filter {
+		margin: -8px 0 8px;
+	}
+
+	.status-filter summary {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: var(--touch-min);
+		font-size: 13px;
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		list-style: none;
+	}
+
+	.status-filter summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.status-filter summary strong {
+		font-weight: 500;
+		color: var(--color-text-primary);
+	}
+
+	.status-filter[open] summary .ti {
+		transform: rotate(180deg);
+	}
+
+	.status-filter .filter-bar {
+		margin-top: 4px;
+	}
+
+	.count {
+		display: flex;
+		justify-content: space-between;
+		gap: 12px;
+		margin: 0;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+
+	.count a {
+		color: var(--color-text-info);
+		text-decoration: none;
+	}
+
+	.day-head {
+		position: sticky;
+		top: 56px;
+		z-index: 2;
+		padding: 8px 0;
+		margin: 16px 0 0;
+		background: var(--color-background-primary);
+	}
+
+	.time {
+		align-self: flex-start;
+		min-width: 40px;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 1.5;
+	}
+
+	.time.tbc {
+		font-size: 11px;
+		color: var(--color-text-tertiary);
+	}
+
+	.line {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		min-width: 0;
+	}
+
+	.name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.total {
+		font-size: 13px;
+		font-weight: 500;
+		flex-shrink: 0;
+	}
+
+	.line .a-badge {
+		flex-shrink: 0;
+	}
+
+	/* Desktop: one line per booking, columns aligned down the day. */
+	@media (min-width: 769px) {
+		.a-item {
+			align-items: center;
+		}
+
+		.a-item-main {
+			display: grid;
+			grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) minmax(0, 1fr) 128px 56px;
+			grid-template-areas: 'name tour guests badge total';
+			align-items: center;
+			gap: 12px;
+		}
+
+		.line {
+			display: contents;
+		}
+
+		.name {
+			grid-area: name;
+		}
+
+		.tour {
+			grid-area: tour;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		.guests {
+			grid-area: guests;
+		}
+
+		.line .a-badge {
+			grid-area: badge;
+			justify-self: start;
+		}
+
+		.total {
+			grid-area: total;
+			text-align: right;
+		}
+
+		.time {
+			align-self: center;
+		}
+	}
+</style>

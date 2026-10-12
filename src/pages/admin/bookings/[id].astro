@@ -1,0 +1,488 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { formatBookingDate, guestSummaryFromCounts } from '../../../lib/booking';
+import { departureHasLeft, formatTimestamp } from '../../../lib/bookings/dates';
+import { isRecordId } from '../../../lib/bookings/ids';
+import { applyAdminAction, STATUS_LABELS, type AdminAction } from '../../../lib/bookings/service';
+import { byCreatedDesc, outbox, bookings, type BookingStatus, type PaymentStatus } from '../../../lib/bookings/store';
+import { whatsappNumber } from '../../../lib/admin/manifest';
+import { DELIVERY_LABELS } from '../../../lib/email/send';
+import TourThumb from '../../../components/admin/TourThumb.astro';
+
+const id = Astro.params.id;
+if (!isRecordId(id)) return Astro.redirect('/admin/bookings/', 303);
+
+const STAFF = 'Admin';
+const PAYMENT_LABELS: Record<PaymentStatus, string> = {
+	unpaid: 'Not paid',
+	paid: 'Paid',
+	failed: 'Payment declined',
+	refunded: 'Refunded',
+};
+const FLASH: Record<string, string> = {
+	status: 'Status updated.',
+	refund: 'Marked as refunded.',
+	note: 'Note added.',
+	resend: 'Confirmation email created again. Check Emails to see whether it was sent.',
+};
+
+if (Astro.request.method === 'POST') {
+	const form = await Astro.request.formData();
+	const type = String(form.get('action') ?? '');
+	let action: AdminAction | null = null;
+	if (type === 'status') {
+		const status = String(form.get('status') ?? '') as BookingStatus;
+		if (Object.hasOwn(STATUS_LABELS, status)) action = { type: 'status', status };
+	} else if (type === 'refund' || type === 'resend') {
+		action = { type };
+	} else if (type === 'note') {
+		action = { type: 'note', text: String(form.get('text') ?? '') };
+	}
+	if (action) await applyAdminAction(id, action, STAFF);
+	return Astro.redirect(`/admin/bookings/${id}/?done=${encodeURIComponent(type)}`, 303);
+}
+
+const booking = await bookings().get(id);
+if (!booking) return Astro.redirect('/admin/bookings/', 303);
+
+const flash = FLASH[Astro.url.searchParams.get('done') ?? ''] ?? '';
+const emails = (await outbox().list()).filter((e) => e.relatedId === booking.id).sort(byCreatedDesc);
+const wa = whatsappNumber(booking.phone);
+const paid = booking.paymentStatus === 'paid';
+const tripStarted = departureHasLeft(booking.date, booking.slot);
+
+// Same allowed moves as before (the server re-checks them); ordered so the likeliest next step comes first.
+const STATUS_ACTIONS: { status: BookingStatus; label: string; icon: string }[] = [
+	{ status: 'completed', label: 'Mark completed', icon: 'ti-circle-check' },
+	{ status: 'no_show', label: 'Mark no-show', icon: 'ti-user-check' },
+	{ status: 'confirmed', label: 'Set back to confirmed', icon: 'ti-refresh' },
+];
+const statusActions = STATUS_ACTIONS.filter((a) => paid && a.status !== booking.status);
+// Completed/no-show only make sense once the trip day has come.
+const visibleStatusActions = statusActions.filter((a) => a.status === 'confirmed' || tripStarted);
+// The trip has happened and nobody has said how it went: ask that first, in plain view.
+const askOutcome = paid && booking.status === 'confirmed' && tripStarted;
+const outcomeActions = askOutcome ? visibleStatusActions.filter((a) => a.status !== 'confirmed') : [];
+const otherStatusActions = visibleStatusActions.filter((a) => !outcomeActions.includes(a));
+const awaitingPayment = booking.status === 'pending_payment' && !paid;
+const canCancel = booking.status !== 'cancelled';
+const hasManage = otherStatusActions.length > 0 || paid || canCancel;
+---
+
+<AdminLayout
+	title={`${booking.ref} ${booking.firstName} ${booking.lastName}`}
+	heading={`${booking.firstName} ${booking.lastName}`}
+	section="bookings"
+	back={{ href: '/admin/bookings/', label: 'Bookings' }}
+	wide
+>
+	<p class="admin-lede ref">
+		<span class="a-tnum">{booking.ref}</span>
+		{booking.sample && <span class="a-badge a-badge--demo">Demo data</span>}
+	</p>
+
+	{
+		flash && (
+			<div class="highlight-box" role="status">
+				<i class="ti ti-circle-check" aria-hidden="true" />
+				<p>{flash}</p>
+			</div>
+		)
+	}
+
+	{
+		awaitingPayment && (
+			<div class="warn-box" role="note">
+				<i class="ti ti-alert-circle" aria-hidden="true" />
+				<p>
+					<strong>Not paid yet.</strong> The seats aren't held until the customer pays. Contact them to finish the booking, or
+					cancel it.
+				</p>
+			</div>
+		)
+	}
+
+	{
+		askOutcome && (
+			<section class="a-tile outcome" aria-labelledby="outcome-title">
+				<h2 class="a-card-title" id="outcome-title">How did the trip go?</h2>
+				<div class="a-btnrow">
+					{outcomeActions.map((a) => (
+						<form method="post">
+							<input type="hidden" name="action" value="status" />
+							<input type="hidden" name="status" value={a.status} />
+							<button class={a.status === 'completed' ? 'btn-primary' : 'btn-secondary'} type="submit">
+								<i class={`ti ${a.icon}`} aria-hidden="true" /> {a.status === 'completed' ? 'Completed' : 'No-show'}
+							</button>
+						</form>
+					))}
+				</div>
+			</section>
+		)
+	}
+
+	{/* Desktop: what was booked on the left, what staff do with it on the right. */}
+	<div class="detail">
+		<div class="detail-main">
+			<section class="a-card" aria-labelledby="tour-title">
+				<h2 class="a-card-title" id="tour-title">Tour details</h2>
+				<div class="tour-row">
+					<TourThumb slug={booking.tourSlug} size={64} />
+					<div class="tour-body">
+						<p class="tour-name">{booking.tourTitle}</p>
+						<div class="badge-row">
+							<span class={`a-badge a-badge--${booking.status}`}>{STATUS_LABELS[booking.status]}</span>
+							<span class={`a-badge a-badge--${booking.paymentStatus}`}>{PAYMENT_LABELS[booking.paymentStatus]}</span>
+						</div>
+					</div>
+				</div>
+				<dl class="a-rows">
+					<div><dt><i class="ti ti-calendar" aria-hidden="true"></i>Date</dt><dd>{formatBookingDate(booking.date)}</dd></div>
+					<div><dt><i class="ti ti-clock" aria-hidden="true"></i>Departure</dt><dd class="a-tnum">{booking.slot || 'To be confirmed'}</dd></div>
+					<div><dt><i class="ti ti-users" aria-hidden="true"></i>Guests</dt><dd>{guestSummaryFromCounts(booking.adults, booking.children)}</dd></div>
+				</dl>
+				{
+					booking.customerNotes && (
+						<p class="hold-warn request">
+							<i class="ti ti-info-circle" aria-hidden="true" />
+							<span>
+								<strong>Customer's request:</strong> {booking.customerNotes}
+							</span>
+						</p>
+					)
+				}
+			</section>
+
+			<section class="a-card" aria-labelledby="guest-title">
+				<h2 class="a-card-title" id="guest-title">Guest details</h2>
+				<dl class="a-rows">
+					<div><dt>Name</dt><dd>{booking.firstName} {booking.lastName}</dd></div>
+					<div><dt>Email</dt><dd><a href={`mailto:${booking.email}`}>{booking.email}</a></dd></div>
+					<div><dt>Phone</dt><dd>{booking.phone ? <a href={`tel:${booking.phone.replace(/\s/g, '')}`}>{booking.phone}</a> : 'Not given'}</dd></div>
+				</dl>
+				<div class="a-btnrow contact">
+					{booking.phone && <a class="btn-secondary" href={`tel:${booking.phone.replace(/\s/g, '')}`}><i class="ti ti-phone" aria-hidden="true"></i> Call</a>}
+					{wa && <a class="btn-secondary" href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp</a>}
+					<a class="btn-secondary" href={`mailto:${booking.email}?subject=${encodeURIComponent(`Your booking ${booking.ref}`)}`}><i class="ti ti-mail" aria-hidden="true"></i> Email</a>
+				</div>
+			</section>
+
+			<section class="a-card" aria-labelledby="pay-title">
+				<h2 class="a-card-title" id="pay-title">Payment</h2>
+				<dl class="a-rows">
+					<div><dt>Status</dt><dd>{PAYMENT_LABELS[booking.paymentStatus]}</dd></div>
+					{booking.paymentProvider && <div><dt>Paid with</dt><dd>{booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card (Teya)'}</dd></div>}
+					{booking.paidAt && <div><dt>Paid at</dt><dd>{formatTimestamp(booking.paidAt)}</dd></div>}
+					{booking.paymentRef && <div><dt>Payment ref</dt><dd class="mono">{booking.paymentRef}</dd></div>}
+					{booking.invoice && <div><dt>Invoice (račun)</dt><dd>{booking.invoice.number}<span class="fees-note">Demo, not fiscalized</span></dd></div>}
+				</dl>
+				<hr class="a-divider" />
+				<div class="total-row">
+					<span class="total-label">Total</span>
+					<span class="total-amount a-tnum">€{booking.total}</span>
+				</div>
+			</section>
+		</div>
+
+		<div class="detail-side">
+			<section class="a-card" aria-labelledby="notes-title">
+				<h2 class="a-card-title" id="notes-title">Staff notes</h2>
+				{
+					booking.staffNotes.length > 0 && (
+						<ul class="note-list">
+							{[...booking.staffNotes].reverse().map((note) => (
+								<li>
+									<p>{note.text}</p>
+									<p class="note-meta">{note.by} · {formatTimestamp(note.at)}</p>
+								</li>
+							))}
+						</ul>
+					)
+				}
+				<form method="post" class="a-field note-form">
+					<input type="hidden" name="action" value="note" />
+					<label class="a-label" for="note-text">Add a note <span class="a-hint">(only staff see notes)</span></label>
+					<textarea class="a-textarea" id="note-text" name="text" rows="2" maxlength="1000" placeholder="e.g. paid extra for snorkel gear" required></textarea>
+					<button class="btn-secondary" type="submit"><i class="ti ti-edit" aria-hidden="true"></i> Save note</button>
+				</form>
+			</section>
+
+			{
+				emails.length > 0 && (
+					<section class="a-card a-card--flush" aria-labelledby="emails-title">
+						<h2 class="a-card-title pad" id="emails-title">Emails</h2>
+						<ul class="emails">
+							{emails.map((email) => (
+								<li>
+									<a class="a-item" href={`/admin/emails/${email.id}/`}>
+										<span class="a-item-main">
+											<span class="a-item-title">{email.subject}</span>
+											<span class="a-item-sub">
+												{email.to} · {formatTimestamp(email.createdAt)}
+											</span>
+										</span>
+										<span class={`a-badge a-badge--${email.delivery}`}>{DELIVERY_LABELS[email.delivery]}</span>
+									</a>
+								</li>
+							))}
+						</ul>
+					</section>
+				)
+			}
+
+			<section class="a-card" aria-labelledby="history-title">
+				<h2 class="a-card-title" id="history-title">History</h2>
+				<ol class="timeline">
+					{
+						[...booking.history].reverse().map((entry) => (
+							<li>
+								<span>{entry.action}</span>
+								<span class="note-meta">{entry.by} · {formatTimestamp(entry.at)}</span>
+							</li>
+						))
+					}
+				</ol>
+			</section>
+
+			{
+				hasManage && (
+					<section class="manage" aria-labelledby="manage-title">
+						<p class="section-label" id="manage-title"><span>Change this booking</span></p>
+						<div class="manage-actions">
+							{otherStatusActions.map((a) => (
+								<form method="post">
+									<input type="hidden" name="action" value="status" />
+									<input type="hidden" name="status" value={a.status} />
+									<button class="btn-secondary a-block" type="submit">
+										<i class={`ti ${a.icon}`} aria-hidden="true" /> {a.label}
+									</button>
+								</form>
+							))}
+							{paid && (
+								<form method="post">
+									<input type="hidden" name="action" value="resend" />
+									<button class="btn-secondary a-block" type="submit">
+										<i class="ti ti-mail" aria-hidden="true" /> Resend confirmation email
+									</button>
+								</form>
+							)}
+							{paid && (
+								<details class="a-confirm">
+									<summary class="btn-secondary a-danger a-block">
+										<i class="ti ti-cash" aria-hidden="true" /> Mark refunded…
+									</summary>
+									<div class="a-danger-box">
+										<p>
+											<strong>Mark €{booking.total} as refunded?</strong> This only records the refund. In this demo no money goes back to the customer.
+										</p>
+										<form method="post">
+											<input type="hidden" name="action" value="refund" />
+											<button class="btn-primary a-danger" type="submit">Yes, mark refunded</button>
+										</form>
+									</div>
+								</details>
+							)}
+							{canCancel && (
+								<details class="a-confirm">
+									<summary class="btn-secondary a-danger a-block">
+										<i class="ti ti-calendar-x" aria-hidden="true" /> Cancel booking…
+									</summary>
+									<div class="a-danger-box">
+										<p>
+											<strong>Cancel this booking?</strong> The customer is not emailed. Contact them yourself.
+										</p>
+										<form method="post">
+											<input type="hidden" name="action" value="status" />
+											<input type="hidden" name="status" value="cancelled" />
+											<button class="btn-primary a-danger" type="submit">Yes, cancel booking</button>
+										</form>
+									</div>
+								</details>
+							)}
+						</div>
+					</section>
+				)
+			}
+		</div>
+	</div>
+</AdminLayout>
+
+<style>
+	@media (min-width: 1024px) {
+		.detail {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			gap: 0 24px;
+			align-items: start;
+		}
+	}
+
+	.ref {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.outcome {
+		border: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.tour-row {
+		display: flex;
+		gap: 14px;
+		align-items: center;
+		margin-bottom: 14px;
+	}
+
+	.tour-body {
+		min-width: 0;
+	}
+
+	.tour-name {
+		margin: 0 0 6px;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.badge-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	.request {
+		align-items: flex-start;
+		margin: 14px 0 0;
+	}
+
+	.request .ti {
+		margin-top: 3px;
+	}
+
+	.request strong {
+		font-weight: 500;
+	}
+
+	.contact {
+		margin-top: 16px;
+	}
+
+	.contact .btn-secondary {
+		padding-inline: 8px;
+	}
+
+	.mono {
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+		font-size: 12px;
+	}
+
+	.fees-note {
+		display: block;
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--color-text-tertiary);
+	}
+
+	.total-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+	}
+
+	.total-label {
+		font-size: 15px;
+		font-weight: 500;
+	}
+
+	.total-amount {
+		font-size: 20px;
+		font-weight: 500;
+	}
+
+	.note-list {
+		list-style: none;
+		margin: 0 0 16px;
+		padding: 0;
+		display: grid;
+		gap: 8px;
+	}
+
+	.note-list li {
+		padding: 10px 12px;
+		border-radius: var(--radius-md);
+		background: var(--color-background-secondary);
+		font-size: 13px;
+	}
+
+	.note-list p {
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+
+	.note-meta {
+		font-size: 12px;
+		color: var(--color-text-tertiary);
+	}
+
+	.note-form .btn-secondary {
+		justify-self: end;
+		margin-top: 4px;
+	}
+
+	.pad {
+		padding: 1.25rem 1.25rem 0;
+	}
+
+	.emails {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		border-top: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.emails li + li {
+		border-top: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.timeline {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 12px;
+		font-size: 13px;
+	}
+
+	.timeline li {
+		position: relative;
+		display: grid;
+		gap: 1px;
+		padding-left: 20px;
+	}
+
+	.timeline li::before {
+		content: '';
+		position: absolute;
+		left: 2px;
+		top: 6px;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--color-accent-teal);
+	}
+
+	.timeline li:not(:first-child)::before {
+		background: var(--color-border-secondary);
+	}
+
+	.manage-actions {
+		display: grid;
+		gap: 8px;
+	}
+
+	.a-confirm .btn-primary {
+		justify-self: start;
+	}
+</style>

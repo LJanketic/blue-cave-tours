@@ -1,0 +1,263 @@
+---
+/**
+ * One departure (tour + time on a day) with its passenger list: who is on board,
+ * what they asked for, one tap to call or WhatsApp them, and who hasn't paid.
+ */
+import { guestSummaryFromCounts } from '../../lib/booking';
+import { whatsappNumber, type Departure } from '../../lib/admin/manifest';
+import TourThumb from './TourThumb.astro';
+
+type Props = { departure: Departure };
+const { departure: d } = Astro.props;
+
+const left = Math.max(0, d.capacity - d.seatsTaken);
+const fill = Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100));
+---
+
+<section class="a-card a-card--flush departure" aria-label={`${d.slot || 'Time to be confirmed'}, ${d.tourTitle}`}>
+	<header class="dep-head">
+		<TourThumb slug={d.tourSlug} size={48} />
+		<div class="dep-info">
+			<p class="dep-line">
+				<span class="dep-time a-tnum">{d.slot || 'Time TBC'}</span>
+				<span class:list={['a-badge', left === 0 ? 'a-badge--full' : left <= 3 ? 'a-badge--busy' : 'a-badge--confirmed']}>
+					{left === 0 ? 'Full' : `${left} ${left === 1 ? 'seat' : 'seats'} left`}
+				</span>
+			</p>
+			<h3 class="dep-title">{d.tourTitle}</h3>
+			<p class="dep-seats">
+				<span class="seat-bar" aria-hidden="true"><span style={`width:${fill}%`}></span></span>
+				<span class="a-tnum">{d.seatsTaken}/{d.capacity}</span>
+				{d.seatsTaken > 0 && <span class="a-muted">· {guestSummaryFromCounts(d.adults, d.children)}</span>}
+			</p>
+		</div>
+	</header>
+
+	{
+		d.passengers.length > 0 && (
+			<ul class="pax" aria-label="Passengers">
+				{d.passengers.map((b) => {
+					const wa = whatsappNumber(b.phone);
+					return (
+						<li class="pax-row">
+							<a class="pax-main" href={`/admin/bookings/${b.id}/`}>
+								<span class="pax-name">
+									{b.firstName} {b.lastName}
+									{b.status !== 'confirmed' && (
+										<span class={`a-badge a-badge--${b.status}`}>{b.status === 'no_show' ? 'No-show' : 'Completed'}</span>
+									)}
+								</span>
+								<span class="pax-sub">
+									<span class="a-tnum">{b.adults + b.children}</span> {b.adults + b.children === 1 ? 'guest' : 'guests'}
+									{b.children > 0 && <span> ({b.children} {b.children === 1 ? 'child' : 'children'})</span>}
+								</span>
+								{b.customerNotes && (
+									<span class="pax-note">
+										<i class="ti ti-info-circle" aria-hidden="true" /> {b.customerNotes}
+									</span>
+								)}
+							</a>
+							<span class="pax-contact">
+								{b.phone && (
+									<a class="a-icon-btn" href={`tel:${b.phone.replace(/\s/g, '')}`} aria-label={`Call ${b.firstName} ${b.lastName}`}>
+										<i class="ti ti-phone" aria-hidden="true" />
+									</a>
+								)}
+								{wa && (
+									<a
+										class="a-icon-btn"
+										href={`https://wa.me/${wa}`}
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-label={`WhatsApp ${b.firstName} ${b.lastName}`}
+									>
+										<i class="ti ti-brand-whatsapp" aria-hidden="true" />
+									</a>
+								)}
+							</span>
+						</li>
+					);
+				})}
+			</ul>
+		)
+	}
+
+	{
+		d.unpaid.length > 0 && (
+			<p class="unpaid">
+				<i class="ti ti-alert-circle" aria-hidden="true" />
+				<span>
+					<strong>Not paid, seats not held:</strong>{' '}
+					{d.unpaid.map((b, i) => (
+						// Kept on one line: Astro keeps the whitespace around fragment children.
+						<>{i > 0 && ', '}<a href={`/admin/bookings/${b.id}/`}>{`${b.firstName} ${b.lastName}`}</a></>
+					))}
+				</span>
+			</p>
+		)
+	}
+</section>
+
+<style>
+	.departure {
+		margin-bottom: 12px;
+	}
+
+	.dep-head {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		padding: 14px 16px;
+	}
+
+	.dep-info {
+		flex: 1;
+		min-width: 0;
+		display: grid;
+		gap: 2px;
+	}
+
+	.dep-line {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		margin: 0;
+	}
+
+	.dep-time {
+		font-size: 17px;
+		font-weight: 500;
+		line-height: 1.2;
+	}
+
+	.dep-title {
+		margin: 0;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 1.35;
+	}
+
+	.dep-seats {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin: 4px 0 0;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+
+	.seat-bar {
+		width: 64px;
+		height: 6px;
+		border-radius: 3px;
+		background: var(--color-background-secondary);
+		box-shadow: inset 0 0 0 0.5px var(--color-border-tertiary);
+		overflow: hidden;
+	}
+
+	.seat-bar span {
+		display: block;
+		height: 100%;
+		background: var(--color-accent-teal);
+	}
+
+	.pax {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		border-top: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.pax-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding-right: 12px;
+	}
+
+	.pax-row + .pax-row {
+		border-top: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.pax-main {
+		flex: 1;
+		min-width: 0;
+		display: grid;
+		gap: 2px;
+		padding: 10px 8px 10px 16px;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.pax-main:hover .pax-name {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	.pax-main:focus-visible {
+		outline-offset: -3px;
+	}
+
+	.pax-name {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.pax-sub {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+
+	.pax-note {
+		display: flex;
+		gap: 6px;
+		margin-top: 2px;
+		font-size: 12px;
+		line-height: 1.45;
+		color: var(--color-category-tip-text);
+	}
+
+	.pax-note .ti {
+		margin-top: 2px;
+		flex-shrink: 0;
+	}
+
+	.pax-contact {
+		display: flex;
+		gap: 8px;
+		flex-shrink: 0;
+	}
+
+	.unpaid {
+		display: flex;
+		gap: 8px;
+		margin: 0;
+		padding: 10px 16px;
+		border-top: 0.5px solid var(--color-border-tertiary);
+		background: var(--color-background-warning);
+		color: var(--color-category-tip-text);
+		font-size: 12px;
+		line-height: 1.5;
+	}
+
+	.unpaid .ti {
+		font-size: 15px;
+		flex-shrink: 0;
+		margin-top: 1px;
+	}
+
+	.unpaid strong {
+		font-weight: 500;
+	}
+
+	.unpaid a {
+		color: inherit;
+		font-weight: 500;
+	}
+</style>
