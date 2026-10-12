@@ -36,6 +36,16 @@ export type Booking = {
 	paymentProvider: PaymentProvider | null;
 	paymentRef: string | null;
 	paidAt: string | null;
+	/** Set when staff put a cancelled, paid booking back: from then on it takes seats again. */
+	seatsSince?: string;
+	/**
+	 * The latest customer confirmation email: when it was created and whether it
+	 * went out. Kept on the booking (like an order timeline) so the success page
+	 * reads one record instead of searching every email.
+	 */
+	confirmationEmail?: { delivery: 'outbox' | 'sent' | 'failed'; at: string };
+	/** Ids of this booking's emails in the outbox, so its admin page loads just those. */
+	emailIds?: string[];
 	tourSlug: string;
 	tourTitle: string;
 	date: string;

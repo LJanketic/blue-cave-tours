@@ -1,7 +1,8 @@
 ---
 /**
  * One departure (tour + time on a day) with its passenger list: who is on board,
- * what they asked for, one tap to call or WhatsApp them, and who hasn't paid.
+ * what they asked for, one tap to call or WhatsApp them, who hasn't paid, and
+ * which booking pushed the boat over capacity.
  */
 import { guestSummaryFromCounts } from '../../lib/booking';
 import { whatsappNumber, type Departure } from '../../lib/admin/manifest';
@@ -12,6 +13,7 @@ const { departure: d } = Astro.props;
 
 const left = Math.max(0, d.capacity - d.seatsTaken);
 const fill = Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100));
+const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 ---
 
 <section class="a-card a-card--flush departure" aria-label={`${d.slot || 'Time to be confirmed'}, ${d.tourTitle}`}>
@@ -21,12 +23,12 @@ const fill = Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100));
 			<p class="dep-line">
 				<span class="dep-time a-tnum">{d.slot || 'Time TBC'}</span>
 				<span class:list={['a-badge', left === 0 ? 'a-badge--full' : left <= 3 ? 'a-badge--busy' : 'a-badge--confirmed']}>
-					{left === 0 ? 'Full' : `${left} ${left === 1 ? 'seat' : 'seats'} left`}
+					{d.overBy > 0 ? `Overbooked by ${d.overBy}` : left === 0 ? 'Full' : `${left} ${left === 1 ? 'seat' : 'seats'} left`}
 				</span>
 			</p>
 			<h3 class="dep-title">{d.tourTitle}</h3>
 			<p class="dep-seats">
-				<span class="seat-bar" aria-hidden="true"><span style={`width:${fill}%`}></span></span>
+				<span class:list={['seat-bar', { 'seat-bar--over': d.overBy > 0 }]} aria-hidden="true"><span style={`width:${fill}%`}></span></span>
 				<span class="a-tnum">{d.seatsTaken}/{d.capacity}</span>
 				{d.seatsTaken > 0 && <span class="a-muted">· {guestSummaryFromCounts(d.adults, d.children)}</span>}
 			</p>
@@ -38,6 +40,7 @@ const fill = Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100));
 			<ul class="pax" aria-label="Passengers">
 				{d.passengers.map((b) => {
 					const wa = whatsappNumber(b.phone);
+					const over = overById.get(b.id);
 					return (
 						<li class="pax-row">
 							<a class="pax-main" href={`/admin/bookings/${b.id}/`}>
@@ -46,6 +49,7 @@ const fill = Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100));
 									{b.status !== 'confirmed' && (
 										<span class={`a-badge a-badge--${b.status}`}>{b.status === 'no_show' ? 'No-show' : 'Completed'}</span>
 									)}
+									{over && <span class="a-badge a-badge--full">Overbooked +{over.seatsOver}</span>}
 								</span>
 								<span class="pax-sub">
 									<span class="a-tnum">{b.adults + b.children}</span> {b.adults + b.children === 1 ? 'guest' : 'guests'}
@@ -79,6 +83,21 @@ const fill = Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100));
 					);
 				})}
 			</ul>
+		)
+	}
+
+	{
+		d.overbookings.length > 0 && (
+			<p class="overbooked">
+				<i class="ti ti-alert-triangle" aria-hidden="true" />
+				<span>
+					<strong>{d.overBy} over capacity ({d.seatsTaken}/{d.capacity}).</strong>{' '}
+					{d.overbookings.map((o, i) => (
+						// Kept on one line: Astro keeps the whitespace around fragment children.
+						<>{i > 0 && ' '}<a href={`/admin/bookings/${o.booking.id}/`}>{`${o.booking.firstName} ${o.booking.lastName}`}</a>{` (${o.booking.adults + o.booking.children}) took it from ${o.seatsBefore} to ${o.seatsAfter}.`}</>
+					))}
+				</span>
+			</p>
 		)
 	}
 
@@ -161,6 +180,37 @@ const fill = Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100));
 		display: block;
 		height: 100%;
 		background: var(--color-accent-teal);
+	}
+
+	.seat-bar--over span {
+		background: var(--color-text-danger);
+	}
+
+	.overbooked {
+		display: flex;
+		gap: 8px;
+		margin: 0;
+		padding: 10px 16px;
+		border-top: 0.5px solid var(--color-border-tertiary);
+		background: var(--color-background-danger);
+		color: var(--color-text-danger);
+		font-size: 12px;
+		line-height: 1.5;
+	}
+
+	.overbooked .ti {
+		font-size: 15px;
+		flex-shrink: 0;
+		margin-top: 1px;
+	}
+
+	.overbooked strong,
+	.overbooked a {
+		font-weight: 500;
+	}
+
+	.overbooked a {
+		color: inherit;
 	}
 
 	.pax {

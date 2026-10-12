@@ -4,7 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { formatTimestamp } from '../../../lib/bookings/dates';
 import { byCreatedDesc, outbox, type OutboxEmail } from '../../../lib/bookings/store';
-import { DELIVERY_LABELS, adminEmail, emailDeliveryEnabled } from '../../../lib/email/send';
+import { DELIVERY_LABELS } from '../../../lib/email/send';
 
 const KIND: Record<OutboxEmail['kind'], { label: string; icon: string }> = {
 	booking_confirmation: { label: 'To customer', icon: 'ti-user' },
@@ -13,23 +13,10 @@ const KIND: Record<OutboxEmail['kind'], { label: string; icon: string }> = {
 };
 
 const rows = (await outbox().list()).sort(byCreatedDesc);
-const delivering = emailDeliveryEnabled();
 ---
 
 <AdminLayout title="Emails" section="emails">
 	<p class="admin-lede">Every email the website sends, shown as the recipient sees it.</p>
-
-	{
-		!delivering && (
-			<div class="contact-note notice" role="note">
-				<i class="ti ti-info-circle" aria-hidden="true" />
-				<p>
-					<strong>Sending is off.</strong> Emails are saved here, but nobody receives them until the email service (Brevo) is set
-					up. Admin copies will go to {adminEmail()}.
-				</p>
-			</div>
-		)
-	}
 
 	{
 		rows.length === 0 ? (
@@ -55,7 +42,7 @@ const delivering = emailDeliveryEnabled();
 								</span>
 								<span class="a-item-title subject">{email.subject}</span>
 								<span class="top">
-									<span class="a-item-sub to">{email.to}</span>
+									<span class="a-item-sub to">{email.to || 'No address'}</span>
 									<span class={`a-badge a-badge--${email.delivery}`}>{DELIVERY_LABELS[email.delivery]}</span>
 								</span>
 							</span>
@@ -68,15 +55,6 @@ const delivering = emailDeliveryEnabled();
 </AdminLayout>
 
 <style>
-	.notice {
-		margin: 0 0 16px;
-	}
-
-	.notice strong {
-		font-weight: 500;
-		color: var(--color-text-primary);
-	}
-
 	.a-item {
 		align-items: flex-start;
 	}

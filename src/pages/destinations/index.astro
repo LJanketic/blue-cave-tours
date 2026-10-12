@@ -1,7 +1,7 @@
 ---
 export const prerender = true;
 
-import { pageTitle } from '../../config/site';
+import { MEETING_POINT_MAP_URL, pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import DestinationsCatalog from '../../components/vue/DestinationsCatalog.vue';
 import { getAllDestinations, getDestinationPhoto } from '../../lib/destinations';
@@ -15,8 +15,7 @@ const cardPhotos = Object.fromEntries(
 		),
 	),
 );
-const mapUrl =
-	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
+const mapUrl = MEETING_POINT_MAP_URL;
 ---
 
 <SiteLayout

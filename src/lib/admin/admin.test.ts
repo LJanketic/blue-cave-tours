@@ -2,11 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Booking } from '../bookings/store';
 import { checkAdminPassword, createSessionToken, verifySessionToken } from './auth';
 import { bookingsCsv, csvCell } from './csv';
-import { departuresOn, whatsappNumber } from './manifest';
+import { departuresOn, overbookedDepartures, overbookingsById, whatsappNumber } from './manifest';
 import { sendEmail } from '../email/send';
 import { bookings, resetMemoryStore } from '../bookings/store';
 import { departureHasLeft, formatShortDate } from '../bookings/dates';
-import { addDays, isIsoDate, weekFrom } from './schedule';
+import { addDays, isIsoDate, summarizeDay, weekFrom } from './schedule';
 import { MAX_GUESTS } from '../booking';
 import { loadSampleData } from './sample-data';
 
@@ -83,6 +83,84 @@ describe('departuresOn', () => {
 	});
 });
 
+describe('overbooking', () => {
+	const paid = (id: string, paidAt: string, adults: number, extra: Partial<Booking> = {}) =>
+		booking({ id, paidAt, createdAt: paidAt, adults, lastName: `P${id}`, ...extra });
+
+	it('names the booking that crossed capacity, not the earlier ones', () => {
+		const [d] = departuresOn('2027-07-15', [
+			paid('a', '2027-07-01T10:00:00Z', 6),
+			paid('b', '2027-07-02T10:00:00Z', 5),
+			paid('late', '2027-07-03T10:00:00Z', 4),
+		]);
+		expect(d.seatsTaken).toBe(15);
+		expect(d.overBy).toBe(3);
+		expect(d.overbookings).toHaveLength(1);
+		expect(d.overbookings[0]).toMatchObject({ seatsOver: 3, seatsBefore: 11, seatsAfter: 15, capacity: MAX_GUESTS });
+		expect(d.overbookings[0].booking.id).toBe('late');
+	});
+
+	it('uses payment order, not the order records are listed in', () => {
+		const [d] = departuresOn('2027-07-15', [
+			paid('late', '2027-07-03T10:00:00Z', 4),
+			paid('a', '2027-07-01T10:00:00Z', 6),
+			paid('b', '2027-07-02T10:00:00Z', 5),
+		]);
+		expect(d.overbookings.map((o) => o.booking.id)).toEqual(['late']);
+	});
+
+	it('counts every later booking as fully over once the boat is already past capacity', () => {
+		const [d] = departuresOn('2027-07-15', [
+			paid('a', '2027-07-01T10:00:00Z', 12),
+			paid('b', '2027-07-02T10:00:00Z', 2),
+			paid('c', '2027-07-03T10:00:00Z', 3),
+		]);
+		expect(d.overbookings.map((o) => [o.booking.id, o.seatsOver])).toEqual([
+			['b', 2],
+			['c', 3],
+		]);
+	});
+
+	it('is not flagged at exactly full, and ignores unpaid and cancelled bookings', () => {
+		const [d] = departuresOn('2027-07-15', [
+			paid('a', '2027-07-01T10:00:00Z', 12),
+			booking({ id: 'u', status: 'pending_payment', paymentStatus: 'unpaid', adults: 4 }),
+			paid('x', '2027-07-02T10:00:00Z', 4, { status: 'cancelled', paymentStatus: 'refunded' }),
+		]);
+		expect(d.overBy).toBe(0);
+		expect(d.overbookings).toEqual([]);
+	});
+
+	it('treats a reinstated booking as taking its seats when it was put back', () => {
+		const [d] = departuresOn('2027-07-15', [
+			paid('back', '2027-07-01T10:00:00Z', 4, { seatsSince: '2027-07-05T10:00:00Z' }),
+			paid('a', '2027-07-02T10:00:00Z', 6),
+			paid('b', '2027-07-03T10:00:00Z', 5),
+		]);
+		expect(d.overbookings.map((o) => o.booking.id)).toEqual(['back']);
+	});
+
+	it('finds overbookings across dates by id, and lists overbooked departures from a date on', () => {
+		const all = [
+			paid('a', '2027-07-01T10:00:00Z', 10),
+			paid('b', '2027-07-02T10:00:00Z', 4),
+			paid('old1', '2027-06-01T10:00:00Z', 10, { date: '2027-07-10' }),
+			paid('old2', '2027-06-02T10:00:00Z', 4, { date: '2027-07-10' }),
+		];
+		expect([...overbookingsById(all).keys()].sort()).toEqual(['b', 'old2']);
+		expect(overbookedDepartures(all, '2027-07-12').map((x) => x.date)).toEqual(['2027-07-15']);
+	});
+
+	it('counts free seats per boat, so an overbooked boat does not hide seats on another', () => {
+		const day = summarizeDay('2027-07-15', [
+			paid('a', '2027-07-01T10:00:00Z', 10),
+			paid('b', '2027-07-02T10:00:00Z', 5),
+			paid('c', '2027-07-01T10:00:00Z', 2, { slot: '07:20', tourSlug: 'x', tourTitle: 'X' }),
+		]);
+		expect(day).toMatchObject({ guests: 17, free: 10, overbooked: 1 });
+	});
+});
+
 describe('week schedule', () => {
 	it('summarises seven days, counting capacity only for departures with guests', () => {
 		const week = weekFrom('2027-07-15', [
@@ -155,25 +233,106 @@ describe('whatsappNumber', () => {
 });
 
 describe('demo email delivery', () => {
+	it('runs tests with no real keys or addresses, and no network', async () => {
+		expect(process.env.RESEND_API_KEY).toBeUndefined();
+		expect(process.env.ADMIN_EMAIL).toBeUndefined();
+		await expect(fetch('https://api.resend.com/emails')).rejects.toThrow(/disabled in tests/);
+	});
+
 	afterEach(() => {
-		delete process.env.BREVO_API_KEY;
+		delete process.env.RESEND_API_KEY;
+		delete process.env.EMAIL_SENDING;
 		delete process.env.EMAIL_FROM;
 		delete process.env.EMAIL_DEMO_ALLOWLIST;
 		vi.unstubAllGlobals();
 		resetMemoryStore();
 	});
 
+	const message = { kind: 'booking_confirmation' as const, replyTo: null, subject: 's', html: 'h', text: 't', relatedId: null };
+
 	it('only delivers to the admin and allowlisted addresses while payments are a demo', async () => {
-		process.env.BREVO_API_KEY = 'key';
-		process.env.EMAIL_FROM = 'bookings@example.test';
+		process.env.EMAIL_SENDING = 'on';
+		process.env.RESEND_API_KEY = 're_test';
 		process.env.EMAIL_DEMO_ALLOWLIST = 'boss@example.test';
-		const fetchMock = vi.fn(async () => new Response('{}', { status: 201 }));
+		const fetchMock = vi.fn(async () => new Response('{"id":"x"}', { status: 200 }));
 		vi.stubGlobal('fetch', fetchMock);
-		const message = { kind: 'booking_confirmation' as const, replyTo: null, subject: 's', html: 'h', text: 't', relatedId: null };
 
 		expect((await sendEmail({ ...message, to: 'stranger@example.com' })).delivery).toBe('outbox');
 		expect((await sendEmail({ ...message, to: 'Boss@example.test' })).delivery).toBe('sent');
 		expect(fetchMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('sends through Resend from the test sender until EMAIL_FROM is set', async () => {
+		process.env.EMAIL_SENDING = 'on';
+		process.env.RESEND_API_KEY = 're_test';
+		process.env.EMAIL_DEMO_ALLOWLIST = 'boss@example.test';
+		const fetchMock = vi.fn(async (_url: string, _init: RequestInit) => new Response('{"id":"x"}', { status: 200 }));
+		vi.stubGlobal('fetch', fetchMock);
+
+		const sent = await sendEmail({ ...message, to: 'boss@example.test', replyTo: 'guest@example.com' });
+		const [url, init] = fetchMock.mock.calls[0];
+		const headers = init.headers as Record<string, string>;
+		expect(url).toBe('https://api.resend.com/emails');
+		expect(headers.Authorization).toBe('Bearer re_test');
+		expect(headers['Idempotency-Key']).toBe(sent.id);
+		expect(JSON.parse(String(init.body))).toMatchObject({
+			from: 'Hello Blue Cave <onboarding@resend.dev>',
+			to: ['boss@example.test'],
+			reply_to: 'guest@example.com',
+			subject: 's',
+		});
+
+		process.env.EMAIL_FROM = 'bookings@example.test';
+		await sendEmail({ ...message, to: 'boss@example.test' });
+		expect(JSON.parse(String(fetchMock.mock.calls[1][1].body)).from).toBe('Hello Blue Cave <bookings@example.test>');
+	});
+
+	it('records Resend\'s reason when it refuses, and a timeout as a failure', async () => {
+		process.env.EMAIL_SENDING = 'on';
+		process.env.RESEND_API_KEY = 're_test';
+		process.env.EMAIL_DEMO_ALLOWLIST = 'boss@example.test';
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => new Response('{"name":"validation_error","message":"You can only send testing emails to your own email address"}', { status: 403 })),
+		);
+		const refused = await sendEmail({ ...message, to: 'boss@example.test' });
+		expect(refused.delivery).toBe('failed');
+		expect(refused.deliveryError).toBe('Resend responded 403: You can only send testing emails to your own email address');
+		expect(refused.deliveryError).not.toContain('re_test');
+
+		vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new Error('The operation was aborted due to timeout'))));
+		const timedOut = await sendEmail({ ...message, to: 'boss@example.test' });
+		expect(timedOut.delivery).toBe('failed');
+		expect(timedOut.deliveryError).toContain('timeout');
+	});
+
+	it('sends nothing unless EMAIL_SENDING=on is set, and says nothing about it', async () => {
+		process.env.RESEND_API_KEY = 're_test';
+		process.env.EMAIL_DEMO_ALLOWLIST = 'admin@example.test';
+		const fetchMock = vi.fn(async () => new Response('{"id":"x"}', { status: 200 }));
+		vi.stubGlobal('fetch', fetchMock);
+
+		for (const value of [undefined, '', 'off', 'yes']) {
+			if (value === undefined) delete process.env.EMAIL_SENDING;
+			else process.env.EMAIL_SENDING = value;
+			const email = await sendEmail({ ...message, to: 'admin@example.test' });
+			expect(email.delivery).toBe('outbox');
+			expect(email.deliveryError).toBeUndefined();
+		}
+		expect(fetchMock).not.toHaveBeenCalled();
+
+		process.env.EMAIL_SENDING = ' On ';
+		expect((await sendEmail({ ...message, to: 'admin@example.test' })).delivery).toBe('sent');
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('sends nothing without RESEND_API_KEY, even with EMAIL_SENDING=on', async () => {
+		process.env.EMAIL_SENDING = 'on';
+		const fetchMock = vi.fn();
+		vi.stubGlobal('fetch', fetchMock);
+		const email = await sendEmail({ ...message, to: 'admin@example.test' });
+		expect(email.delivery).toBe('outbox');
+		expect(fetchMock).not.toHaveBeenCalled();
 	});
 });
 
@@ -187,17 +346,17 @@ describe('formatShortDate', () => {
 describe('demo data', () => {
 	afterEach(() => resetMemoryStore());
 
-	it('covers about three weeks ahead without overbooking any departure', async () => {
+	it('covers about three weeks ahead with exactly one overbooked departure, tomorrow', async () => {
 		const now = new Date('2027-07-01T08:00:00Z');
 		await loadSampleData(now);
 		const all = await bookings().list();
 		const dates = new Set(all.map((b) => b.date));
 		expect(dates.has('2027-07-21')).toBe(true);
-		for (const date of dates) {
-			for (const departure of departuresOn(date, all)) {
-				expect(departure.seatsTaken).toBeLessThanOrEqual(MAX_GUESTS);
-			}
-		}
+		const over = [...dates].flatMap((date) => departuresOn(date, all).filter((d) => d.seatsTaken > MAX_GUESTS).map((d) => ({ date, d })));
+		expect(over).toHaveLength(1);
+		expect(over[0].date).toBe('2027-07-02');
+		expect(over[0].d.seatsTaken).toBe(15);
+		expect(over[0].d.overbookings.map((o) => [o.booking.lastName, o.seatsOver])).toEqual([['Smith', 3]]);
 		// Bookings are never created after "now".
 		expect(all.every((b) => b.createdAt <= now.toISOString())).toBe(true);
 	});

@@ -2,7 +2,7 @@
 export const prerender = true;
 
 import { isGroupTour, tourPriceUnit } from '../../lib/booking';
-import { pageTitle } from '../../config/site';
+import { MEETING_POINT_MAP_URL, pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import ImageGallery from '../../components/vue/ImageGallery.vue';
 import TourImage from '../../components/TourImage.astro';
@@ -65,8 +65,7 @@ const heroTags: HeroTag[] = [
 		: []),
 ];
 
-const mapUrl =
-	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
+const mapUrl = MEETING_POINT_MAP_URL;
 const bestSeason = destination.bestTimeMonths.some((s, i) => s >= 2 && i >= 4 && i <= 9)
 	? 'May – Oct'
 	: 'Jun – Sep';

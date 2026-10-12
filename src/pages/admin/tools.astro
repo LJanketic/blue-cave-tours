@@ -3,7 +3,7 @@ export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { clearAllData, loadSampleData } from '../../lib/admin/sample-data';
-import { adminEmail, emailDeliveryEnabled } from '../../lib/email/send';
+import { adminEmail, emailSender, emailSendingOn } from '../../lib/email/send';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 
 if (Astro.request.method === 'POST') {
@@ -20,7 +20,8 @@ if (Astro.request.method === 'POST') {
 }
 
 const flash = Astro.url.searchParams.get('flash') === 'cleared' ? 'All bookings, enquiries and emails deleted.' : '';
-const delivering = emailDeliveryEnabled();
+const sendingOn = emailSendingOn();
+const sender = emailSender();
 ---
 
 <AdminLayout title="More" section="more">
@@ -60,11 +61,22 @@ const delivering = emailDeliveryEnabled();
 	<p class="section-label"><span>Setup</span></p>
 	<section class="a-card" aria-label="Setup">
 		<dl class="a-rows">
-			<div><dt>Admin notifications go to</dt><dd>{adminEmail()}</dd></div>
+			<div><dt>Admin notifications go to</dt><dd>{adminEmail() || 'Not set (ADMIN_EMAIL)'}</dd></div>
 			<div>
 				<dt>Email sending</dt>
-				<dd>{delivering ? <span class="a-badge a-badge--sent">On</span> : <span class="a-badge a-badge--outbox">Off: saved only</span>}</dd>
+				<dd>{sendingOn ? <span class="a-badge a-badge--sent">On</span> : <span class="a-badge a-badge--outbox">Off</span>}</dd>
 			</div>
+			{
+				sendingOn && (
+					<div>
+						<dt>Sent from</dt>
+						<dd>
+							{sender.address}
+							{sender.isTestSender && <span class="sender-note">Resend's test sender: it only delivers to the email your Resend account uses.</span>}
+						</dd>
+					</div>
+				)
+			}
 			<div><dt>Payments</dt><dd>{PAYMENTS_ARE_DEMO ? 'Demo, no money taken' : 'Live'}</dd></div>
 		</dl>
 	</section>
@@ -96,6 +108,14 @@ const delivering = emailDeliveryEnabled();
 </AdminLayout>
 
 <style>
+	.sender-note {
+		display: block;
+		margin-top: 4px;
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--color-text-secondary);
+	}
+
 	.demo {
 		display: grid;
 		gap: 10px;

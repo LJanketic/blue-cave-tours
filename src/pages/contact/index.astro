@@ -2,6 +2,7 @@
 export const prerender = true;
 
 import {
+	MEETING_POINT_MAP_URL,
 	pageTitle,
 	SITE_EMAIL,
 	SITE_NAME,
@@ -14,8 +15,7 @@ import { getAllTours } from '../../lib/tours';
 const tours = getAllTours();
 const tourFromQuery = Astro.url.searchParams.get('tour') ?? '';
 const selectedTour = tours.some((t) => t.slug === tourFromQuery) ? tourFromQuery : '';
-const mapUrl =
-	'https://www.google.com/maps/search/?api=1&query=Riva+promenade+Split+Croatia+stand+14';
+const mapUrl = MEETING_POINT_MAP_URL;
 const whatsappUrl = `https://wa.me/${SITE_PHONE.replace(/\D/g, '')}`;
 const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 ---

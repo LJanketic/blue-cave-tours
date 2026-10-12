@@ -8,7 +8,9 @@ import { getAllTours } from '../tours';
 /**
  * "Load demo data" in the admin: a believable spread of bookings around
  * today so the manifest and lists aren't empty when showing the admin.
- * Records are flagged `sample` and no emails are sent for them.
+ * Records are flagged `sample` and no emails are sent for them. Tomorrow has
+ * one overbooked boat on purpose (11 of 12 taken, then a booking for 4), so
+ * the overbooking warnings can be shown.
  */
 
 const GUESTS: [first: string, last: string, phone: string][] = [
@@ -47,6 +49,10 @@ const PLAN: [number, number, number, number, number, Booking['status'], Booking[
 	[1, 1, 8, 1, 0, 'confirmed', 'paid'],
 	[1, 3, 9, 2, 2, 'confirmed', 'paid'],
 	[1, 0, 1, 2, 0, 'cancelled', 'refunded'],
+	// The overbooked boat: Ferrari and Wagner book early (11 seats), Smith pays last for 4.
+	[1, 2, 11, 4, 2, 'confirmed', 'paid'],
+	[1, 2, 13, 5, 0, 'confirmed', 'paid'],
+	[1, 2, 15, 4, 0, 'confirmed', 'paid'],
 	...futurePlan(),
 ];
 

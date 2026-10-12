@@ -1,17 +1,20 @@
-import { SITE_EMAIL, SITE_NAME } from '../../config/site';
+import { SITE_NAME } from '../../config/site';
 import { newId } from '../bookings/ids';
 import { outbox, type OutboxEmail } from '../bookings/store';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 
 export type EmailMessage = Pick<OutboxEmail, 'kind' | 'to' | 'replyTo' | 'subject' | 'html' | 'text' | 'relatedId'>;
 
-/** Where admin notifications go. Defaults to the address on the contact page. */
+/**
+ * Where admin notifications go: ADMIN_EMAIL, and nothing else. With it unset,
+ * admin notifications are saved in the admin but never sent anywhere.
+ */
 export function adminEmail(): string {
-	return process.env.ADMIN_EMAIL || SITE_EMAIL;
+	return process.env.ADMIN_EMAIL?.trim() ?? '';
 }
 
 export const DELIVERY_LABELS: Record<OutboxEmail['delivery'], string> = {
-	outbox: 'Not sent (demo)',
+	outbox: 'Not sent',
 	sent: 'Sent',
 	failed: 'Failed',
 };
@@ -29,15 +32,44 @@ function mayDeliverTo(address: string): boolean {
 	return allowed.includes(address.trim().toLowerCase());
 }
 
-/** True once a real email provider is configured; until then emails only reach the admin outbox. */
-export function emailDeliveryEnabled(): boolean {
-	return Boolean(process.env.BREVO_API_KEY && process.env.EMAIL_FROM);
+/**
+ * Resend's shared test sender. It needs no domain, but Resend only delivers it
+ * to the email address the Resend account was created with.
+ */
+export const RESEND_TEST_SENDER = 'onboarding@resend.dev';
+
+/**
+ * Real sending is opt-in per Netlify deploy: it needs the Resend key AND
+ * EMAIL_SENDING=on. Without both, emails are only saved in the admin outbox,
+ * quietly; nothing warns about it.
+ */
+export function emailSendingOn(): boolean {
+	return Boolean(process.env.RESEND_API_KEY) && process.env.EMAIL_SENDING?.trim().toLowerCase() === 'on';
+}
+
+/** The From address: EMAIL_FROM once our domain is verified in Resend, the test sender until then. */
+export function emailSender(): { name: string; address: string; isTestSender: boolean } {
+	const address = process.env.EMAIL_FROM || RESEND_TEST_SENDER;
+	return { name: process.env.EMAIL_FROM_NAME || SITE_NAME, address, isTestSender: address === RESEND_TEST_SENDER };
+}
+
+/** Resend's error text (e.g. "You can only send testing emails to your own email address"), kept short. Never includes the key. */
+async function resendError(res: Response): Promise<string> {
+	let detail = '';
+	try {
+		const body = (await res.json()) as { message?: unknown };
+		if (typeof body.message === 'string') detail = `: ${body.message.slice(0, 200)}`;
+	} catch {
+		// Not JSON: the status code is all we have.
+	}
+	return `Resend responded ${res.status}${detail}`;
 }
 
 /**
  * Records the email in the outbox (shown in the admin), then delivers it
- * through Brevo when `BREVO_API_KEY` and `EMAIL_FROM` are set. Until then the
- * outbox is the whole delivery: the showcase runs end to end with no account.
+ * through Resend when sending is switched on in Netlify (see
+ * `emailSendingOn`). Otherwise the outbox is the whole delivery: the showcase
+ * runs end to end with no account.
  *
  * Never throws. A booking must not fail because an email couldn't be sent.
  */
@@ -49,25 +81,30 @@ export async function sendEmail(message: EmailMessage): Promise<OutboxEmail> {
 		delivery: 'outbox',
 	};
 
-	const apiKey = process.env.BREVO_API_KEY;
-	const from = process.env.EMAIL_FROM;
-	if (apiKey && from && mayDeliverTo(message.to)) {
+	const apiKey = process.env.RESEND_API_KEY;
+	if (apiKey && emailSendingOn() && message.to && mayDeliverTo(message.to)) {
+		const sender = emailSender();
 		try {
-			const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+			const res = await fetch('https://api.resend.com/emails', {
 				method: 'POST',
-				headers: { 'api-key': apiKey, 'Content-Type': 'application/json', Accept: 'application/json' },
+				headers: {
+					Authorization: `Bearer ${apiKey}`,
+					'Content-Type': 'application/json',
+					// Same outbox record, same email: Resend drops a repeat within 24 hours.
+					'Idempotency-Key': email.id,
+				},
 				body: JSON.stringify({
-					sender: { name: process.env.EMAIL_FROM_NAME || SITE_NAME, email: from },
-					to: [{ email: message.to }],
-					...(message.replyTo ? { replyTo: { email: message.replyTo } } : {}),
+					from: `${sender.name.replace(/[<>"]/g, '')} <${sender.address}>`,
+					to: [message.to],
+					...(message.replyTo ? { reply_to: message.replyTo } : {}),
 					subject: message.subject,
-					htmlContent: message.html,
-					textContent: message.text,
+					html: message.html,
+					text: message.text,
 				}),
 				signal: AbortSignal.timeout(8000),
 			});
 			email.delivery = res.ok ? 'sent' : 'failed';
-			if (!res.ok) email.deliveryError = `Brevo responded ${res.status}`;
+			if (!res.ok) email.deliveryError = await resendError(res);
 		} catch (error) {
 			email.delivery = 'failed';
 			email.deliveryError = error instanceof Error ? error.message : 'Unknown error';

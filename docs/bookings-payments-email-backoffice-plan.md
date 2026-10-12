@@ -43,7 +43,7 @@ Payments use **Teya** (primary; the account exists) and **PayPal** (secondary). 
 |---|---|---|
 | Payment | `/booking/pay/` page with "Pay" and "simulate declined" buttons; the Teya/PayPal choice is recorded | Phases 2 and 6 |
 | Račun | Sequential number, random JIR/ZKI, labelled "DEMO, not fiscalized" | Phase 3 |
-| Email delivery | Emails are recorded in the admin outbox and not sent. Setting `BREVO_API_KEY` + `EMAIL_FROM` turns on real sending | Phase 4 |
+| Email delivery | Emails are recorded in the admin outbox and not sent. Real sending through Resend needs `RESEND_API_KEY` **and** `EMAIL_SENDING=on` in Netlify (test sender until `EMAIL_FROM` is on our own domain); without both, emails are quietly only saved | Phase 4 |
 | Storage | Netlify Blobs (free, no account), no transactions | Phase 1 (D15) |
 | Admin login | One shared password (`ADMIN_PASSWORD`; `demo` in local dev) | Phase 5 (D17) |
 | Seats | Counted and shown, but not enforced | Phase 1 |
@@ -54,7 +54,7 @@ Payments use **Teya** (primary; the account exists) and **PayPal** (secondary). 
 - **Phone numbers in the CSV export start with an apostrophe** (`'+385…`). That's the spreadsheet-formula protection; Excel shows it.
 - **Set `ADMIN_SESSION_SECRET` in Netlify.** Without it, login cookies are signed with a key derived from the password.
 - **The success page shows the guest's phone and notes** to anyone who has the link. The link contains a random ID that can't be guessed. Trim the page before launch.
-- **While `PAYMENTS_ARE_DEMO` is on** (`src/config/payments.ts`), real email only goes to `ADMIN_EMAIL` and `EMAIL_DEMO_ALLOWLIST`, even with Brevo set up.
+- **While `PAYMENTS_ARE_DEMO` is on** (`src/config/payments.ts`), real email only goes to `ADMIN_EMAIL` and `EMAIL_DEMO_ALLOWLIST`, even with Resend set up.
 
 **How to demo it:**
 1. Set `ADMIN_PASSWORD` (and `ADMIN_SESSION_SECRET`) in Netlify and deploy. Locally, `pnpm dev` and the password `demo`.
@@ -248,7 +248,7 @@ The terms already say the full price for group tours and a 30% deposit for priva
 **D11. New domain.** What's the name, and who registers it? ⭐ Register with Cloudflare or a registrar, with DNS on Cloudflare. That gives free inbox forwarding (Email Routing) and allows Cloudflare Access later.
 ✏️ Answer:
 
-**D12. Email provider.** *(For now: demo outbox. Brevo is wired in and switched off.)*
+**D12. Email provider.** *(Answer 2026-10-12: **Resend**. It's wired in and switched on by `RESEND_API_KEY`; Brevo was removed.)*
 - ⭐ **a)** Brevo free: 300/day, EU, owner-editable templates.
 - **b)** Resend free: 100/day, nicer developer experience.
 

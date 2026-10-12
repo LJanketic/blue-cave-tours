@@ -1,5 +1,4 @@
-import { SITE_EMAIL, SITE_NAME, SITE_PHONE_DISPLAY } from '../../config/site';
-import { CANCELLATION_FULL_PREFIX, CANCELLATION_FULL_SUFFIX, CANCELLATION_WINDOW } from '../../config/cancellation';
+import { EMAIL_SIGN_OFF, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL, SITE_EMAIL, SITE_NAME, SITE_PHONE_DISPLAY } from '../../config/site';
 import { formatBookingDate, guestSummaryFromCounts, meetingPointShort } from '../booking';
 import type { Booking, Enquiry } from '../bookings/store';
 import { getTourBySlug } from '../tours';
@@ -15,33 +14,58 @@ export function escapeHtml(value: string): string {
 		.replace(/'/g, '&#39;');
 }
 
-type Row = [label: string, value: string];
+/** A label and value; with a link, the value itself is the link (e.g. the meeting point opens Google Maps). */
+type Row = [label: string, value: string, link?: { href: string; hint: string }];
+
+// Darker than the brand teal so link text passes 4.5:1 on white.
+const LINK_COLOR = '#0f6e56';
+
+function rowValueHtml(value: string, link?: Row[2]): string {
+	if (!link) return escapeHtml(value);
+	// One link: the value, with the hint underneath, so it's a single tap target.
+	return (
+		`<a href="${escapeHtml(link.href)}" target="_blank" rel="noopener" style="color:${LINK_COLOR};text-decoration:underline">${escapeHtml(value)}` +
+		`<br><span style="font-size:13px;font-weight:400">${escapeHtml(link.hint)} &#8599;</span></a>`
+	);
+}
 
 function rowsHtml(rows: Row[]): string {
 	return rows
 		.map(
-			([label, value]) =>
+			([label, value, link]) =>
 				`<tr><td style="padding:6px 0;color:#555;font-size:14px;vertical-align:top;width:40%">${escapeHtml(label)}</td>` +
-				`<td style="padding:6px 0;color:#111;font-size:14px;font-weight:600;text-align:right">${escapeHtml(value)}</td></tr>`,
+				`<td style="padding:6px 0;color:#111;font-size:14px;font-weight:600;text-align:right">${rowValueHtml(value, link)}</td></tr>`,
 		)
 		.join('');
 }
 
 function rowsText(rows: Row[]): string {
-	return rows.map(([label, value]) => `${label}: ${value}`).join('\n');
+	return rows.map(([label, value, link]) => `${label}: ${value}${link ? `\n${link.hint}: ${link.href}` : ''}`).join('\n');
 }
 
-/** One shared shell: plain table layout and inline styles, which every mail client renders. */
-function layout(heading: string, intro: string, body: string): string {
-	return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(heading)}</title></head>
+/**
+ * Google Maps link for a tour's meeting point. Riva tours use the same link as
+ * the website; any other meeting point gets a search for its own name.
+ */
+export function meetingPointMapUrl(meetingPoint: string): string {
+	if (/\briva\b/i.test(meetingPoint)) return MEETING_POINT_MAP_URL;
+	return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${meetingPointShort(meetingPoint)}, Split, Croatia`)}`;
+}
+
+/**
+ * One shared shell: plain table layout and inline styles, which every mail client renders.
+ * Without a heading the email opens straight on the intro; `footer` replaces the default address line.
+ */
+function layout(heading: string, intro: string, body: string, options: { title?: string; footer?: string } = {}): string {
+	const footer = options.footer ?? `${escapeHtml(SITE_NAME)} · Riva promenade, stand 14, Split, Croatia<br>${escapeHtml(SITE_PHONE_DISPLAY)} · ${escapeHtml(SITE_EMAIL)}`;
+	return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(options.title ?? heading)}</title></head>
 <body style="margin:0;padding:0;background:#f5f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f4;padding:24px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;padding:28px">
 <tr><td style="font-size:13px;font-weight:600;color:#1d9e75;letter-spacing:.04em;text-transform:uppercase;padding-bottom:12px">${escapeHtml(SITE_NAME)}</td></tr>
-<tr><td style="font-size:22px;font-weight:600;color:#111;padding-bottom:8px">${escapeHtml(heading)}</td></tr>
-<tr><td style="font-size:15px;line-height:1.5;color:#333;padding-bottom:20px">${intro}</td></tr>
+${heading ? `<tr><td style="font-size:22px;font-weight:600;color:#111;padding-bottom:8px">${escapeHtml(heading)}</td></tr>\n` : ''}<tr><td style="font-size:15px;line-height:1.5;color:#333;padding-bottom:20px">${intro}</td></tr>
 ${body}
-<tr><td style="font-size:12px;line-height:1.5;color:#767676;padding-top:24px;border-top:1px solid #e5e5e3">${escapeHtml(SITE_NAME)} · Riva promenade, stand 14, Split, Croatia<br>${escapeHtml(SITE_PHONE_DISPLAY)} · ${escapeHtml(SITE_EMAIL)}</td></tr>
+<tr><td style="font-size:12px;line-height:1.5;color:#767676;padding-top:24px;border-top:1px solid #e5e5e3">${footer}</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -82,45 +106,99 @@ function paymentRows(booking: Booking, audience: 'customer' | 'admin'): Row[] {
 
 const DEMO_NOTICE = 'This is a demo booking. No payment was taken.';
 
-export function bookingConfirmationEmail(booking: Booking): EmailMessage {
+/** What to bring, as worded in the confirmation email template. */
+const EMAIL_BRING_LIST = 'Swimsuit and towel, Sunscreen and sunglasses, Hat or cap, Light jacket for cooler sea breezes';
+
+const PAYMENT_STATUS_TEXT: Record<Booking['paymentStatus'], string> = {
+	paid: PAYMENTS_ARE_DEMO ? 'Paid (demo, no money taken)' : 'Paid',
+	unpaid: 'Not paid yet',
+	failed: 'Payment declined',
+	refunded: 'Refunded',
+};
+
+/** A label/value table with no section title, for the confirmation's plain list of details. */
+function detailsTable(rows: Row[]): string {
+	return `<tr><td style="padding-bottom:16px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rowsHtml(rows)}</table></td></tr>`;
+}
+
+/**
+ * The website address customers see: the configured site (PUBLIC_SITE_URL) when
+ * there is one, otherwise the address this request came in on. Admin links keep
+ * using the request's address, because each deploy keeps its own bookings.
+ */
+function publicOrigin(requestOrigin: string): string {
+	const site = import.meta.env.SITE;
+	return site ? new URL(site).origin : requestOrigin;
+}
+
+/**
+ * The customer's booking confirmation, following the owner's wording
+ * (2026-10-12). `requestOrigin` is used for the website link when no site URL is configured.
+ */
+export function bookingConfirmationEmail(booking: Booking, requestOrigin: string): EmailMessage {
+	const siteOrigin = publicOrigin(requestOrigin);
 	const tour = getTourBySlug(booking.tourSlug);
-	const meeting = tour ? meetingPointShort(tour.meetingPoint) : 'Riva stand 14';
-	const bring = tour?.whatToBring.slice(0, 4).join(', ') ?? 'Sunscreen, swimwear, towel';
-	const cancellation = `${CANCELLATION_FULL_PREFIX}${CANCELLATION_WINDOW}${CANCELLATION_FULL_SUFFIX}`;
+	const riva = !tour || /\briva\b/i.test(tour.meetingPoint);
+	const meeting = riva ? MEETING_POINT_LABEL : `${meetingPointShort(tour.meetingPoint)}, Split`;
+	const mapUrl = riva ? MEETING_POINT_MAP_URL : meetingPointMapUrl(tour.meetingPoint);
+	const date = formatBookingDate(booking.date);
+	const departure = booking.slot || 'To be confirmed';
+	const guests = guestSummaryFromCounts(booking.adults, booking.children);
+	const total = `€${booking.total} — ${PAYMENT_STATUS_TEXT[booking.paymentStatus]}`;
+	const website = siteOrigin.replace(/^https?:\/\//, '');
+	const groupNote = "As you'll be joining a group, please be on time at the meeting point so we don't keep your fellow travelers waiting.";
+	const weatherNote = "In case of bad weather we may reschedule or refund — we'll contact you directly.";
 
 	const tripRows: Row[] = [
-		['Meeting point', `${meeting}, Split`],
-		['Arrive', '15 minutes before departure'],
-		['What to bring', bring],
+		['Booking ref', booking.ref],
+		['Tour', booking.tourTitle],
+		['Date', date],
+		['Departure', departure],
+		['Meeting point', meeting, { href: mapUrl, hint: 'Open in Google Maps' }],
+	];
+	const partyRows: Row[] = [
+		['Guests', guests],
+		['Total', total],
+		['Bring', EMAIL_BRING_LIST],
 	];
 
-	const subject = `Booking confirmed: ${booking.tourTitle}, ${formatBookingDate(booking.date)} (${booking.ref})`;
+	const subject = `Your ${SITE_NAME} booking confirmation – ${booking.tourTitle}, ${date}`;
+	const signature = `${escapeHtml(EMAIL_SIGN_OFF)} · ${escapeHtml(SITE_NAME)} · Split, Croatia<br>` +
+		`<a href="${escapeHtml(siteOrigin)}" style="color:${LINK_COLOR}">${escapeHtml(website)}</a> · ${escapeHtml(SITE_PHONE_DISPLAY)} · ${escapeHtml(SITE_EMAIL)}`;
 	const html = layout(
-		"You're booked!",
-		`${PAYMENTS_ARE_DEMO ? `<strong>${DEMO_NOTICE}</strong><br><br>` : ''}Hi ${escapeHtml(booking.firstName)}, thanks for booking with us. Here are your details. Show this email or just tell the crew your name.`,
-		section('Your booking', bookingRows(booking)) +
-			section('Before you go', tripRows) +
-			section('Payment', paymentRows(booking, 'customer')) +
-			paragraph(`<strong>Cancellation:</strong> ${escapeHtml(cancellation)}`) +
-			paragraph(
-				`Questions? Reply to this email or call ${escapeHtml(SITE_PHONE_DISPLAY)}. Please quote <strong>${escapeHtml(booking.ref)}</strong>.`,
-			),
+		'',
+		`${PAYMENTS_ARE_DEMO ? `<strong>${DEMO_NOTICE}</strong><br><br>` : ''}Dear ${escapeHtml(booking.firstName)},<br><br>Thank you for booking with ${escapeHtml(SITE_NAME)}! Here are your booking details:`,
+		detailsTable(tripRows) +
+			paragraph(escapeHtml(groupNote)) +
+			detailsTable(partyRows) +
+			paragraph(escapeHtml(weatherNote)) +
+			paragraph('<strong>See you aboard!</strong>'),
+		{ title: subject, footer: signature },
 	);
 	const text = [
 		...(PAYMENTS_ARE_DEMO ? [DEMO_NOTICE, ''] : []),
-		`Hi ${booking.firstName}, you're booked!`,
+		`Dear ${booking.firstName},`,
 		'',
-		rowsText(bookingRows(booking)),
+		`Thank you for booking with ${SITE_NAME}! Here are your booking details:`,
 		'',
-		rowsText(tripRows),
+		`Booking ref: ${booking.ref}`,
+		`Tour: ${booking.tourTitle}`,
+		`Date: ${date}`,
+		`Departure: ${departure}`,
+		`Meeting point: ${meeting} — ${mapUrl}`,
 		'',
-		rowsText(paymentRows(booking, 'customer')),
+		groupNote,
 		'',
-		`Cancellation: ${cancellation}`,
+		`Guests: ${guests}`,
+		`Total: ${total}`,
+		`Bring: ${EMAIL_BRING_LIST}`,
 		'',
-		`Questions? Reply to this email or call ${SITE_PHONE_DISPLAY}. Please quote ${booking.ref}.`,
+		weatherNote,
 		'',
-		`${SITE_NAME} · Riva promenade, stand 14, Split, Croatia`,
+		'See you aboard!',
+		'',
+		`${EMAIL_SIGN_OFF} · ${SITE_NAME} · Split, Croatia`,
+		`${website} · ${SITE_PHONE_DISPLAY} · ${SITE_EMAIL}`,
 	].join('\n');
 
 	return {
