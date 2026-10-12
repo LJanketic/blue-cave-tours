@@ -42,7 +42,7 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 						</div>
 						<div class="sum-item">
 							<i class="ti ti-circle-check" aria-hidden="true"></i>
-							Payment details go directly to Stripe — we never see them
+							Payment details go directly to Teya or PayPal — we never see them
 						</div>
 						<div class="sum-item">
 							<i class="ti ti-circle-check" aria-hidden="true"></i>
@@ -59,7 +59,7 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 						<p>
 							When you make a booking or contact us, we may collect: name, email address, phone number,
 							booking details, and correspondence sent via the contact form or email. We do not collect
-							payment card details — handled directly by Stripe.
+							payment card details — handled directly by Teya or PayPal.
 						</p>
 					</section>
 
@@ -87,8 +87,13 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 								</thead>
 								<tbody>
 									<tr>
-										<td>Stripe</td>
-										<td>Payment processing</td>
+										<td>Teya</td>
+										<td>Card payment processing</td>
+										<td>Name, email, payment data</td>
+									</tr>
+									<tr>
+										<td>PayPal</td>
+										<td>PayPal payment processing</td>
 										<td>Name, email, payment data</td>
 									</tr>
 									<tr>
@@ -99,7 +104,12 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 									<tr>
 										<td>Email provider</td>
 										<td>Confirmation emails</td>
-										<td>Name, email, booking ref</td>
+										<td>Name, email, phone, booking details</td>
+									</tr>
+									<tr>
+										<td>Netlify</td>
+										<td>Website hosting and booking storage</td>
+										<td>Booking and contact form details</td>
 									</tr>
 								</tbody>
 							</table>

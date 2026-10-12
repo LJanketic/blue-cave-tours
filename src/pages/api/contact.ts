@@ -10,6 +10,7 @@ import { getTourBySlug } from '../../lib/tours';
 import { jsonResponse } from '../../lib/json-response';
 import { checkRateLimit } from '../../lib/rate-limit';
 import { verifyTurnstileToken } from '../../lib/turnstile';
+import { recordEnquiry } from '../../lib/bookings/service';
 
 export const prerender = false;
 
@@ -112,9 +113,21 @@ export const POST: APIRoute = async ({ request }) => {
 		return jsonResponse({ error: turnstile.error }, 400);
 	}
 
-	// Showcase: validated and accepted. Wire email delivery before production.
-	void fields.phone;
-	void fields.tourSlug;
+	try {
+		await recordEnquiry(
+			{
+				name: fields.name,
+				email: fields.email,
+				phone: fields.phone,
+				tourSlug: fields.tourSlug,
+				message: fields.message,
+			},
+			new URL(request.url).origin,
+		);
+	} catch (error) {
+		console.error('[contact] could not store enquiry', error);
+		return jsonResponse({ error: 'We could not send your message — please try again or call us' }, 503);
+	}
 
 	return jsonResponse({ ok: true });
 };

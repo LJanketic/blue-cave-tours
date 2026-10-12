@@ -1,0 +1,191 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { formatTimestamp } from '../../lib/bookings/dates';
+import { isRecordId } from '../../lib/bookings/ids';
+import { byCreatedDesc, enquiries, type EnquiryStatus } from '../../lib/bookings/store';
+import { whatsappNumber } from '../../lib/admin/manifest';
+import { getTourBySlug } from '../../lib/tours';
+
+const LABELS: Record<EnquiryStatus, string> = { new: 'New', replied: 'Replied', closed: 'Closed' };
+/** The one obvious next step for each state. */
+const NEXT: Record<EnquiryStatus, { status: EnquiryStatus; label: string; icon: string }> = {
+	new: { status: 'replied', label: 'Mark replied', icon: 'ti-check' },
+	replied: { status: 'closed', label: 'Close', icon: 'ti-circle-check' },
+	closed: { status: 'new', label: 'Reopen', icon: 'ti-refresh' },
+};
+
+if (Astro.request.method === 'POST') {
+	const form = await Astro.request.formData();
+	const id = String(form.get('id') ?? '');
+	const status = String(form.get('status') ?? '');
+	if (isRecordId(id) && Object.hasOwn(LABELS, status)) {
+		await enquiries().update(id, (enquiry) => (enquiry.status === status ? null : { ...enquiry, status: status as EnquiryStatus }));
+	}
+	return Astro.redirect(`/admin/enquiries/${Astro.url.search}`, 303);
+}
+
+const show = Astro.url.searchParams.get('show') === 'all' ? 'all' : 'open';
+const everything = await enquiries().list();
+const openCount = everything.filter((e) => e.status !== 'closed').length;
+const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').sort(byCreatedDesc);
+---
+
+<AdminLayout title="Enquiries" section="enquiries">
+	<p class="admin-lede">Messages from the contact form, including private charter requests.</p>
+
+	<nav class="filter-bar" aria-label="Show">
+		<a class:list={['filter-chip', { active: show === 'open' }]} href="/admin/enquiries/" aria-current={show === 'open' ? 'page' : undefined}>Open <span class="count">{openCount}</span></a>
+		<a class:list={['filter-chip', { active: show === 'all' }]} href="/admin/enquiries/?show=all" aria-current={show === 'all' ? 'page' : undefined}>All <span class="count">{everything.length}</span></a>
+	</nav>
+
+	{
+		rows.length === 0 && (
+			<div class="a-tile a-empty">
+				<div class="nf-icon">
+					<i class="ti ti-headset" aria-hidden="true" />
+				</div>
+				<h2>{show === 'open' ? 'All caught up' : 'No enquiries yet'}</h2>
+				<p>New messages from the contact form will show up here.</p>
+			</div>
+		)
+	}
+
+	{
+		rows.map((e) => {
+			const tour = e.tourSlug ? (getTourBySlug(e.tourSlug)?.title ?? e.tourSlug) : 'General enquiry';
+			const wa = whatsappNumber(e.phone);
+			const reply = `mailto:${e.email}?subject=${encodeURIComponent(`Re: ${tour}`)}`;
+			const next = NEXT[e.status];
+			return (
+				<article class:list={['a-card enquiry', { 'is-new': e.status === 'new' }]}>
+					<header class="head">
+						<div>
+							<h2 class="name">{e.name}</h2>
+							<p class="card-meta meta">
+								<span class="meta-item">
+									<i class="ti ti-clock" aria-hidden="true" /> {formatTimestamp(e.createdAt)}
+								</span>
+								<span class="meta-item">
+									<i class="ti ti-sailboat" aria-hidden="true" /> {tour}
+								</span>
+							</p>
+						</div>
+						<span class={`a-badge a-badge--${e.status}`}>{LABELS[e.status]}</span>
+					</header>
+					<p class="message">{e.message}</p>
+					<ul class="from" aria-label={`Contact ${e.name}`}>
+						<li>
+							<a href={`mailto:${e.email}`}>
+								<i class="ti ti-mail" aria-hidden="true" /> <span>{e.email}</span>
+							</a>
+						</li>
+						{e.phone && (
+							<li>
+								<a href={`tel:${e.phone.replace(/\s/g, '')}`}>
+									<i class="ti ti-phone" aria-hidden="true" /> <span>{e.phone}</span>
+								</a>
+							</li>
+						)}
+						{wa && (
+							<li>
+								<a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer">
+									<i class="ti ti-brand-whatsapp" aria-hidden="true" /> <span>WhatsApp</span>
+								</a>
+							</li>
+						)}
+					</ul>
+					<div class="actions">
+						{e.status !== 'closed' && (
+							<a class="btn-primary" href={reply}>
+								<i class="ti ti-mail" aria-hidden="true" /> Reply by email
+							</a>
+						)}
+						<form method="post">
+							<input type="hidden" name="id" value={e.id} />
+							<input type="hidden" name="status" value={next.status} />
+							<button class="btn-secondary" type="submit">
+								<i class={`ti ${next.icon}`} aria-hidden="true" /> {next.label}
+							</button>
+						</form>
+					</div>
+				</article>
+			);
+		})
+	}
+</AdminLayout>
+
+<style>
+	/* New enquiries get the site's featured-card border. */
+	.enquiry.is-new {
+		border: 2px solid var(--color-border-info);
+	}
+
+	.head {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.name {
+		margin: 0 0 4px;
+		font-size: 15px;
+		font-weight: 500;
+	}
+
+	.meta {
+		margin: 0;
+	}
+
+	.message {
+		margin: 12px 0;
+		font-size: 14px;
+		line-height: 1.6;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	.from {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 16px;
+		list-style: none;
+		margin: 0 0 12px;
+		padding: 0;
+	}
+
+	.from a {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		min-height: var(--touch-min);
+		color: var(--color-text-info);
+		font-size: 13px;
+		text-decoration: none;
+		overflow-wrap: anywhere;
+	}
+
+	.from a:hover span {
+		text-decoration: underline;
+	}
+
+	.from .ti {
+		font-size: 15px;
+		flex-shrink: 0;
+	}
+
+	.actions {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+		gap: 8px;
+		padding-top: 12px;
+		border-top: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.actions .btn-primary,
+	.actions .btn-secondary {
+		width: 100%;
+	}
+</style>

@@ -1,0 +1,123 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { formatTimestamp } from '../../../lib/bookings/dates';
+import { byCreatedDesc, outbox, type OutboxEmail } from '../../../lib/bookings/store';
+import { DELIVERY_LABELS, adminEmail, emailDeliveryEnabled } from '../../../lib/email/send';
+
+const KIND: Record<OutboxEmail['kind'], { label: string; icon: string }> = {
+	booking_confirmation: { label: 'To customer', icon: 'ti-user' },
+	admin_booking: { label: 'New booking', icon: 'ti-ticket' },
+	admin_enquiry: { label: 'New enquiry', icon: 'ti-headset' },
+};
+
+const rows = (await outbox().list()).sort(byCreatedDesc);
+const delivering = emailDeliveryEnabled();
+---
+
+<AdminLayout title="Emails" section="emails">
+	<p class="admin-lede">Every email the website sends, shown as the recipient sees it.</p>
+
+	{
+		!delivering && (
+			<div class="contact-note notice" role="note">
+				<i class="ti ti-info-circle" aria-hidden="true" />
+				<p>
+					<strong>Sending is off.</strong> Emails are saved here, but nobody receives them until the email service (Brevo) is set
+					up. Admin copies will go to {adminEmail()}.
+				</p>
+			</div>
+		)
+	}
+
+	{
+		rows.length === 0 ? (
+			<div class="a-tile a-empty">
+				<div class="nf-icon">
+					<i class="ti ti-mail" aria-hidden="true" />
+				</div>
+				<h2>No emails yet</h2>
+				<p>Make a test booking or send the contact form to see one here.</p>
+			</div>
+		) : (
+			<ul class="a-list">
+				{rows.map((email) => (
+					<li>
+						<a class="a-item" href={`/admin/emails/${email.id}/`}>
+							<span class="next-icon kind" aria-hidden="true">
+								<i class={`ti ${KIND[email.kind].icon}`} />
+							</span>
+							<span class="a-item-main">
+								<span class="top">
+									<span class="kind-label">{KIND[email.kind].label}</span>
+									<span class="when a-tnum">{formatTimestamp(email.createdAt)}</span>
+								</span>
+								<span class="a-item-title subject">{email.subject}</span>
+								<span class="top">
+									<span class="a-item-sub to">{email.to}</span>
+									<span class={`a-badge a-badge--${email.delivery}`}>{DELIVERY_LABELS[email.delivery]}</span>
+								</span>
+							</span>
+						</a>
+					</li>
+				))}
+			</ul>
+		)
+	}
+</AdminLayout>
+
+<style>
+	.notice {
+		margin: 0 0 16px;
+	}
+
+	.notice strong {
+		font-weight: 500;
+		color: var(--color-text-primary);
+	}
+
+	.a-item {
+		align-items: flex-start;
+	}
+
+	.kind {
+		background: var(--color-background-secondary);
+	}
+
+	.top {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 8px;
+		min-width: 0;
+	}
+
+	.kind-label {
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--color-text-tertiary);
+	}
+
+	.when {
+		font-size: 12px;
+		color: var(--color-text-tertiary);
+		white-space: nowrap;
+	}
+
+	.subject {
+		font-size: 13px;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.to {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+</style>

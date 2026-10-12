@@ -1,0 +1,120 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { ADMIN_COOKIE, SESSION_HOURS, adminPassword, checkAdminPassword, createSessionToken } from '../../lib/admin/auth';
+import { checkRateLimit } from '../../lib/rate-limit';
+
+const configured = adminPassword() !== null;
+
+// Only same-site admin paths: never an open redirect to another host.
+const nextParam = Astro.url.searchParams.get('next') ?? '';
+const next = /^\/admin(\/|$)/.test(nextParam) && !nextParam.startsWith('//') ? nextParam : '/admin/';
+let error = '';
+
+if (Astro.request.method === 'POST' && configured) {
+	const ip = Astro.request.headers.get('x-nf-client-connection-ip') ?? 'unknown';
+	const limit = await checkRateLimit(`admin-login:${ip}`);
+	const form = await Astro.request.formData();
+	const password = String(form.get('password') ?? '');
+	if (!limit.ok) {
+		error = 'Too many attempts. Wait 10 minutes and try again.';
+	} else if (checkAdminPassword(password)) {
+		const token = createSessionToken();
+		if (token) {
+			Astro.cookies.set(ADMIN_COOKIE, token, {
+				httpOnly: true,
+				secure: import.meta.env.PROD,
+				// Lax, not Strict: a Strict cookie isn't sent when the boss taps a link in a
+				// booking email, so every email link would land on this login page.
+				// Cross-site form posts are still refused by Astro's checkOrigin.
+				sameSite: 'lax',
+				path: '/',
+				maxAge: SESSION_HOURS * 3600,
+			});
+			return Astro.redirect(next, 303);
+		}
+	} else {
+		error = 'Wrong password.';
+	}
+}
+---
+
+<AdminLayout title="Log in" bare>
+	<div class="login">
+		<a class="nav-logo login-logo" href="/">
+			<i class="ti ti-sailboat" aria-hidden="true"></i>
+			Hello Blue Cave
+		</a>
+		<div class="a-card">
+			<h1 class="login-title">Admin login</h1>
+			<p class="login-sub">Bookings, enquiries and emails for the website.</p>
+			{
+				configured ? (
+					<form method="post">
+						<div class="a-field">
+							<label class="a-label" for="password">Password</label>
+							<input
+								class="a-input"
+								id="password"
+								name="password"
+								type="password"
+								autocomplete="current-password"
+								required
+								autofocus
+								aria-invalid={error ? 'true' : undefined}
+								aria-describedby={error ? 'login-error' : undefined}
+							/>
+						</div>
+						{error && (
+							<p class="error-note login-error" id="login-error" role="alert">
+								<i class="ti ti-alert-circle" aria-hidden="true" /> {error}
+							</p>
+						)}
+						<button class="btn-primary a-block" type="submit">Log in</button>
+					</form>
+				) : (
+					<p class="login-sub">The admin is switched off. Set ADMIN_PASSWORD in the Netlify environment variables and redeploy.</p>
+				)
+			}
+		</div>
+		<p class="lock-note">
+			<i class="ti ti-lock" aria-hidden="true"></i>
+			{import.meta.env.DEV ? <>Local development: the password is <code>demo</code> unless ADMIN_PASSWORD is set.</> : 'Staff only. 5 tries every 10 minutes.'}
+		</p>
+	</div>
+</AdminLayout>
+
+<style>
+	.login {
+		max-width: 400px;
+		margin: 0 auto;
+		padding-top: max(32px, 10vh);
+	}
+
+	.login-logo {
+		justify-content: center;
+		margin-bottom: 20px;
+	}
+
+	.login-title {
+		margin: 0 0 4px;
+		font-size: 20px;
+		font-weight: 500;
+	}
+
+	.login-sub {
+		margin: 0 0 20px;
+		font-size: 13px;
+		color: var(--color-text-secondary);
+	}
+
+	.login form {
+		display: grid;
+		gap: 16px;
+	}
+
+	.login-error {
+		margin: -4px 0 0;
+	}
+</style>

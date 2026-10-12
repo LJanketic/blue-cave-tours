@@ -49,11 +49,6 @@ export type GroupBookingDetails = {
 	guests: string | null;
 };
 
-export function bookingSuccessPath(params: Record<string, string>): string {
-	const query = bookingQuery(params);
-	return query ? `/booking/success/?${query}` : '/booking/success/';
-}
-
 export function bookingReviewPath(slug: string, params: Record<string, string>): string {
 	const query = bookingQuery(params);
 	const path = `/book/${encodeURIComponent(slug)}/review/`;
@@ -162,14 +157,4 @@ export function guestSummaryFromCounts(adults: number, children: number): string
 		parts.push(`${children} child${children !== 1 ? 'ren' : ''}`);
 	}
 	return parts.join(', ');
-}
-
-export function bookingRefFromDetails(tourId: string, details: GroupBookingDetails): string | null {
-	const seed = [tourId, details.date, details.email, details.slot].filter(Boolean).join('|');
-	if (!seed) return null;
-	let hash = 0;
-	for (const char of seed) {
-		hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-	}
-	return `HBC-${(hash % 100000).toString().padStart(5, '0')}`;
 }

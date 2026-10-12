@@ -1,0 +1,41 @@
+---
+import TourImage from '../TourImage.astro';
+import { getTourBySlug, getTourCardPhoto } from '../../lib/tours';
+
+type Props = {
+	slug: string;
+	/** Edge length in px. */
+	size?: number;
+};
+
+const { slug, size = 56 } = Astro.props;
+const tour = getTourBySlug(slug);
+---
+
+<div class="tour-thumb" style={`--thumb: ${size}px`} aria-hidden="true">
+	{tour ? <TourImage photo={getTourCardPhoto(tour)} layout="thumb" /> : <i class="ti ti-sailboat" />}
+</div>
+
+<style>
+	/* The checkout's tour thumbnail, with the real photo. */
+	.tour-thumb {
+		display: grid;
+		place-items: center;
+		width: var(--thumb);
+		height: var(--thumb);
+		flex-shrink: 0;
+		overflow: hidden;
+		border-radius: var(--radius-md);
+		border: 0.5px solid var(--color-border-tertiary);
+		background: var(--color-background-secondary);
+		color: var(--color-text-secondary);
+		font-size: 22px;
+	}
+
+	.tour-thumb :global(.placeholder-image) {
+		width: 100%;
+		height: 100%;
+		min-height: 0;
+		border-radius: 0;
+	}
+</style>

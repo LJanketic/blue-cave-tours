@@ -6,10 +6,25 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import MiniNav from '../../components/MiniNav.astro';
 import TrustStrip from '../../components/TrustStrip.astro';
 import { getTourBySlug } from '../../lib/tours';
+import { isRecordId } from '../../lib/bookings/ids';
+import { bookings } from '../../lib/bookings/store';
+import { isPayable } from '../../lib/bookings/service';
 
+// A declined payment returns here with the booking id: retrying goes straight
+// back to payment with the saved details. Without one (the booking couldn't be
+// saved at all), the customer starts the tour's booking form again.
+const id = Astro.url.searchParams.get('id');
+const stored = isRecordId(id) ? await bookings().get(id) : null;
+// Anything no longer payable (paid, cancelled, past) is handled by the pay page.
+if (stored && !isPayable(stored)) return Astro.redirect(`/booking/pay/?id=${stored.id}`, 303);
+const booking = stored;
 const tourIdParam = Astro.url.searchParams.get('tourId');
 const bookedTour = tourIdParam ? getTourBySlug(tourIdParam) : undefined;
-const retryHref = bookedTour ? `/book/${bookedTour.slug}/group/` : '/tours/';
+const retryHref = booking
+	? `/booking/pay/?id=${booking.id}`
+	: bookedTour
+		? `/book/${bookedTour.slug}/group/`
+		: '/tours/';
 ---
 
 <SiteLayout
@@ -24,15 +39,24 @@ const retryHref = bookedTour ? `/book/${bookedTour.slug}/group/` : '/tours/';
 			<div class="error-circle" aria-hidden="true">
 				<i class="ti ti-x"></i>
 			</div>
-			<h1>Payment unsuccessful</h1>
-			<p>Your booking hasn't been confirmed yet. No money has been taken from your account.</p>
+			<h1>{booking ? 'Payment unsuccessful' : "We couldn't save your booking"}</h1>
+			<p>
+				{
+					booking
+						? "Your booking hasn't been confirmed yet. No money has been taken from your account."
+						: 'Nothing was charged. Please start your booking again.'
+				}
+			</p>
 		</div>
 
 		<div class="error-note" role="alert">
 			<i class="ti ti-alert-circle" aria-hidden="true"></i>
 			<span>
-				Your spots may still be held for a short time. Try again before the hold expires or your selection may be
-				released.
+				{
+					booking
+						? 'Your booking details are saved. Try again, or pay with a different card or PayPal.'
+						: 'Something went wrong saving your booking. Please try again.'
+				}
 			</span>
 		</div>
 
@@ -60,7 +84,7 @@ const retryHref = bookedTour ? `/book/${bookedTour.slug}/group/` : '/tours/';
 
 		<div class="hold-warn">
 			<i class="ti ti-clock" aria-hidden="true"></i>
-			Your date and time slot may be held briefly. Try again now to keep your selection.
+			We don't hold seats until you pay. Try again soon so your tour doesn't fill up.
 		</div>
 
 		<div class="help-strip">
@@ -76,7 +100,7 @@ const retryHref = bookedTour ? `/book/${bookedTour.slug}/group/` : '/tours/';
 
 		<a class="btn-retry" href={retryHref}>
 			<i class="ti ti-refresh" aria-hidden="true"></i>
-			Try payment again
+			{booking ? 'Try payment again' : 'Start booking again'}
 		</a>
 		<a class="btn-back" href="/tours/">Back to tours</a>
 

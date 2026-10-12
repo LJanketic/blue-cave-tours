@@ -1,0 +1,789 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { SITE_NAME } from '../config/site';
+import { enquiries } from '../lib/bookings/store';
+
+type Section = 'today' | 'bookings' | 'enquiries' | 'emails' | 'more';
+
+type Props = {
+	/** Browser tab title. */
+	title: string;
+	/** Visible page heading; defaults to the title. */
+	heading?: string;
+	/** Which nav item is current. */
+	section?: Section;
+	/** Detail pages: a back link (the checkout's exit link) instead of the logo. */
+	back?: { href: string; label: string };
+	/** Login page: no navigation. */
+	bare?: boolean;
+	/** Dashboard: use the full desktop width for a two-column layout. */
+	wide?: boolean;
+};
+
+const { title, heading = title, section, back, bare = false, wide = false } = Astro.props;
+
+let newEnquiries = 0;
+if (!bare) {
+	try {
+		newEnquiries = (await enquiries().list()).filter((e) => e.status === 'new').length;
+	} catch {
+		// The badge is a nicety; never break the page over it.
+	}
+}
+
+const nav: { id: Section; label: string; href: string; icon: string; badge?: number }[] = [
+	{ id: 'today', label: 'Dashboard', href: '/admin/', icon: 'ti-calendar' },
+	{ id: 'bookings', label: 'Bookings', href: '/admin/bookings/', icon: 'ti-ticket' },
+	{ id: 'enquiries', label: 'Enquiries', href: '/admin/enquiries/', icon: 'ti-headset', badge: newEnquiries },
+	{ id: 'emails', label: 'Emails', href: '/admin/emails/', icon: 'ti-mail' },
+	{ id: 'more', label: 'More', href: '/admin/tools/', icon: 'ti-settings' },
+];
+---
+
+<BaseLayout title={`${title} · Admin · ${SITE_NAME}`} robots="noindex, nofollow" canonical={false}>
+	<div class:list={['admin', { 'admin--bare': bare, 'admin--wide': wide }]}>
+		<a class="skip-link" href="#main">Skip to content</a>
+
+		{
+			!bare && (
+				<header class="nav nav-solid admin-header">
+					<div class="nav-inner">
+						{back ? (
+							<a class="exit-link admin-back" href={back.href}>
+								<i class="ti ti-chevron-left" aria-hidden="true" />
+								{back.label}
+							</a>
+						) : (
+							<a class="nav-logo" href="/admin/">
+								<i class="ti ti-sailboat" aria-hidden="true" />
+								{SITE_NAME}
+								<span class="admin-tag">Admin</span>
+							</a>
+						)}
+						<nav class="admin-links" aria-label="Admin">
+							{nav.map((item) => (
+								<a
+									class:list={['nav-link', { 'nav-link--active': section === item.id }]}
+									href={item.href}
+									aria-current={section === item.id ? 'page' : undefined}
+								>
+									{item.label}
+									{item.badge ? (
+										<span class="admin-count">
+											{item.badge}
+											<span class="sr-only"> new</span>
+										</span>
+									) : null}
+								</a>
+							))}
+						</nav>
+						<div class="admin-actions">
+							<slot name="top-actions" />
+						</div>
+					</div>
+				</header>
+			)
+		}
+
+		<main id="main" class="admin-main" tabindex="-1">
+			{!bare && <h1 class="admin-title">{heading}</h1>}
+			<slot />
+		</main>
+
+		{
+			!bare && (
+				<nav class="admin-tabs" aria-label="Admin">
+					{nav.map((item) => (
+						<a href={item.href} aria-current={section === item.id ? 'page' : undefined}>
+							<span class="admin-tab-icon">
+								<i class={`ti ${item.icon}`} aria-hidden="true" />
+								{item.badge ? <span class="admin-count admin-count--dot" aria-hidden="true">{item.badge}</span> : null}
+							</span>
+							{item.label}
+							{item.badge ? <span class="sr-only">({item.badge} new)</span> : null}
+						</a>
+					))}
+				</nav>
+			)
+		}
+	</div>
+</BaseLayout>
+
+<style is:global>
+	/*
+	 * The admin is built from the public site's own parts, so it reads as the same product:
+	 * the site header (.nav, .nav-logo, .nav-link), .btn-primary / .btn-secondary, .filter-chip,
+	 * .trust-item tiles, .next-item rows, .warn-box / .highlight-box callouts and the checkout's
+	 * card + label/value rows. Only what the site has no equivalent for is defined here, using
+	 * the same values: 0.5px hairlines, weight 500, 11–14px type, teal for icons, black for actions.
+	 */
+	.admin {
+		/* Reading width for lists and detail pages; the header and the dashboard use the wide one. */
+		--admin-width: 760px;
+		--admin-width-wide: 1120px;
+		--admin-tabs: 60px;
+
+		min-height: 100vh;
+		min-height: 100dvh;
+		background: var(--color-background-primary);
+		font-size: 14px;
+		-webkit-text-size-adjust: 100%;
+		text-size-adjust: 100%;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	html:has(.admin:not(.admin--bare)) {
+		scroll-padding-top: 88px;
+		scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom));
+	}
+
+	.admin a:not([class]) {
+		color: var(--color-text-info);
+	}
+
+	.admin--wide .admin-main {
+		max-width: var(--admin-width-wide);
+	}
+
+	.admin-main:focus {
+		outline: none;
+	}
+
+	/* ---------- Header: the site's nav bar, admin flavour ---------- */
+	.admin-header .nav-inner {
+		max-width: var(--admin-width-wide);
+		min-height: 56px;
+	}
+
+	.admin-tag {
+		margin-left: 2px;
+		padding: 2px 8px;
+		border-radius: 20px;
+		background: var(--color-background-secondary);
+		color: var(--color-text-secondary);
+		font-size: 11px;
+		font-weight: 500;
+	}
+
+	.admin-back {
+		min-height: var(--touch-min);
+		margin-left: -4px;
+		font-size: 14px;
+	}
+
+	.admin-links {
+		display: none;
+	}
+
+	.admin-actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-left: auto;
+	}
+
+	.admin-actions:empty {
+		display: none;
+	}
+
+	.admin-count {
+		display: inline-grid;
+		place-items: center;
+		min-width: 18px;
+		height: 18px;
+		margin-left: 5px;
+		padding: 0 5px;
+		border-radius: 20px;
+		background: var(--badge-bestseller-bg);
+		color: var(--badge-bestseller-text);
+		font-size: 11px;
+		font-weight: 500;
+		line-height: 1;
+	}
+
+	/* ---------- Page ---------- */
+	.admin-main {
+		max-width: var(--admin-width);
+		margin: 0 auto;
+		padding: 20px var(--page-gutter) calc(var(--admin-tabs) + env(safe-area-inset-bottom) + 40px);
+	}
+
+	.admin--bare .admin-main {
+		padding-bottom: 40px;
+	}
+
+	/* Same as the tours page title. */
+	.admin-title {
+		font-size: 26px;
+		font-weight: 500;
+		line-height: 1.2;
+		margin: 0 0 6px;
+		overflow-wrap: anywhere;
+	}
+
+	.admin-lede {
+		margin: 0 0 20px;
+		font-size: 14px;
+		color: var(--color-text-secondary);
+		line-height: 1.6;
+	}
+
+	/* ---------- Bottom tabs (phones): the site's nav links, laid out for a thumb ---------- */
+	.admin-tabs {
+		position: fixed;
+		inset: auto 0 0;
+		z-index: 90;
+		display: grid;
+		grid-template-columns: repeat(5, 1fr);
+		padding: 0 max(8px, calc((100% - 560px) / 2)) env(safe-area-inset-bottom);
+		background: rgb(255 255 255 / 97%);
+		border-top: 0.5px solid var(--color-border-tertiary);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+	}
+
+	.admin .admin-tabs a {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 3px;
+		height: var(--admin-tabs);
+		font-size: 11px;
+		color: var(--color-text-secondary);
+		text-decoration: none;
+	}
+
+	.admin .admin-tabs a[aria-current='page'] {
+		color: var(--color-text-primary);
+		font-weight: 500;
+	}
+
+	.admin-tab-icon {
+		position: relative;
+		font-size: 20px;
+		line-height: 1;
+	}
+
+	.admin-tabs a[aria-current='page'] .admin-tab-icon {
+		color: var(--color-accent-teal);
+	}
+
+	.admin-count--dot {
+		position: absolute;
+		top: -6px;
+		left: 14px;
+		margin: 0;
+		box-shadow: 0 0 0 2px var(--color-background-primary);
+	}
+
+	.admin-tabs a:focus-visible {
+		outline-offset: -4px;
+		border-radius: var(--radius-md);
+	}
+
+	@media (min-width: 769px) {
+		.admin-tabs {
+			display: none;
+		}
+
+		.admin-main {
+			padding-top: 32px;
+			padding-bottom: 64px;
+		}
+
+		.admin-links {
+			display: flex;
+			align-items: center;
+			gap: 20px;
+			margin-left: 28px;
+		}
+
+		.admin-links .nav-link {
+			display: inline-flex;
+			align-items: center;
+			min-height: var(--touch-min);
+		}
+
+		.admin-title {
+			font-size: 28px;
+		}
+	}
+
+	/* ---------- Building blocks with no exact site equivalent (site values) ---------- */
+
+	/* Card: the checkout review card. */
+	.a-card {
+		background: var(--color-background-primary);
+		border: 0.5px solid var(--color-border-tertiary);
+		border-radius: var(--radius-lg);
+		padding: 1.25rem;
+		margin: 0 0 12px;
+	}
+
+	.a-card--flush {
+		padding: 0;
+		overflow: hidden;
+	}
+
+	/* Card heading with an optional quiet link on the right (checkout "Tour details · Edit"). */
+	.a-card-title {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 8px;
+		margin: 0 0 12px;
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	.a-card-title a {
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--color-text-info);
+		text-decoration: none;
+	}
+
+	/* Grey tile: the site's summary / meetup cards. */
+	.a-tile {
+		background: var(--color-background-secondary);
+		border-radius: var(--radius-lg);
+		padding: 1.1rem 1.25rem;
+		margin: 0 0 12px;
+	}
+
+	/* Label/value rows: the checkout's .row / .label / .value. */
+	.a-rows {
+		display: grid;
+		gap: 8px;
+		margin: 0;
+	}
+
+	.a-rows > div {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 4px 12px;
+		flex-wrap: wrap;
+	}
+
+	.a-rows dt {
+		font-size: 13px;
+		color: var(--color-text-secondary);
+	}
+
+	.a-rows dt .ti {
+		font-size: 13px;
+		margin-right: 4px;
+		vertical-align: -2px;
+	}
+
+	.a-rows dd {
+		margin: 0 0 0 auto;
+		font-size: 13px;
+		font-weight: 500;
+		text-align: right;
+		overflow-wrap: anywhere;
+	}
+
+	.a-divider {
+		border: 0;
+		border-top: 0.5px solid var(--color-border-tertiary);
+		margin: 12px 0;
+	}
+
+	/* Hairline list: the FAQ list. */
+	.a-list {
+		list-style: none;
+		margin: 0 0 12px;
+		padding: 0;
+		border: 0.5px solid var(--color-border-tertiary);
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+	}
+
+	.a-list > li + li {
+		border-top: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.a-item {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		min-height: 56px;
+		padding: 12px 16px;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	a.a-item:hover {
+		background: var(--color-background-secondary);
+	}
+
+	a.a-item:focus-visible {
+		outline-offset: -3px;
+	}
+
+	.a-item-main {
+		flex: 1;
+		min-width: 0;
+		display: grid;
+		gap: 2px;
+	}
+
+	.a-item-title {
+		font-size: 14px;
+		font-weight: 500;
+		line-height: 1.35;
+	}
+
+	.a-item-sub {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+		line-height: 1.45;
+	}
+
+	.a-chevron {
+		font-size: 14px;
+		color: var(--color-text-tertiary);
+		flex-shrink: 0;
+	}
+
+	/* Status pills: same shape and colours as the tour-card badges. */
+	.a-badge {
+		display: inline-block;
+		padding: 3px 10px;
+		border-radius: 20px;
+		font-size: 11px;
+		font-weight: 500;
+		line-height: 1.4;
+		white-space: nowrap;
+		background: var(--color-background-secondary);
+		color: var(--color-text-secondary);
+	}
+
+	.a-badge--confirmed,
+	.a-badge--paid,
+	.a-badge--sent,
+	.a-badge--replied {
+		background: var(--badge-group-bg);
+		color: var(--badge-group-text);
+	}
+
+	.a-badge--pending_payment,
+	.a-badge--unpaid,
+	.a-badge--new,
+	.a-badge--no_show,
+	.a-badge--busy {
+		background: var(--badge-bestseller-bg);
+		color: var(--badge-bestseller-text);
+	}
+
+	.a-badge--cancelled,
+	.a-badge--refunded,
+	.a-badge--failed,
+	.a-badge--full {
+		background: var(--color-background-danger);
+		color: var(--color-text-danger);
+	}
+
+	.a-badge--outbox {
+		background: var(--color-background-info);
+		color: var(--color-category-info-icon);
+	}
+
+	.a-badge--demo {
+		background: var(--badge-private-bg);
+		color: var(--badge-private-text);
+	}
+
+	/* Buttons: .btn-primary / .btn-secondary from the site, plus a few admin variants. */
+	.admin .btn-primary,
+	.admin .btn-secondary {
+		gap: 6px;
+		padding: 10px 18px;
+		-webkit-appearance: none;
+		appearance: none;
+		touch-action: manipulation;
+	}
+
+	.admin .btn-secondary .ti {
+		color: var(--color-accent-teal);
+	}
+
+	.admin .btn-primary .ti,
+	.admin .btn-secondary .ti {
+		font-size: 16px;
+	}
+
+	.a-block {
+		width: 100%;
+	}
+
+	.btn-secondary.a-danger,
+	.btn-secondary.a-danger .ti {
+		color: var(--color-text-danger);
+	}
+
+	.btn-secondary.a-danger:hover {
+		background: var(--color-background-danger);
+	}
+
+	.btn-primary.a-danger {
+		background: var(--color-text-danger);
+	}
+
+	/* Round icon button: the site's stepper / calendar buttons at touch size. */
+	.a-icon-btn {
+		display: inline-grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: var(--touch-min);
+		height: var(--touch-min);
+		border-radius: 50%;
+		border: 0.5px solid var(--color-border-secondary);
+		background: var(--color-background-primary);
+		color: var(--color-accent-teal);
+		font-size: 18px;
+		text-decoration: none;
+	}
+
+	.a-icon-btn:hover {
+		background: var(--color-background-secondary);
+	}
+
+	/* Equal-width row of buttons. */
+	.a-btnrow {
+		display: grid;
+		grid-auto-columns: 1fr;
+		grid-auto-flow: column;
+		gap: 8px;
+	}
+
+	.a-btnrow form,
+	.a-btnrow .btn-primary,
+	.a-btnrow .btn-secondary {
+		width: 100%;
+	}
+
+	/* Filter chips: the tours page's .filter-chip; keep them on one line and wrap. */
+	.admin .filter-bar {
+		flex-wrap: wrap;
+		overflow: visible;
+		margin-bottom: 16px;
+	}
+
+	.admin .filter-chip {
+		text-decoration: none;
+	}
+
+	.admin .filter-chip .count {
+		color: var(--color-text-tertiary);
+	}
+
+	.admin .filter-chip.active .count {
+		color: inherit;
+		opacity: 0.75;
+	}
+
+	/* Section heading row: the home page's .section-header. */
+	.admin .section-header {
+		margin: 28px 0 12px;
+	}
+
+	.admin .section-title {
+		font-size: 16px;
+	}
+
+	.admin .section-label {
+		display: flex;
+		justify-content: space-between;
+		gap: 12px;
+		margin: 24px 0 8px;
+	}
+
+	.admin .section-label span + span {
+		letter-spacing: 0;
+		text-transform: none;
+		font-weight: 400;
+	}
+
+	/* Callouts: the site's .warn-box / .highlight-box with an icon. */
+	.admin .warn-box,
+	.admin .highlight-box,
+	.a-danger-box {
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
+		margin: 0 0 16px;
+	}
+
+	.admin .warn-box p,
+	.admin .highlight-box p {
+		font-weight: 400;
+	}
+
+	.admin .warn-box strong,
+	.admin .highlight-box strong {
+		font-weight: 500;
+	}
+
+	.admin .warn-box > .ti,
+	.admin .highlight-box > .ti,
+	.a-danger-box > .ti {
+		font-size: 16px;
+		margin-top: 2px;
+		flex-shrink: 0;
+	}
+
+	.admin .highlight-box > .ti {
+		color: var(--color-accent-teal);
+	}
+
+	.a-danger-box {
+		border-left: 3px solid var(--color-text-danger);
+		padding: 10px 14px;
+		border-radius: 0 var(--radius-md) var(--radius-md) 0;
+		background: var(--color-background-danger);
+		color: var(--color-text-danger);
+		font-size: 13px;
+		line-height: 1.6;
+	}
+
+	.a-danger-box p {
+		margin: 0;
+	}
+
+	/* "Needs attention": the success page's .next-item, as links. */
+	.admin a.next-item {
+		align-items: center;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.admin a.next-item:hover {
+		background: var(--color-background-hover);
+	}
+
+	.admin .next-item .next-main {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.admin .next-icon--warn .ti {
+		color: var(--color-text-warning);
+	}
+
+	/* Stat tiles: the home page's trust bar. */
+	.admin .trust-bar {
+		grid-template-columns: repeat(3, 1fr);
+		gap: 8px;
+		margin: 0 0 16px;
+	}
+
+	/* Empty state: the 404 page. */
+	.a-empty {
+		padding: 2rem 1rem;
+		text-align: center;
+	}
+
+	.a-empty .nf-icon {
+		width: 64px;
+		height: 64px;
+		margin-bottom: 14px;
+	}
+
+	.a-empty .nf-icon .ti {
+		font-size: 28px;
+	}
+
+	.a-empty h2 {
+		font-size: 16px;
+		font-weight: 500;
+		margin: 0 0 6px;
+	}
+
+	.a-empty p {
+		margin: 0 auto 16px;
+		max-width: 34ch;
+		font-size: 13px;
+		color: var(--color-text-secondary);
+	}
+
+	/* Forms: the site's inputs, at 16px so iOS doesn't zoom in. */
+	.a-field {
+		display: grid;
+		gap: 6px;
+	}
+
+	.a-label {
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	.a-hint {
+		margin: 0;
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+
+	.a-input,
+	.a-textarea {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 100%;
+		min-height: var(--touch-min);
+		padding: 10px 12px;
+		font-size: 16px;
+		line-height: 1.4;
+	}
+
+	.a-input::-webkit-search-decoration,
+	.a-input::-webkit-search-cancel-button {
+		-webkit-appearance: none;
+	}
+
+	.a-input::placeholder,
+	.a-textarea::placeholder {
+		color: var(--color-text-tertiary);
+		opacity: 1;
+	}
+
+	.a-textarea {
+		min-height: 72px;
+		resize: vertical;
+	}
+
+	/* Ask before destructive actions. */
+	.a-confirm > summary {
+		list-style: none;
+	}
+
+	.a-confirm > summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.a-confirm[open] > summary {
+		display: none;
+	}
+
+	.a-confirm .a-danger-box {
+		display: grid;
+		gap: 10px;
+		margin: 0;
+	}
+
+	.a-muted {
+		color: var(--color-text-secondary);
+	}
+
+	.a-tnum {
+		font-variant-numeric: tabular-nums;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.admin * {
+			transition: none !important;
+		}
+	}
+</style>

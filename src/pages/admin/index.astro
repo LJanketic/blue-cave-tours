@@ -1,0 +1,471 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import DepartureCard from '../../components/admin/DepartureCard.astro';
+import { formatBookingDate } from '../../lib/booking';
+import { businessDate, formatShortDate, formatTimestamp } from '../../lib/bookings/dates';
+import { STATUS_LABELS } from '../../lib/bookings/service';
+import { bookings, byCreatedDesc, enquiries } from '../../lib/bookings/store';
+import { addDays, isIsoDate, summarizeDay, weekFrom } from '../../lib/admin/schedule';
+
+const FLASH: Record<string, string> = {
+	loaded: 'Demo bookings and enquiries loaded.',
+	cleared: 'All bookings, enquiries and emails deleted.',
+};
+const flash = FLASH[Astro.url.searchParams.get('flash') ?? ''] ?? '';
+
+const today = businessDate();
+const tomorrow = addDays(today, 1);
+const params = Astro.url.searchParams;
+// The week strip starts at `from` (default today); `day` picks the day listed below it.
+const fromParam = params.get('from');
+const from = isIsoDate(fromParam) ? fromParam : today;
+const dayParam = params.get('day');
+const day = isIsoDate(dayParam) ? dayParam : from;
+
+const all = await bookings().list();
+const week = weekFrom(from, all);
+const selected = week.find((d) => d.date === day) ?? summarizeDay(day, all);
+const isEmpty = all.length === 0;
+
+const dayName = (iso: string) => (iso === today ? 'Today' : iso === tomorrow ? 'Tomorrow' : null);
+const weekLink = (start: string) => (start === today ? '/admin/' : `/admin/?from=${start}`);
+const dayLink = (date: string) => {
+	const next = new URLSearchParams();
+	if (from !== today) next.set('from', from);
+	if (date !== from) next.set('day', date);
+	return `/admin/${next.size ? `?${next}` : ''}#day`;
+};
+const rangeLabel = `${formatShortDate(from, false)} – ${formatShortDate(addDays(from, 6), false)}`;
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// What needs doing, most urgent first. Each item links to where it gets done.
+const unpaidSoon = [today, tomorrow].flatMap((d) =>
+	summarizeDay(d, all).departures.flatMap((dep) => dep.unpaid.map((b) => ({ booking: b, departure: dep, date: d }))),
+);
+const newEnquiries = (await enquiries().list()).filter((e) => e.status === 'new').length;
+const toWrapUp = all.filter((b) => b.status === 'confirmed' && b.date < today).length;
+
+type Todo = { warn?: boolean; icon: string; title: string; sub: string; href: string };
+const todos: Todo[] = [];
+if (unpaidSoon.length === 1) {
+	const { booking: b, departure: d, date } = unpaidSoon[0];
+	todos.push({
+		warn: true,
+		icon: 'ti-credit-card',
+		title: `${b.firstName} ${b.lastName} hasn't paid`,
+		sub: `${dayName(date)} ${d.slot || '(time TBC)'} · ${d.tourTitle}`,
+		href: `/admin/bookings/${b.id}/`,
+	});
+} else if (unpaidSoon.length > 1) {
+	todos.push({
+		warn: true,
+		icon: 'ti-credit-card',
+		title: `${unpaidSoon.length} bookings today or tomorrow haven't paid`,
+		sub: 'Their seats aren’t held. Contact them or let the seats go.',
+		href: '/admin/bookings/?status=pending_payment',
+	});
+}
+if (newEnquiries > 0) {
+	todos.push({
+		icon: 'ti-headset',
+		title: plural(newEnquiries, 'new enquiry', 'new enquiries'),
+		sub: 'Waiting for a reply.',
+		href: '/admin/enquiries/',
+	});
+}
+if (toWrapUp > 0) {
+	todos.push({
+		icon: 'ti-list-check',
+		title: `${plural(toWrapUp, 'past trip', 'past trips')} to wrap up`,
+		sub: 'Mark each one completed or no-show.',
+		href: '/admin/bookings/?when=past&status=confirmed',
+	});
+}
+
+const latest = [...all].sort(byCreatedDesc).slice(0, 5);
+---
+
+<AdminLayout title="Dashboard" section="today" wide>
+	<p class="admin-lede">{formatBookingDate(today)}</p>
+
+	{
+		flash && (
+			<div class="highlight-box" role="status">
+				<i class="ti ti-circle-check" aria-hidden="true" />
+				<p>{flash}</p>
+			</div>
+		)
+	}
+
+	{
+		isEmpty ? (
+			<div class="a-tile a-empty">
+				<div class="nf-icon">
+					<i class="ti ti-sailboat" aria-hidden="true" />
+				</div>
+				<h2>No bookings yet</h2>
+				<p>New bookings from the website appear here. Load demo data to see how the admin works.</p>
+				<form method="post" action="/admin/tools/">
+					<input type="hidden" name="action" value="load-sample" />
+					<button class="btn-primary" type="submit">
+						<i class="ti ti-database" aria-hidden="true" /> Load demo data
+					</button>
+				</form>
+			</div>
+		) : (
+			<div class="dash">
+				<section class="dash-attn" aria-labelledby="attn-title">
+					<h2 class="section-label" id="attn-title">
+						<span>{todos.length ? 'Needs attention' : 'All clear'}</span>
+					</h2>
+					{todos.length > 0 ? (
+						todos.map((t) => (
+							<a class="next-item" href={t.href}>
+								<span class:list={['next-icon', { 'next-icon--warn': t.warn }]} aria-hidden="true">
+									<i class={`ti ${t.icon}`} />
+								</span>
+								<span class="next-main">
+									<span class="next-title">{t.title}</span>
+									<span class="next-desc">{t.sub}</span>
+								</span>
+								<i class="ti ti-chevron-right a-chevron" aria-hidden="true" />
+							</a>
+						))
+					) : (
+						<p class="a-muted calm">Nothing needs you right now. Unpaid bookings, new enquiries and trips to wrap up show here.</p>
+					)}
+				</section>
+
+				<div class="dash-main">
+					<section aria-labelledby="week-title">
+						<div class="week-head">
+							<h2 class="section-title" id="week-title">
+								{from === today ? 'Next 7 days' : rangeLabel}
+							</h2>
+							<div class="week-nav">
+								{from !== today && <a class="today-link" href="/admin/">Back to today</a>}
+								<a class="a-icon-btn" href={weekLink(addDays(from, -7))} aria-label="Previous 7 days">
+									<i class="ti ti-chevron-left" aria-hidden="true" />
+								</a>
+								<a class="a-icon-btn" href={weekLink(addDays(from, 7))} aria-label="Next 7 days">
+									<i class="ti ti-chevron-right" aria-hidden="true" />
+								</a>
+							</div>
+						</div>
+
+						<ol class="week">
+							{week.map((d) => {
+								const fill = d.capacity ? Math.round((d.guests / d.capacity) * 100) : 0;
+								const label = `${formatBookingDate(d.date)}: ${
+									d.departures.length
+										? `${plural(d.guests, 'guest', 'guests')} on ${plural(d.departures.length, 'departure', 'departures')}`
+										: 'no bookings'
+								}${d.unpaid ? `, ${d.unpaid} unpaid` : ''}`;
+								return (
+									<li>
+										<a
+											class:list={['wd', { 'wd--on': d.date === day, 'wd--today': d.date === today, 'wd--empty': !d.departures.length }]}
+											href={dayLink(d.date)}
+											aria-label={label}
+											aria-current={d.date === day ? 'date' : undefined}
+										>
+											<span class="wd-name">{formatShortDate(d.date).split(' ')[0]}</span>
+											<span class="wd-num a-tnum">{Number(d.date.slice(8))}</span>
+											<span class="wd-guests a-tnum">{d.departures.length ? d.guests : '–'}</span>
+											<span class="wd-bar">
+												<span style={`width:${fill}%`} />
+											</span>
+											{d.unpaid > 0 && <span class="wd-dot" />}
+										</a>
+									</li>
+								);
+							})}
+						</ol>
+						<p class="week-key a-muted">
+							Number = guests booked. <span class="wd-dot wd-dot--key" aria-hidden="true" /> = someone hasn't paid.
+						</p>
+					</section>
+
+					<section id="day" class="day" aria-labelledby="day-title">
+						<div class="day-head">
+							<h2 class="section-title" id="day-title">
+								{dayName(selected.date) ? `${dayName(selected.date)} · ${formatShortDate(selected.date)}` : formatBookingDate(selected.date)}
+							</h2>
+							{selected.departures.length > 0 && (
+								<p class="a-muted day-sum">
+									{plural(selected.departures.length, 'departure', 'departures')} · {plural(selected.guests, 'guest', 'guests')}
+									{selected.capacity > 0 && <> · {selected.capacity - selected.guests} seats free</>}
+								</p>
+							)}
+						</div>
+						{selected.departures.length > 0 ? (
+							selected.departures.map((d) => <DepartureCard departure={d} />)
+						) : (
+							<p class="a-tile no-trips">No bookings for this day.</p>
+						)}
+					</section>
+				</div>
+
+				<section class="dash-latest" aria-labelledby="latest-title">
+					<div class="latest-head">
+						<h2 class="section-label" id="latest-title">
+							<span>Latest bookings</span>
+						</h2>
+						<a href="/admin/bookings/">All bookings</a>
+					</div>
+					<ul class="a-list">
+						{latest.map((b) => (
+							<li>
+								<a class="a-item" href={`/admin/bookings/${b.id}/`}>
+									<span class="a-item-main">
+										<span class="line">
+											<span class="a-item-title">{b.firstName} {b.lastName}</span>
+											<span class={`a-badge a-badge--${b.status}`}>{STATUS_LABELS[b.status]}</span>
+										</span>
+										<span class="a-item-sub">
+											{formatShortDate(b.date)} {b.slot || 'TBC'} · {b.tourTitle}
+										</span>
+										<span class="booked">Booked {formatTimestamp(b.createdAt)}</span>
+									</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				</section>
+			</div>
+		)
+	}
+</AdminLayout>
+
+<style>
+	.dash {
+		display: grid;
+		gap: 28px;
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	@media (min-width: 1024px) {
+		.dash {
+			grid-template-columns: minmax(0, 1fr) 320px;
+			grid-template-areas:
+				'main attn'
+				'main latest';
+			grid-template-rows: auto 1fr;
+			align-items: start;
+			column-gap: 40px;
+		}
+
+		.dash-main {
+			grid-area: main;
+		}
+
+		.dash-attn {
+			grid-area: attn;
+		}
+
+		.dash-latest {
+			grid-area: latest;
+		}
+	}
+
+	.dash-attn .section-label,
+	.dash-latest .section-label {
+		margin-top: 0;
+	}
+
+	.next-main {
+		flex: 1;
+		min-width: 0;
+		display: grid;
+		gap: 2px;
+	}
+
+	.next-title,
+	.next-desc {
+		display: block;
+	}
+
+	.calm {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.5;
+	}
+
+	/* Week strip */
+	.week-head,
+	.day-head,
+	.latest-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 12px;
+	}
+
+	.week-head .section-title,
+	.day-head .section-title {
+		margin: 0;
+		font-size: 18px;
+	}
+
+	.week-nav {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.today-link {
+		font-size: 13px;
+		margin-right: 4px;
+	}
+
+	.week {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(7, minmax(0, 1fr));
+		gap: 4px;
+	}
+
+	.wd {
+		position: relative;
+		display: grid;
+		justify-items: center;
+		gap: 2px;
+		padding: 8px 2px 10px;
+		border-radius: var(--radius-md);
+		border: 0.5px solid var(--color-border-tertiary);
+		color: var(--color-text-primary);
+		text-decoration: none;
+	}
+
+	.wd:hover {
+		background: var(--color-background-secondary);
+	}
+
+	.wd-name {
+		font-size: 11px;
+		font-weight: 500;
+		color: var(--color-text-tertiary);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.wd-num {
+		font-size: 17px;
+		font-weight: 500;
+		line-height: 1.2;
+	}
+
+	.wd-guests {
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+
+	.wd--empty .wd-guests {
+		color: var(--color-text-tertiary);
+	}
+
+	.wd-bar {
+		width: 70%;
+		height: 4px;
+		border-radius: 2px;
+		background: var(--color-background-secondary);
+		overflow: hidden;
+	}
+
+	.wd-bar span {
+		display: block;
+		height: 100%;
+		background: var(--color-accent-teal);
+	}
+
+	.wd--today .wd-name {
+		color: var(--color-accent-teal);
+	}
+
+	.wd--on,
+	.wd--on:hover {
+		background: var(--color-text-primary);
+		border-color: var(--color-text-primary);
+		color: var(--color-background-primary);
+	}
+
+	.wd--on .wd-name,
+	.wd--on .wd-guests {
+		color: var(--color-background-primary);
+	}
+
+	.wd--on .wd-bar {
+		background: rgb(255 255 255 / 0.25);
+	}
+
+	.wd-dot {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--color-text-warning);
+	}
+
+	.wd-dot--key {
+		position: static;
+		display: inline-block;
+		vertical-align: 1px;
+	}
+
+	.week-key {
+		margin: 8px 0 0;
+		font-size: 12px;
+	}
+
+	/* Selected day */
+	.day {
+		margin-top: 28px;
+		scroll-margin-top: 80px;
+	}
+
+	.day-head {
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: flex-start;
+		gap: 4px 12px;
+	}
+
+	.day-sum {
+		margin: 0;
+		font-size: 13px;
+	}
+
+	.no-trips {
+		margin: 0;
+		text-align: center;
+		color: var(--color-text-secondary);
+	}
+
+	/* Latest bookings */
+	.latest-head {
+		margin-bottom: 8px;
+	}
+
+	.latest-head a {
+		font-size: 13px;
+	}
+
+	.line {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	.booked {
+		font-size: 12px;
+		color: var(--color-text-tertiary);
+	}
+</style>

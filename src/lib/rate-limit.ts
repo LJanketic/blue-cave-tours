@@ -25,7 +25,7 @@ type Bucket = { count: number; windowStart: number };
  * only against the real Netlify Blobs backend in production, which documents
  * these conditions as atomic.
  */
-export async function checkRateLimit(key: string): Promise<{ ok: boolean }> {
+export async function checkRateLimit(key: string, maxRequests = MAX_REQUESTS): Promise<{ ok: boolean }> {
 	let store;
 	try {
 		store = getStore({ name: 'rate-limits', consistency: 'strong' });
@@ -48,7 +48,7 @@ export async function checkRateLimit(key: string): Promise<{ ok: boolean }> {
 			}
 
 			const bucket = existing.data as Bucket;
-			if (bucket.count >= MAX_REQUESTS) {
+			if (bucket.count >= maxRequests) {
 				return { ok: false };
 			}
 

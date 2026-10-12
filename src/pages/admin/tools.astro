@@ -1,0 +1,117 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { clearAllData, loadSampleData } from '../../lib/admin/sample-data';
+import { adminEmail, emailDeliveryEnabled } from '../../lib/email/send';
+import { PAYMENTS_ARE_DEMO } from '../../config/payments';
+
+if (Astro.request.method === 'POST') {
+	const form = await Astro.request.formData();
+	if (form.get('action') === 'load-sample') {
+		await loadSampleData();
+		return Astro.redirect('/admin/?flash=loaded', 303);
+	}
+	if (form.get('action') === 'clear-all' && form.get('confirm') === 'yes') {
+		await clearAllData();
+		return Astro.redirect('/admin/tools/?flash=cleared', 303);
+	}
+	return Astro.redirect('/admin/tools/', 303);
+}
+
+const flash = Astro.url.searchParams.get('flash') === 'cleared' ? 'All bookings, enquiries and emails deleted.' : '';
+const delivering = emailDeliveryEnabled();
+---
+
+<AdminLayout title="More" section="more">
+	{
+		flash && (
+			<div class="highlight-box" role="status">
+				<i class="ti ti-circle-check" aria-hidden="true" />
+				<p>{flash}</p>
+			</div>
+		)
+	}
+
+	<p class="section-label"><span>Export</span></p>
+	<ul class="a-list">
+		<li>
+			<a class="a-item" href="/admin/export.csv">
+				<span class="next-icon" aria-hidden="true"><i class="ti ti-list"></i></span>
+				<span class="a-item-main">
+					<span class="a-item-title">Download all bookings</span>
+					<span class="a-item-sub">CSV file, opens in Excel or Google Sheets</span>
+				</span>
+				<i class="ti ti-chevron-right a-chevron" aria-hidden="true"></i>
+			</a>
+		</li>
+		<li>
+			<a class="a-item" href="/">
+				<span class="next-icon" aria-hidden="true"><i class="ti ti-map"></i></span>
+				<span class="a-item-main">
+					<span class="a-item-title">Open the website</span>
+					<span class="a-item-sub">See what customers see</span>
+				</span>
+				<i class="ti ti-chevron-right a-chevron" aria-hidden="true"></i>
+			</a>
+		</li>
+	</ul>
+
+	<p class="section-label"><span>Setup</span></p>
+	<section class="a-card" aria-label="Setup">
+		<dl class="a-rows">
+			<div><dt>Admin notifications go to</dt><dd>{adminEmail()}</dd></div>
+			<div>
+				<dt>Email sending</dt>
+				<dd>{delivering ? <span class="a-badge a-badge--sent">On</span> : <span class="a-badge a-badge--outbox">Off: saved only</span>}</dd>
+			</div>
+			<div><dt>Payments</dt><dd>{PAYMENTS_ARE_DEMO ? 'Demo, no money taken' : 'Live'}</dd></div>
+		</dl>
+	</section>
+
+	<p class="section-label"><span>Demo data</span></p>
+	<section class="a-tile demo" aria-label="Demo data">
+		<p>Fills the admin with about three weeks of example bookings and enquiries, so you can show it to someone. Demo data sends no emails.</p>
+		<form method="post">
+			<input type="hidden" name="action" value="load-sample" />
+			<button class="btn-primary a-block" type="submit"><i class="ti ti-database" aria-hidden="true"></i> Load demo data</button>
+		</form>
+		<details class="a-confirm">
+			<summary class="btn-secondary a-danger a-block">Delete everything…</summary>
+			<div class="a-danger-box">
+				<p><strong>Delete every booking, enquiry and email?</strong> This can't be undone.</p>
+				<form method="post">
+					<input type="hidden" name="action" value="clear-all" />
+					<input type="hidden" name="confirm" value="yes" />
+					<button class="btn-primary a-danger" type="submit">Yes, delete everything</button>
+				</form>
+			</div>
+		</details>
+	</section>
+
+	<p class="section-label"><span>Account</span></p>
+	<form method="post" action="/admin/logout/">
+		<button class="btn-secondary a-block" type="submit"><i class="ti ti-lock" aria-hidden="true"></i> Log out</button>
+	</form>
+</AdminLayout>
+
+<style>
+	.demo {
+		display: grid;
+		gap: 10px;
+	}
+
+	.demo p {
+		margin: 0 0 4px;
+		font-size: 13px;
+		color: var(--color-text-secondary);
+	}
+
+	.a-confirm .btn-primary {
+		justify-self: start;
+	}
+
+	.next-icon {
+		background: var(--color-background-secondary);
+	}
+</style>
