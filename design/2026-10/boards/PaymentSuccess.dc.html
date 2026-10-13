@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Payment Success — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-text-tertiary)}a:hover{color:var(--color-text-secondary)}
+.page{max-width:var(--flow-width);margin:0 auto;padding:calc(24px + 1.5rem) 24px 2rem}
+.hbc p{margin:0}
+.check-circle{width:72px;height:72px;border-radius:50%;background:var(--color-background-success);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.check-circle i{font-size:32px;color:var(--color-text-success)}
+.success-hero{text-align:center;padding:2rem 1rem 1.5rem}
+.success-hero h1{font-size:var(--font-size-hero);font-weight:500;margin:0 0 6px;line-height:var(--line-height-tight)}
+.success-hero p{font-size:var(--font-size-base);color:var(--color-text-secondary);line-height:var(--line-height-relaxed)}
+.conf-ref{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 16px;margin:16px 0 24px;font-size:var(--font-size-base)}
+.conf-ref strong{font-size:var(--font-size-md);letter-spacing:0.08em}
+.hbc .copy-btn{font-size:var(--font-size-sm);padding:4px 10px;border-radius:var(--border-radius-md);cursor:pointer;color:var(--color-text-secondary)}
+.card{background:var(--color-background-primary);border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:14px}
+.hbc .card-title{font-size:var(--font-size-lg);font-weight:500;margin:0 0 12px;display:flex;align-items:center;gap:7px}
+.card-title i{font-size:15px;color:var(--color-accent)}
+.b-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;font-size:var(--font-size-base);margin-bottom:8px}
+.b-label{color:var(--color-text-secondary)}.b-val{font-weight:500;text-align:right}
+.b-div{border-top:0.5px solid var(--color-border-tertiary);margin:4px 0 12px}
+.meetup-card{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.1rem 1.25rem;margin-bottom:14px}
+.meetup-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.meetup-item{display:flex;flex-direction:column;gap:2px}
+.meetup-label{font-size:var(--font-size-xs);color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em}
+.meetup-val{font-size:var(--font-size-base);font-weight:500}
+.map-stub{height:80px;background:var(--color-background-primary);border:1px solid var(--color-border-card);border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;margin-top:10px;gap:7px;font-size:var(--font-size-sm);color:var(--color-text-secondary);cursor:pointer}
+.next-item{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:8px}
+.next-icon{width:32px;height:32px;border-radius:var(--border-radius-md);background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.next-icon i{color:var(--color-accent)}
+.next-title{font-size:var(--font-size-base);font-weight:500;margin:0 0 2px}
+.next-desc{font-size:var(--font-size-base);color:var(--color-text-secondary);line-height:var(--line-height-relaxed)}
+.hbc .btn-secondary{width:100%;padding:10px;background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500}
+.hbc .btn-secondary:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+@media (max-width:768px){
+  .page{padding:calc(16px + 1.5rem) 16px 2rem}
+  .meetup-grid{grid-template-columns:1fr}
+}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="page">
+    <div class="mini-nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+    </div>
+    <div class="success-hero">
+      <div class="check-circle"><i class="ti ti-check" aria-hidden="true"></i></div>
+      <h1>You're booked!</h1>
+      <p>Confirmation sent to <strong>ivan@example.com</strong>. Check your inbox — including spam just in case.</p>
+    </div>
+    <div class="conf-ref"><span style="font-size: var(--font-size-sm); color: var(--color-text-secondary)">Booking ref:</span><strong>HBC-20847</strong><button class="copy-btn" onClick="{{ copy }}">{{ copyLabel }}</button></div>
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-sailboat" aria-hidden="true"></i> Your booking</p>
+      <div class="b-row"><span class="b-label">Tour</span><span class="b-val">Sunset Bay coastal cruise</span></div>
+      <div class="b-row"><span class="b-label">Date</span><span class="b-val">Saturday, 12 Jul 2025</span></div>
+      <div class="b-row"><span class="b-label">Departure</span><span class="b-val">18:00 — Marina Pier B, Gate 3</span></div>
+      <div class="b-row"><span class="b-label">Guests</span><span class="b-val">2 adults, 1 child</span></div>
+      <div class="b-div"></div>
+      <div class="b-row"><span class="b-label">Total paid</span><span class="b-val">€245</span></div>
+    </div>
+
+    <div class="meetup-card">
+      <p class="card-title" style="margin-bottom: 10px"><i class="ti ti-map-pin" aria-hidden="true"></i> Where to meet us</p>
+      <div class="meetup-grid">
+        <div class="meetup-item"><span class="meetup-label">Location</span><span class="meetup-val">Marina Pier B, Gate 3</span></div>
+        <div class="meetup-item"><span class="meetup-label">Arrive by</span><span class="meetup-val">17:45 (15 min early)</span></div>
+        <div class="meetup-item"><span class="meetup-label">What to bring</span><span class="meetup-val">Swimwear, sunscreen, camera</span></div>
+        <div class="meetup-item"><span class="meetup-label">Captain</span><span class="meetup-val">Marko will meet you</span></div>
+      </div>
+      <div class="map-stub"><i class="ti ti-map-2" style="font-size: 18px; color: var(--color-accent)" aria-hidden="true"></i> View meeting point on map</div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-list-check" aria-hidden="true"></i> What happens next</p>
+      <div class="next-item"><div class="next-icon"><i class="ti ti-mail" aria-hidden="true"></i></div><div><p class="next-title">Check your email</p><p class="next-desc">Full booking details, meeting point, and what to bring — sent to ivan@example.com right now.</p></div></div>
+      <div class="next-item"><div class="next-icon"><i class="ti ti-cloud-storm" aria-hidden="true"></i></div><div><p class="next-title">Weather update</p><p class="next-desc">We'll email you 24h before departure if conditions change. If cancelled, you get a full refund or free rescheduling.</p></div></div>
+      <div class="next-item"><div class="next-icon"><i class="ti ti-anchor" aria-hidden="true"></i></div><div><p class="next-title">Show up and enjoy</p><p class="next-desc">Arrive at Marina Pier B by 17:45. Your captain will be waiting — no need to print anything.</p></div></div>
+    </div>
+
+    <a class="btn-secondary" href="Tours.dc.html"><i class="ti ti-sailboat" style="font-size: 13px; vertical-align: -2px" aria-hidden="true"></i> Browse more tours</a>
+    <div class="trust-strip">
+      <span><i class="ti ti-lock" aria-hidden="true"></i> Secure payment</span>
+      <span><i class="ti ti-headset" aria-hidden="true"></i> Need help? <a href="mailto:help@hellobluecave.com">help@hellobluecave.com</a></span>
+      <span>Licensed maritime operator · Croatia</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { copied: false };
+  }
+  componentWillUnmount() { clearTimeout(this.t); }
+  renderVals() {
+    return {
+      copyLabel: this.state.copied ? 'Copied!' : 'Copy',
+      copy: () => {
+        this.setState({ copied: true });
+        clearTimeout(this.t);
+        this.t = setTimeout(() => this.setState({ copied: false }), 1500);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

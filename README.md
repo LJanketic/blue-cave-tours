@@ -14,8 +14,14 @@ Client showcase site for **Hello Blue Cave**: boat tours and private charters fr
 | `pnpm check` | Type-check, plus a check that the icon font covers every icon used |
 | `pnpm test` | Unit tests (Vitest): booking, pricing, contact validation, catalog data, contact API |
 | `pnpm icons` | Rebuild the icon font subset after adding a new `ti-*` icon (needs network) |
+| `pnpm test:a11y` | axe on every public page; fails if a page gets more serious/critical violations than `tests/a11y/axe-baseline.json` |
+| `pnpm test:visual admin` | Admin look check: every element's computed style must match the baselines (see `tests/visual/admin.spec.ts`) |
+| `CAPTURE=<label> pnpm test:visual capture --project=chromium` | Full-page screenshots of every public page into `screenshots/<label>/` (not committed) |
+| `pnpm test:e2e` | End-to-end flows (Chromium, WebKit, Firefox) |
 
-CI (`.github/workflows/ci.yml`) runs check, test and build on every pull request.
+CI (`.github/workflows/ci.yml`) runs check, test and build on every pull request. The Playwright suites run locally only (first time: `pnpm exec playwright install chromium webkit firefox`). They start their own dev server with email off and `CONTEXT=playwright`, which gives them separate Blobs stores, so they never touch your local dev bookings.
+
+**Styles:** public pages load `src/styles/global.css` (through `SiteLayout`); the admin loads only `src/styles/admin.css` (through `AdminLayout`), its look frozen with its own `--a-*` tokens until it's re-skinned. The October 2026 redesign plan is `docs/redesign/07-IMPLEMENTATION-SPEC.md`, with the design reference in `design/2026-10/`.
 
 ## Deploy
 
@@ -46,5 +52,7 @@ src/
   pages/          Routes + /api/contact
   styles/         Tokens, global CSS modules, generated icons.css
 scripts/          icons.mjs (icon font subset)
-docs/             Audits and the redesign reference (start at docs/redesign/00-INDEX.md)
+tests/            Playwright: a11y (axe), visual (admin look, screenshots), e2e
+design/2026-10/   The October 2026 design boards and research notes (reference only)
+docs/             Audits and the redesign plan (docs/redesign/07-IMPLEMENTATION-SPEC.md)
 ```

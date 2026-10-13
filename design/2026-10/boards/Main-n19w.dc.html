@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Homepage — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+@font-face{font-family:"Glorich";font-style:normal;font-weight:200;font-display:swap;src:url("/_blob/2db8744983e9a9bc881dcf4dbf33fb1c") format("woff2")}
+@font-face{font-family:"Glorich";font-style:normal;font-weight:300;font-display:swap;src:url("/_blob/8d3259615f0bd33a7d8aba82fbfa432a") format("woff2")}
+@font-face{font-family:"Glorich";font-style:normal;font-weight:400;font-display:swap;src:url("/_blob/c26a52ea8f3db58850c5ce6303d32a78") format("woff2")}
+@font-face{font-family:"Glorich";font-style:normal;font-weight:500;font-display:swap;src:url("/_blob/e1f50f1c1f01410c502ac7e24ae58922") format("woff2")}
+@font-face{font-family:"Glorich";font-style:normal;font-weight:600;font-display:swap;src:url("/_blob/1a3f0fccd4d55849603cc79714ae7ba6") format("woff2")}
+@font-face{font-family:"Glorich";font-style:normal;font-weight:700;font-display:swap;src:url("/_blob/fe81462958ba52eeab1049987b005385") format("woff2")}
+@font-face{font-family:"Glorich";font-style:normal;font-weight:800;font-display:swap;src:url("/_blob/ef3c7627cb702b4e0687dd07b54ca6fe") format("woff2")}
+@font-face{font-family:"Glorich";font-style:normal;font-weight:900;font-display:swap;src:url("/_blob/aa69f48b412455c92155e50fb26c43c6") format("woff2")}
+.hero h1,.font-display{font-family:"Glorich",var(--font-sans)}
+.section-title.font-display{font-weight:700}
+a{color:var(--color-text-info)}a:hover{color:var(--color-accent-dark)}
+.hero{position:relative;background:#0a2a40;height:100vh;min-height:580px;max-height:1140px;text-align:left}
+.nav-bar.nav-overlay{position:fixed;top:0;left:0;right:0;background:transparent;border-bottom-color:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;transition:background 0.3s ease,border-color 0.3s ease,box-shadow 0.3s ease}
+.nav-overlay.on-photo .nav-logo,.nav-overlay.on-photo .nav-logo i,.nav-overlay.on-photo .nav-hamburger{color:#fff}
+.nav-overlay.on-photo .nav-link{color:rgba(255,255,255,0.88)}
+.nav-overlay.on-photo .nav-link:hover{color:#fff}
+.hbc .nav .nav-cta{background:transparent;color:var(--color-text-primary);border:1px solid var(--color-border-primary, rgba(0,0,0,0.35));padding:5px 14px;transition:background 0.2s ease,color 0.2s ease,border-color 0.2s ease}
+.hbc .nav .nav-cta:hover{opacity:1;background:var(--color-text-primary);color:var(--color-background-primary)}
+.hbc .nav-overlay.on-photo .nav-cta{color:#fff;border-color:rgba(255,255,255,0.75)}
+.hbc .nav-overlay.on-photo .nav-cta:hover{background:#fff;color:#0a2a40;border-color:#fff}
+.lang-switch{position:relative}
+@media (min-width:769px){.hbc .nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}.hbc .nav .nav-links{justify-self:center}.hbc .nav .lang-switch{justify-self:end}}
+.hbc .lang-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 11px;border-radius:var(--border-radius-md);border:1px solid var(--color-border-primary);background:transparent;color:var(--color-text-primary);font-size:var(--font-size-sm);font-weight:600;letter-spacing:0.02em;cursor:pointer;transition:background 0.2s ease,color 0.2s ease,border-color 0.2s ease}
+.hbc .lang-btn:hover{background:var(--color-background-secondary)}
+.lang-globe{width:16px;height:16px;flex-shrink:0}
+.lang-chev{font-size:14px;transition:transform 0.2s ease}
+.lang-btn[aria-expanded="true"] .lang-chev{transform:rotate(180deg)}
+.hbc .nav-overlay.on-photo .lang-btn{color:#fff;border-color:rgba(255,255,255,0.75)}
+.hbc .nav-overlay.on-photo .lang-btn:hover{background:rgba(255,255,255,0.14);border-color:#fff}
+.lang-backdrop{position:fixed;inset:0;z-index:1}
+.lang-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:2;min-width:190px;margin:0;padding:6px;list-style:none;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;box-shadow:0 16px 40px rgba(10,42,64,0.16);animation:langIn 0.16s ease}
+@keyframes langIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.hbc .lang-opt{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:none;border-radius:8px;background:transparent;color:var(--color-text-primary);font-size:var(--font-size-sm);text-align:left;cursor:pointer}
+.hbc .lang-opt:hover{background:var(--color-background-secondary)}
+.lang-code{width:24px;font-weight:600;font-size:var(--font-size-xs);color:var(--color-text-tertiary);letter-spacing:0.04em}
+.lang-name{flex:1}
+.lang-check{font-size:15px;color:var(--color-brand-dark);visibility:hidden}
+.lang-opt.on{font-weight:600}
+.lang-opt.on .lang-check{visibility:visible}
+@media (max-width:768px){.lang-switch{margin-left:auto;margin-right:10px}}
+.nav-bar.nav-overlay.is-solid{background:rgba(255,255,255,0.97);border-bottom-color:var(--color-border-tertiary);box-shadow:0 1px 16px rgba(0,0,0,0.05);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.hero-topfade{position:absolute;left:0;right:0;top:0;height:160px;background:linear-gradient(180deg,rgba(0,0,0,0.38),rgba(0,0,0,0));pointer-events:none}
+.hero-content{height:100%;width:100%;max-width:960px;margin:0 auto;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 24px}
+.hero-panel{display:flex;flex-direction:column;align-items:flex-start}
+.hero-search{width:100%;max-width:375px;margin-top:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));row-gap:10px;background:rgba(8,28,48,0.42);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border:1px solid rgba(255,255,255,0.22);border-radius:16px;padding:14px;box-shadow:0 12px 32px rgba(0,0,0,0.22)}
+.hs-title{grid-column:1 / -1;margin:0 2px 2px;font-size:var(--font-size-base);font-weight:600;line-height:1.2;color:#fff;letter-spacing:-0.01em}
+.hs-toggle{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.16);border-radius:10px}
+.hbc .hs-toggle button{display:flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 10px;border:none;border-radius:7px;background:transparent;font-size:var(--font-size-sm);font-weight:500;color:rgba(255,255,255,0.75);cursor:pointer;transition:background 0.2s ease,color 0.2s ease}
+.hbc .hs-toggle button:hover{color:#fff}
+.hbc .hs-toggle button i{font-size:14px}
+.hbc .hs-toggle button.on{background:rgba(255,255,255,0.88);color:var(--color-text-primary);font-weight:600}
+.hbc .hs-toggle button.on i{color:var(--color-brand-dark)}
+.hs-toggle{position:relative}
+.hbc .hs-toggle button{position:relative;z-index:1}
+.hbc .hs-toggle button.on{background:transparent}
+.hs-tab-ind{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 12px) / 3);border-radius:7px;background:rgba(255,255,255,0.88);z-index:0;transition:transform 0.55s cubic-bezier(0.45,0.05,0.25,1);pointer-events:none}
+.hs-tab-ind.ind-1{transform:translateX(calc(100% + 3px))}
+.hs-tab-ind.ind-2{transform:translateX(calc(200% + 6px))}
+.hs-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1 / -1;margin:0 4px 2px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:var(--font-size-xs);line-height:1.4;color:rgba(255,255,255,0.85)}
+.hs-note i{font-size:14px;color:#fff;flex-shrink:0}
+.hs-field{display:flex;flex-direction:column;justify-content:center;gap:3px;height:56px;padding:0 12px;min-width:0;background:rgba(255,255,255,0.10);border-left:1px solid rgba(255,255,255,0.18)}
+.hs-field.first{border-left:none;border-radius:11px 0 0 11px}
+.hs-field.last{border-radius:0 11px 11px 0}
+.hero-search .hs-field,.hero-search .hs-field.first,.hero-search .hs-field.last{grid-column:1 / -1;border-left:none;border-radius:11px}
+.hs-where-row{grid-column:1 / -1;display:grid;grid-template-columns:1fr;gap:8px}
+.hs-where-row.split{grid-template-columns:repeat(2,minmax(0,1fr))}
+.hero-search .hs-field.half{grid-column:auto}
+.hs-field label{font-size:0.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.78);display:flex;align-items:center;gap:5px}
+.hs-field label i{font-size:13px;color:#fff}
+.hbc .hs-field select,.hbc .hs-field input{border:none;padding:0;font-size:0.9375rem;font-weight:600;color:#fff;background:transparent;width:100%;min-width:0;border-radius:0;color-scheme:dark}
+.hs-date{position:relative}
+.hs-date-display{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:0.9375rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden}
+.hs-date-display>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.hs-date-display i{font-size:16px;color:rgba(255,255,255,0.85);flex-shrink:0}
+.hbc .hs-field .hs-date-input{position:absolute;inset:0;display:block;width:100%;height:100%;min-width:100%;opacity:0;cursor:pointer;border:none;padding:0;margin:0;z-index:2;-webkit-appearance:none;appearance:none}
+.hs-date-input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer}
+.hs-date:focus-within{box-shadow:inset 0 0 0 2px rgba(255,255,255,0.6);border-radius:11px}
+.hbc .hs-field option{color:var(--color-text-primary);background:#fff}
+.hbc .hs-btn{grid-column:1 / -1;display:flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 16px;background:var(--color-background-highlight);color:#fff;border-radius:11px;font-size:var(--font-size-base);font-weight:600;text-decoration:none;transition:background 0.2s ease}
+.hbc .hs-btn:hover{color:#fff;background:var(--color-highlight-dark)}
+.hs-btn i{font-size:18px}
+.hs-stepper{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.hbc .hs-step{width:24px;height:24px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.12);color:#fff;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.hbc .hs-step:hover{background:rgba(255,255,255,0.24)}
+.hbc .hs-step:disabled{opacity:0.4;cursor:default}
+.hbc .hs-field .hs-num{width:28px;flex:0 0 28px;text-align:center;-moz-appearance:textfield;appearance:textfield}
+.hs-num::-webkit-outer-spin-button,.hs-num::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.search-band{background:var(--color-background-primary);color:var(--color-text-primary);padding:56px 0 0}
+.sb-inner{position:relative;max-width:960px;margin:0 auto;padding:0 24px}
+.sb-left{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;max-width:375px;padding:32px 0}
+.sb-copy{max-width:340px;margin-bottom:24px}
+.sb-title{font-family:"Glorich",var(--font-sans);font-size:56px;font-weight:700;line-height:0.94;letter-spacing:-0.02em;margin:0;color:var(--color-text-primary)}
+.sb-text{font-size:var(--font-size-base);line-height:var(--line-height-relaxed);color:var(--color-text-secondary);margin:0;max-width:375px}
+.sb-photos{position:absolute;inset:0;pointer-events:none}
+.sb-photo{position:absolute;aspect-ratio:1 / 1;overflow:hidden;background:#0a2a40;border-radius:50%;box-shadow:0 0 0 6px var(--color-background-primary),0 20px 44px rgba(10,42,64,0.16)}
+.sb-orbit{position:absolute;z-index:1;top:50%;right:40px;width:420px;transform:translateY(-50%)}
+.sb-orbit .sb-photo-lg{position:relative;width:100%}
+.sb-waves{position:absolute;z-index:2;left:-26px;bottom:34px;width:128px;height:auto;color:#c7ccd1;overflow:visible;pointer-events:none}
+.sb-sun{position:absolute;z-index:2;right:-14px;top:18px;width:112px;height:auto;color:#c7ccd1;overflow:visible;pointer-events:none}
+.sb-photo::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 48px rgba(6,24,40,0.38),inset 0 0 0 1px rgba(255,255,255,0.12);pointer-events:none;z-index:1}
+.sb-strip{position:absolute;top:0;left:0;height:100%;width:300%;display:flex;transition:transform 1.1s cubic-bezier(0.45,0.05,0.25,1);will-change:transform,filter,opacity}
+.sb-strip.pan-a{animation:sbPanA 1.1s ease-in-out}
+.sb-strip.pan-b{animation:sbPanB 1.1s ease-in-out}
+@keyframes sbPanA{0%{filter:blur(0);opacity:1}45%{filter:blur(5px);opacity:0.45}100%{filter:blur(0);opacity:1}}
+@keyframes sbPanB{0%{filter:blur(0);opacity:1}45%{filter:blur(5px);opacity:0.45}100%{filter:blur(0);opacity:1}}
+.sb-strip.pos-1{transform:translateX(-33.3333%)}
+.sb-strip.pos-2{transform:translateX(-66.6667%)}
+.sb-pic{flex:0 0 33.3333%;width:33.3333%;height:100%;object-fit:cover;display:block}
+.sb-defs{position:absolute;width:0;height:0;overflow:hidden}
+.sb-t3,.sb-t2{white-space:pre}
+.sb-t2{display:none}
+@media (prefers-reduced-motion:reduce){.sb-strip{transition:none}.sb-strip.pan-a,.sb-strip.pan-b{animation:none}.hs-tab-ind{transition:none}}
+.search-band .sb-inner{min-height:580px}
+.search-band .sb-left{z-index:2}
+.sb-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;opacity:0;transition:opacity 0.9s ease}
+.sb-bg.on{opacity:1}
+/* light search panel */
+.hbc .search-band .hero-search{width:100%;max-width:375px;background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 16px 40px rgba(10,42,64,0.10)}
+.hbc .search-band .hs-toggle{background:var(--color-background-secondary);border:none}
+.hbc .search-band .hs-toggle button{color:var(--color-text-secondary)}
+.hbc .search-band .hs-toggle button:hover{color:var(--color-text-primary)}
+.hbc .search-band .hs-toggle button.on{background:transparent;color:var(--color-text-primary);box-shadow:none}
+.search-band .hs-tab-ind{background:var(--color-background-primary);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.hbc .search-band .hs-toggle button.on i{color:var(--color-brand-dark)}
+.hbc .search-band .hs-field{background:var(--color-background-secondary);border-left:none}
+.hbc .search-band .hs-field label{color:var(--color-text-tertiary)}
+.hbc .search-band .hs-field label i{color:var(--color-accent)}
+.hbc .search-band .hs-field select,.hbc .search-band .hs-field input{color:var(--color-text-primary);color-scheme:light}
+.hbc .search-band .hs-date-display{color:var(--color-text-primary)}
+.hbc .search-band .hs-date-display i{color:var(--color-text-tertiary)}
+.hbc .search-band .hs-date:focus-within{box-shadow:inset 0 0 0 2px var(--color-border-primary)}
+.hbc .search-band .hs-note{color:var(--color-text-secondary)}
+.hbc .search-band .hs-note i{color:var(--color-text-secondary)}
+@media (max-width:1024px){
+  .search-band{padding:40px 0 0}
+  .sb-inner{display:flex;flex-direction:column;padding:0 16px}
+  .sb-left{max-width:none;padding:0}
+  .search-band .sb-inner{min-height:0}
+  .sb-photos{position:relative;inset:auto;order:-1;width:100%;max-width:375px;display:flex;justify-content:center;margin-bottom:24px}
+  .sb-orbit{position:relative;top:auto;right:auto;width:280px;transform:none}
+  .sb-waves{width:86px;left:-16px;bottom:20px}
+  .sb-sun{width:76px;right:-10px;top:10px}
+  .sb-title{font-size:clamp(34px, 10.5vw, 52px)}
+  .sb-t3{display:none}
+  .sb-t2{display:inline}
+  .sb-left{align-items:center}
+  .sb-copy{width:100%;max-width:375px}
+  .sb-photos{align-self:center}
+}
+.trust-line{position:absolute;left:0;right:0;bottom:0;z-index:3;background:rgba(8,28,48,0.38);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-top:1px solid rgba(255,255,255,0.18)}
+.trust-line-inner{max-width:960px;margin:0 auto;padding:14px 24px;display:flex;justify-content:space-between;gap:10px 24px;flex-wrap:wrap}
+.trust-line-item{display:flex;align-items:center;gap:8px;font-size:var(--font-size-sm);color:rgba(255,255,255,0.85)}
+.trust-line-item strong{color:#fff;font-weight:600}
+.trust-line-item i{font-size:18px;color:#fff}
+.trust-line-item .tl-star{color:#FBBF24}
+.tl-dup{display:none}
+@keyframes trustMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.hero .hero-dots{bottom:128px}
+.hero-explore{position:absolute;left:50%;bottom:70px;transform:translateX(-50%);z-index:4}
+.hbc .hero-explore-btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border-radius:999px;border:none;background:transparent;color:#fff;font-size:var(--font-size-sm);font-weight:600;letter-spacing:0.02em;cursor:pointer;transition:background 0.2s ease,border-color 0.2s ease}
+.hbc .hero-explore-btn:hover{background:rgba(255,255,255,0.12);color:#fff}
+.hero-explore-btn i{font-size:16px;animation:exploreBob 1.8s ease-in-out infinite}
+@keyframes exploreBob{0%,100%{transform:translateY(-1px)}50%{transform:translateY(2px)}}
+@media (prefers-reduced-motion:reduce){.hero-explore-btn i{animation:none}}
+.reviews-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:0}
+@media (max-width:1024px){
+  .reviews-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:12px;margin-left:-24px;margin-right:-24px;padding:0 24px 4px;scroll-padding-inline:24px}
+  .reviews-grid::-webkit-scrollbar{display:none}
+  .reviews-grid>*{flex:0 0 min(320px, 82%);scroll-snap-align:start}
+}
+@media (max-width:768px){
+  .reviews-grid{margin-left:-16px;margin-right:-16px;padding:0 16px 4px;scroll-padding-inline:16px}
+}
+@media (max-width:480px){
+  .reviews-grid{margin-left:-12px;margin-right:-12px;padding:0 12px 4px;scroll-padding-inline:12px}
+}
+.rv-summary{background:var(--color-background-brand-soft);border-radius:var(--border-radius-lg);padding:20px;display:flex;flex-direction:column;gap:4px}
+.rv-score{font-size:2.75rem;font-weight:600;line-height:1;color:var(--color-text-brand)}
+.rv-stars{color:var(--color-text-warning);font-size:var(--font-size-lg);letter-spacing:2px}
+.rv-count{font-size:var(--font-size-sm);color:var(--color-text-secondary)}
+.rv-meta{margin-top:auto;padding-top:14px;display:flex;flex-direction:column;gap:6px;font-size:var(--font-size-sm);color:var(--color-text-brand)}
+.rv-meta span{display:flex;align-items:center;gap:6px}
+.rv-card{border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:20px;display:flex;flex-direction:column;gap:12px;margin:0}
+.rv-card .rv-stars{font-size:var(--font-size-base)}
+.rv-quote{font-size:var(--font-size-base);line-height:var(--line-height-relaxed);color:var(--color-text-primary);margin:0}
+.rv-who{margin-top:auto;display:flex;align-items:center;gap:10px}
+.rv-avatar{width:36px;height:36px;border-radius:50%;background:var(--color-category-private-bg);color:var(--color-category-private-text);display:flex;align-items:center;justify-content:center;font-size:var(--font-size-xs);font-weight:600;flex-shrink:0}
+.rv-name{font-size:var(--font-size-sm);font-weight:600;display:block}
+.rv-tour{font-size:var(--font-size-xs);color:var(--color-text-tertiary);display:block}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:calc(70% + 180px) center;display:block;opacity:0;transition:opacity 1.2s ease}
+.hero-bg.on{opacity:1}
+.hero-bg.hero-bg-hello{object-position:right center}
+@keyframes heroTitleIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes heroFadeIn{from{opacity:0}to{opacity:1}}
+.hero-panel h1{animation:heroTitleIn 0.7s cubic-bezier(0.2,0.7,0.2,1) 0.1s both}
+.hero-panel .hero-sub{animation:heroFadeIn 0.6s ease 0.25s both}
+.hero-panel .hero-cta{animation:heroFadeIn 0.6s ease 0.4s both}
+.hero-panel.leaving .hero-cta{animation:none;opacity:0;transition:opacity 0.3s ease}
+.hero-panel.leaving h1{animation:none;opacity:0;transform:translateY(28px);transition:opacity 0.4s ease,transform 0.45s cubic-bezier(0.5,0,0.8,0.4)}
+.hero-panel.leaving .hero-sub{animation:none;opacity:0;transition:opacity 0.4s ease}
+@media (max-width:1024px){
+  .hero.has-photo h1{text-shadow:0 1px 2px rgba(0,0,0,0.35),0 4px 24px rgba(0,0,0,0.45)}
+  .hero.has-photo .hero-sub{text-shadow:0 1px 2px rgba(0,0,0,0.45),0 2px 12px rgba(0,0,0,0.4)}
+}
+@media (prefers-reduced-motion:reduce){.trust-line-inner{animation:none !important}.hero-panel .hero-cta{animation:none}.hero-bg{transition:none}.hero-panel h1,.hero-panel .hero-sub{animation:none}.hero-panel.leaving h1,.hero-panel.leaving .hero-sub{transition:none}}
+.hero-scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.62) 0%,rgba(0,0,0,0.38) 45%,rgba(0,0,0,0.08) 100%)}
+.hero .hero-content{position:relative;z-index:1}
+.hero.has-photo h1{color:#fff}
+.hero.has-photo .hero-sub{color:rgba(255,255,255,0.9)}
+.hbc .hero.has-photo .hero-dot{background:rgba(255,255,255,0.6)}
+.hbc .hero.has-photo .hero-dot.active{background:rgba(255,255,255,0.35)}
+.hero-dots,.hero-badge{z-index:2}
+.hero .hero-dots{align-items:center}
+.hero h1{font-size:80px;font-weight:700;margin:0;line-height:0.94;letter-spacing:-0.02em;white-space:nowrap}
+.hero-sub{font-size:var(--font-size-base);color:var(--color-text-secondary);margin:0 0 24px;max-width:375px;line-height:var(--line-height-relaxed)}
+.hbc .hero-cta{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 20px;border-radius:11px;background:var(--color-cta-on-image);color:#fff;font-size:var(--font-size-base);font-weight:600;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,0.18);transition:background 0.2s ease,transform 0.2s ease}
+.hbc .hero-cta:hover{background:var(--color-cta-on-image-dark);color:#fff}
+.hero-cta i{font-size:18px;transition:transform 0.2s ease}
+.hero-cta:hover i{transform:translateX(3px)}
+.hero-dots{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+.hbc .hero-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--color-border-secondary);cursor:pointer;padding:0;transition:all 0.3s ease}
+.hbc .hero-dot.active{background:rgba(0,0,0,0.15);width:28px;border-radius:4px;position:relative;overflow:hidden}
+.hero-dot.active::after{content:"";position:absolute;left:0;top:0;bottom:0;width:100%;background:#F2662B;border-radius:inherit;transform-origin:left center;animation:heroDotFill var(--hero-interval,6000ms) linear both}
+.hero-dots.is-paused .hero-dot.active::after{animation-play-state:paused}
+.hero-dots.no-rotate .hero-dot.active::after{animation:none}
+@keyframes heroDotFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.hbc .hero-dot:hover{transform:scale(1.4)}
+.hbc .hero-dot.active:hover{transform:scale(1.25)}
+.hbc .hero-arrow{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,0.28);background:rgba(8,28,48,0.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:#fff;z-index:6;opacity:0;transition:opacity 0.2s ease;padding:0}
+.hero:hover .hero-arrow{opacity:1}
+.hbc .hero-arrow:hover{background:rgba(8,28,48,0.62)}
+.hero-arrow-prev{left:20px}.hero-arrow-next{right:20px}
+.hbc .btn-primary{padding:10px 22px;background:var(--color-background-brand);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500;cursor:pointer}
+.hbc .btn-primary:hover{opacity:0.88;color:var(--color-background-primary)}
+.hbc .btn-secondary{padding:10px 22px;background:var(--color-background-primary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500;cursor:pointer}
+.hbc .btn-secondary:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.hero-badge{position:absolute;bottom:12px;right:12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 12px;font-size:var(--font-size-micro);display:flex;align-items:center;gap:6px}
+.hero-badge i{color:var(--color-accent);font-size:13px}
+.trust-bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:28px 0 32px}
+.trust-item{display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);gap:6px}
+.trust-item i{font-size:20px;color:var(--color-accent)}
+.trust-num{font-size:var(--font-size-lg);font-weight:500}
+.trust-label{font-size:var(--font-size-xs);color:var(--color-text-secondary)}
+.hbc{--sec-gap:72px}
+.section-header{display:flex;justify-content:space-between;align-items:baseline;margin:var(--sec-gap) 0 20px}
+@media (max-width:1024px){.hbc{--sec-gap:56px}}
+@media (max-width:480px){.hbc{--sec-gap:44px}}
+.section-title,.cta-band h2{font-family:"Glorich",var(--font-sans);font-size:28px;font-weight:700;line-height:1;letter-spacing:-0.01em;margin:0;text-transform:uppercase;font-variant-ligatures:common-ligatures;-webkit-font-feature-settings:"liga" 1,"kern" 1;font-feature-settings:"liga" 1,"kern" 1}
+.section-link{font-size:var(--font-size-sm);color:var(--color-text-info);cursor:pointer;text-decoration:none}
+.slider{position:relative;margin-bottom:0}
+.slider-track{position:relative;--slider-gutter:max(24px, calc((100% - 912px) / 2));display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;padding:4px var(--slider-gutter) 8px;scroll-padding-inline:var(--slider-gutter)}
+.slider-track::-webkit-scrollbar{display:none}
+.slider-fade{position:absolute;top:0;bottom:0;width:max(24px, calc((100% - 912px) / 2));pointer-events:none;z-index:2}
+.slider-fade-left{left:0;background:var(--color-background-primary)}
+.slider-fade-right{right:0;background:linear-gradient(270deg,var(--color-background-primary) 0%,rgba(255,255,255,0.85) 35%,rgba(255,255,255,0) 100%)}
+.slider-arrows{display:flex;gap:8px}
+.hbc .slider-arrow{width:36px;height:36px;padding:0;border-radius:50%;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--color-text-primary)}
+.hbc .slider-arrow:hover{background:var(--color-background-secondary)}
+.section-header-right{display:flex;align-items:center;gap:16px}
+.slider-track .tour-card{flex:0 0 300px;scroll-snap-align:start}
+.dest-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:190px;gap:12px;margin-bottom:0}
+.dest-section{margin:0;padding:0}
+.dest-section .dest-grid{margin-bottom:0}
+.dest-grid .dest-card{aspect-ratio:auto;height:100%}
+.bento-a{grid-column:span 2;grid-row:span 2}
+.bento-b,.bento-e,.bento-f{grid-column:span 2}
+.bento-a .dest-name{font-size:var(--font-size-2xl)}
+.bento-a .dest-desc{font-size:var(--font-size-base)}
+.dest-card{border-radius:var(--border-radius-lg);aspect-ratio:3 / 2;height:auto;background:linear-gradient(160deg,var(--palette-blue-500) 0%,var(--palette-blue-900) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px;position:relative;overflow:hidden;text-decoration:none;color:#fff;isolation:isolate}
+.dest-card:hover{color:#fff}
+.dest-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;transition:transform 0.4s ease}
+.dest-card:hover .dest-img{transform:scale(1.04)}
+.dest-card::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,0.55) 100%)}
+.dest-blur{position:absolute;left:0;right:0;bottom:0;height:42%;z-index:-1;pointer-events:none}
+.dest-blur>span{position:absolute;inset:0}
+.dest-blur>span:nth-child(1){backdrop-filter:blur(0.25px);-webkit-backdrop-filter:blur(0.25px);-webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 12.5%,#000 25%,transparent 37.5%);mask-image:linear-gradient(180deg,transparent 0%,#000 12.5%,#000 25%,transparent 37.5%)}
+.dest-blur>span:nth-child(2){backdrop-filter:blur(0.5px);-webkit-backdrop-filter:blur(0.5px);-webkit-mask-image:linear-gradient(180deg,transparent 12.5%,#000 25%,#000 37.5%,transparent 50%);mask-image:linear-gradient(180deg,transparent 12.5%,#000 25%,#000 37.5%,transparent 50%)}
+.dest-blur>span:nth-child(3){backdrop-filter:blur(0.75px);-webkit-backdrop-filter:blur(0.75px);-webkit-mask-image:linear-gradient(180deg,transparent 25%,#000 37.5%,#000 50%,transparent 62.5%);mask-image:linear-gradient(180deg,transparent 25%,#000 37.5%,#000 50%,transparent 62.5%)}
+.dest-blur>span:nth-child(4){backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);-webkit-mask-image:linear-gradient(180deg,transparent 37.5%,#000 50%,#000 62.5%,transparent 75%);mask-image:linear-gradient(180deg,transparent 37.5%,#000 50%,#000 62.5%,transparent 75%)}
+.dest-blur>span:nth-child(5){backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px);-webkit-mask-image:linear-gradient(180deg,transparent 50%,#000 62.5%,#000 75%,transparent 87.5%);mask-image:linear-gradient(180deg,transparent 50%,#000 62.5%,#000 75%,transparent 87.5%)}
+.dest-blur>span:nth-child(6){backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);-webkit-mask-image:linear-gradient(180deg,transparent 62.5%,#000 75%,#000 87.5%,transparent 100%);mask-image:linear-gradient(180deg,transparent 62.5%,#000 75%,#000 87.5%,transparent 100%)}
+.dest-blur>span:nth-child(7){backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);-webkit-mask-image:linear-gradient(180deg,transparent 75%,#000 87.5%);mask-image:linear-gradient(180deg,transparent 75%,#000 87.5%)}
+.dest-blur>span:nth-child(8){backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);-webkit-mask-image:linear-gradient(180deg,transparent 87.5%,#000 100%);mask-image:linear-gradient(180deg,transparent 87.5%,#000 100%)}
+.dest-name{font-size:var(--font-size-lg);font-weight:600;line-height:var(--line-height-tight)}
+.dest-desc{font-size:var(--font-size-sm);color:rgba(255,255,255,0.88);margin-top:2px}
+.dest-count{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:4px;font-size:var(--font-size-xs);font-weight:500;color:#fff;background:rgba(255,255,255,0.18);border:0.5px solid rgba(255,255,255,0.35);padding:2px 9px;border-radius:999px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:0}
+.step-card{display:flex;flex-direction:column;gap:8px;padding:14px;background:var(--color-background-secondary);border-radius:var(--border-radius-lg)}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:var(--font-size-micro);font-weight:500}
+.step-title{font-size:var(--font-size-sm);font-weight:500;margin:0}
+.step-desc{font-size:var(--font-size-base);color:var(--color-text-secondary);margin:0;line-height:var(--line-height-relaxed)}
+.types-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:0}
+.type-card{position:relative;border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:18px 20px;background:var(--color-background-primary)}
+.type-badge{position:absolute;top:16px;right:16px;display:inline-flex;align-items:center;gap:5px;font-size:var(--font-size-xs);font-weight:600;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.type-badge i{font-size:13px}
+.tb-group{background:var(--color-background-info);color:var(--color-accent-dark)}
+.tb-private{background:var(--color-category-private-bg);color:var(--color-category-private-text)}
+.type-card:hover{border-color:var(--color-border-primary)}
+.type-card.featured{border:1px solid var(--color-border-card)}
+.type-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;background:var(--color-background-info)}
+.type-card.featured .type-icon{background:var(--color-category-private-bg)}
+.type-title{font-size:var(--font-size-md);font-weight:500;margin:0 0 5px}
+.type-desc{font-size:var(--font-size-base);color:var(--color-text-secondary);line-height:var(--line-height-relaxed);margin:0 0 12px}
+.type-features{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.type-feat{font-size:var(--font-size-sm);color:var(--color-text-secondary);display:flex;align-items:center;gap:6px}
+.type-feat i{color:var(--color-accent);font-size:12px}
+.hbc .type-cta{font-size:var(--font-size-sm);padding:6px 14px;cursor:pointer;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:none;font-weight:500;color:var(--color-text-primary)}
+.hbc .type-cta.btn-primary{padding:6px 14px;background:var(--color-background-brand);border:none;color:var(--color-background-primary)}
+.faq-list{margin-bottom:0;border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);overflow:hidden}
+.hbc .faq-item{width:100%;text-align:left;padding:13px 16px;border:none;border-radius:0;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.hbc .faq-item.last{border-bottom:none}
+.hbc .faq-item:hover,.hbc .faq-item.open{background:var(--color-background-secondary)}
+.faq-q{font-size:var(--font-size-sm);font-weight:500;margin:0;display:block}
+.faq-a{font-size:var(--font-size-base);color:var(--color-text-secondary);margin:6px 0 0;line-height:var(--line-height-relaxed);display:block}
+.faq-chevron{font-size:14px;color:var(--color-text-tertiary);flex-shrink:0;transition:transform 0.15s}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.cta-band{position:relative;overflow:hidden;isolation:isolate;border-radius:20px;padding:2rem;text-align:center;margin:var(--sec-gap) 0 48px;color:#fff;background:#0a2a40 url("/_blob/f155a16b9e88c1741a9e475ada1cbbdf") center 60% / cover no-repeat}
+.cta-band::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(6,24,40,0.15) 0%,rgba(6,24,40,0.45) 100%)}
+.cta-band h2{margin:0 0 10px;font-size:28px;line-height:0.96;color:#fff;text-shadow:0 2px 24px rgba(0,0,0,0.25)}
+.cta-band p{font-size:var(--font-size-base);line-height:var(--line-height-relaxed);color:rgba(255,255,255,0.9);margin:0 auto 18px;max-width:420px}
+.cta-band-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.hbc .cta-band .btn-primary{display:inline-flex;align-items:center;height:40px;padding:0 20px;border-radius:10px;background:var(--color-cta-on-image);color:#fff;font-size:var(--font-size-base);font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+.hbc .cta-band .btn-primary:hover{opacity:1;background:var(--color-cta-on-image-dark);color:#fff}
+.hbc .cta-band .btn-secondary{display:inline-flex;align-items:center;height:40px;padding:0 20px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.7);color:#fff;font-size:var(--font-size-base);font-weight:600;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.hbc .cta-band .btn-secondary:hover{background:rgba(255,255,255,0.18);border-color:#fff;color:#fff}
+@media (max-width:768px){
+  .cta-band{padding:2rem 20px;border-radius:16px}
+  .cta-band-btns{flex-direction:column;align-items:stretch;max-width:320px;margin:0 auto}
+  .hbc .cta-band .btn-primary,.hbc .cta-band .btn-secondary{justify-content:center}
+}
+@media (max-width:960px){
+  .trust-line-mask{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,0.15) 20px,#000 64px,#000 calc(100% - 64px),rgba(0,0,0,0.15) calc(100% - 20px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,0.15) 20px,#000 64px,#000 calc(100% - 64px),rgba(0,0,0,0.15) calc(100% - 20px),transparent 100%)}
+  .trust-line-inner{max-width:none;width:max-content;margin:0;padding:14px 0;flex-wrap:nowrap;justify-content:flex-start;gap:0;animation:trustMarquee 40s linear infinite}
+  .trust-line-item{white-space:nowrap;padding-right:40px}
+  .tl-dup{display:flex}
+}
+@media (max-width:768px){
+  .hero-content{padding:0 16px 168px;justify-content:flex-end;align-items:flex-start}
+  .hero-sub{margin-bottom:20px}
+  .hero-bg{object-position:70% center}
+  .hero h1{font-size:clamp(44px, 12vw, 64px)}
+  .hbc .hero-arrow{display:none}
+  .trust-line-item{font-size:var(--font-size-xs)}
+  .hero .hero-dots{bottom:120px}
+  .hero-explore{bottom:62px}
+  .dest-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:4px}
+  .dest-grid>*{flex:0 0 280px;scroll-snap-align:start}
+  .dest-grid .dest-card{aspect-ratio:3 / 2;height:auto}
+  .slider-track{--slider-gutter:16px}
+  .slider-track .tour-card{flex-basis:min(300px, 82%)}
+  .slider-arrows{display:none}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .types-grid{grid-template-columns:1fr}
+}
+@media (max-width:480px){
+  .hero-panel{width:100%;max-width:375px}
+  .dest-grid>*{flex:0 0 min(280px, 80%)}
+  .steps{grid-template-columns:1fr}
+}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="{{ navClass }}">
+    <nav class="nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+      <div class="nav-links">
+        <a class="nav-link" href="Tours.dc.html">Tours</a>
+        <a class="nav-link" href="Destinations.dc.html">Destinations</a>
+        <a class="nav-link" href="About.dc.html">About</a>
+        <a class="nav-link" href="Faqs.dc.html">FAQ</a>
+      </div>
+      <div class="lang-switch">
+        <button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="{{ langExpanded }}" aria-label="Change language" onClick="{{ toggleLang }}"><svg class="lang-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M3.6 9h16.8M3.6 15h16.8"></path><path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg><span>{{ langCode }}</span><i class="ti ti-chevron-down lang-chev" aria-hidden="true"></i></button>
+        <sc-if value="{{ langOpen }}" hint-placeholder-val="{{ false }}">
+          <div class="lang-backdrop" onClick="{{ closeLang }}"></div>
+          <ul class="lang-menu" role="listbox" aria-label="Language">
+            <sc-for list="{{ langs }}" as="l" hint-placeholder-count="5">
+              <li><button type="button" class="{{ l.cls }}" role="option" aria-selected="{{ l.sel }}" onClick="{{ l.pick }}"><span class="lang-code">{{ l.code }}</span><span class="lang-name">{{ l.name }}</span><i class="ti ti-check lang-check" aria-hidden="true"></i></button></li>
+            </sc-for>
+          </ul>
+        </sc-if>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+    </nav>
+  </div>
+
+  <div class="{{ heroClass }}">
+    <sc-if value="{{ hasToursImage }}" hint-placeholder-val="{{ false }}"><img class="{{ toursImgCls }}" src="{{ toursImage }}" alt=""></sc-if>
+    <sc-if value="{{ hasCharterImage }}" hint-placeholder-val="{{ false }}"><img class="{{ charterImgCls }}" src="{{ charterImage }}" alt=""></sc-if>
+    <sc-if value="{{ hasHelloImage }}" hint-placeholder-val="{{ false }}"><img class="{{ helloImgCls }}" src="{{ helloImage }}" alt=""></sc-if>
+    <button class="hero-arrow hero-arrow-prev" aria-label="Previous banner" onClick="{{ heroPrev }}"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+    <button class="hero-arrow hero-arrow-next" aria-label="Next banner" onClick="{{ heroNext }}"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+    <div class="hero-content">
+      <sc-if value="{{ showTours }}" hint-placeholder-val="{{ true }}">
+        <div class="{{ panelCls }}">
+          <h1><span></span><span></span><span style="white-space: pre-wrap">Escape 
+in style 
+&amp; comfort</span></h1>
+          <p class="hero-sub">Group departures along the Dalmatian coast. Small boats, real guides, no tourist conveyor belts.</p>
+          <a class="hero-cta" href="Tours.dc.html">Browse group tours<i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+        </div>
+      </sc-if>
+      <sc-if value="{{ showCharter }}" hint-placeholder-val="{{ false }}">
+        <div class="{{ panelCls }}">
+          <h1><span></span><span></span><span style="white-space: pre-wrap">All 
+aboard,</span><br><span style="white-space: pre-wrap">mateys!</span></h1>
+          <p class="hero-sub">Private charters for two or twenty. Set the route, set the pace, skip the crowds entirely.</p>
+          <a class="hero-cta" href="PrivateBooking.dc.html">Plan a private charter<i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+        </div>
+      </sc-if>
+      <sc-if value="{{ showHello }}" hint-placeholder-val="{{ false }}">
+        <div class="{{ panelCls }}">
+          <h1>Hello<br>Blue cave<br>Croatia</h1>
+          <p class="hero-sub">Small-boat tours from Split since 2015. Licensed, insured and sea-obsessed.</p>
+          <a class="hero-cta" href="About.dc.html">Meet the crew<i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+        </div>
+      </sc-if>
+    </div>
+    <div class="hero-explore">
+      <button type="button" class="hero-explore-btn" onClick="{{ scrollToSearch }}"><i class="ti ti-chevron-down" aria-hidden="true"></i>Explore<i class="ti ti-chevron-down" aria-hidden="true"></i></button>
+    </div>
+    <div class="{{ dotsCls }}">
+      <button class="{{ dot0Class }}" aria-label="{{ dot0Label }}" onClick="{{ showPanel0 }}"></button>
+      <button class="{{ dot1Class }}" aria-label="{{ dot1Label }}" onClick="{{ showPanel1 }}"></button>
+      <button class="{{ dot2Class }}" aria-label="{{ dot2Label }}" onClick="{{ showPanel2 }}"></button>
+    </div>
+    <div class="trust-line">
+      <div class="trust-line-mask">
+      <div class="trust-line-inner">
+        <span class="trust-line-item"><span class="tl-star" aria-hidden="true">★★★★★</span><span><strong>4.9</strong> from 800+ reviews</span></span>
+        <span class="trust-line-item"><i class="ti ti-shield-check" aria-hidden="true"></i><span><strong>Free cancellation</strong> up to 48h</span></span>
+        <span class="trust-line-item"><i class="ti ti-users" aria-hidden="true"></i><span><strong>Max 12 guests</strong> per departure</span></span>
+        <span class="trust-line-item"><i class="ti ti-certificate" aria-hidden="true"></i><span><strong>10 years</strong> on the water</span></span>
+        <span class="trust-line-item tl-dup" aria-hidden="true"><span class="tl-star" aria-hidden="true">★★★★★</span><span><strong>4.9</strong> from 800+ reviews</span></span>
+        <span class="trust-line-item tl-dup" aria-hidden="true"><i class="ti ti-shield-check" aria-hidden="true"></i><span><strong>Free cancellation</strong> up to 48h</span></span>
+        <span class="trust-line-item tl-dup" aria-hidden="true"><i class="ti ti-users" aria-hidden="true"></i><span><strong>Max 12 guests</strong> per departure</span></span>
+        <span class="trust-line-item tl-dup" aria-hidden="true"><i class="ti ti-certificate" aria-hidden="true"></i><span><strong>10 years</strong> on the water</span></span>
+      </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <section class="search-band" aria-label="Book a trip" ref="{{ setSearchBand }}">
+    <div class="sb-inner">
+      <div class="sb-left">
+        <div class="sb-copy">
+          <h2 class="sb-title"><span class="sb-t3">{{ sbTitle3 }}</span><span class="sb-t2">{{ sbTitle2 }}</span></h2>
+          <p class="sb-text">{{ sbText }}</p>
+        </div>
+        <form class="hero-search" role="search" aria-label="Find a tour" onSubmit="{{ onSearch }}">
+        
+                <div class="hs-toggle" role="group" aria-label="Trip type">
+                  <span class="{{ tabIndCls }}" aria-hidden="true"></span>
+                  <span class="{{ tabIndCls }}" aria-hidden="true"></span>
+                  <button type="button" class="{{ groupBtnCls }}" aria-pressed="{{ groupPressed }}" onClick="{{ pickGroup }}"><i class="ti ti-users" aria-hidden="true"></i>Group</button>
+                  <button type="button" class="{{ privateBtnCls }}" aria-pressed="{{ privatePressed }}" onClick="{{ pickPrivate }}"><i class="ti ti-crown" aria-hidden="true"></i>Private</button>
+                  <button type="button" class="{{ transferBtnCls }}" aria-pressed="{{ transferPressed }}" onClick="{{ pickTransfer }}"><i class="ti ti-ship" aria-hidden="true"></i>Transfer</button>
+                </div>
+                <div class="{{ whereRowCls }}">
+                  <sc-if value="{{ isTour }}" hint-placeholder-val="{{ true }}">
+                    <div class="hs-field first hs-date"><label for="hs-where"><i class="ti ti-map-pin" aria-hidden="true"></i>Where</label><span class="hs-date-display" aria-hidden="true"><span>{{ where }}</span><i class="ti ti-chevron-down"></i></span><select id="hs-where" class="hs-date-input" value="{{ where }}" onChange="{{ whereChange }}"><option>Anywhere</option><option>Blue Cave, Biševo</option><option>Hvar Island</option><option>Blue Lagoon</option><option>Dubrovnik</option><option>Brač Island</option><option>Vis Island</option></select></div>
+                  </sc-if>
+                  <sc-if value="{{ isTransfer }}" hint-placeholder-val="{{ false }}">
+                    <div class="hs-field half hs-date"><label for="hs-from"><i class="ti ti-anchor" aria-hidden="true"></i>From</label><span class="hs-date-display" aria-hidden="true"><span>{{ fromPort }}</span><i class="ti ti-chevron-down"></i></span><select id="hs-from" class="hs-date-input" value="{{ fromPort }}" onChange="{{ fromChange }}"><option>Split</option><option>Split Airport</option><option>Trogir</option><option>Hvar Town</option><option>Bol, Brač</option><option>Vis</option><option>Komiža</option></select></div>
+                    <div class="hs-field half hs-date"><label for="hs-to"><i class="ti ti-map-pin" aria-hidden="true"></i>To</label><span class="hs-date-display" aria-hidden="true"><span>{{ toPort }}</span><i class="ti ti-chevron-down"></i></span><select id="hs-to" class="hs-date-input" value="{{ toPort }}" onChange="{{ toChange }}"><option>Split</option><option>Split Airport</option><option>Trogir</option><option>Hvar Town</option><option>Bol, Brač</option><option>Vis</option><option>Komiža</option></select></div>
+                  </sc-if>
+                </div>
+                <div class="hs-field last hs-date"><label for="hs-when"><i class="ti ti-calendar" aria-hidden="true"></i>When</label><span class="hs-date-display" aria-hidden="true"><span>{{ whenLabel }}</span><i class="ti ti-chevron-down"></i></span><input id="hs-when" class="hs-date-input" type="date" value="{{ when }}" onClick="{{ openPicker }}" onChange="{{ whenChange }}"></div>
+                <a class="hs-btn" href="{{ searchHref }}"><i class="ti ti-search" aria-hidden="true"></i>{{ searchLabel }}</a>
+                <p class="hs-note"><i class="{{ noteIcon }}" aria-hidden="true"></i>{{ noteText }}</p>
+              </form>
+      </div>
+      <div class="sb-photos" aria-hidden="true">
+        <div class="sb-orbit">
+          <div class="sb-photo sb-photo-lg">
+            <div class="{{ sbStripCls }}">
+              <img class="sb-pic" src="{{ groupBg }}" alt="">
+              <img class="sb-pic" src="{{ privateBg }}" alt="">
+              <img class="sb-pic" src="{{ transferBg }}" alt="">
+            </div>
+          </div>
+          <svg class="sb-waves" viewBox="0 0 128 76" fill="none" aria-hidden="true" focusable="false"><g stroke="currentColor" stroke-width="9" stroke-linecap="round"><path d="M8 12 q 14 -10 28 0 t 28 0 t 28 0 t 28 0"></path><path d="M8 38 q 14 -10 28 0 t 28 0 t 28 0 t 28 0"></path><path d="M8 64 q 14 -10 28 0 t 28 0 t 28 0 t 28 0"></path></g></svg>
+          <svg class="sb-sun" viewBox="0 0 120 120" fill="none" aria-hidden="true" focusable="false"><g stroke="currentColor" stroke-width="9" stroke-linecap="round"><circle cx="60" cy="60" r="20"></circle><path d="M94.0 60.0 L108.0 60.0"></path><path d="M84.0 84.0 L93.9 93.9"></path><path d="M60.0 94.0 L60.0 108.0"></path><path d="M36.0 84.0 L26.1 93.9"></path><path d="M26.0 60.0 L12.0 60.0"></path><path d="M36.0 36.0 L26.1 26.1"></path><path d="M60.0 26.0 L60.0 12.0"></path><path d="M84.0 36.0 L93.9 26.1"></path></g></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <div class="wrap" style="padding-top: 0; padding-bottom: 0px">
+    <div class="section-header" style="align-items: center"><h2 class="section-title font-display">Popular tours</h2><div class="section-header-right"><a class="section-link" href="Tours.dc.html">See all tours →</a><div class="slider-arrows"><button class="slider-arrow" aria-label="Previous tours" onClick="{{ slidePrev }}"><i class="ti ti-chevron-left" aria-hidden="true"></i></button><button class="slider-arrow" aria-label="Next tours" onClick="{{ slideNext }}"><i class="ti ti-chevron-right" aria-hidden="true"></i></button></div></div></div>
+  </div>
+
+  <div class="slider">
+    <div class="slider-track" ref="{{ setTrack }}">
+      <sc-for list="{{ popularTours }}" as="t" hint-placeholder-count="6">
+        <div class="tour-card" aria-hidden="{{ t.hidden }}">
+          <div class="tc-img"><img src="{{ t.img }}" alt=""><span class="{{ t.badgeCls }}">{{ t.badge }}</span></div>
+          <div class="tc-body">
+            <p class="tc-name">{{ t.name }}</p>
+            <div class="tc-foot"><div><span class="tc-from">From</span><span class="tc-price">{{ t.price }}</span> <span class="tc-per">{{ t.per }}</span></div><span class="tc-duration"><i class="ti ti-clock" aria-hidden="true"></i>{{ t.duration }}</span></div>
+            <a class="tc-btn" href="TourDetail.dc.html">View tour</a>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div class="slider-fade slider-fade-left" aria-hidden="true"></div>
+    <div class="slider-fade slider-fade-right" aria-hidden="true"></div>
+  </div>
+
+  <div class="wrap" style="padding-top: 0">
+
+    <section class="dest-section">
+    <div class="section-header"><h2 class="section-title font-display">Destinations</h2><a class="section-link" href="Destinations.dc.html">All destinations →</a></div>
+    <div class="dest-grid">
+      <sc-for list="{{ destCards }}" as="d" hint-placeholder-count="6">
+        <a class="{{ d.cls }}" href="{{ d.href }}"><sc-if value="{{ d.hasImg }}" hint-placeholder-val="{{ false }}"><img class="dest-img" src="{{ d.img }}" alt=""></sc-if><span class="dest-blur" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span><span class="dest-name">{{ d.name }}</span><span class="dest-desc">{{ d.desc }}</span><span class="dest-count"><i class="ti ti-sailboat" aria-hidden="true"></i>{{ d.count }}</span></a>
+      </sc-for>
+    </div>
+    </section>
+
+    <div class="section-header"><h2 class="section-title font-display">How it works</h2></div>
+    <div class="steps">
+      <div class="step-card"><div class="step-num">1</div><p class="step-title">Choose a tour</p><p class="step-desc">Browse by destination, activity, or duration. Group or private — your call.</p></div>
+      <div class="step-card"><div class="step-num">2</div><p class="step-title">Pick your date</p><p class="step-desc">Check live availability and choose a departure that suits your schedule.</p></div>
+      <div class="step-card"><div class="step-num">3</div><p class="step-title">Book securely</p><p class="step-desc">Pay online via secure checkout. Instant confirmation to your inbox.</p></div>
+      <div class="step-card"><div class="step-num">4</div><p class="step-title">Show up and sail</p><p class="step-desc">Meet your captain at the marina. Everything else is taken care of.</p></div>
+    </div>
+
+    <div class="section-header"><h2 class="section-title font-display">Group or private?</h2></div>
+    <div class="types-grid">
+      <div class="type-card"><span class="type-badge tb-group"><i class="ti ti-users" aria-hidden="true"></i>Other people on board</span><div class="type-icon" style="color: var(--color-accent)"><i class="ti ti-users" aria-hidden="true"></i></div><p class="type-title">Group tour</p><p class="type-desc">Join a small shared departure — max 12 guests. Great for solo travellers, couples, and anyone who likes meeting people on the water.</p><div class="type-features"><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> From €45 per person</span><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fixed departures, daily</span><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Guided commentary included</span></div><a class="type-cta" href="Tours.dc.html">Browse group tours</a></div>
+      <div class="type-card featured"><span class="type-badge tb-private"><i class="ti ti-crown" aria-hidden="true"></i>Just you on board</span><div class="type-icon" style="color: var(--color-category-private-icon)"><i class="ti ti-crown" aria-hidden="true"></i></div><p class="type-title">Private charter</p><p class="type-desc">The whole boat is yours. Choose your route, set your pace, bring your own food and music. Ideal for families, celebrations, and corporate groups.</p><div class="type-features"><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> From €280 for the boat</span><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fully customisable route</span><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Flexible departure time</span></div><a class="type-cta btn-primary" href="PrivateBooking.dc.html">Plan a private charter</a></div>
+    </div>
+
+    <div class="section-header"><h2 class="section-title font-display">What guests say</h2><a class="section-link" href="TourDetail.dc.html">Read all reviews →</a></div>
+    <div class="reviews-grid">
+      <div class="rv-summary">
+        <span class="rv-score">4.9</span>
+        <span class="rv-stars" aria-label="4.9 out of 5">★★★★★</span>
+        <span class="rv-count">Average across 800+ reviews</span>
+        <div class="rv-meta"><span><i class="ti ti-users" aria-hidden="true"></i>4,200+ guests this season</span><span><i class="ti ti-sailboat" aria-hidden="true"></i>14 tours and routes</span></div>
+      </div>
+      <figure class="rv-card">
+        <span class="rv-stars" aria-label="5 out of 5">★★★★★</span>
+        <blockquote class="rv-quote">“Absolutely magical. The sea cave was the highlight — we were the only boat there at that time of day. Captain was knowledgeable and funny. Book this.”</blockquote>
+        <figcaption class="rv-who"><span class="rv-avatar">MK</span><span><span class="rv-name">Maja K.</span><span class="rv-tour">Sunset Bay coastal cruise · Jun 2025</span></span></figcaption>
+      </figure>
+      <figure class="rv-card">
+        <span class="rv-stars" aria-label="4 out of 5">★★★★☆</span>
+        <blockquote class="rv-quote">“Great tour. Swimming stop was a bit short for my taste but the sunset views more than made up for it. Very smooth booking process too.”</blockquote>
+        <figcaption class="rv-who"><span class="rv-avatar">TR</span><span><span class="rv-name">Thomas R.</span><span class="rv-tour">Sunset Bay coastal cruise · May 2025</span></span></figcaption>
+      </figure>
+    </div>
+
+    <div class="section-header"><h2 class="section-title font-display">Common questions</h2><a class="section-link" href="Faqs.dc.html">All FAQs →</a></div>
+    <div class="faq-list">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="4">
+        <button class="{{ f.cls }}" aria-expanded="{{ f.expanded }}" onClick="{{ f.toggle }}">
+          <span><span class="faq-q">{{ f.q }}</span><sc-if value="{{ f.open }}" hint-placeholder-val="{{ false }}"><span class="faq-a">{{ f.a }}</span></sc-if></span>
+          <i class="ti ti-chevron-down faq-chevron" aria-hidden="true"></i>
+        </button>
+      </sc-for>
+    </div>
+
+    <div class="cta-band">
+      <h2>Ready to get on the water?</h2>
+      <p>Tours depart daily. Most sell out 3–5 days ahead in summer — book early.</p>
+      <div class="cta-band-btns"><a class="btn-primary" href="Tours.dc.html">Browse all tours</a><a class="btn-secondary" href="PrivateBooking.dc.html">Plan a private charter</a></div>
+    </div>
+
+    <footer class="footer" style="margin-top: 0">
+      <div class="footer-brand"><div class="nav-logo" style="margin-bottom: 6px"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</div><p>Small-boat tours along the Dalmatian coast since 2015. Licensed, insured, and obsessed with the sea.</p></div>
+      <div class="footer-col"><h4>Tours</h4><a href="Tours.dc.html">Group tours</a><a href="PrivateBooking.dc.html">Private charters</a><a href="Tours.dc.html">Day trips</a><a href="Tours.dc.html">Sunset cruises</a></div>
+      <div class="footer-col"><h4>Info</h4><a href="About.dc.html">About us</a><a href="Destinations.dc.html">Destinations</a><a href="Faqs.dc.html">FAQs</a><a href="Contact.dc.html">Contact</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="Legal.dc.html">Terms &amp; conditions</a><a href="Legal.dc.html">Privacy policy</a><a href="Legal.dc.html">Cancellation policy</a></div>
+    </footer>
+    <div class="footer-bottom"><span>© 2025 Hello Blue Cave</span><span>Licensed maritime operator · Croatia</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"autoRotate":{"editor":"boolean","default":true},"toursImage":{"editor":"text","default":"/_blob/6db22cf5a8d634b0343f7323ec5796a6","section":"Hero photos"},"charterImage":{"editor":"text","default":"/_blob/017adfe4e2ef7be5d0d94d4957daa087","section":"Hero photos"},"helloImage":{"editor":"text","default":"/_blob/796f7f6baf909bac630a446041e4b831","section":"Hero photos"},"groupBg":{"editor":"text","default":"/_blob/dadcccc0c42934ae83b1191097c704a0","section":"Search photos"},"privateBg":{"editor":"text","default":"/_blob/459a535dd66c6c77cf28944102b4ba05","section":"Search photos"},"transferBg":{"editor":"text","default":"/_blob/17620d6f1eda545b4894db6053b21de2","section":"Search photos"},"$preview":{"width":1280,"height":5000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { hero: 0, img: 0, leaving: false, openFaq: -1, scrolled: false, tripType: 'group', guests: 2, when: '', where: 'Anywhere', fromPort: 'Split', toPort: 'Hvar Town', lang: 'en', langOpen: false };
+    this.onScroll = e => {
+      const t = e && e.target;
+      const y = window.scrollY || (document.documentElement && document.documentElement.scrollTop) || (t && t.scrollTop) || 0;
+      const scrolled = y > 40;
+      if (scrolled !== this.state.scrolled) this.setState({ scrolled: scrolled });
+    };
+  }
+  centerSlider() {
+    const el = this.track;
+    if (!el) return;
+    const cards = el.querySelectorAll('.tour-card');
+    const first = cards[cards.length / 3];
+    if (!first) return;
+    const gutter = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+    const prev = el.style.scrollBehavior;
+    el.style.scrollBehavior = 'auto';
+    el.scrollLeft = first.offsetLeft - gutter;
+    el.style.scrollBehavior = prev;
+  }
+  componentDidMount() {
+    this.startTimer();
+    window.addEventListener('scroll', this.onScroll, { passive: true, capture: true });
+  }
+  pickType(t) {
+    if (t === this.state.tripType) return;
+    this.setState({ tripType: t, panSeq: (this.state.panSeq || 0) + 1 });
+  }
+  componentWillUnmount() {
+    clearTimeout(this.panT);
+    clearInterval(this.timer);
+    clearTimeout(this.swapT);
+    clearTimeout(this.resumeT);
+    clearTimeout(this.centerTimer);
+    window.removeEventListener('scroll', this.onScroll, { capture: true });
+  }
+  startTimer() {
+    clearInterval(this.timer);
+    clearTimeout(this.resumeT);
+    this.elapsed = 0;
+    if (this.props.autoRotate === false || this.state.paused) return;
+    this.slideStart = Date.now();
+    this.timer = setInterval(() => { this.slideStart = Date.now(); this.go(this.state.img + 1, true); }, 6000);
+  }
+  togglePause() {
+    const paused = !this.state.paused;
+    this.state.paused = paused;
+    this.setState({ paused: paused });
+    clearInterval(this.timer);
+    clearTimeout(this.resumeT);
+    if (paused) {
+      this.elapsed = Math.min(5999, Date.now() - (this.slideStart || Date.now()));
+    } else {
+      const elapsed = this.elapsed || 0;
+      this.slideStart = Date.now() - elapsed;
+      this.resumeT = setTimeout(() => { this.go(this.state.img + 1, true); this.startTimer(); }, 6000 - elapsed);
+    }
+  }
+  tapDot(n) {
+    if (n === this.state.img && this.props.autoRotate !== false) this.togglePause();
+    else this.go(n);
+  }
+  go(i, auto) {
+    const t = (i + 3) % 3;
+    if (!auto) this.startTimer();
+    if (t === this.state.img) return;
+    clearTimeout(this.swapT);
+    this.setState({ img: t, leaving: true });
+    this.swapT = setTimeout(() => this.setState({ hero: t, leaving: false }), 450);
+  }
+  renderVals() {
+    const faqData = [
+      { q: 'What happens if the weather is bad?', a: "We monitor conditions closely. If a tour is cancelled due to weather, you'll receive a full refund or the option to rebook at no extra cost. We'll notify you at least 4 hours before departure." },
+      { q: 'Do I need to know how to swim?', a: "Not at all. Life jackets are provided on all tours. Swimming stops are optional — you're welcome to stay on the boat." },
+      { q: 'Can I bring young children?', a: "Yes — children aged 3 and above are welcome on all group tours. Life jackets are available in children's sizes. Private charters have no minimum age." },
+      { q: 'How do I cancel or reschedule?', a: "Free cancellation up to 48 hours before departure. Inside 48 hours, bookings are non-refundable. To reschedule, contact us and we'll do our best to find an alternative date." }
+    ];
+    const faqs = faqData.map((f, i) => {
+      const open = this.state.openFaq === i;
+      return {
+        q: f.q, a: f.a, open: open, expanded: open ? 'true' : 'false',
+        cls: 'faq-item' + (open ? ' open' : '') + (i === faqData.length - 1 ? ' last' : ''),
+        toggle: () => this.setState({ openFaq: open ? -1 : i })
+      };
+    });
+    const popularTours = [
+      { name: 'Sunset Bay coastal cruise', img: '/_blob/4f05356ebee03f5016b43a559bc34c5b', icon: 'ti-sunset', badge: 'Best seller', badgeType: 'b-best', duration: '3h', chips: ['Group', 'Private'], price: '€55', per: '/ person', rating: '4.9 (128)', href: 'GroupBooking.dc.html' },
+      { name: 'Island hopping — Elafiti day trip', img: '/_blob/b5535f758995bdf694c8c2468734b0c5', icon: 'ti-island', badge: 'Best seller', badgeType: 'b-best', duration: '7h', chips: ['Group'], price: '€89', per: '/ person', rating: '4.8 (94)', href: 'GroupBooking.dc.html' },
+      { name: 'Private sunset charter', img: '/_blob/cbc2b610fa31e9081789057f1607038a', icon: 'ti-crown', badge: 'Private', badgeType: 'b-priv', duration: '2h', chips: ['Private'], price: '€320', per: '/ boat', rating: '5.0 (41)', href: 'PrivateBooking.dc.html' },
+      { name: 'Blue Cave & Hvar full day', img: '/_blob/5207d5d0f4d27c542bd2802443a85c29', icon: 'ti-map', badge: 'Best seller', badgeType: 'b-best', duration: '10h', chips: ['Group'], price: '€110', per: '/ person', rating: '4.9 (203)', href: 'GroupBooking.dc.html' },
+      { name: 'Morning snorkel tour', img: '/_blob/cde84cb92d3381b507a1c6f1a012a9c6', icon: 'ti-swimming', badge: 'New', badgeType: 'b-new', duration: '2h', chips: ['Group'], price: '€45', per: '/ person', rating: '4.7 (67)', href: 'GroupBooking.dc.html' },
+      { name: 'Romantic private dinner cruise', img: '/_blob/07056f2593f867a3e97043cc9ea27185', icon: 'ti-heart', badge: 'Private', badgeType: 'b-priv', duration: '3h', chips: ['Private'], price: '€280', per: '/ boat', rating: '4.9 (29)', href: 'PrivateBooking.dc.html' }
+    ].map(t => Object.assign({}, t, { iconCls: 'ti ' + t.icon, badgeCls: 'tc-badge ' + t.badgeType }));
+    const destCards = [
+      { name: 'Blue Cave, Biševo', desc: 'Sea cave that glows electric blue', count: '2 tours', href: 'Destinations.dc.html', img: '/_blob/5207d5d0f4d27c542bd2802443a85c29' },
+      { name: 'Hvar Island', desc: "Croatia's sunniest island & Pakleni island", count: '4 tours', href: 'DestinationDetail.dc.html', img: '/_blob/f80742f991078a1db049ece637c4a2b9' },
+      { name: 'Blue Lagoon', desc: 'Turquoise shallows off Drvenik Veli', count: '3 tours', href: 'Destinations.dc.html', img: '/_blob/b5535f758995bdf694c8c2468734b0c5' },
+      { name: 'Dubrovnik', desc: 'UNESCO-listed walled old town', count: '8 tours', href: 'Destinations.dc.html', img: '/_blob/4f05356ebee03f5016b43a559bc34c5b' },
+      { name: 'Brač Island', desc: 'Home of Zlatni Rat, the shifting beach', count: '2 tours', href: 'Destinations.dc.html', img: '/_blob/4938740a436087e6009c764ff1a83168' },
+      { name: 'Vis Island', desc: 'Outer island with untouched bays', count: '3 tours', href: 'Destinations.dc.html', img: '/_blob/cde84cb92d3381b507a1c6f1a012a9c6' }
+    ].map((d, i) => Object.assign({}, d, { hasImg: !!d.img, cls: 'dest-card bento-' + 'abcdef'[i] }));
+    const loopTours = [0, 1, 2].reduce((all, copy) => all.concat(popularTours.map(t => Object.assign({}, t, { hidden: copy === 1 ? 'false' : 'true' }))), []);
+    const slideBy = dir => {
+      const el = this.track;
+      if (!el) return;
+      const card = el.querySelector('.tour-card');
+      const step = card ? card.getBoundingClientRect().width + 16 : 316;
+      el.scrollBy({ left: dir * step, behavior: 'smooth' });
+    };
+    const h = this.state.hero;
+    const toursImage = (this.props.toursImage ?? '/_blob/6db22cf5a8d634b0343f7323ec5796a6').trim();
+    const charterImage = (this.props.charterImage ?? '/_blob/017adfe4e2ef7be5d0d94d4957daa087').trim();
+    const helloImage = (this.props.helloImage ?? '/_blob/796f7f6baf909bac630a446041e4b831').trim();
+    const im = this.state.img;
+    const showToursPhoto = im === 0 && !!toursImage;
+    const showCharterPhoto = im === 1 && !!charterImage;
+    const hasPhoto = showToursPhoto || showCharterPhoto || (im === 2 && !!helloImage);
+    return {
+      popularTours: popularTours.map(t => Object.assign({}, t, { hidden: 'false' })),
+      destCards: destCards,
+      groupBtnCls: this.state.tripType === 'group' ? 'on' : '',
+      privateBtnCls: this.state.tripType === 'private' ? 'on' : '',
+      groupPressed: this.state.tripType === 'group' ? 'true' : 'false',
+      privatePressed: this.state.tripType === 'private' ? 'true' : 'false',
+      pickGroup: () => this.pickType('group'),
+      noteIcon: { private: 'ti ti-lock', transfer: 'ti ti-clock', group: 'ti ti-info-circle' }[this.state.tripType],
+      groupBg: (() => { const v = (this.props.groupBg ?? '').trim(); return (!v || v === '/_blob/6db22cf5a8d634b0343f7323ec5796a6') ? '/_blob/dadcccc0c42934ae83b1191097c704a0' : v; })(),
+      privateBg: (() => { const v = (this.props.privateBg ?? '').trim(); return (!v || v === '/_blob/017adfe4e2ef7be5d0d94d4957daa087') ? '/_blob/459a535dd66c6c77cf28944102b4ba05' : v; })(),
+      transferBg: (() => { const v = (this.props.transferBg ?? '').trim(); return (!v || v === '/_blob/796f7f6baf909bac630a446041e4b831') ? '/_blob/17620d6f1eda545b4894db6053b21de2' : v; })(),
+      tabIndCls: 'hs-tab-ind ind-' + ({ group: 0, private: 1, transfer: 2 }[this.state.tripType] || 0),
+      sbStripCls: 'sb-strip pos-' + ({ group: 0, private: 1, transfer: 2 }[this.state.tripType] || 0) + (this.state.panSeq ? (this.state.panSeq % 2 ? ' pan-a' : ' pan-b') : ''),
+      sbGroupCls: 'sb-bg' + (this.state.tripType === 'group' ? ' on' : ''),
+      sbPrivateCls: 'sb-bg' + (this.state.tripType === 'private' ? ' on' : ''),
+      sbTransferCls: 'sb-bg' + (this.state.tripType === 'transfer' ? ' on' : ''),
+      sbTitle3: { group: 'Find your\nday on\nthe water', private: 'Your\nprivacy &\nyour pace', transfer: 'Skip the\nwait, go\nby boat' }[this.state.tripType],
+      sbTitle2: { group: 'Find your day\non the water', private: 'Your privacy\n& your pace', transfer: 'Skip the wait,\ngo by boat' }[this.state.tripType],
+      sbText: { group: 'Pick a destination and a date — we\'ll show every small-group departure that fits.', private: 'Choose where and when, then make the route your own on the next step.', transfer: 'Skip the ferry queues. A private boat between Split, the airport and the islands.' }[this.state.tripType],
+      noteText: { private: 'Fully private — the whole boat is yours', transfer: 'Private transfer — dock to dock, your time', group: 'Public tour — shared with up to 12 guests' }[this.state.tripType],
+      when: this.state.when,
+      where: this.state.where,
+      fromPort: this.state.fromPort,
+      toPort: this.state.toPort,
+      fromChange: e => this.setState({ fromPort: e.target.value }),
+      toChange: e => this.setState({ toPort: e.target.value }),
+      isTour: this.state.tripType !== 'transfer',
+      isTransfer: this.state.tripType === 'transfer',
+      whereRowCls: 'hs-where-row' + (this.state.tripType === 'transfer' ? ' split' : ''),
+      transferBtnCls: this.state.tripType === 'transfer' ? 'on' : '',
+      transferPressed: this.state.tripType === 'transfer' ? 'true' : 'false',
+      pickTransfer: () => this.pickType('transfer'),
+      whereChange: e => this.setState({ where: e.target.value }),
+      whenLabel: this.state.when ? new Date(this.state.when + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Any date',
+      openPicker: e => { try { if (e.target.showPicker) e.target.showPicker(); } catch (err) {} },
+      whenChange: e => this.setState({ when: e.target.value }),
+      guests: this.state.guests,
+      guestsMin: this.state.guests <= 1,
+      guestsMax: this.state.guests >= 12,
+      guestsDown: () => this.setState({ guests: Math.max(1, this.state.guests - 1) }),
+      guestsUp: () => this.setState({ guests: Math.min(12, this.state.guests + 1) }),
+      onGuests: e => { const n = parseInt(e.target.value, 10); this.setState({ guests: isNaN(n) ? 1 : Math.min(12, Math.max(1, n)) }); },
+      pickPrivate: () => this.pickType('private'),
+      searchLabel: { private: 'Plan my charter', transfer: 'Find a transfer', group: 'Search tours' }[this.state.tripType],
+      searchHref: { private: 'PrivateBooking.dc.html', transfer: 'Contact.dc.html', group: 'Tours.dc.html' }[this.state.tripType],
+      onSearch: e => { if (e && e.preventDefault) e.preventDefault(); },
+      setTrack: el => { this.track = el; },
+      langCode: ({ en: 'EN', hr: 'HR', de: 'DE', it: 'IT', fr: 'FR' })[this.state.lang],
+      langOpen: !!this.state.langOpen,
+      langExpanded: this.state.langOpen ? 'true' : 'false',
+      toggleLang: () => this.setState({ langOpen: !this.state.langOpen }),
+      closeLang: () => this.setState({ langOpen: false }),
+      langs: [['en', 'EN', 'English'], ['hr', 'HR', 'Hrvatski'], ['de', 'DE', 'Deutsch'], ['it', 'IT', 'Italiano'], ['fr', 'FR', 'Français']].map(l => ({ code: l[1], name: l[2], sel: this.state.lang === l[0] ? 'true' : 'false', cls: 'lang-opt' + (this.state.lang === l[0] ? ' on' : ''), pick: () => this.setState({ lang: l[0], langOpen: false }) })),
+      setSearchBand: el => { this.searchBand = el; },
+      scrollToSearch: () => {
+        const el = this.searchBand;
+        if (!el) return;
+        const nav = document.querySelector('.nav-bar');
+        const navH = nav ? nav.getBoundingClientRect().height : 0;
+        const top = el.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || 0) - navH;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      },
+      slidePrev: () => slideBy(-1),
+      slideNext: () => slideBy(1),
+      toursImage: toursImage,
+      charterImage: charterImage,
+      showToursPhoto: showToursPhoto,
+      showCharterPhoto: showCharterPhoto,
+      hasPhoto: hasPhoto,
+      heroClass: 'hero' + (hasPhoto ? ' has-photo' : ''),
+      hasToursImage: !!toursImage,
+      hasCharterImage: !!charterImage,
+      toursImgCls: 'hero-bg' + (im === 0 ? ' on' : ''),
+      charterImgCls: 'hero-bg' + (im === 1 ? ' on' : ''),
+      hasHelloImage: !!helloImage,
+      helloImage: helloImage,
+      helloImgCls: 'hero-bg hero-bg-hello' + (im === 2 ? ' on' : ''),
+      showHello: h === 2,
+      dot2Class: 'hero-dot' + (im === 2 ? ' active' : ''),
+      showPanel2: () => this.tapDot(2),
+      panelCls: 'hero-panel' + (this.state.leaving ? ' leaving' : ''),
+      navClass: 'nav-bar nav-overlay' + (this.state.scrolled ? ' is-solid' : (hasPhoto ? ' on-photo' : '')),
+      showTours: h === 0,
+      showCharter: h === 1,
+      dot0Class: 'hero-dot' + (im === 0 ? ' active' : ''),
+      dot1Class: 'hero-dot' + (im === 1 ? ' active' : ''),
+      showPanel0: () => this.tapDot(0),
+      showPanel1: () => this.tapDot(1),
+      heroNext: () => this.go(im + 1),
+      dotsCls: 'hero-dots' + (this.props.autoRotate === false ? ' no-rotate' : (this.state.paused ? ' is-paused' : '')),
+      dot0Label: im === 0 ? (this.state.paused ? 'Play slideshow' : 'Pause slideshow') : 'Show all tours',
+      dot1Label: im === 1 ? (this.state.paused ? 'Play slideshow' : 'Pause slideshow') : 'Show private charter',
+      dot2Label: im === 2 ? (this.state.paused ? 'Play slideshow' : 'Pause slideshow') : 'Show Hello Blue Cave',
+      heroPrev: () => this.go(im - 1),
+      faqs: faqs
+    };
+  }
+}
+</script>
+</body>
+</html>

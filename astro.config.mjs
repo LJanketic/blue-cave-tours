@@ -71,6 +71,8 @@ export default defineConfig({
 	// Astro's default, set explicitly: server endpoints and form posts reject
 	// requests whose Origin isn't this site (CSRF protection).
 	security: { checkOrigin: true },
+	// Playwright's dev server (CONTEXT=playwright) runs without the toolbar, so it isn't in screenshots.
+	devToolbar: { enabled: process.env.CONTEXT !== 'playwright' },
 	// imageCDN defaults to true, which silently routes every astro:assets image
 	// through Netlify's metered on-demand Image CDN — even on fully prerendered
 	// pages. Disabling it restores Astro's own Sharp-based image service, which

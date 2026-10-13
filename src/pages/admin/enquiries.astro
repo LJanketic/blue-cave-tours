@@ -119,7 +119,7 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 <style>
 	/* New enquiries get the site's featured-card border. */
 	.enquiry.is-new {
-		border: 2px solid var(--color-border-info);
+		border: 2px solid var(--a-border-info);
 	}
 
 	.head {
@@ -160,8 +160,8 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
-		min-height: var(--touch-min);
-		color: var(--color-text-info);
+		min-height: var(--a-touch-min);
+		color: var(--a-text-info);
 		font-size: 13px;
 		text-decoration: none;
 		overflow-wrap: anywhere;
@@ -181,7 +181,7 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 		gap: 8px;
 		padding-top: 12px;
-		border-top: 0.5px solid var(--color-border-tertiary);
+		border-top: 0.5px solid var(--a-border-tertiary);
 	}
 
 	.actions .btn-primary,

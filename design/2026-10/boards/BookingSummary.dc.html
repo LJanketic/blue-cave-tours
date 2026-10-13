@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Booking Summary &amp; Review — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-text-tertiary)}a:hover{color:var(--color-text-secondary)}
+.page{max-width:var(--flow-width);margin:0 auto;padding:calc(24px + 1.5rem) 24px 2rem}
+.card{background:var(--color-background-primary);border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:12px}
+.section-title{font-size:var(--font-size-lg);font-weight:500;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}
+.hbc .edit-btn{font-size:var(--font-size-sm);color:var(--color-text-info);background:none;border:none;padding:0;cursor:pointer}
+.edit-btn i{font-size:12px;vertical-align:-1px}
+.badge-private{background:var(--color-category-private-bg);color:var(--color-category-private-text);font-size:var(--font-size-micro);font-weight:500;padding:3px 10px;border-radius:20px}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.row+.row{margin-top:6px}
+.label{font-size:var(--font-size-base);color:var(--color-text-secondary)}
+.label i{font-size:13px;vertical-align:-2px;margin-right:4px}
+.value{font-size:var(--font-size-base);font-weight:500;text-align:right}
+.divider{border-top:0.5px solid var(--color-border-tertiary);margin:12px 0}
+.extra-row{display:flex;justify-content:space-between;font-size:var(--font-size-base);padding:4px 0}
+.extra-row i{font-size:13px;vertical-align:-2px;margin-right:4px}
+.policy-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;font-size:var(--font-size-body-md);line-height:var(--line-height-body-md);color:var(--color-text-secondary)}
+.total-row{display:flex;justify-content:space-between;align-items:baseline}
+.hbc .cta-btn{width:100%;padding:13px;background:var(--color-background-brand);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500}
+.hbc .cta-btn:hover{opacity:0.88;color:var(--color-background-primary)}
+.cta-btn i{font-size:14px;vertical-align:-2px}
+.lock-note{display:flex;align-items:center;gap:6px;font-size:var(--font-size-sm);color:var(--color-text-tertiary);justify-content:center;margin-top:10px}
+.tour-thumb{width:64px;height:64px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+@media (max-width:768px){.page{padding:calc(16px + 1.5rem) 16px 2rem}}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="page">
+    <div class="mini-nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+    </div>
+    <div class="step-bar">
+      <div class="step done"><div class="step-dot"><i class="ti ti-check" style="font-size: 11px" aria-hidden="true"></i></div><span class="step-lbl">Tour type</span></div><div class="step-line"></div>
+      <div class="step done"><div class="step-dot"><i class="ti ti-check" style="font-size: 11px" aria-hidden="true"></i></div><span class="step-lbl">Customise</span></div><div class="step-line"></div>
+      <div class="step active"><div class="step-dot">3</div><span class="step-lbl">Review</span></div><div class="step-line"></div>
+      <div class="step next"><div class="step-dot">4</div><span class="step-lbl">Payment</span></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Tour details <a class="edit-btn" href="PrivateBooking.dc.html">Edit <i class="ti ti-edit" aria-hidden="true"></i></a></div>
+      <div style="display: flex; gap: 14px; align-items: flex-start">
+        <div class="tour-thumb"><i class="ti ti-sailboat" style="font-size: 24px; color: var(--color-text-secondary)" aria-hidden="true"></i></div>
+        <div style="flex: 1">
+          <p style="font-size: var(--font-size-md); font-weight: 500; margin: 0 0 6px">Sunset Bay coastal cruise</p>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px"><span class="badge-private">Private tour</span></div>
+          <div class="row"><span class="label"><i class="ti ti-calendar" aria-hidden="true"></i>Date</span><span class="value">Sat, 12 Jul 2025</span></div>
+          <div class="row"><span class="label"><i class="ti ti-clock" aria-hidden="true"></i>Departure</span><span class="value">18:00</span></div>
+          <div class="row"><span class="label"><i class="ti ti-clock" aria-hidden="true"></i>Duration</span><span class="value">3 hours</span></div>
+          <div class="row"><span class="label"><i class="ti ti-map-pin" aria-hidden="true"></i>Meeting point</span><span class="value">Marina Pier B, Gate 3</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Guests &amp; extras <a class="edit-btn" href="PrivateBooking.dc.html">Edit <i class="ti ti-edit" aria-hidden="true"></i></a></div>
+      <div class="row"><span class="label">Adults</span><span class="value">4 × €95</span></div>
+      <div class="row"><span class="label">Children (under 12)</span><span class="value">2 × €55</span></div>
+      <div class="divider"></div>
+      <p style="font-size: var(--font-size-sm); font-weight: 500; color: var(--color-text-secondary); margin: 0 0 8px">Add-ons</p>
+      <div class="extra-row"><span style="color: var(--color-text-secondary)"><i class="ti ti-bottle" aria-hidden="true"></i>Champagne welcome</span><span style="font-weight: 500">€40</span></div>
+      <div class="extra-row"><span style="color: var(--color-text-secondary)"><i class="ti ti-camera" aria-hidden="true"></i>Professional photo package</span><span style="font-weight: 500">€80</span></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Guest details <a class="edit-btn" href="GroupBooking.dc.html">Edit <i class="ti ti-edit" aria-hidden="true"></i></a></div>
+      <div class="row"><span class="label">Name</span><span class="value">Ivan Kovač</span></div>
+      <div class="row"><span class="label">Email</span><span class="value">ivan@example.com</span></div>
+      <div class="row"><span class="label">Phone</span><span class="value">+385 91 234 5678</span></div>
+      <div class="row"><span class="label">Special requests</span><span class="value" style="max-width: 60%; word-break: break-word">Nut allergy, one guest uses a wheelchair</span></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Price breakdown</div>
+      <div class="row"><span class="label">Adults (4 × €95)</span><span class="value">€380</span></div>
+      <div class="row"><span class="label">Children (2 × €55)</span><span class="value">€110</span></div>
+      <div class="row"><span class="label">Champagne welcome</span><span class="value">€40</span></div>
+      <div class="row"><span class="label">Photo package</span><span class="value">€80</span></div>
+      <div class="divider"></div>
+      <div class="total-row"><span style="font-size: var(--font-size-md); font-weight: 500">Total</span><span style="font-size: var(--font-size-xl); font-weight: 500">€610</span></div>
+      <p style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin: 6px 0 0; text-align: right">Includes all taxes and fees</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px">
+      <div class="section-title" style="margin-bottom: 8px"><span><i class="ti ti-shield-check" style="font-size: 15px; vertical-align: -2px; margin-right: 6px; color: var(--color-text-success)" aria-hidden="true"></i>Cancellation policy</span></div>
+      <div class="policy-box">Free cancellation up to <strong style="color: var(--color-text-primary)">48 hours</strong> before departure. Cancellations within 48 hours are non-refundable. In case of bad weather, you'll receive a full refund or free rescheduling.</div>
+    </div>
+
+    <a class="cta-btn" href="PaymentSuccess.dc.html">Continue to payment <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    <div class="lock-note"><i class="ti ti-lock" style="font-size: 13px" aria-hidden="true"></i> Secure payment handled by Teya</div>
+    <div class="trust-strip">
+      <span><i class="ti ti-lock" aria-hidden="true"></i> Secure payment</span>
+      <span><i class="ti ti-headset" aria-hidden="true"></i> Need help? <a href="mailto:help@hellobluecave.com">help@hellobluecave.com</a></span>
+      <span>Licensed maritime operator · Croatia</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

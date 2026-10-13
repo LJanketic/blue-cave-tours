@@ -164,26 +164,26 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 		gap: 6px;
 		margin: 4px 0 0;
 		font-size: 12px;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 	}
 
 	.seat-bar {
 		width: 64px;
 		height: 6px;
 		border-radius: 3px;
-		background: var(--color-background-secondary);
-		box-shadow: inset 0 0 0 0.5px var(--color-border-tertiary);
+		background: var(--a-background-secondary);
+		box-shadow: inset 0 0 0 0.5px var(--a-border-tertiary);
 		overflow: hidden;
 	}
 
 	.seat-bar span {
 		display: block;
 		height: 100%;
-		background: var(--color-accent-teal);
+		background: var(--a-accent-teal);
 	}
 
 	.seat-bar--over span {
-		background: var(--color-text-danger);
+		background: var(--a-text-danger);
 	}
 
 	.overbooked {
@@ -191,9 +191,9 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 		gap: 8px;
 		margin: 0;
 		padding: 10px 16px;
-		border-top: 0.5px solid var(--color-border-tertiary);
-		background: var(--color-background-danger);
-		color: var(--color-text-danger);
+		border-top: 0.5px solid var(--a-border-tertiary);
+		background: var(--a-background-danger);
+		color: var(--a-text-danger);
 		font-size: 12px;
 		line-height: 1.5;
 	}
@@ -217,7 +217,7 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		border-top: 0.5px solid var(--color-border-tertiary);
+		border-top: 0.5px solid var(--a-border-tertiary);
 	}
 
 	.pax-row {
@@ -228,7 +228,7 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 	}
 
 	.pax-row + .pax-row {
-		border-top: 0.5px solid var(--color-border-tertiary);
+		border-top: 0.5px solid var(--a-border-tertiary);
 	}
 
 	.pax-main {
@@ -261,7 +261,7 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 
 	.pax-sub {
 		font-size: 12px;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 	}
 
 	.pax-note {
@@ -270,7 +270,7 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 		margin-top: 2px;
 		font-size: 12px;
 		line-height: 1.45;
-		color: var(--color-category-tip-text);
+		color: var(--a-category-tip-text);
 	}
 
 	.pax-note .ti {
@@ -289,9 +289,9 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 		gap: 8px;
 		margin: 0;
 		padding: 10px 16px;
-		border-top: 0.5px solid var(--color-border-tertiary);
-		background: var(--color-background-warning);
-		color: var(--color-category-tip-text);
+		border-top: 0.5px solid var(--a-border-tertiary);
+		background: var(--a-background-warning);
+		color: var(--a-category-tip-text);
 		font-size: 12px;
 		line-height: 1.5;
 	}
