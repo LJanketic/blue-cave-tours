@@ -68,6 +68,9 @@ const loadDotenvInDev = {
 // https://astro.build/config — Netlify adapter for SSR + API routes.
 export default defineConfig({
 	output: 'server',
+	// Astro's default, set explicitly: server endpoints and form posts reject
+	// requests whose Origin isn't this site (CSRF protection).
+	security: { checkOrigin: true },
 	// imageCDN defaults to true, which silently routes every astro:assets image
 	// through Netlify's metered on-demand Image CDN — even on fully prerendered
 	// pages. Disabling it restores Astro's own Sharp-based image service, which
