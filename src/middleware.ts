@@ -1,5 +1,7 @@
+import type { APIContext, MiddlewareNext } from 'astro';
 import { defineMiddleware } from 'astro:middleware';
 import { ADMIN_COOKIE, verifySessionToken } from './lib/admin/auth';
+import { SECURITY_HEADERS } from './config/security-headers';
 
 const LOGIN_PATH = '/admin/login/';
 
@@ -16,20 +18,31 @@ function carriesCustomerData(pathname: string): boolean {
 	return pathname.startsWith('/booking/') || pathname.startsWith('/api/') || pathname.startsWith('/book/');
 }
 
-function noStore(response: Response, robots: boolean): Response {
+function setHeaders(response: Response, headers: Record<string, string>): Response {
 	try {
-		response.headers.set('Cache-Control', 'no-store');
-		if (robots) response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+		for (const [name, value] of Object.entries(headers)) response.headers.set(name, value);
 	} catch {
-		// Some responses (e.g. Response.redirect) have immutable headers; they carry no data worth caching anyway.
+		// Some responses (e.g. Response.redirect) have immutable headers; a redirect has no page to frame or cache.
 	}
 	return response;
 }
 
-/** Guards every /admin page behind the session cookie, and keeps private pages out of caches and search engines. */
+function noStore(response: Response, robots: boolean): Response {
+	return setHeaders(response, { 'Cache-Control': 'no-store', ...(robots ? { 'X-Robots-Tag': 'noindex, nofollow' } : {}) });
+}
+
+/**
+ * Guards every /admin page behind the session cookie, keeps private pages out
+ * of caches and search engines, and gives server-rendered responses the
+ * security headers that netlify.toml gives prerendered pages.
+ */
 export const onRequest = defineMiddleware(async (context, next) => {
-	const { pathname } = context.url;
 	if (context.isPrerendered) return next();
+	return setHeaders(await guard(context, next), SECURITY_HEADERS);
+});
+
+async function guard(context: APIContext, next: MiddlewareNext): Promise<Response> {
+	const { pathname } = context.url;
 
 	if (isAdminPath(pathname)) {
 		const isLogin = pathname === LOGIN_PATH || pathname === LOGIN_PATH.slice(0, -1);
@@ -43,4 +56,4 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	if (carriesCustomerData(pathname)) return noStore(await next(), false);
 	return next();
-});
+}
