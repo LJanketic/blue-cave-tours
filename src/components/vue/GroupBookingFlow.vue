@@ -380,10 +380,6 @@ onMounted(() => {
 					Maximum {{ MAX_GUESTS }} guests per departure reached.
 				</p>
 			</div>
-			<div class="hold-note">
-				<i class="ti ti-lock" aria-hidden="true"></i>
-				Your spots are held for 12 minutes once you proceed to review.
-			</div>
 		</div>
 
 		<div class="card">
@@ -798,24 +794,6 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	gap: 5px;
-}
-
-.hold-note {
-	font-size: 12px;
-	color: var(--color-text-secondary);
-	margin-top: 10px;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	background: var(--color-background-secondary);
-	padding: 8px 12px;
-	border-radius: var(--radius-md);
-}
-
-.hold-note .ti {
-	color: var(--color-accent);
-	font-size: 14px;
-	flex-shrink: 0;
 }
 
 .details-grid {

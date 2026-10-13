@@ -18,6 +18,8 @@
 
 [[headers]]
   for = "/*"
+  # Keep in step with src/config/security-headers.ts: these rules don't reach
+  # server-rendered responses, so middleware sets the same values there.
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
