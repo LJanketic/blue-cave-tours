@@ -1376,6 +1376,38 @@ Responsive behaviour: §3.1.1, row "Destination detail".
   Keep the `.nf-icon` class: the admin uses it too (§12).
 - **`NotFoundPanel.astro`:** delete it, together with its unreachable branch in `tours/[slug].astro`. It references 8 undefined tokens.
 
+**As built (PR 6, 2026-10-14):**
+- **Legal:** `layouts/LegalLayout.astro` holds the switcher, the "On this page" list (scrollspy with `aria-current`), the summary box and the section styles. Terms and Cancellation keep their wording; every 48h/4h figure comes from `cancellation.ts`.
+  - **Privacy, rewritten facts:**
+    - The processors are Teya, PayPal, Netlify, Resend and Cloudflare Turnstile, each with its role and country. Teya's entity is "to be confirmed", and a code comment flags the US transfers for the lawyer.
+    - Removed: Google Analytics, and the made-up cookies (`session_id`, `csrf_token`, `cookie_consent`). The storage text is the one in §7.2.
+    - The complaints line has the 15-day reply. There's no ODR link.
+    - The controller shows once `IMPRINT` is set.
+    - "5 years" retention becomes "as long as Croatian accounting law requires", until PR 11.
+- **FAQ:**
+  - The `FAQPage.vue` island now holds the search form, the categories and the groups; the hero and the contact band are Astro.
+  - The search is a real `role=search` form (GET `?q=`, read on mount); submitting moves focus to the results heading.
+  - Counts follow the search, which fixes the "All" bug. One answer is open per group, and "Show all questions" clears both the search and the category.
+  - **No JavaScript:** answers are shown through a `<noscript>` style in the base layer. That means no expand-on-hydrate, and so no CLS.
+- **About:**
+  - Stats have `confirmed` flags: years (computed) and "12 max" show; "4.9" and "Licensed" wait.
+  - Guest quotes were deleted from `about.ts` (D-5).
+  - Two lines claiming licensed crew were reworded (C-7).
+  - The hero is `hero-banner.jpg`. Crew bands show the icon until photos are consented to.
+- **Contact:**
+  - `/api/contact` accepts JSON or form-encoded bodies and answers 415 to anything else.
+  - First and last name are joined on the server too, and the optional `topic` and `bookingRef` are stored (tests).
+  - Admin email and admin list show the subject and the reference; for `change` the list adds "confirmed only by email to the address on the booking".
+- **[DEVIATE, technical] Contact without JavaScript:**
+  - A form post 303s to the static `/contact/sent/` or `/contact/problem/?error=<code>` (both noindex). The prerendered `/contact/` can't show a message from `?sent=1` without JavaScript.
+  - A plain post may omit `_startedAt`, which only the script sets: the form fails open (§3.5), and the honeypot and rate limit still apply.
+  - An empty `_startedAt` used to parse as 1970, which rejected every no-JS post.
+- **S-6:** admin notifications are capped at 40 per UTC day (`ADMIN_NOTIFY_DAILY_CAP`, Blobs counter). Over the cap, enquiries are stored with `notified: false` and the admin says so. Tested.
+- **404:** rebuilt. `NotFoundPanel` and its unreachable branch in `tours/[slug].astro` are deleted.
+- **Tests:** `tests/e2e/content.spec.ts` covers contact with and without JavaScript, the fields that follow the subject, FAQ counts, the no-JS FAQ, the legal switcher and figures, and the 404. Contact tests post from their own IP, so the contact rate limit never trips on reruns.
+- **Lighthouse:** FAQ, Contact, About and Privacy all score 100 / 100 / 100 / 100.
+- **Dead legacy CSS:** 73 rules removed; computed styles elsewhere unchanged.
+
 ---
 
 ## 8. Booking flows

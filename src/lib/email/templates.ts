@@ -1,6 +1,7 @@
 import { EMAIL_SIGN_OFF, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL, SITE_EMAIL, SITE_NAME, SITE_PHONE_DISPLAY } from '../../config/site';
 import { formatBookingDate, guestSummaryFromCounts, meetingPointShort } from '../booking';
 import type { Booking, Enquiry } from '../bookings/store';
+import { topicLabel } from '../contact-validation';
 import { getTourBySlug } from '../tours';
 import type { EmailMessage } from './send';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
@@ -247,6 +248,8 @@ export function adminEnquiryEmail(enquiry: Enquiry, to: string, adminUrl: string
 		['Email', enquiry.email],
 		['Phone', enquiry.phone || '—'],
 		['About', tourTitle],
+		...(enquiry.topic ? ([['Subject', topicLabel(enquiry.topic)]] as Row[]) : []),
+		...(enquiry.bookingRef ? ([['Booking ref', enquiry.bookingRef]] as Row[]) : []),
 	];
 	const subject = `New enquiry from ${enquiry.name}: ${tourTitle}`;
 	const html = layout(

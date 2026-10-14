@@ -119,21 +119,3 @@ h3.dest-name {
 }
 
 /* Grid cell wrapping each tour card. */
-
-.no-results {
-	text-align: center;
-	padding: 2rem;
-	color: var(--color-text-secondary);
-	font-size: 13px;
-}
-
-.no-results .ti {
-	font-size: 28px;
-	display: block;
-	margin-bottom: 8px;
-	color: var(--color-border-secondary);
-}
-
-.no-results p {
-	margin: 0;
-}

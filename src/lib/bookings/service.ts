@@ -264,14 +264,23 @@ export async function applyAdminAction(
 	return { record, written };
 }
 
+/**
+ * Admin notification emails for contact (and later charter) messages per UTC
+ * day (S-6). Past it, messages are stored and shown in the admin, but not
+ * emailed: a flood can't burn the Resend quota. Booking emails aren't capped.
+ */
+export const ADMIN_NOTIFY_DAILY_CAP = 40;
+
 export async function recordEnquiry(
-	input: Omit<Enquiry, 'id' | 'createdAt' | 'status'>,
+	input: Omit<Enquiry, 'id' | 'createdAt' | 'status' | 'notified'>,
 	siteOrigin: string,
 	now: Date = new Date(),
 ): Promise<Enquiry> {
-	const enquiry: Enquiry = { ...input, id: newId(), createdAt: now.toISOString(), status: 'new' };
+	const sentToday = await nextCounterValue(`admin-notify:${now.toISOString().slice(0, 10)}`);
+	const notified = sentToday <= ADMIN_NOTIFY_DAILY_CAP;
+	const enquiry: Enquiry = { ...input, id: newId(), createdAt: now.toISOString(), status: 'new', notified };
 	await enquiries().put(enquiry);
-	await sendEmail(adminEnquiryEmail(enquiry, adminEmail(), `${siteOrigin}/admin/enquiries/`));
+	if (notified) await sendEmail(adminEnquiryEmail(enquiry, adminEmail(), `${siteOrigin}/admin/enquiries/`));
 	return enquiry;
 }
 

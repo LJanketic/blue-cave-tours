@@ -93,17 +93,6 @@
 	color: var(--color-accent-teal);
 }
 
-.trust-num {
-	font-size: 18px;
-	font-weight: 500;
-}
-
-.trust-label {
-	font-size: 11px;
-	color: var(--color-text-secondary);
-	line-height: 1.4;
-}
-
 /* ─── Sections ───────────────────────────────────────────────────────── */
 
 .section-header {
@@ -238,11 +227,4 @@
 	font-size: 13px;
 	color: var(--color-text-secondary);
 	margin: 0 0 18px;
-}
-
-.cta-band-btns {
-	display: flex;
-	gap: 8px;
-	justify-content: center;
-	flex-wrap: wrap;
 }

@@ -87,48 +87,6 @@
 
 	/* Featured row becomes a horizontal snap carousel on mobile. */
 
-	.contact-grid {
-		grid-template-columns: 1fr;
-	}
-
-	.legal-layout {
-		grid-template-columns: 1fr;
-	}
-
-	.legal-nav {
-		position: static;
-		flex-direction: row;
-		flex-wrap: wrap;
-		gap: 6px;
-		margin-bottom: 16px;
-	}
-
-	.legal-nav a,
-	.legal-nav .side-link {
-		border-left: none;
-		border: 0.5px solid var(--color-border-tertiary);
-	}
-
-	.about-layout {
-		grid-template-columns: 1fr;
-	}
-
-	.crew-grid,
-	.press-grid {
-		display: flex;
-		overflow-x: auto;
-		scroll-snap-type: x mandatory;
-		-webkit-overflow-scrolling: touch;
-		scrollbar-width: none;
-		padding-bottom: 4px;
-	}
-
-	.crew-grid > *,
-	.press-grid > * {
-		flex: 0 0 40%;
-		scroll-snap-align: start;
-	}
-
 	.values-grid,
 	.meetup-grid,
 	.form-grid,

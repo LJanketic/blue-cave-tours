@@ -7,6 +7,7 @@ import { isRecordId } from '../../lib/bookings/ids';
 import { byCreatedDesc, enquiries, type EnquiryStatus } from '../../lib/bookings/store';
 import { whatsappNumber } from '../../lib/admin/manifest';
 import { getTourBySlug } from '../../lib/tours';
+import { topicLabel } from '../../lib/contact-validation';
 
 const LABELS: Record<EnquiryStatus, string> = { new: 'New', replied: 'Replied', closed: 'Closed' };
 /** The one obvious next step for each state. */
@@ -70,11 +71,28 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 								<span class="meta-item">
 									<i class="ti ti-sailboat" aria-hidden="true" /> {tour}
 								</span>
+								{e.topic && (
+									<span class="meta-item">
+										<i class="ti ti-message" aria-hidden="true" /> {topicLabel(e.topic)}
+									</span>
+								)}
+								{e.bookingRef && (
+									<span class="meta-item">
+										<i class="ti ti-ticket" aria-hidden="true" /> {e.bookingRef}
+									</span>
+								)}
 							</p>
 						</div>
 						<span class={`a-badge a-badge--${e.status}`}>{LABELS[e.status]}</span>
 					</header>
 					<p class="message">{e.message}</p>
+					{e.topic === 'change' && (
+						<p class="card-meta">
+							Changes and cancellations are confirmed only by email to the address on the booking, never on the
+							word of this message.
+						</p>
+					)}
+					{e.notified === false && <p class="card-meta">Not emailed: the day's notification limit (40) was reached.</p>}
 					<ul class="from" aria-label={`Contact ${e.name}`}>
 						<li>
 							<a href={`mailto:${e.email}`}>

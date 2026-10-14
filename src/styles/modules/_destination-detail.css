@@ -65,11 +65,3 @@
 }
 
 /* ─── Destination detail extras ──────────────────────────────────────── */
-
-.sec-title {
-	font-size: 14px;
-	font-weight: 500;
-	margin: 0 0 10px;
-	padding-bottom: 8px;
-	border-bottom: 0.5px solid var(--color-border-tertiary);
-}

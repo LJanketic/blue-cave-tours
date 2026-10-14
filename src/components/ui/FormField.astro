@@ -13,6 +13,8 @@ type Props = Omit<HTMLAttributes<'input'>, 'id' | 'name' | 'class'> & {
 	hint?: string;
 	/** Server-side error to show (the entered value stays in the field, §11.8). */
 	error?: string;
+	/** For `as="textarea"`. */
+	rows?: number;
 	class?: string;
 };
 

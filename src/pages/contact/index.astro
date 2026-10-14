@@ -1,197 +1,153 @@
 ---
 export const prerender = true;
 
+/**
+ * Contact (spec §7.5, board 14). The form posts to /api/contact: as JSON from
+ * the page script, or as a plain form without JavaScript (then the API
+ * redirects to /contact/sent/ or /contact/problem/).
+ */
 import {
+	MEETING_POINT_LABEL,
 	MEETING_POINT_MAP_URL,
+	OFFICE_HOURS,
+	REPLY_TIME,
 	pageTitle,
 	SITE_EMAIL,
 	SITE_NAME,
 	SITE_PHONE,
 	SITE_PHONE_DISPLAY,
 } from '../../config/site';
+import { seasonLabel } from '../../config/season';
+import { CONTACT_TOPICS, HONEYPOT_FIELD } from '../../lib/contact-validation';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import FormField from '../../components/ui/FormField.astro';
+import Button from '../../components/ui/Button.astro';
 import { getAllTours } from '../../lib/tours';
 
 const tours = getAllTours();
-const tourFromQuery = Astro.url.searchParams.get('tour') ?? '';
-const selectedTour = tours.some((t) => t.slug === tourFromQuery) ? tourFromQuery : '';
-const mapUrl = MEETING_POINT_MAP_URL;
 const whatsappUrl = `https://wa.me/${SITE_PHONE.replace(/\D/g, '')}`;
 const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+
+const CARDS = [
+	{ type: 'Phone', icon: 'phone', tone: 'brand', value: SITE_PHONE_DISPLAY, sub: 'Call or text us', href: `tel:${SITE_PHONE}` },
+	{ type: 'WhatsApp', icon: 'brand-whatsapp', tone: 'brand', value: SITE_PHONE_DISPLAY, sub: 'Message us on WhatsApp', href: whatsappUrl, external: true },
+	{ type: 'Email', icon: 'mail', tone: 'info', value: SITE_EMAIL, sub: 'For bookings, invoices and detailed requests', href: `mailto:${SITE_EMAIL}` },
+	{ type: 'Find us', icon: 'map-pin', tone: 'warm', value: MEETING_POINT_LABEL, sub: 'Where every tour starts', href: MEETING_POINT_MAP_URL, external: true },
+];
 ---
 
 <SiteLayout
 	title={pageTitle('Contact us: Riva stand 14, Split')}
-	description={`Reach ${SITE_NAME} on Split’s Riva — stand 14 — or send a message about tours and private charters.`}
+	description={`Reach ${SITE_NAME} on Split's Riva, stand 14, or send a message about tours and private charters.`}
+	footerGap="32px"
 >
-	<main id="main" class="page-shell">
-		<div class="page contact-page">
-			<h1 class="contact-title">Contact us</h1>
-			<p class="hero-sub">
-				Questions, special requests, or just not sure which tour is right for you — get in touch. We usually
-				reply within a couple of hours during the season.
-			</p>
+	<main id="main" class="contact">
+		<h1 class="contact__title">Contact us</h1>
+		<p class="contact__lead">
+			Questions, special requests, or not sure which tour is right for you? Get in touch: we reply {REPLY_TIME}.
+		</p>
 
-			<div class="contact-grid">
-				<a class="contact-card" href={`tel:${SITE_PHONE}`}>
-					<div class="cc-icon cc-icon--success">
-						<i class="ti ti-phone" aria-hidden="true"></i>
-					</div>
-					<span class="cc-type">Phone</span>
-					<span class="cc-value">{SITE_PHONE_DISPLAY}</span>
-					<span class="cc-sub">Office line — Mon to Sun, 08:00–20:00 during season</span>
-				</a>
-				<a class="contact-card" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-					<div class="cc-icon cc-icon--success">
-						<i class="ti ti-brand-whatsapp" aria-hidden="true"></i>
-					</div>
-					<span class="cc-type">WhatsApp</span>
-					<span class="cc-value">{SITE_PHONE_DISPLAY}</span>
-					<span class="cc-sub">Fastest response — typically within the hour</span>
-				</a>
-				<a class="contact-card" href={`mailto:${SITE_EMAIL}`}>
-					<div class="cc-icon cc-icon--info">
-						<i class="ti ti-mail" aria-hidden="true"></i>
-					</div>
-					<span class="cc-type">Email</span>
-					<span class="cc-value">{SITE_EMAIL}</span>
-					<span class="cc-sub">For bookings, invoices, and detailed requests</span>
-				</a>
-				<a class="contact-card" href={mapUrl} target="_blank" rel="noopener noreferrer">
-					<div class="cc-icon cc-icon--location">
-						<i class="ti ti-map-pin" aria-hidden="true"></i>
-					</div>
-					<span class="cc-type">Find us</span>
-					<span class="cc-value">Riva promenade, stand 14</span>
-					<span class="cc-sub">Split waterfront — meet before every departure</span>
-				</a>
+		<ul class="contact__cards" role="list">
+			{
+				CARDS.map((card) => (
+					<li>
+						<a class="contact__card" href={card.href} {...(card.external ? { target: '_blank', rel: 'noopener' } : {})}>
+							<span class={`contact__icon contact__icon--${card.tone}`} aria-hidden="true">
+								<i class={`ti ti-${card.icon}`} />
+							</span>
+							<span class="contact__type">{card.type}</span>
+							<span class="contact__value">{card.value}</span>
+							<span class="contact__sub">
+								{card.sub}
+								{card.external && <span class="sr-only"> (opens in a new tab)</span>}
+							</span>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+
+		<div class="contact__hours">
+			<div>
+				<h2 class="contact__hours-label">Response time</h2>
+				{OFFICE_HOURS && <p class="contact__hours-line">{OFFICE_HOURS}</p>}
+				<p class="contact__hours-line">We reply to messages {REPLY_TIME}.</p>
 			</div>
-
-			<div class="hours-card">
-				<div class="hours-col">
-					<p class="hours-label">Response hours</p>
-					<div class="open-badge">
-						<span class="open-dot" aria-hidden="true"></span>
-						Open now
-					</div>
-					<div class="hours-row">
-						<span class="hours-day">Mon – Fri</span>
-						<span class="hours-time">08:00 – 20:00</span>
-					</div>
-					<div class="hours-row">
-						<span class="hours-day">Sat – Sun</span>
-						<span class="hours-time">08:00 – 18:00</span>
-					</div>
-				</div>
-				<div class="hours-col">
-					<p class="hours-label">Season</p>
-					<div class="hours-row">
-						<span class="hours-day">Apr – Nov</span>
-						<span class="hours-time">Daily departures</span>
-					</div>
-					<div class="hours-row">
-						<span class="hours-day">Off-season</span>
-						<span class="hours-time">Email only</span>
-					</div>
-					<p class="hours-note">
-						Private charters available year-round by request, weather permitting.
-					</p>
-				</div>
-			</div>
-
-			<div class="form-card">
-				<p class="form-title">Send us a message</p>
-				<form id="contact-form" novalidate>
-					<input type="hidden" name="_startedAt" id="contact-started-at" value="" />
-					<div class="form-field form-field--hp" aria-hidden="true">
-						<label for="company">Company</label>
-						<input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
-					</div>
-					<p class="form-note">Fields marked * are required.</p>
-					<div class="form-grid">
-						<div class="form-field form-field--name">
-							<label for="name">Name <span aria-hidden="true">*</span></label>
-							<input
-								id="name"
-								name="name"
-								type="text"
-								required
-								autocomplete="name"
-								aria-required="true"
-								placeholder="Ivan"
-							/>
-						</div>
-						<div class="form-field form-field--email">
-							<label for="email">Email <span aria-hidden="true">*</span></label>
-							<input
-								id="email"
-								name="email"
-								type="email"
-								required
-								autocomplete="email"
-								aria-required="true"
-								placeholder="ivan@example.com"
-							/>
-						</div>
-						<div class="form-field form-field--phone">
-							<label for="phone">Phone</label>
-							<input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+385…" />
-						</div>
-						<div class="form-field full">
-							<label for="tourSlug">Subject</label>
-							<select id="tourSlug" name="tourSlug">
-								<option value="">General enquiry</option>
-								{
-									tours.map((t) => (
-										<option value={t.slug} selected={t.slug === selectedTour}>
-											{t.title}
-										</option>
-									))
-								}
-							</select>
-						</div>
-						<div class="form-field full">
-							<label for="message">Message <span aria-hidden="true">*</span></label>
-							<textarea
-								id="message"
-								name="message"
-								required
-								aria-required="true"
-								placeholder="Tell us what you have in mind — dates, group size, any special requests…"
-							></textarea>
-						</div>
-					</div>
-					{
-						turnstileSiteKey && (
-							<div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-theme="light" />
-						)
-					}
-					<button type="submit" class="btn-primary contact-submit">
-						Send message
-						<i class="ti ti-arrow-right" aria-hidden="true"></i>
-					</button>
-					<p id="contact-status" role="status" aria-live="polite"></p>
-				</form>
-			</div>
-
-			<a class="map-stub" href={mapUrl} target="_blank" rel="noopener noreferrer">
-				<i class="ti ti-map-2" aria-hidden="true"></i>
-				Riva promenade, stand 14 — open in Google Maps
-			</a>
-			<div class="marina-note">
-				<i class="ti ti-info-circle" aria-hidden="true"></i>
-				<span>
-					Meet at stand 14 on Split’s Riva — look for Hello Blue Cave signage near the boat berths. Arrive ten
-					to fifteen minutes before check-in; the waterfront gets busy in peak season.
-				</span>
+			<div>
+				<h2 class="contact__hours-label">Season</h2>
+				<p class="contact__hours-line">Tours run daily, {seasonLabel()}.</p>
 			</div>
 		</div>
+
+		<section class="contact__form-card" aria-labelledby="form-heading">
+			<h2 id="form-heading" class="contact__form-title">Send us a message</h2>
+			<form id="contact-form" method="post" action="/api/contact">
+				<input type="hidden" name="_startedAt" id="contact-started-at" value="" />
+				<div class="contact__hp" aria-hidden="true">
+					<label for={HONEYPOT_FIELD}>Company</label>
+					<input id={HONEYPOT_FIELD} name={HONEYPOT_FIELD} type="text" tabindex="-1" autocomplete="off" />
+				</div>
+				<p class="contact__note">Fields marked <span aria-hidden="true">*</span><span class="sr-only">with an asterisk</span> are required.</p>
+				<div class="contact__grid">
+					<FormField label="First name" name="firstName" autocomplete="given-name" required maxlength={100} />
+					<FormField label="Last name" name="lastName" autocomplete="family-name" required maxlength={100} />
+					<FormField label="Email" name="email" type="email" autocomplete="email" required maxlength={254} />
+					<FormField label="Phone (optional)" name="phone" type="tel" autocomplete="tel" maxlength={30} />
+					<FormField
+						class="contact__full"
+						label="Subject"
+						name="topic"
+						as="select"
+						options={CONTACT_TOPICS.map((t) => ({ value: t.id, label: t.label }))}
+					/>
+					<FormField
+						class="contact__full contact__optional"
+						id="tourSlug"
+						label="Which tour?"
+						name="tourSlug"
+						as="select"
+						options={[{ value: '', label: 'Not about a particular tour' }, ...tours.map((t) => ({ value: t.slug, label: t.title }))]}
+						data-contact-tour
+					/>
+					<FormField
+						class="contact__full contact__optional"
+						label="Booking reference"
+						name="bookingRef"
+						hint="It's in your confirmation email, e.g. HBC-7K3QXM."
+						maxlength={20}
+						autocapitalize="characters"
+						data-contact-ref
+					/>
+					<FormField class="contact__full" label="Message" name="message" as="textarea" required maxlength={5000} rows={5} />
+				</div>
+				{turnstileSiteKey && <div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-theme="light" />}
+				<p class="contact__privacy">
+					We use your details only to answer your message. See our <a href="/legal/privacy/">Privacy policy</a>.
+				</p>
+				<Button type="submit" iconEnd="arrow-right" class="contact__submit">Send message</Button>
+				<p id="contact-status" class="contact__status" role="status" aria-live="polite"></p>
+			</form>
+		</section>
+
+		<a class="contact__map" href={MEETING_POINT_MAP_URL} target="_blank" rel="noopener">
+			<i class="ti ti-map-2" aria-hidden="true"></i>
+			{MEETING_POINT_LABEL}: open the map
+			<span class="sr-only"> (opens in a new tab)</span>
+		</a>
+		<p class="contact__meeting">
+			<i class="ti ti-info-circle" aria-hidden="true"></i>
+			<span>
+				Meet at stand 14 on Split's Riva: look for the Hello Blue Cave sign near the boat berths. Arrive ten to fifteen
+				minutes before check-in; the waterfront gets busy in peak season.
+			</span>
+		</p>
 	</main>
 </SiteLayout>
 
-{turnstileSiteKey && (
-	<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-)}
+<!-- Without JavaScript the tour and booking-reference fields always show. -->
+<noscript><style>.contact__optional { display: flex !important; }</style></noscript>
+
+{turnstileSiteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}
 
 <script>
 	import { initContactForm } from '../../client/contact-form';
@@ -199,134 +155,237 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 </script>
 
 <style>
-	.contact-title {
-		font-size: 22px;
-		font-weight: 500;
-		margin: 0 0 5px;
-	}
+	@layer pages {
+		.contact {
+			width: 100%;
+			max-width: var(--content-max);
+			margin: 0 auto;
+			padding: calc(24px + 1.5rem) var(--page-gutter) 0;
+		}
 
-	.hero-sub {
-		font-size: 13px;
-		color: var(--color-text-secondary);
-		margin: 0 0 24px;
-		line-height: 1.6;
-	}
+		.contact__title {
+			margin: 0 0 var(--space-2);
+			font-size: var(--font-size-hero);
+			font-weight: var(--font-weight-medium);
+			line-height: var(--line-height-tight);
+		}
 
-	.contact-page .cc-icon--success {
-		background: var(--color-background-success);
-		color: var(--color-text-success);
-	}
+		.contact__lead {
+			max-width: 560px;
+			margin: 0 0 var(--space-6);
+			font-size: var(--font-size-body-md);
+			line-height: var(--line-height-body-md);
+			color: var(--color-text-secondary);
+		}
 
-	.contact-page .cc-icon--info {
-		background: var(--color-background-info);
-		color: var(--color-text-info);
-	}
+		.contact__cards {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: var(--space-3);
+			margin: 0 0 var(--space-3);
+			padding: 0;
+			list-style: none;
+		}
 
-	.contact-page .cc-icon--location {
-		background: var(--color-category-tip-bg);
-		color: var(--color-category-tip-text);
-	}
+		/* board 14: grey, borderless tiles; every one is a real link */
+		.contact__card {
+			display: grid;
+			grid-template-columns: auto 1fr;
+			grid-template-rows: auto auto auto;
+			column-gap: 14px;
+			height: 100%;
+			padding: var(--space-4) 18px;
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+			color: var(--color-text-primary);
+			text-decoration: none;
+			transition: background-color var(--duration-fast) ease;
+		}
 
-	.contact-page .contact-card:hover {
-		background: var(--color-background-hover);
-	}
+		.contact__card:hover {
+			background: var(--color-background-hover);
+		}
 
-	.contact-page .open-dot {
-		background: var(--color-accent);
-	}
+		.contact__icon {
+			display: flex;
+			grid-row: span 3;
+			align-items: center;
+			justify-content: center;
+			width: 36px;
+			height: 36px;
+			border-radius: var(--radius-md);
+			font-size: 18px;
+		}
 
-	.hours-note {
-		font-size: 12px;
-		color: var(--color-text-secondary);
-		margin: 8px 0 0;
-		line-height: 1.5;
-	}
+		.contact__icon--brand {
+			background: var(--color-background-brand-soft);
+			color: var(--color-text-brand);
+		}
 
-	.contact-page .form-field--name {
-		grid-column: 1;
-		grid-row: 1;
-	}
+		.contact__icon--info {
+			background: var(--color-background-brand-soft);
+			color: var(--color-text-info);
+		}
 
-	.contact-page .form-field--email {
-		grid-column: 1;
-		grid-row: 2;
-	}
+		.contact__icon--warm {
+			background: var(--color-category-tip-bg);
+			color: var(--color-category-tip-text);
+		}
 
-	.contact-page .form-field--phone {
-		grid-column: 2;
-		grid-row: 2;
-	}
+		.contact__type {
+			font-size: var(--font-size-xs);
+			text-transform: uppercase;
+			letter-spacing: var(--letter-spacing-label);
+			color: var(--color-text-tertiary);
+		}
 
-	.contact-page .form-field input,
-	.contact-page .form-field select,
-	.contact-page .form-field textarea {
-		font-size: 13px;
-	}
+		.contact__value {
+			font-size: var(--font-size-md);
+			font-weight: var(--font-weight-medium);
+			overflow-wrap: anywhere;
+		}
 
-	.contact-page .form-field textarea {
-		resize: vertical;
-		min-height: 80px;
-	}
+		.contact__sub {
+			font-size: var(--font-size-base);
+			color: var(--color-text-secondary);
+		}
 
-	.form-note {
-		font-size: 12px;
-		color: var(--color-text-secondary);
-		margin: 0 0 12px;
-	}
+		.contact__hours {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: var(--space-5);
+			margin-bottom: var(--space-6);
+			padding: var(--space-4) 18px;
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+		}
 
-	.contact-submit[aria-disabled='true'] {
-		opacity: 0.6;
-		cursor: progress;
-	}
+		.contact__hours-label {
+			margin: 0 0 6px;
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-medium);
+			text-transform: uppercase;
+			letter-spacing: var(--letter-spacing-label);
+			color: var(--color-text-tertiary);
+		}
 
-	.contact-submit {
-		margin-top: 6px;
-		padding: 11px 22px;
-		font-size: 13px;
-		min-height: auto;
-	}
+		.contact__hours-line {
+			margin: 0;
+			font-size: var(--font-size-base);
+			color: var(--color-text-secondary);
+		}
 
-	.contact-submit .ti {
-		font-size: 13px;
-		vertical-align: -2px;
-	}
+		.contact__form-card {
+			margin-bottom: var(--space-6);
+			padding: 1.25rem;
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
+		}
 
-	#contact-status {
-		min-height: 1.5em;
-		margin: 8px 0 0;
-		font-size: 13px;
-		font-weight: 500;
-	}
+		.contact__form-title {
+			margin: 0 0 var(--space-2);
+			font-size: var(--font-size-lg);
+			font-weight: var(--font-weight-medium);
+		}
 
-	#contact-status:empty {
-		min-height: 0;
-		margin: 0;
-	}
+		.contact__note,
+		.contact__privacy {
+			margin: 0 0 var(--space-4);
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
 
-	.contact-page .map-stub {
-		height: 140px;
-		margin-bottom: 16px;
-	}
+		.contact__privacy {
+			margin: var(--space-4) 0 0;
+		}
 
-	.contact-page .map-stub .ti {
-		font-size: 20px;
-		color: var(--color-accent);
-	}
+		.contact__grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: var(--space-4);
+		}
 
-	.contact-page .marina-note .ti {
-		color: var(--color-accent);
-	}
+		.contact :global(.contact__full) {
+			grid-column: 1 / -1;
+		}
 
-	.contact-page .marina-note span {
-		margin: 0;
-	}
+		/* Shown by the script for the subjects that need them. */
+		.contact :global(.contact__optional) {
+			display: none;
+		}
 
-	@media (max-width: 768px) {
-		.contact-page .form-field--name,
-		.contact-page .form-field--email,
-		.contact-page .form-field--phone {
-			grid-column: auto;
-			grid-row: auto;
+		.contact :global(.contact__optional.is-shown) {
+			display: flex;
+		}
+
+		.contact__hp {
+			position: absolute;
+			left: -10000px;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+		}
+
+		.contact :global(.contact__submit) {
+			margin-top: var(--space-4);
+			padding: 11px 22px;
+		}
+
+		.contact__status {
+			margin: var(--space-3) 0 0;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.contact__status:empty {
+			display: none;
+		}
+
+		.contact__map {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: var(--space-2);
+			height: 140px;
+			margin-bottom: var(--space-3);
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+			color: var(--color-text-primary);
+			font-weight: var(--font-weight-medium);
+			text-decoration: none;
+		}
+
+		.contact__map:hover {
+			background: var(--color-background-hover);
+		}
+
+		.contact__map .ti {
+			font-size: 20px;
+			color: var(--color-accent);
+		}
+
+		.contact__meeting {
+			display: flex;
+			gap: var(--space-2);
+			margin: 0;
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.contact__meeting .ti {
+			flex-shrink: 0;
+			margin-top: 2px;
+			color: var(--color-text-tertiary);
+		}
+
+		@media (max-width: 768px) {
+			.contact__cards,
+			.contact__hours,
+			.contact__grid {
+				grid-template-columns: 1fr;
+			}
 		}
 	}
 </style>

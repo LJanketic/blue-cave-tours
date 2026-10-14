@@ -139,8 +139,3 @@ export const FAQ_ITEMS: FaqItem[] = [
 		link: { href: '/contact/', label: 'Contact us' },
 	},
 ];
-
-/** Items per category, useful for FAQ nav counts. */
-export function faqCountByCategory(category: FaqCategory): number {
-	return FAQ_ITEMS.filter((item) => item.category === category).length;
-}

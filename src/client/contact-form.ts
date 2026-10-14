@@ -1,8 +1,11 @@
 import {
 	CONTACT_LIMITS,
 	HONEYPOT_FIELD,
+	TOPICS_WITH_TOUR,
+	joinName,
 	trimField,
 	validateContactSubmission,
+	type ContactTopic,
 } from '../lib/contact-validation';
 
 /** Minimal surface of the Cloudflare Turnstile widget API we call into. */
@@ -24,10 +27,16 @@ export function initContactForm(): void {
 	if (!(startedAtEl instanceof HTMLInputElement)) return;
 
 	const contactForm = form;
+	// The script validates and explains in the status line; without it the
+	// browser's own checks run before the plain form post.
+	contactForm.noValidate = true;
 	startedAtEl.value = String(Date.now());
 
 	const params = new URLSearchParams(window.location.search);
 	const tourFromUrl = params.get('tour');
+	const topicSelect = contactForm.querySelector<HTMLSelectElement>('#topic');
+	const tourWrap = contactForm.querySelector('[data-contact-tour]')?.closest<HTMLElement>('.form-field-ui');
+	const refWrap = contactForm.querySelector('[data-contact-ref]')?.closest<HTMLElement>('.form-field-ui');
 
 	function applyTourPreselect() {
 		if (!tourFromUrl) return;
@@ -37,7 +46,17 @@ export function initContactForm(): void {
 		}
 	}
 
+	// The tour question shows for group, charter and change topics, or when a
+	// tour page linked here; the booking reference only for changes.
+	function syncOptionalFields() {
+		const topic = (topicSelect?.value ?? 'general') as ContactTopic;
+		tourWrap?.classList.toggle('is-shown', Boolean(tourFromUrl) || TOPICS_WITH_TOUR.includes(topic));
+		refWrap?.classList.toggle('is-shown', topic === 'change');
+	}
+
 	applyTourPreselect();
+	syncOptionalFields();
+	topicSelect?.addEventListener('change', syncOptionalFields);
 
 	// Point screen readers from each invalid field to the status message, and
 	// clear the flag as soon as the visitor edits that field.
@@ -50,7 +69,9 @@ export function initContactForm(): void {
 	}
 
 	function fieldsById(ids: readonly string[] | undefined): HTMLElement[] {
+		// The record has one name; the form asks for first and last.
 		return (ids ?? [])
+			.flatMap((id) => (id === 'name' ? ['firstName', 'lastName'] : [id]))
 			.map((id) => contactForm.querySelector<HTMLElement>(`#${id}`))
 			.filter((el): el is HTMLElement => el !== null);
 	}
@@ -82,11 +103,13 @@ export function initContactForm(): void {
 		try {
 			const data = Object.fromEntries(new FormData(contactForm).entries());
 			const result = validateContactSubmission({
-				name: trimField(data.name, CONTACT_LIMITS.name),
+				name: joinName(trimField(data.firstName, CONTACT_LIMITS.firstName), trimField(data.lastName, CONTACT_LIMITS.lastName)),
 				email: trimField(data.email, CONTACT_LIMITS.email),
 				message: trimField(data.message, CONTACT_LIMITS.message),
 				phone: trimField(data.phone, CONTACT_LIMITS.phone),
 				tourSlug: trimField(data.tourSlug, CONTACT_LIMITS.tourSlug),
+				topic: trimField(data.topic, 20),
+				bookingRef: trimField(data.bookingRef, CONTACT_LIMITS.bookingRef),
 				honeypot: trimField(data[HONEYPOT_FIELD], 200),
 				startedAt: Number(startedAtEl.value) || null,
 			});
@@ -110,10 +133,11 @@ export function initContactForm(): void {
 				markInvalid(fieldsById(json.fields));
 				throw new Error(json.error || 'Failed to send');
 			}
-			statusEl.textContent = 'Thanks — we received your message and will get back to you soon.';
+			statusEl.textContent = 'Thanks, we received your message and will get back to you soon.';
 			contactForm.reset();
 			startedAtEl.value = String(Date.now());
 			applyTourPreselect();
+			syncOptionalFields();
 		} catch (err) {
 			statusEl.textContent = err instanceof Error ? err.message : 'Something went wrong';
 		} finally {

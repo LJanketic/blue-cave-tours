@@ -1,0 +1,64 @@
+---
+export const prerender = true;
+
+/** Where the contact form lands without JavaScript, after a successful send (§3.5). */
+import { REPLY_TIME, pageTitle } from '../../config/site';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import Button from '../../components/ui/Button.astro';
+---
+
+<SiteLayout title={pageTitle('Message sent')} robots="noindex" footerGap="32px">
+	<main id="main" class="contact-result">
+		<span class="contact-result__icon" aria-hidden="true"><i class="ti ti-circle-check"></i></span>
+		<h1>Thanks, your message is on its way</h1>
+		<p>We reply {REPLY_TIME}, by email. If it's urgent, call or WhatsApp us.</p>
+		<div class="contact-result__actions">
+			<Button href="/tours/">Browse tours</Button>
+			<Button href="/" variant="secondary">Back to home</Button>
+		</div>
+	</main>
+</SiteLayout>
+
+<style>
+	@layer pages {
+		.contact-result {
+			width: 100%;
+			max-width: 520px;
+			margin: 0 auto;
+			padding: calc(24px + 3rem) var(--page-gutter) var(--space-8);
+			text-align: center;
+		}
+
+		.contact-result__icon {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 56px;
+			height: 56px;
+			margin-bottom: var(--space-4);
+			border-radius: 50%;
+			background: var(--color-background-brand-soft);
+			color: var(--color-text-brand);
+			font-size: 28px;
+		}
+
+		h1 {
+			margin: 0 0 var(--space-2);
+			font-size: var(--font-size-hero);
+			font-weight: var(--font-weight-medium);
+			line-height: var(--line-height-tight);
+		}
+
+		p {
+			margin: 0 0 var(--space-6);
+			color: var(--color-text-secondary);
+		}
+
+		.contact-result__actions {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: var(--space-3);
+		}
+	}
+</style>

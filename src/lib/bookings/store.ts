@@ -77,6 +77,12 @@ export type Enquiry = {
 	phone: string;
 	tourSlug: string;
 	message: string;
+	/** The Subject the sender picked (PR 6); older records have none. */
+	topic?: import('../contact-validation').ContactTopic;
+	/** For cancellations and changes; confirmed only by email to the booking's address. */
+	bookingRef?: string;
+	/** False when the daily cap on admin notification emails was reached (S-6): stored, not emailed. */
+	notified?: boolean;
 	sample?: boolean;
 };
 

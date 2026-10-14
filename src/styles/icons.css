@@ -48,6 +48,7 @@
 .ti-map-pin:before{content:"\eae8"}
 .ti-mask:before{content:"\eeb0"}
 .ti-menu-2:before{content:"\ec42"}
+.ti-message:before{content:"\eaef"}
 .ti-mood-sad:before{content:"\eaf6"}
 .ti-moon-stars:before{content:"\ece7"}
 .ti-mountain:before{content:"\ef97"}
@@ -56,7 +57,6 @@
 .ti-plane:before{content:"\eb6f"}
 .ti-player-pause:before{content:"\ed45"}
 .ti-player-play:before{content:"\ed46"}
-.ti-quote:before{content:"\efbe"}
 .ti-refresh:before{content:"\eb13"}
 .ti-sailboat:before{content:"\ec83"}
 .ti-scale:before{content:"\ebc2"}
@@ -73,6 +73,7 @@
 .ti-ticket:before{content:"\eb3d"}
 .ti-user:before{content:"\eb4d"}
 .ti-user-check:before{content:"\eb49"}
+.ti-user-circle:before{content:"\ef68"}
 .ti-users:before{content:"\ebf2"}
 .ti-wifi-off:before{content:"\ecfa"}
 .ti-x:before{content:"\eb55"}
