@@ -1076,6 +1076,41 @@ Responsive behaviour: §3.1.1, row "Tour detail".
 - The aside never overlaps the footer.
 - The mobile bar never covers a focused element (Playwright check, §11.15).
 
+**As built (PR 4, 2026-10-14), Tours overview:**
+- **Two islands share one store** (`src/lib/tours-catalog-state.ts`): `TourFilters.vue` (`client:load`) holds the chips and sort inside `PhotoHero`; `ToursCatalog.vue` (`client:visible`) holds the count, Clear filters, the grid and the empty state.
+  - Both render the server's unfiltered state until they've mounted, then apply the URL. Hydrating straight into filtered state caused mismatch warnings.
+  - The URL stays in step through `history.replaceState`, and can be shared.
+  - `tour-filters.ts` is retyped to the DTO and gains `parseCatalogQuery` / `catalogQueryString`, which still read the older `?filter=` and `?search=`. It has tests.
+- **Removable destination chip:** "Hvar island ×" is a pressed chip; its accessible name ends in ", remove this filter".
+- **The island payload test** (`src/lib/island-size.test.ts`, run on the built page) sits at 6,071 of 6,144 bytes. To get there:
+  - card photos are `{ srcset, alt }`: card boxes have a fixed height, and the fallback `src` is the first srcset candidate
+  - the price label is computed in the card
+  - the search text is the tagline (the title is searched as well)
+  - only the half-day and sunset tags are sent
+  - empty fields are left out
+
+  More tours won't fit; the next step would be rendering the cards on the server and only reordering them.
+- **Photo:** the Tours hero is `blue-lagoon/02` (C-17).
+- **[DEVIATE, a11y] Scrim:** `PhotoHero` uses `--color-overlay-photo-hero`, a stronger scrim. The board's measured 1.9:1 behind the lead. The glass chips keep the board's .42, which passes on top of the stronger scrim.
+- **Contrast test:** `tests/visual/photo-hero-contrast.spec.ts` checks eyebrow, title, lead and chip labels at four widths in Chromium and WebKit. It needs no transitions while measuring, and leaves out a pill's own border and rounded ends.
+- **Footer gap:** `SiteLayout` takes `footerGap`. The footer isn't inside `<main>`, so a custom property set on the page never reached it.
+- **Lighthouse** (mobile, brotli, median of 3): 99 / 100 / 100 / 100, LCP 2.3s (the hero image), CLS 0.01.
+- **Removed:** `TourCard.astro`. Destination pages keep their own card markup until PR 5.
+
+**As built (PR 4), tour detail:**
+- **Rewritten** with Breadcrumb, `ImageGallery`, Timeline, `InfoTileGrid`, `Notice`, `StickyAside` and `MobileActionBar`. Highlights, the destination chips and the "Overview" heading are gone.
+- **[DEVIATE, content] Intro:** it's `overviewHighlights` (the operator's full description), not `shortDescription`, which is the card blurb.
+- **Good to know** also shows Weather and "On board" (the safety copy), which the page showed before.
+- **Info tiles** share their height per row, not across all rows. A long value (What to bring) would otherwise stretch every tile.
+- **Booking actions** come from `tourCtas()` in `tour-display.ts`, which has tests: Book group tour / Plan your charter / Enquire about this tour, plus "Book as private charter" except on the charter landing page and the one-way transfer.
+- **The "Book now" h2** heads the aside: visually hidden on wide screens, shown on phones.
+- **Tests:** `tests/e2e/tours.spec.ts` covers:
+  - every tour opens on a real photo, with no Highlights
+  - focus never sits under the header or the bar at 390×844 (skipped in WebKit, which doesn't Tab to links by default)
+  - the mobile bar leads to `#book` and hides there
+- **Lighthouse:** 99 / 100 / 100 / 100, LCP 2.0–2.2s, CLS 0.
+- **Not done:** Reviews (D-5); they're hidden.
+
 ### 6.4 Destinations overview `/destinations/` (board 04)
 
 **Files:**

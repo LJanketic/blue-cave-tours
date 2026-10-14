@@ -107,35 +107,7 @@
 		grid-template-columns: 1fr;
 	}
 
-	.mobile-book-bar {
-		display: flex;
-	}
-
-	.tour-detail {
-		padding-bottom: calc(2rem + 72px);
-	}
-
 	/* Featured row becomes a horizontal snap carousel on mobile. */
-	.tour-grid--featured {
-		display: flex;
-		grid-template-columns: none;
-		overflow-x: auto;
-		scroll-snap-type: x mandatory;
-		-webkit-overflow-scrolling: touch;
-		scrollbar-width: none;
-		gap: 12px;
-		margin-inline: calc(-1 * var(--page-gutter));
-		padding: 0 var(--page-gutter) 4px;
-	}
-
-	.tour-grid--featured::-webkit-scrollbar {
-		display: none;
-	}
-
-	.tour-grid--featured > .tour-cell {
-		flex: 0 0 78%;
-		scroll-snap-align: start;
-	}
 
 	.contact-grid {
 		grid-template-columns: 1fr;
@@ -266,10 +238,6 @@
 	.trust-bar {
 		grid-template-columns: 1fr 1fr;
 		margin-top: 28px;
-	}
-
-	.tour-grid--featured > .tour-cell {
-		flex: 0 0 85%;
 	}
 
 	.dest-grid:not(.dest-grid--listing) > * {

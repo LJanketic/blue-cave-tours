@@ -5,6 +5,7 @@
  */
 import type { DestinationCardDTO } from '../../lib/cards';
 import Badge from '../ui/Badge.vue';
+import { cardPhotoSrc } from '../../lib/cards';
 import '../../styles/components/pill-link.css';
 
 withDefaults(defineProps<{ destination: DestinationCardDTO; eager?: boolean; headingLevel?: 2 | 3 }>(), {
@@ -19,11 +20,9 @@ withDefaults(defineProps<{ destination: DestinationCardDTO; eager?: boolean; hea
 			<div class="dest-card-ui__img">
 				<img
 					v-if="destination.photo"
-					:src="destination.photo.src"
+				:src="cardPhotoSrc(destination.photo)"
 					:srcset="destination.photo.srcset"
-					:sizes="destination.photo.sizes"
-					:width="destination.photo.width"
-					:height="destination.photo.height"
+					sizes="(max-width: 640px) 92vw, 460px"
 					:alt="destination.photo.alt"
 					:loading="eager ? 'eager' : 'lazy'"
 					decoding="async"

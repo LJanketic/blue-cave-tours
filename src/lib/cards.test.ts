@@ -29,7 +29,7 @@ describe('toTourCardDTO', () => {
 	it('stays slim: every tour card fits well under 1 KB of island props', () => {
 		for (const tour of tours) {
 			const dto = toTourCardDTO(tour, ['hvar'], null);
-			expect(JSON.stringify(dto).length, tour.slug).toBeLessThan(1000);
+			expect(JSON.stringify(dto).length, tour.slug).toBeLessThan(700);
 		}
 	});
 

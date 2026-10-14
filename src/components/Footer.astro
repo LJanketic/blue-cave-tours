@@ -3,6 +3,10 @@ import { IMPRINT } from '../config/legal';
 import { charterUrl } from '../config/routes';
 import { LICENCE_CONFIRMED, SITE_BLURB, SITE_NAME } from '../config/site';
 
+type Props = { /** Space above the footer, e.g. 'var(--section-gap)'. */ gap?: string };
+
+const { gap } = Astro.props;
+
 // Spec §5.2 and decision D-19 (no "Sunset cruises": there's no such product).
 const COLUMNS = [
 	{
@@ -33,7 +37,7 @@ const COLUMNS = [
 ];
 ---
 
-<footer class="site-footer">
+<footer class="site-footer" style={gap ? `--footer-gap: ${gap}` : undefined}>
 	<div class="site-footer__grid">
 		<div class="site-footer__brand">
 			<a class="site-footer__logo" href="/">
@@ -66,7 +70,7 @@ const COLUMNS = [
 
 <style>
 	@layer components {
-		/* Spec §5.2 (board hbc.css .footer). Pages set --footer-gap for the space above it. */
+		/* Spec §5.2 (board hbc.css .footer). Pages set the space above it with SiteLayout's footerGap. */
 		.site-footer {
 			width: 100%;
 			max-width: var(--content-max);

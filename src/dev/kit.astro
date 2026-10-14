@@ -60,7 +60,7 @@ const hvar = destinations.find((d) => d.slug === 'hvar') ?? destinations[0];
 const fee = mandatoryFeeLabel(blueCave);
 ---
 
-<SiteLayout title="Component kit" robots="noindex, nofollow" solidNav={false}>
+<SiteLayout title="Component kit" robots="noindex, nofollow" solidNav={false} footerGap="var(--section-gap)">
 	<main id="main" class="kit">
 		<PhotoHero
 			image={HERO_IMAGE.src}
@@ -230,10 +230,6 @@ const fee = mandatoryFeeLabel(blueCave);
 
 <style>
 	@layer pages {
-		.kit {
-			--footer-gap: var(--section-gap);
-		}
-
 		.kit__wrap {
 			max-width: var(--content-max);
 			margin: 0 auto;

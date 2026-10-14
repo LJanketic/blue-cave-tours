@@ -64,12 +64,13 @@ const { image, imagePosition = 'center', eyebrow, eyebrowIcon, title, lead } = A
 			object-fit: cover;
 		}
 
-		/* The board's scrim plus the header fade, so the nav and the text both have contrast. */
+		/* Header fade plus a scrim strong enough for the text ([DEVIATE, a11y]: the
+		   board's measured as low as 1.9:1 on the Tours photo, PR 4). */
 		.photo-hero::after {
 			content: '';
 			position: absolute;
 			inset: 0;
-			background: var(--color-overlay-header), var(--color-overlay-hero);
+			background: var(--color-overlay-header), var(--color-overlay-photo-hero);
 			pointer-events: none;
 		}
 

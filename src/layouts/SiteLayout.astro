@@ -20,6 +20,8 @@ type Props = {
 	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 	/** Passed to BaseLayout: preload the display font on pages with a display hero. */
 	fontPreload?: boolean;
+	/** Space above the footer (spec §5.2), e.g. 'var(--section-gap)'. Default 0. */
+	footerGap?: string;
 };
 
 const {
@@ -33,6 +35,7 @@ const {
 	robots,
 	jsonLd,
 	fontPreload = false,
+	footerGap,
 } = Astro.props;
 ---
 
@@ -51,6 +54,6 @@ const {
 		<a class="skip-link" href="#main">Skip to content</a>
 		{!checkout && <Header solid={solidNav} />}
 		<slot />
-		{!checkout && <Footer />}
+		{!checkout && <Footer gap={footerGap} />}
 	</div>
 </BaseLayout>

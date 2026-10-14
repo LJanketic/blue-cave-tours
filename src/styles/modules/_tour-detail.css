@@ -52,63 +52,6 @@
 	border-radius: 20px;
 }
 
-.prose {
-	font-size: 13px;
-	color: var(--color-text-secondary);
-	line-height: 1.7;
-	margin: 0;
-}
-
-.rating-row {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-bottom: 16px;
-	font-size: 13px;
-	color: var(--color-text-secondary);
-	flex-wrap: wrap;
-}
-
-.price-row {
-	display: flex;
-	align-items: baseline;
-	gap: 4px;
-	margin-bottom: 4px;
-}
-
-.card-divider {
-	border: none;
-	border-top: 0.5px solid var(--color-border-tertiary);
-	margin: 12px 0;
-}
-
-.card-row {
-	display: flex;
-	justify-content: space-between;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	gap: 4px 12px;
-	font-size: 13px;
-	margin-bottom: 8px;
-}
-
-.card-label {
-	color: var(--color-text-secondary);
-	display: flex;
-	align-items: center;
-	gap: 5px;
-	flex: 1 1 auto;
-	min-width: 0;
-}
-
-.card-val {
-	font-weight: 500;
-	text-align: right;
-	flex: 0 1 auto;
-	min-width: 0;
-	word-break: break-word;
-}
-
 .cta-primary {
 	width: 100%;
 	padding: 12px;
@@ -150,16 +93,6 @@
 
 .cta-secondary:hover {
 	background: var(--color-background-secondary);
-}
-
-.policy-pill {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	font-size: 12px;
-	color: var(--color-text-success);
-	margin-top: 10px;
-	justify-content: center;
 }
 
 .placeholder-image {
@@ -309,56 +242,6 @@
 	background: var(--color-border-secondary);
 }
 
-.it-dot {
-	width: 22px;
-	height: 22px;
-	border-radius: 50%;
-	background: var(--color-background-info);
-	border: 0.5px solid var(--color-border-info);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-}
-
-.it-dot .ti {
-	font-size: 11px;
-	color: var(--color-text-info);
-}
-
-.it-time {
-	font-size: 11px;
-	color: var(--color-text-tertiary);
-	margin-bottom: 2px;
-}
-
-.it-label {
-	font-size: 13px;
-	font-weight: 500;
-}
-
-.includes-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 6px;
-}
-
-.inc-item {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-size: 13px;
-	color: var(--color-text-secondary);
-}
-
-.inc-item.yes .ti {
-	color: var(--color-text-success);
-}
-
-.inc-item.no .ti {
-	color: var(--color-text-danger);
-}
-
 .info-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -389,47 +272,4 @@
 /* Mobile sticky book bar — only shown on tour detail at ≤768px. */
 #book-panel {
 	scroll-margin-top: calc(var(--site-header-height) + 12px);
-}
-
-.mobile-book-bar {
-	display: none;
-	position: fixed;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	z-index: 90;
-	background: var(--color-background-primary);
-	border-top: 0.5px solid var(--color-border-tertiary);
-	padding: 12px 16px;
-	padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	box-shadow: 0 -2px 16px rgb(0 0 0 / 6%);
-}
-
-.mbb-info {
-	display: flex;
-	flex-direction: column;
-	line-height: 1.25;
-	min-width: 0;
-}
-
-.mbb-price {
-	font-size: 16px;
-	font-weight: 600;
-}
-
-.mbb-per {
-	font-size: 11px;
-	font-weight: 400;
-	color: var(--color-text-secondary);
-}
-
-.mobile-book-bar .mbb-btn {
-	width: auto;
-	padding: 10px 22px;
-	font-size: 13px;
-	white-space: nowrap;
-	text-decoration: none;
 }

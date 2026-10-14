@@ -1,19 +1,5 @@
 /* ─── Tour cards ─────────────────────────────────────────────────────── */
 
-.cards-scroll,
-.tour-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 12px;
-	margin-bottom: 32px;
-}
-
-.tour-grid {
-	grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-	gap: 14px;
-	margin-bottom: 28px;
-}
-
 .tour-card {
 	display: block;
 	background: var(--color-background-primary);
@@ -343,24 +329,6 @@ h3.card-name {
 
 /* ─── Tours overview (catalog header, sort chip, cards) ───────────────── */
 
-.tours-header {
-	margin: 8px 0 24px;
-}
-
-.tours-title {
-	font-size: 28px;
-	font-weight: 500;
-	margin: 0 0 8px;
-}
-
-.tours-desc {
-	font-size: 14px;
-	color: var(--color-text-secondary);
-	line-height: 1.6;
-	max-width: 520px;
-	margin: 0;
-}
-
 .sort-chip {
 	cursor: pointer;
 }
@@ -376,10 +344,6 @@ h3.card-name {
 }
 
 /* Grid cell wrapping each tour card. */
-.tour-cell {
-	position: relative;
-	min-width: 0;
-}
 
 .no-results {
 	text-align: center;

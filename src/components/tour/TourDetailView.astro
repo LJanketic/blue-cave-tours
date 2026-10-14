@@ -1,339 +1,457 @@
 ---
+/**
+ * Tour detail (spec §6.3, board 03): gallery, the main column (intro,
+ * itinerary, inclusions, good to know, please note) and the sticky booking
+ * aside, with a mobile action bar that leads to it.
+ */
 import type { TourDetail } from '../../types/tour';
-import { contactHrefForTour, groupBookHref, isGroupTour, supportsInstantBook, tourPriceUnit } from '../../lib/booking';
+import { contactHrefForTour, groupBookHref, isGroupTour, MAX_GUESTS } from '../../lib/booking';
 import { charterUrl } from '../../config/routes';
-import { tourFromPrice } from '../../lib/price';
-import { caveEntryNote, showsBestseller } from '../../lib/tour-display';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
+import { seasonLabel } from '../../config/season';
+import { MEETING_POINT_LABEL, MEETING_POINT_MAP_URL } from '../../config/site';
+import { tourFromPrice } from '../../lib/price';
+import { mandatoryFeeLabel } from '../../lib/cards';
+import { showsBestseller, tourCtas } from '../../lib/tour-display';
 import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
-import { getDestinationsForTour, getPrimaryDestinationForTour } from '../../lib/destinations';
+import { getPrimaryDestinationForTour } from '../../lib/destinations';
 import ImageGallery, { type GalleryTag } from '../vue/ImageGallery.vue';
+import Breadcrumb from '../ui/Breadcrumb.astro';
+import SectionHeader from '../ui/SectionHeader.astro';
+import Timeline from '../ui/Timeline.astro';
+import InfoTile from '../ui/InfoTile.astro';
+import InfoTileGrid from '../ui/InfoTileGrid.astro';
+import Notice from '../ui/Notice.astro';
+import StickyAside from '../ui/StickyAside.astro';
+import Button from '../ui/Button.astro';
+import MobileActionBar from '../ui/MobileActionBar.astro';
 
 type Props = { tour: TourDetail };
 
-
 const { tour } = Astro.props;
-const instantBook = supportsInstantBook(tour);
-const types = tour.types;
 const isGroup = isGroupTour(tour);
-// Not instantly bookable: private tours go to the charter request, group tours on request to the contact form.
-const primaryBookHref = instantBook ? groupBookHref(tour) : isGroupTour(tour) ? contactHrefForTour(tour) : charterUrl(tour.slug);
-const showPrivateCta = instantBook && types.includes('private');
+const { primary, secondary } = tourCtas(tour, { book: (s) => groupBookHref({ slug: s }), contact: (s) => contactHrefForTour({ slug: s }), charter: charterUrl });
 
 // Order as on board 03: private first, then group.
 const heroTags: GalleryTag[] = [];
-if (types.includes('private')) {
-	heroTags.push({ icon: 'crown', label: instantBook ? 'Private available' : 'Private charter', tone: 'private' });
-}
-if (isGroup) {
-	heroTags.push({ icon: 'users', label: 'Group tour', tone: 'brand' });
-}
-if (showsBestseller(tour)) {
-	heroTags.push({ icon: 'star', label: 'Best seller', tone: 'tip' });
-}
+if (tour.types.includes('private')) heroTags.push({ icon: 'crown', label: isGroup ? 'Private available' : 'Private charter', tone: 'private' });
+if (isGroup) heroTags.push({ icon: 'users', label: 'Group tour', tone: 'brand' });
+if (showsBestseller(tour)) heroTags.push({ icon: 'star', label: 'Best seller', tone: 'tip' });
 
-const durationDisplay = tour.duration.replace(/Approx\.\s*/, '≈');
-const groupLabel = isGroup ? 'Small group' : 'Private charter';
-const groupIcon = isGroup ? 'users' : 'crown';
-const priceUnit = tourPriceUnit(tour);
-
-// The gallery's hero is its first real photo: tour.image is only a placeholder (§3.4).
+// The gallery opens on its first real photo: tour.image is only a placeholder (§3.4).
 const galleryPhotos = await Promise.all(
 	[tour.image, ...tour.gallery].map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)),
 );
 
-const highlightIcons = ['sunset-2', 'swimming', 'bottle', 'binoculars', 'ship', 'accessible', 'sailboat', 'droplet'];
-
-const goodToKnow = [
-	{ label: 'Duration', value: tour.duration },
-	{ label: 'Departure', value: tour.departure },
-	{ label: 'Return', value: tour.returnTime },
-	{ label: 'Season', value: tour.availability },
-	{ label: 'Meeting point', value: tour.meetingPoint },
-	{ label: 'What to bring', value: tour.whatToBring.join(', ') },
+const primaryDestination = getPrimaryDestinationForTour(tour);
+const crumbs = [
+	{ label: 'Tours', href: '/tours/' },
+	...(primaryDestination ? [{ label: primaryDestination.name, href: `/destinations/${primaryDestination.slug}/` }] : []),
+	{ label: tour.title },
 ];
 
-goodToKnow.push({ label: 'Cave entry', value: caveEntryNote(tour) });
-
-const tourDestinations = getDestinationsForTour(tour.slug);
-const primaryDestination = getPrimaryDestinationForTour(tour);
+const price = tourFromPrice(tour);
+const hasPrice = tour.adultPrice !== null;
+const unit = tour.priceUnit === 'boat' ? '/ boat' : '/ adult';
+const feeLine = mandatoryFeeLabel(tour);
+const mandatoryFees = tour.additionalFees.filter((fee) => fee.mandatory);
+const nextDeparture =
+	tour.departures.length > 1 ? 'Several departures daily' : (tour.departures[0]?.time ?? 'Time confirmed at booking');
+const duration = tour.duration.replace(/^Approx\.\s*/, '≈ ');
 ---
 
-<article class="page tour-detail">
-	<nav class="breadcrumb" aria-label="Breadcrumb">
-		<a href="/tours/">Tours</a>
-		<span aria-hidden="true"> › </span>
-		{
-			primaryDestination ? (
-				<a href={`/destinations/${primaryDestination.slug}/`}>{primaryDestination.name}</a>
-			) : (
-				<a href="/tours/">{tour.tagline}</a>
-			)
-		}
-		<span aria-hidden="true"> › </span>
-		<span aria-current="page">{tour.title}</span>
-	</nav>
-
+<article class="tour">
+	<Breadcrumb items={crumbs} />
 	<ImageGallery client:visible photos={galleryPhotos} tags={heroTags} />
 
-	<div class="layout">
-		<div>
-			<h1>{tour.title}</h1>
-			<p class="rating-row">
-				<span><i class="ti ti-clock" aria-hidden="true"></i> {durationDisplay}</span>
+	<div class="tour__layout">
+		<div class="tour__main">
+			<h1 class="tour__title">{tour.title}</h1>
+			<p class="tour__meta">
+				<span><i class="ti ti-clock" aria-hidden="true"></i> {duration}</span>
 				<span aria-hidden="true">·</span>
-				<span><i class={`ti ti-${groupIcon}`} aria-hidden="true"></i> {groupLabel}</span>
+				<span>
+					<i class={`ti ti-${isGroup ? 'users' : 'crown'}`} aria-hidden="true"></i>
+					{isGroup ? `Small group, max ${MAX_GUESTS}` : 'Private charter'}
+				</span>
 			</p>
+			<!-- [DEVIATE, content] The operator's full description, not the card blurb: it's the only overview the page has. -->
+			<p class="tour__intro">{tour.overviewHighlights}</p>
 
-			<section class="section" aria-labelledby="overview-heading">
-				<h2 id="overview-heading" class="section-title">Overview</h2>
-				<p class="prose">{tour.overviewHighlights}</p>
+			<section class="tour__section" aria-labelledby="itinerary-heading">
+				<SectionHeader variant="plain" title={tour.itineraryLabel} id="itinerary-heading" />
+				<Timeline variant="itinerary" items={tour.itinerary} />
 			</section>
 
-			<section class="section" aria-labelledby="highlights-heading">
-				<h2 id="highlights-heading" class="section-title">Highlights</h2>
-				<div class="highlights">
-					{
-						tour.included.map((item, index) => (
-							<div class="hl-item">
-								<i
-									class={`ti ti-${highlightIcons[index % highlightIcons.length]}`}
-									aria-hidden="true"
-								></i>
-								{item}
-							</div>
-						))
-					}
-				</div>
-			</section>
-
-			<section class="section" aria-labelledby="itinerary-heading">
-				<h2 id="itinerary-heading" class="section-title">{tour.itineraryLabel}</h2>
-				{
-					tour.itinerary.map((step, index) => {
-						const isFirst = index === 0;
-						const isLast = index === tour.itinerary.length - 1;
-						const timeLabel = isFirst ? tour.scheduleLabel : isLast ? tour.returnTime : null;
-
-						return (
-							<div class={`itinerary-item${isLast ? ' itinerary-item--last' : ''}`}>
-								<div class="it-dot">
-									<i class={`ti ti-${step.icon}`} aria-hidden="true"></i>
-								</div>
-								<div>
-									{timeLabel && <p class="it-time">{timeLabel}</p>}
-									<p class="it-label">{step.label}</p>
-								</div>
-							</div>
-						);
-					})
-				}
-			</section>
-
-			<section class="section" aria-labelledby="included-heading">
-				<h2 id="included-heading" class="section-title">What&apos;s included</h2>
-				<div class="includes-grid">
+			<section class="tour__section" aria-labelledby="included-heading">
+				<SectionHeader variant="plain" title="What's included" id="included-heading" />
+				<ul class="tour__list" role="list">
 					{
 						tour.included.map((item) => (
-							<div class="inc-item yes">
-								<i class="ti ti-circle-check" aria-hidden="true"></i>
+							<li>
+								<i class="ti ti-circle-check tour__yes" aria-hidden="true" />
 								{item}
-							</div>
+							</li>
+						))
+					}
+				</ul>
+			</section>
+
+			<section class="tour__section" aria-labelledby="excluded-heading">
+				<SectionHeader variant="plain" title="What's not included" id="excluded-heading" />
+				<ul class="tour__list" role="list">
+					{
+						mandatoryFees.map((fee) => (
+							<li>
+								<i class="ti ti-x tour__no" aria-hidden="true" />
+								{fee.shortText}
+								{fee.amountLabel && ` (${fee.amountLabel})`}
+							</li>
 						))
 					}
 					{
 						tour.notIncluded.map((item) => (
-							<div class="inc-item no">
-								<i class="ti ti-circle-x" aria-hidden="true"></i>
+							<li>
+								<i class="ti ti-x tour__no" aria-hidden="true" />
 								{item}
-							</div>
+							</li>
 						))
 					}
-				</div>
+				</ul>
 			</section>
 
-			<section class="section" aria-labelledby="know-heading">
-				<h2 id="know-heading" class="section-title">Good to know</h2>
-				<div class="info-grid">
-					{
-						goodToKnow.map((item) => (
-							<div class="info-item">
-								<span class="info-label">{item.label}</span>
-								<span class="info-val">{item.value}</span>
-							</div>
-						))
-					}
-				</div>
-				<p class="prose tour-detail__note">{tour.importantInfo}</p>
+			<section class="tour__section" aria-labelledby="know-heading">
+				<SectionHeader variant="plain" title="Good to know" id="know-heading" />
+				<InfoTileGrid>
+					<InfoTile label="Departure">{tour.departure}</InfoTile>
+					<InfoTile label="Return">{tour.returnTime}</InfoTile>
+					<InfoTile label="Meeting point">
+						<a href={MEETING_POINT_MAP_URL} target="_blank" rel="noopener">
+							{MEETING_POINT_LABEL}<i class="ti ti-arrow-up-right" aria-hidden="true"></i>
+							<span class="sr-only"> (opens in a new tab)</span>
+						</a>
+					</InfoTile>
+					<InfoTile label="Season">{seasonLabel()}</InfoTile>
+					{tour.additionalFees.length > 0 && <InfoTile label="Additional fees">{tour.additionalFees.map((fee) => fee.text).join(' ')}</InfoTile>}
+					{tour.languages && tour.languages.length > 0 && <InfoTile label="Languages">{tour.languages.join(', ')}</InfoTile>}
+					<InfoTile label="What to bring">{tour.whatToBring.join(', ')}</InfoTile>
+					<InfoTile label="Weather">{tour.weather}</InfoTile>
+					<InfoTile label="On board">{tour.importantInfo}</InfoTile>
+				</InfoTileGrid>
 			</section>
-
-			{
-				tourDestinations.length > 0 && (
-					<section class="section" aria-labelledby="destinations-heading">
-						<h2 id="destinations-heading" class="section-title">
-							Destinations on this tour
-						</h2>
-						<div class="tour-detail__dest-chips">
-							{tourDestinations.map((destination) => (
-								<a class="filter-chip" href={`/destinations/${destination.slug}/`}>
-									<i class={`ti ti-${destination.icon}`} aria-hidden="true" />
-									{destination.name}
-								</a>
-							))}
-						</div>
-					</section>
-				)
-			}
 
 			{
 				tour.disclaimers.length > 0 && (
-					<section class="section" aria-labelledby="disclaimers-heading">
-						<h2 id="disclaimers-heading" class="section-title">Please note</h2>
-						<ul class="tour-detail__disclaimers">
-							{tour.disclaimers.map((item) => (
-								<li>{item}</li>
-							))}
-						</ul>
+					<section class="tour__section" aria-labelledby="note-heading">
+						<SectionHeader variant="plain" title="Please note" id="note-heading" />
+						<Notice tone="warn">
+							<ul class="tour__notes">
+								{tour.disclaimers.map((item) => (
+									<li>{item}</li>
+								))}
+							</ul>
+						</Notice>
 					</section>
 				)
 			}
 		</div>
 
-		<aside id="book-panel" aria-label="Book this tour">
-			<div class="sticky-card">
-				<div class="price-row">
-					{priceUnit && <span class="price-from">From</span>}
-					<span class="price-val">{tourFromPrice(tour)}</span>
-					{priceUnit && <span class="price-per">{priceUnit}</span>}
+		<StickyAside id="book" class="tour__aside" aria-labelledby="book-heading">
+			<h2 id="book-heading" class="tour__book-heading">Book now</h2>
+			<p class="tour__price">
+				{
+					hasPrice ? (
+						<>
+							<span class="tour__from">From</span> <strong>{price}</strong> <span class="tour__unit">{unit}</span>
+						</>
+					) : (
+						<strong>{price}</strong>
+					)
+				}
+			</p>
+			{feeLine && <p class="tour__fee">{feeLine}</p>}
+			{
+				tour.childPrice !== null && (
+					<p class="tour__child">
+						<i class="ti ti-baby-carriage" aria-hidden="true" /> Children from €{tour.childPrice}
+					</p>
+				)
+			}
+			<dl class="tour__rows">
+				<div>
+					<dt><i class="ti ti-calendar" aria-hidden="true"></i> Next departure</dt>
+					<dd>{nextDeparture}</dd>
 				</div>
-				<p class="sticky-card__price-note">{tour.priceNotes}</p>
-
-				<div class="card-row">
-					<span class="card-label"><i class="ti ti-calendar" aria-hidden="true"></i> Next departure</span>
-					<span class="card-val">{tour.departure}</span>
+				<div>
+					<dt><i class="ti ti-sun" aria-hidden="true"></i> Season</dt>
+					<dd>{seasonLabel()}</dd>
 				</div>
-				<div class="card-row">
-					<span class="card-label"><i class="ti ti-users" aria-hidden="true"></i> Season</span>
-					<span class="card-val">{tour.availability}</span>
-				</div>
-
-				<hr class="card-divider" />
-
-				<a class="cta-primary cta-primary--link" href={primaryBookHref}>
-					{instantBook ? 'Book group tour' : 'Enquire now'}
-					<i class="ti ti-arrow-right" aria-hidden="true"></i>
-				</a>
-				{showPrivateCta && (
-					<a class="cta-secondary" href={charterUrl(tour.slug)}>
-						<i class="ti ti-crown" aria-hidden="true"></i>
-						Enquire about a private charter
-					</a>
-				)}
-
-				<p class="policy-pill">
-					<i class="ti ti-shield-check" aria-hidden="true"></i>
-					{CANCELLATION_SHORT}
-				</p>
-			</div>
-		</aside>
+			</dl>
+			<!-- Season-dependent prices must be disclosed ([DEVIATE, legal], §6.3.4). -->
+			<p class="tour__price-notes">{tour.priceNotes}</p>
+			<hr class="tour__divider" />
+			<Button href={primary.href} block iconEnd="arrow-right" class="tour__cta">{primary.label}</Button>
+			{secondary && <Button href={secondary.href} variant="secondary" block icon="crown" class="tour__cta tour__cta--secondary">{secondary.label}</Button>}
+			<p class="tour__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {CANCELLATION_SHORT}</p>
+		</StickyAside>
 	</div>
 
-	<div class="mobile-book-bar">
-		<div class="mbb-info">
-			<span class="mbb-price">
-				{tourFromPrice(tour)}
-				{priceUnit && <span class="mbb-per">{priceUnit}</span>}
-			</span>
-		</div>
-		<a class="btn-primary mbb-btn" href={primaryBookHref}>
-			{instantBook ? 'Book' : 'Enquire'}
-		</a>
-	</div>
+	<MobileActionBar target="book" label={primary.label === 'Book group tour' ? 'Book now' : primary.label === 'Plan your charter' ? 'Plan your charter' : 'Enquire'}>
+		<p>
+			{hasPrice ? <><strong>{price}</strong> {unit}</> : <strong>{price}</strong>}
+		</p>
+		{feeLine && <p>{feeLine}</p>}
+	</MobileActionBar>
 </article>
 
 <style>
-	.tour-detail h1 {
-		font-size: 20px;
-		font-weight: 500;
-		margin: 0 0 6px;
-	}
-
-	.tour-detail .rating-row {
-		margin-bottom: 16px;
-	}
-
-	.tour-detail .rating-row .ti {
-		font-size: 13px;
-		vertical-align: -1px;
-	}
-
-	.tour-detail .sticky-card .price-from {
-		font-size: 12px;
-	}
-
-	.tour-detail .sticky-card .price-val {
-		font-size: 26px;
-		font-weight: 600;
-	}
-
-	.tour-detail .sticky-card .price-per {
-		font-size: 12px;
-	}
-
-	.tour-detail .sticky-card .card-row:last-of-type {
-		margin-bottom: 0;
-	}
-
-	.tour-detail .hl-item .ti {
-		color: var(--color-accent);
-	}
-
-	.tour-detail .itinerary-item--last {
-		padding-bottom: 0;
-	}
-
-	.tour-detail__note {
-		margin-top: 12px;
-	}
-
-	.tour-detail__dest-chips {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
-
-	.tour-detail__disclaimers {
-		margin: 0;
-		padding-left: 1.25rem;
-		color: var(--color-text-secondary);
-		font-size: 13px;
-		line-height: 1.6;
-	}
-
-	.sticky-card__price-note {
-		font-size: 11px;
-		color: var(--color-text-tertiary);
-		margin: 0 0 12px;
-		line-height: 1.5;
-	}
-
-	.cta-primary--link {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		text-decoration: none;
-	}
-
-	@media (max-width: 768px) {
-		.tour-detail .layout {
-			grid-template-columns: minmax(0, 1fr);
+	@layer pages {
+		.tour {
+			max-width: var(--content-max);
+			margin: 0 auto;
+			padding: calc(var(--space-6)) var(--page-gutter) 0;
 		}
 
-		.tour-detail .highlights,
-		.tour-detail .includes-grid,
-		.tour-detail .info-grid {
-			grid-template-columns: 1fr;
+		.tour__layout {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) var(--aside-width);
+			column-gap: var(--space-7);
+			align-items: start;
+			margin-bottom: var(--detail-gap);
+		}
+
+		.tour__title {
+			margin: 0 0 6px;
+			font-size: var(--font-size-hero);
+			font-weight: var(--font-weight-medium);
+			line-height: var(--line-height-tight);
+		}
+
+		.tour__meta {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: var(--space-2);
+			margin: 0 0 var(--space-5);
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.tour__meta .ti {
+			font-size: 13px;
+		}
+
+		.tour__intro {
+			margin: 0 0 var(--detail-gap);
+			font-size: var(--font-size-body-md);
+			line-height: var(--line-height-body-md);
+			color: var(--color-text-secondary);
+		}
+
+		.tour__section {
+			margin-bottom: var(--detail-gap);
+		}
+
+		.tour__section:last-child {
+			margin-bottom: 0;
+		}
+
+		.tour__list {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 6px var(--space-4);
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.tour__list li {
+			display: flex;
+			align-items: flex-start;
+			gap: var(--space-2);
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.tour__list .ti {
+			flex-shrink: 0;
+			padding-top: 1px;
+			font-size: 1.25em;
+		}
+
+		.tour__yes {
+			color: var(--color-icon-included);
+		}
+
+		.tour__no {
+			color: var(--color-icon-excluded);
+		}
+
+		.tour__section :global(.info-tile a) {
+			color: var(--color-text-info);
+			text-decoration: underline;
+			text-underline-offset: 2px;
+		}
+
+		.tour__notes {
+			margin: 0;
+			padding-left: 1.1rem;
+		}
+
+		.tour__notes li + li {
+			margin-top: 4px;
+		}
+
+		/* Aside (§6.3.4) */
+		.tour__aside {
+			grid-column: 2;
+			grid-row: 1;
+		}
+
+		/* A heading for screen readers on wide screens; shown on phones, as designed. */
+		.tour__book-heading {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
+		}
+
+		.tour__price {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: baseline;
+			gap: 4px;
+			margin: 0 0 4px;
+		}
+
+		.tour__from {
+			font-size: var(--font-size-xs);
+			color: var(--color-text-tertiary);
+		}
+
+		.tour__price strong {
+			font-size: var(--font-size-2xl);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		.tour__unit {
+			font-size: var(--font-size-xs);
+			color: var(--color-text-secondary);
+		}
+
+		.tour__fee {
+			margin: 0 0 var(--space-2);
+			font-size: var(--font-size-xs);
+			color: var(--color-text-secondary);
+		}
+
+		.tour__child {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-body-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.tour__child .ti {
+			color: var(--color-text-tertiary);
+		}
+
+		.tour__rows {
+			margin: 0;
+		}
+
+		.tour__rows div {
+			display: flex;
+			justify-content: space-between;
+			gap: var(--space-3);
+			margin-bottom: var(--space-2);
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+		}
+
+		.tour__rows dt {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			color: var(--color-text-secondary);
+		}
+
+		.tour__rows dt .ti {
+			color: var(--color-text-tertiary);
+		}
+
+		.tour__rows dd {
+			margin: 0;
+			font-weight: var(--font-weight-medium);
+			text-align: right;
+		}
+
+		.tour__price-notes {
+			margin: var(--space-2) 0 0;
+			font-size: var(--font-size-xs);
+			line-height: var(--line-height-normal);
+			color: var(--color-text-tertiary);
+		}
+
+		.tour__divider {
+			margin: var(--space-3) 0;
+			border: 0;
+			border-top: 0.5px solid var(--color-border-tertiary);
+		}
+
+		.tour :global(.tour__cta) {
+			padding: var(--space-3);
+		}
+
+		.tour :global(.tour__cta--secondary) {
+			margin-top: var(--space-2);
+			padding: 10px;
+		}
+
+		.tour__policy {
+			margin: 10px 0 0;
+			font-size: var(--font-size-xs);
+			color: var(--color-text-success);
+			text-align: center;
+		}
+
+		@media (max-width: 768px) {
+			.tour__layout {
+				grid-template-columns: minmax(0, 1fr);
+				row-gap: var(--detail-gap);
+			}
+
+			.tour__aside {
+				grid-column: 1;
+				grid-row: 2;
+			}
+
+			.tour__book-heading {
+				position: static;
+				width: auto;
+				height: auto;
+				margin: 0 0 14px;
+				overflow: visible;
+				clip: auto;
+				font-size: var(--font-size-lg);
+				font-weight: var(--font-weight-medium);
+				white-space: normal;
+			}
+
+			.tour__list {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		/* #book is where the mobile bar leads: clear of the header and the bar. */
+		:global(#book) {
+			scroll-margin-top: 72px;
+			scroll-margin-bottom: 88px;
 		}
 	}
 </style>

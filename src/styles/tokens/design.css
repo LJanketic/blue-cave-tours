@@ -207,6 +207,10 @@
 	--color-overlay-hero-home:
 		linear-gradient(90deg, rgba(6, 24, 40, 0.8) 0%, rgba(6, 24, 40, 0.6) max(45%, calc(50% + 120px)), rgba(6, 24, 40, 0) max(80%, calc(50% + 480px))),
 		linear-gradient(0deg, rgba(6, 24, 40, 0.6) 0%, rgba(6, 24, 40, 0) 45%);
+	/* Photo heroes (Tours, Destinations): the same, with the text bottom-left. */
+	--color-overlay-photo-hero:
+		linear-gradient(90deg, rgba(6, 24, 40, 0.75) 0%, rgba(6, 24, 40, 0.5) max(45%, calc(50% + 120px)), rgba(6, 24, 40, 0) max(80%, calc(50% + 480px))),
+		linear-gradient(0deg, rgba(6, 24, 40, 0.75) 0%, rgba(6, 24, 40, 0) 65%);
 	--color-overlay-hero-home-phone: linear-gradient(0deg, rgba(6, 24, 40, 0.88) 0%, rgba(6, 24, 40, 0.7) 45%, rgba(6, 24, 40, 0.15) 75%);
 	/* [DEVIATE, a11y] stronger than the board's .38 / 160px fade, so the overlay nav text has contrast */
 	--color-overlay-header: linear-gradient(180deg, rgba(6, 24, 40, 0.55) 0, rgba(6, 24, 40, 0) 120px);

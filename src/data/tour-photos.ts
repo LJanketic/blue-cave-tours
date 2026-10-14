@@ -1,5 +1,6 @@
 import type { ImageMetadata } from 'astro';
 import { getImage } from 'astro:assets';
+import type { CardPhoto } from '../lib/cards';
 
 /** Photo registry — placeholders omit `src`; destination galleries include it. */
 export type PhotoRef = {
@@ -144,19 +145,9 @@ export async function toGalleryView(
 	};
 }
 
-/** A card photo, ready for an <img> in a Vue island (TourImage.astro can't render there). */
-export type CardPhoto = { src: string; srcset: string; sizes: string; width: number; height: number; alt: string };
-
 /** Card photo for TourCard.vue / DestinationCard.vue; null when the place has no real photo yet (grey fallback, §3.4). */
 export async function toCardPhoto(photo: PhotoRef, imageSize: GalleryImageSize): Promise<CardPhoto | null> {
 	if (!photo.src) return null;
 	const optimized = await getImage({ src: photo.src, widths: imageSize.widths, format: 'webp', quality: 70 });
-	return {
-		src: optimized.src,
-		srcset: optimized.srcSet.attribute,
-		sizes: imageSize.sizes,
-		width: Number(optimized.attributes.width ?? photo.src.width),
-		height: Number(optimized.attributes.height ?? photo.src.height),
-		alt: photo.alt,
-	};
+	return { srcset: optimized.srcSet.attribute, alt: photo.alt };
 }

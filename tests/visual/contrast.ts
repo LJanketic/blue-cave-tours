@@ -49,20 +49,41 @@ async function lightestPixel(page: Page, box: { x: number; y: number; width: num
  * Worst-case contrast of white text (at `opacity`) over the photo behind
  * `text`. Hides the text, measures, then shows it again.
  */
-export async function photoTextContrast(text: Locator, opacity = 1): Promise<number> {
+export async function photoTextContrast(
+	text: Locator,
+	opacity = 1,
+	mode: 'hide' | 'transparent' = 'hide',
+	/**
+	 * Leave out the element's own outline, which the text never sits on:
+	 * `pill` skips a pill's light border and rounded ends.
+	 */
+	shape: 'box' | 'pill' = 'box',
+): Promise<number> {
 	const page = text.page();
-	const box = await text.boundingBox();
-	if (!box) throw new Error('text not visible');
-	// Hide the text and let the browser repaint before the screenshot (WebKit can lag a frame).
+	const outer = await text.boundingBox();
+	if (!outer) throw new Error('text not visible');
+	const [dx, dy] = shape === 'pill' ? [outer.height / 2, 3] : [0, 0];
+	const box = { x: outer.x + dx, y: outer.y + dy, width: outer.width - 2 * dx, height: outer.height - 2 * dy };
+	// Hide the text and let the browser repaint before the screenshot (WebKit
+	// can lag a frame). `transparent` keeps the element's own background (a
+	// glass chip) and only hides its text and icons.
 	await text.evaluate(
-		(el) =>
+		(el, how) =>
 			new Promise<void>((resolve) => {
-				el.style.setProperty('visibility', 'hidden');
+				// No transition, or the text is caught half faded out.
+				el.style.setProperty('transition', 'none', 'important');
+				if (how === 'hide') el.style.setProperty('visibility', 'hidden');
+				else el.style.setProperty('color', 'transparent', 'important');
 				requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
 			}),
+		mode,
 	);
 	const bg = await lightestPixel(page, box);
-	await text.evaluate((el) => el.style.removeProperty('visibility'));
+	await text.evaluate((el) => {
+		el.style.removeProperty('visibility');
+		el.style.removeProperty('color');
+		el.style.removeProperty('transition');
+	});
 	const fg = bg.map((c) => opacity * 255 + (1 - opacity) * c);
 	return contrastRatio(fg, bg);
 }

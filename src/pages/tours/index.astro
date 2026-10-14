@@ -3,42 +3,79 @@ export const prerender = true;
 
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import PhotoHero from '../../components/ui/PhotoHero.astro';
+import SectionHeader from '../../components/ui/SectionHeader.astro';
+import TypeCards from '../../components/home/TypeCards.astro';
+import HowItWorks from '../../components/home/HowItWorks.astro';
+import TourFilters from '../../components/vue/TourFilters.vue';
 import ToursCatalog from '../../components/vue/ToursCatalog.vue';
-import { getAllDestinations } from '../../lib/destinations';
+import { getAllDestinations, getDestinationsForTour } from '../../lib/destinations';
 import { getAllTours, getTourCardPhoto } from '../../lib/tours';
-import { GALLERY_CARD_SIZE, toGalleryView } from '../../data/tour-photos';
+import { toTourCardDTO } from '../../lib/cards';
+import { GALLERY_CARD_SIZE, toCardPhoto } from '../../data/tour-photos';
+import { firstPhotoForDestination } from '../../data/destination-photos';
+import { HOW_IT_WORKS, TYPE_CARDS } from '../../data/marketing';
 
-const all = getAllTours();
-const toursByDestination = Object.fromEntries(
-	getAllDestinations().map((destination) => [destination.slug, destination.tourSlugs]),
-);
-const cardPhotos = Object.fromEntries(
-	await Promise.all(
-		all.map(async (tour) => [tour.slug, await toGalleryView(getTourCardPhoto(tour), 'sailboat', GALLERY_CARD_SIZE)] as const),
+const tours = getAllTours();
+const cards = await Promise.all(
+	tours.map(async (tour) =>
+		toTourCardDTO(
+			tour,
+			getDestinationsForTour(tour.slug).map((d) => d.slug),
+			await toCardPhoto(getTourCardPhoto(tour), GALLERY_CARD_SIZE),
+		),
 	),
 );
+const destinationNames = Object.fromEntries(getAllDestinations().map((d) => [d.slug, d.name]));
+const hasSunset = tours.some((t) => t.tags.includes('sunset'));
+
+// The design's hero photo isn't cleared for use (C-17): the site's own aerial
+// of the Blue Lagoon, with contrast measured behind the text.
+const heroPhoto = firstPhotoForDestination('blue-lagoon', 1);
+if (!heroPhoto?.src) throw new Error('Tours hero photo missing');
 ---
 
 <SiteLayout
 	title={pageTitle('Speedboat tours and private charters from Split')}
-	description="Full catalog of boat tours and private charters from Split — Blue Cave, islands, lagoon half-days, and custom days at sea."
+	description="Full catalog of boat tours and private charters from Split: Blue Cave, islands, lagoon half-days, and custom days at sea."
+	solidNav={false}
+	fontPreload
+	footerGap="var(--section-gap)"
 >
-	<main id="main" class="page-shell">
-		<div class="page tours-page">
-			<ToursCatalog client:visible tours={all} toursByDestination={toursByDestination} cardPhotos={cardPhotos} />
+	<main id="main" class="tours-page">
+		<PhotoHero
+			image={heroPhoto.src}
+			imagePosition="center 60%"
+			eyebrow="Split · Dalmatian coast"
+			title="Our tours"
+			lead="Group departures and private charters, from half-day lagoon trips to full-day island hops."
+		>
+			<TourFilters client:load destinationNames={destinationNames} hasSunset={hasSunset} />
+		</PhotoHero>
+
+		<div class="tours-page__wrap">
+			<h2 class="sr-only">All tours</h2>
+			<ToursCatalog client:visible tours={cards} />
+
+			<section aria-labelledby="types-heading">
+				<SectionHeader title="Group or private?" id="types-heading" />
+				<TypeCards cards={TYPE_CARDS} withCtas={false} />
+			</section>
+
+			<section aria-labelledby="how-heading">
+				<SectionHeader title="How it works" id="how-heading" />
+				<HowItWorks steps={HOW_IT_WORKS} wide />
+			</section>
 		</div>
 	</main>
 </SiteLayout>
 
 <style>
-	.tours-page {
-		padding: 1.5rem 0 2rem;
-		font-size: 14px;
-	}
-
-	@media (max-width: 768px) {
-		.tours-page {
-			padding-top: 1rem;
+	@layer pages {
+		.tours-page__wrap {
+			max-width: var(--content-max);
+			margin: 0 auto;
+			padding: 0 var(--page-gutter);
 		}
 	}
 </style>

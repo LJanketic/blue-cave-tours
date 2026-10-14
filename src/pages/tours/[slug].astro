@@ -49,7 +49,7 @@ const shareImage = sharePhoto ? await socialImageFor(sharePhoto) : undefined;
 	ogImage={shareImage?.src}
 	ogImageAlt={shareImage?.alt}
 >
-	<main id="main" class="page-shell">
+	<main id="main">
 		{
 			tour ? (
 				<TourDetailView tour={tour} />

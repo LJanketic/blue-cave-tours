@@ -1,7 +1,5 @@
-import type { CardPhoto } from '../data/tour-photos';
 import type { Destination } from '../data/destinations';
 import type { TourDetail } from '../types/tour';
-import { tourFromPrice } from './price';
 import { showsBestseller } from './tour-display';
 
 /*
@@ -10,6 +8,19 @@ import { showsBestseller } from './tour-display';
  * import here, so islands can import the types.
  */
 
+/**
+ * A card photo for a Vue island (TourImage.astro can't render there). Island
+ * props are serialised into the page, so it's only the srcset (its first
+ * candidate is the fallback src) and the alt text: card boxes have a fixed
+ * height, so width and height aren't needed against layout shift.
+ */
+export type CardPhoto = { srcset: string; alt: string };
+
+/** The fallback `src` of a card photo: its srcset's first candidate. */
+export function cardPhotoSrc(photo: CardPhoto): string {
+	return photo.srcset.split(' ')[0];
+}
+
 export type CardBadge = { label: string; tone: 'brand' | 'private' | 'premium' | 'tip' | 'neutral' };
 
 export type TourCardDTO = {
@@ -17,19 +28,19 @@ export type TourCardDTO = {
 	title: string;
 	adultPrice: number | null;
 	priceUnit: TourDetail['priceUnit'];
-	/** "€169", or "Price on request" / "On request". */
-	priceLabel: string;
 	durationShort: string;
 	durationHours: number;
-	featured: boolean;
-	/** At most one, already resolved (§6.2.2). */
-	badge: CardBadge | null;
+	/** Left out when false. */
+	featured?: boolean;
+	/** At most one, already resolved (§6.2.2); left out when there's none. */
+	badge?: CardBadge;
 	types: TourDetail['types'];
+	/** Only the tags a filter uses (half-day, sunset). */
 	tags: TourDetail['tags'];
 	destinationSlugs: string[];
 	/** "+ Blue Cave ticket, paid on site": mandatory on-site fees must show next to the price. */
 	mandatoryFeeLabel?: string;
-	/** Title, tagline and short description, lower-cased, for the catalog search. */
+	/** The tagline, lower-cased, searched with the title for ?q= links. */
 	searchText: string;
 	photo: CardPhoto | null;
 };
@@ -48,25 +59,32 @@ export function mandatoryFeeLabel(tour: Pick<TourDetail, 'additionalFees'>): str
 	return fees.length ? `+ ${fees.map((fee) => fee.shortText).join(', ')}` : undefined;
 }
 
+/**
+ * The card's data for the islands. Island props are inlined in the page
+ * (§6.2.3: ≤ 6 KB for the whole catalog), so empty fields are left out.
+ */
 export function toTourCardDTO(tour: TourDetail, destinationSlugs: string[], photo: CardPhoto | null): TourCardDTO {
+	const badge = tourCardBadge(tour);
+	const fee = mandatoryFeeLabel(tour);
 	return {
 		slug: tour.slug,
 		title: tour.title,
 		adultPrice: tour.adultPrice,
 		priceUnit: tour.priceUnit,
-		priceLabel: tourFromPrice(tour),
 		durationShort: tour.durationShort,
 		durationHours: tour.durationHours,
-		featured: tour.featured ?? false,
-		badge: tourCardBadge(tour),
+		...(tour.featured ? { featured: true } : {}),
+		...(badge ? { badge } : {}),
 		types: tour.types,
-		tags: tour.tags,
+		tags: tour.tags.filter((tag) => FILTER_TAGS.has(tag)),
 		destinationSlugs,
-		mandatoryFeeLabel: mandatoryFeeLabel(tour),
-		searchText: `${tour.title} ${tour.tagline} ${tour.shortDescription}`.toLowerCase(),
+		...(fee ? { mandatoryFeeLabel: fee } : {}),
+		searchText: tour.tagline.toLowerCase(),
 		photo,
 	};
 }
+
+const FILTER_TAGS = new Set<TourDetail['tags'][number]>(['half-day', 'sunset']);
 
 export type DestinationCardDTO = {
 	slug: string;
