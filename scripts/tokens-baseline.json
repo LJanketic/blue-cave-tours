@@ -1,0 +1,14 @@
+{
+	"src/components/vue/GroupBookingFlow.vue": 1,
+	"src/components/vue/ImageGallery.vue": 4,
+	"src/layouts/AdminLayout.astro": 1,
+	"src/lib/destinations.ts": 2,
+	"src/pages/admin/index.astro": 1,
+	"src/pages/destinations/[slug].astro": 5,
+	"src/pages/site.webmanifest.ts": 1,
+	"src/styles/modules/_base.css": 5,
+	"src/styles/modules/_booking.css": 2,
+	"src/styles/modules/_home.css": 15,
+	"src/styles/modules/_legal-about.css": 1,
+	"src/styles/modules/_tour-detail.css": 2
+}

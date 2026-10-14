@@ -1,0 +1,51 @@
+/*
+ * Base layer (spec §3.1): element defaults for the new design. It sits above
+ * `legacy` in the cascade, so it overrides the old modules wherever both set
+ * the same property: keep it to what every page should get. The reset, form
+ * controls and utilities stay in modules/_base.css until PR 9.
+ */
+
+body {
+	font-family: var(--font-sans);
+	font-size: var(--font-size-base);
+	line-height: var(--line-height-normal);
+	color: var(--color-text-primary);
+	background: var(--color-background-primary);
+}
+
+/* One focus ring (§4.5); white with a navy halo on photos. Replaces the two
+   conflicting :focus-visible rules of the old global.css and _base.css. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+	outline: 2px solid var(--color-focus-ring);
+	outline-offset: 2px;
+}
+
+:where(.on-photo, .hero, .photo-hero, .cta-band--photo) :focus-visible {
+	outline-color: var(--color-text-on-image);
+	box-shadow: 0 0 0 4px var(--palette-navy-950);
+}
+
+/* Display type: uppercase only, ligatures and kerning on (§3.3). */
+.display {
+	font-family: var(--font-display);
+	font-weight: var(--font-weight-bold);
+	text-transform: uppercase;
+	font-variant-ligatures: common-ligatures;
+	font-feature-settings: 'liga' 1, 'kern' 1;
+}
+
+/* Reduced motion: only colour changes remain. !important in an early layer
+   beats every later layer's transitions and animations. */
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

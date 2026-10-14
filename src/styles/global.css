@@ -1,15 +1,18 @@
 /**
- * Hello Blue Cave redesign — shared component styles, split by area.
- * Tokens: src/styles/tokens/redesign.css
- * Icons: Tabler Icons webfont (.ti), loaded externally.
+ * The public site's stylesheet (admin pages load admin.css instead).
  *
- * All modules are still loaded on every page (Phase A of the split —
- * see docs/post-mobile-implementation-plan.md item 3.4). `_responsive.css`
- * MUST stay last: it holds the ≤768px/≤480px overrides, and CSS gives a
- * later same-specificity rule priority regardless of which file it's in —
- * importing it earlier would let the non-responsive modules win instead.
+ * Cascade layers (order declared in BaseLayout <head>): tokens < legacy <
+ * base < components < pages < utilities. The old modules are all in
+ * `legacy`; rebuilt components and pages use the later layers and are
+ * deleted from here page by page (spec §3.1). `_responsive.css` must stay
+ * the last legacy module: it overrides the others at equal specificity.
+ *
+ * Tokens: tokens/design.css (new) and tokens/redesign.css (aliases).
+ * Icons: icons.css, loaded by BaseLayout.
  */
+@import './tokens/design.css' layer(tokens);
 @import './tokens/redesign.css' layer(tokens);
+@import './base.css' layer(base);
 @import './modules/_base.css' layer(legacy);
 @import './modules/_home.css' layer(legacy);
 @import './modules/_catalog.css' layer(legacy);
@@ -18,10 +21,3 @@
 @import './modules/_booking.css' layer(legacy);
 @import './modules/_legal-about.css' layer(legacy);
 @import './modules/_responsive.css' layer(legacy);
-
-@layer legacy {
-	:focus-visible {
-		outline: 2px solid var(--color-accent-teal);
-		outline-offset: 2px;
-	}
-}

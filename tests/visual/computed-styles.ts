@@ -29,6 +29,7 @@ export function computedStyles(): string {
 			walk(child, `${path} > ${child.tagName.toLowerCase()}${classes}`);
 		}
 	};
-	walk(document.documentElement, 'html');
+	// <head> renders nothing: skip it, so e.g. a new inline <style> isn't a difference.
+	walk(document.body, 'html > body');
 	return lines.sort().join('\n');
 }

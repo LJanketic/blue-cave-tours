@@ -185,7 +185,7 @@ src/styles/
 **Cascade layers during migration:**
 
 - Unlayered CSS beats every layered rule, so the legacy modules have to be put into a layer as well.
-- `BaseLayout` emits `<style is:inline>@layer legacy, tokens, base, components, pages, utilities;</style>` as the **first** element in `<head>`, before any stylesheet. That fixes the layer order no matter which CSS chunk Astro emits first.
+- `BaseLayout` emits `<style is:inline>@layer tokens, legacy, base, components, pages, utilities;</style>` as the **first** element in `<head>`, before any stylesheet. That fixes the layer order no matter which CSS chunk Astro emits first. **(Done in PR 1, with `tokens` first, not second:** the legacy `_responsive.css` still overrides `--page-gutter` in `:root`, and a later `tokens` layer would beat it.)
 - `global.css`:
 
   ```css
@@ -198,7 +198,7 @@ src/styles/
 
 - New Astro component styles wrap their rules in `@layer components { … }`. Page styles use `@layer pages { … }`.
 - Vue `<style scoped>` blocks wrap their rules in `@layer components { … }`.
-- **PR 1 must confirm with a build** that Vue's scoped-CSS transform rewrites selectors inside `@layer`. If it doesn't, Vue islands import a plain `.css` file instead, wrapped in a layer and scoped by a root class.
+- **Confirmed in PR 1 with a build:** Vue's scoped-CSS transform rewrites selectors inside `@layer` (`.image-gallery__stage[data-v-…]`). If it doesn't, Vue islands import a plain `.css` file instead, wrapped in a layer and scoped by a root class.
 - Legacy modules are deleted page by page as their pages are rebuilt. PR 9 deletes `_responsive.css` once it's empty.
 
 **Breakpoints** (max-width queries; listed in a comment at the top of `tokens/design.css`):
@@ -531,7 +531,7 @@ This replaces both `global.css:22-25` and `_base.css:71-74`, which conflict toda
 - Delete `--border-radius-md/-lg` now; nothing uses them.
 - `scripts/tokens-check.mjs` (new; run inside `pnpm check`):
   1. Lists the remaining alias uses. From PR 9 on, it fails if any are left.
-  2. Fails on `#hex`, `rgb(` or `rgba(` outside these files:
+  2. Fails on `#hex`, `rgb(` or `rgba(` outside these files. **As built (PR 1):** a ratchet, since the legacy code has 40 such values: each file may keep at most its count in `scripts/tokens-baseline.json`, new files get none, and `--update` lowers the baseline as pages are rebuilt. Test files are also allowed.
      - `tokens/design.css`
      - `admin.css`
      - `src/lib/email/*`

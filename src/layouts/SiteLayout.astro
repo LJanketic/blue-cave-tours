@@ -18,6 +18,8 @@ type Props = {
 	solidNav?: boolean;
 	robots?: string;
 	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+	/** Passed to BaseLayout: preload the display font on pages with a display hero. */
+	fontPreload?: boolean;
 };
 
 const {
@@ -30,6 +32,7 @@ const {
 	solidNav = true,
 	robots,
 	jsonLd,
+	fontPreload = false,
 } = Astro.props;
 ---
 
@@ -41,6 +44,7 @@ const {
 	canonical={canonical}
 	robots={robots}
 	jsonLd={jsonLd}
+	fontPreload={fontPreload}
 >
 	<slot name="head" slot="head" />
 	<div class:list={['site-shell', checkout && 'site-shell--checkout']}>

@@ -343,6 +343,8 @@
 .sidebar-link {
 	display: flex;
 	justify-content: space-between;
+	align-items: center;
+	min-height: 24px; /* WCAG 2.5.8 target size */
 	font-size: 12px;
 	text-decoration: none;
 	color: var(--color-text-secondary);
