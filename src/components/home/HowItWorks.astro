@@ -1,0 +1,88 @@
+---
+type Props = {
+	steps: { title: string; description: string }[];
+	/** Home uses 12px gaps, the Tours page 16px. */
+	wide?: boolean;
+};
+
+const { steps, wide = false } = Astro.props;
+---
+
+<!-- Spec §6.1.8. -->
+<ol class:list={['how-it-works', wide && 'how-it-works--wide']} role="list">
+	{
+		steps.map((step, index) => (
+			<li class="how-it-works__step">
+				<span class="how-it-works__num" aria-hidden="true">
+					{index + 1}
+				</span>
+				<h3 class="how-it-works__title">{step.title}</h3>
+				<p class="how-it-works__desc">{step.description}</p>
+			</li>
+		))
+	}
+</ol>
+
+<style>
+	@layer components {
+		.how-it-works {
+			display: grid;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			gap: var(--space-3);
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.how-it-works--wide {
+			gap: var(--space-4);
+		}
+
+		.how-it-works__step {
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-2);
+			padding: 14px;
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+		}
+
+		.how-it-works__num {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 26px;
+			height: 26px;
+			border: 0.5px solid var(--color-border-secondary);
+			border-radius: 50%;
+			background: var(--color-background-primary);
+			font-size: var(--font-size-micro);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.how-it-works__title {
+			margin: 0;
+			font-size: var(--font-size-base);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.how-it-works__desc {
+			margin: 0;
+			font-size: var(--font-size-base);
+			line-height: var(--line-height-relaxed);
+			color: var(--color-text-secondary);
+		}
+
+		@media (max-width: 768px) {
+			.how-it-works {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+		}
+
+		@media (max-width: 480px) {
+			.how-it-works {
+				grid-template-columns: 1fr;
+			}
+		}
+	}
+</style>

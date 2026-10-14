@@ -1,0 +1,200 @@
+---
+import Button from '../ui/Button.astro';
+import type { TypeCard } from '../../data/marketing';
+
+type Props = {
+	cards: TypeCard[];
+	/** Home shows a CTA per card; the Tours page (already a list of tours) doesn't. */
+	withCtas?: boolean;
+};
+
+const { cards, withCtas = true } = Astro.props;
+---
+
+<!-- Spec §6.1.6 ("Group or private?"). -->
+<div class:list={['type-cards', !withCtas && 'type-cards--plain']}>
+	{
+		cards.map((card) => (
+			<article class:list={['type-cards__card', `type-cards__card--${card.kind}`]}>
+				<span class="type-cards__badge">
+					<i class={`ti ti-${card.badge.icon}`} aria-hidden="true" />
+					{card.badge.label}
+				</span>
+				<span class="type-cards__icon" aria-hidden="true">
+					<i class={`ti ti-${card.icon}`} />
+				</span>
+				<h3 class="type-cards__title">{card.title}</h3>
+				<p class="type-cards__desc">{card.description}</p>
+				<ul class="type-cards__features" role="list">
+					{card.features.map((feature) => {
+						const [before, after] = feature.text.split('{strong}');
+						return (
+							<li>
+								<i class="ti ti-circle-check" aria-hidden="true" />
+								<span>
+									{before}
+									{feature.strong && <strong>{feature.strong}</strong>}
+									{after}
+								</span>
+							</li>
+						);
+					})}
+				</ul>
+				{withCtas && (
+					<Button class="type-cards__cta" variant="secondary" size="sm" href={card.ctaHref}>
+						{card.ctaLabel}
+					</Button>
+				)}
+			</article>
+		))
+	}
+</div>
+
+<style>
+	@layer components {
+		.type-cards {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: var(--space-3);
+		}
+
+		.type-cards--plain {
+			gap: var(--space-4);
+		}
+
+		.type-cards__card {
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+			padding: 18px var(--space-5);
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
+			background: var(--color-background-primary);
+			transition:
+				border-color var(--duration-fast) ease,
+				box-shadow var(--duration-fast) ease;
+		}
+
+		.type-cards--plain .type-cards__card {
+			padding-bottom: 26px;
+		}
+
+		.type-cards__card:hover {
+			border-color: var(--color-border-primary);
+			box-shadow: var(--shadow-card-hover-lg);
+		}
+
+		.type-cards__card--private {
+			background: linear-gradient(180deg, var(--color-premium-bg) 0%, var(--color-background-primary) 55%);
+		}
+
+		.type-cards__badge {
+			position: absolute;
+			top: var(--space-4);
+			right: var(--space-4);
+			display: inline-flex;
+			align-items: center;
+			gap: 5px;
+			padding: 4px 10px;
+			border-radius: var(--radius-sm);
+			background: var(--color-background-info);
+			color: var(--color-accent-dark);
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-semibold);
+			white-space: nowrap;
+		}
+
+		.type-cards__badge .ti {
+			font-size: 1.2em;
+		}
+
+		.type-cards__icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 48px;
+			height: 48px;
+			margin-bottom: 14px;
+			border-radius: 50%;
+			background: var(--color-background-info);
+			color: var(--color-accent-dark);
+			font-size: 22px;
+		}
+
+		.type-cards__card--private .type-cards__badge,
+		.type-cards__card--private .type-cards__icon {
+			background: var(--color-premium-gradient);
+			color: var(--color-premium-on-solid);
+		}
+
+		.type-cards__title {
+			margin: 0 0 5px;
+			font-size: var(--font-size-md);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.type-cards__desc {
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-base);
+			line-height: var(--line-height-relaxed);
+			color: var(--color-text-secondary);
+		}
+
+		.type-cards__features {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			margin: 0 0 var(--space-6);
+			padding: 0;
+			list-style: none;
+		}
+
+		.type-cards--plain .type-cards__features {
+			margin-bottom: 0;
+		}
+
+		.type-cards__features li {
+			display: flex;
+			align-items: center;
+			gap: var(--space-2);
+			font-size: var(--font-size-base);
+			color: var(--color-text-secondary);
+		}
+
+		.type-cards__features strong {
+			font-weight: var(--font-weight-semibold);
+			color: var(--color-text-primary);
+		}
+
+		.type-cards__features .ti {
+			flex-shrink: 0;
+			font-size: 1.2em;
+			color: var(--color-accent);
+		}
+
+		.type-cards__card :global(.type-cards__cta) {
+			margin-top: auto;
+		}
+
+		.type-cards__card:hover :global(.type-cards__cta) {
+			border-color: var(--color-border-highlight);
+			background: var(--color-background-highlight);
+			color: var(--color-text-on-image);
+		}
+
+		@media (max-width: 768px) {
+			.type-cards {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		/* The badge sits on the title row on narrow cards, not over the icon. */
+		@media (max-width: 400px) {
+			.type-cards__badge {
+				position: static;
+				margin-bottom: var(--space-3);
+			}
+		}
+	}
+</style>

@@ -822,6 +822,47 @@ Responsive behaviour: §3.1.1, row "Home".
 - Lighthouse mobile, median of 3 runs (CLI version recorded) on `npx netlify-cli serve --offline`: Perf ≥ 90, A11y 100, Best Practices 100, SEO 100. LCP is the slide-1 image, < 2.5s. CLS < 0.05.
 - The carousel can be paused from the keyboard. The hero contrast table is in the PR.
 
+**As built (PR 3, 2026-10-14):**
+- **Built:**
+  - Sections, in order: hero carousel, trust band, popular tours, group or private, destinations bento, how it works, common questions, CTA band.
+  - Components: `HeroCarousel.vue` (rewritten), `home/TrustBand`, `PopularTours`, `TypeCards`, `DestinationTile`, `HowItWorks`, `GuestReviews` (ReviewSummary and ReviewCard in one component), and a restyled `FAQAccordion`.
+- **Hidden until the owner answers:**
+  - **Reviews (D-5):** `GuestReviews` renders only with a source, its link, average, count, "as of" date and ≥2 reviews in `reviews.ts`. That file now also has `asOf` and the written selection rule.
+  - **Video preview (D-6, C-17):** no component yet. It will be built once the footage and its rights are confirmed, together with the credit check.
+- **Photos (C-17):** the design's images aren't cleared, so the site uses its own:
+  - slide 1: `hero-banner.jpg`
+  - slide 2: Pakleni aerial (`pakleni/05`)
+  - slide 3: Blue Cave (`blue-cave/01`)
+  - CTA band: `blue-lagoon/01`
+- **Alt texts:** 10 destination photo alt texts described something else than the photo (e.g. hvar/01 is the cathedral square, not "harbour from above"). They're corrected from what each photo shows.
+- **[DEVIATE, a11y] Scrims:** the board's scrims failed the contrast rule on these photos. The lowest was 1.9:1 behind the slide 2 sub at 1920px, and 3.1:1 behind the CTA band text.
+  - New token `--color-overlay-hero-home`: .8 → .6 on the text side, with its stops following the centred column. Phones get a stronger bottom-up version.
+  - `--color-overlay-band` is now .66 → .74.
+- **Contrast, measured** against the lightest pixel, text hidden, shadows ignored. Lowest values per element:
+
+  | Text | Lowest ratio | Where |
+  |---|---|---|
+  | Slide titles | 3.35:1 | slide 2 at 768px |
+  | Slide subs | 4.92:1 | slide 2 at 1920px |
+  | CTA band heading | 6.30:1 | |
+  | CTA band text | 5.50:1 | |
+
+  `tests/visual/home-contrast.spec.ts` (with `tests/visual/contrast.ts`) checks every slide and the band at 390, 768, 1280 and 1920px in Chromium and WebKit.
+- **Hero `object-position`:** `right center` / `70% center` / `right center`. The board's `calc(70% + 180px)` uncovered a strip on the left at 1920px.
+- **Hero text** animates on slide changes only. On load it's simply there: an entrance from opacity 0 kept the title out of LCP and delayed it.
+- **Hero photos:** slide 2's loads after the `load` event; each later one loads when the slide before it shows.
+- **[DEVIATE, layout] Trust band:** the row is 1120px wide and the marquee starts at ≤1120px. At 16px the four items need ~1030px. The marquee copy has no links (its screen-reader list is visually hidden), so the cancellation link appears only in the row; the footer has it too.
+- **Bento:** with five tiles it's the 2×2 tile plus four singles, which fills two rows. The board's six-tile layout returns automatically with a sixth `bentoOrder`.
+- **Scrollers:** the scroller is a wrapper `div` around each list (`data-scroll-region`, now shared as `src/client/scroll-regions.ts`). Putting `role=region` on the `<ul>` broke the list semantics.
+- **Card fix:** cards are `position: relative`. Their `.sr-only` text otherwise escaped the slider's clipping and gave the page 1000px of sideways scroll.
+- **Content guard (S-14):** `src/lib/content-guard.test.ts` checks the source and, after a build, the built HTML. It caught two things, both fixed:
+  - destination pages still showed "Best seller" for `featured` tours
+  - the privacy page said "GDPR compliant"
+
+  `@example.com` is allowed as an email placeholder, but not as a link.
+- **Dead legacy CSS:** 95 rules are deleted across the legacy modules. A rule went only if every selector named a class found nowhere in `src`. Computed styles on every page at 390 and 1280px are identical before and after.
+- **Lighthouse** 12.6.1, mobile, production build served with brotli, median of 3: Performance 100, Accessibility 100, Best Practices 100, SEO 100. LCP is 1.7s; the LCP element is the slide 1 title, not the image. CLS is 0.
+
 ### 6.2 Tours overview `/tours/` (board 02)
 
 **Files:**

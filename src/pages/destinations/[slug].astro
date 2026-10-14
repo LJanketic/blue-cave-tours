@@ -17,6 +17,7 @@ import {
 	MONTH_LABELS,
 } from '../../lib/destinations';
 import { getTourCardPhoto } from '../../lib/tours';
+import { showsBestseller } from '../../lib/tour-display';
 import { breadcrumbJsonLd, destinationJsonLd, socialImageFor } from '../../lib/seo';
 import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
 
@@ -259,7 +260,7 @@ const jsonLd = siteUrl
 														Stops at {visitLabel}
 													</span>
 													{
-														tour.featured && (
+														showsBestseller(tour) && (
 															<span class="tc-tag tc-tag--featured">
 																<i class="ti ti-star" aria-hidden="true"></i>
 																Best seller

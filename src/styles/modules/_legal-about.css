@@ -348,11 +348,6 @@
 	font-style: italic;
 }
 
-.press-context {
-	font-size: 11px;
-	color: var(--color-text-tertiary);
-}
-
 /* ─── Contact form card ──────────────────────────────────────────────── */
 
 .form-card {

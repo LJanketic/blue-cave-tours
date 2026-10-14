@@ -1,0 +1,260 @@
+---
+import SectionHeader from '../ui/SectionHeader.astro';
+import PillLink from '../ui/PillLink.astro';
+import TourCard from '../vue/TourCard.vue';
+import type { TourCardDTO } from '../../lib/cards';
+
+type Props = { tours: TourCardDTO[] };
+
+const { tours } = Astro.props;
+---
+
+<!--
+	Spec §6.1.5. A native horizontal scroller: arrows, mouse drag and the
+	keyboard (it's a focusable region while it overflows) all move it, and it
+	still scrolls without JavaScript.
+-->
+<section class="popular" aria-labelledby="popular-heading" data-slider>
+	<div class="popular__head">
+		<SectionHeader title="Popular tours" id="popular-heading">
+			<Fragment slot="actions">
+				<div class="popular__arrows">
+					<button type="button" class="popular__arrow" data-slider-prev aria-label="Previous tours" aria-disabled="true">
+						<i class="ti ti-chevron-left" aria-hidden="true"></i>
+					</button>
+					<button type="button" class="popular__arrow" data-slider-next aria-label="Next tours">
+						<i class="ti ti-chevron-right" aria-hidden="true"></i>
+					</button>
+				</div>
+				<PillLink href="/tours/">See all tours</PillLink>
+			</Fragment>
+		</SectionHeader>
+	</div>
+	<div class="popular__frame">
+		<!-- The scroller wraps the list: it becomes a labelled region while it overflows, the list stays a list. -->
+		<div class="popular__track" data-slider-track data-scroll-region="Popular tours, scrollable">
+		<ul class="popular__list" role="list">
+			{
+				tours.map((tour) => (
+					<li class="popular__item">
+						<TourCard tour={tour} variant="slider" />
+					</li>
+				))
+			}
+			<li class="popular__item">
+				<TourCard variant="see-all" href="/tours/" />
+			</li>
+		</ul>
+		</div>
+		<span class="popular__fade popular__fade--left" aria-hidden="true"></span>
+		<span class="popular__fade popular__fade--right" aria-hidden="true"></span>
+	</div>
+</section>
+
+<script>
+	import '../../client/scroll-regions';
+
+	for (const slider of document.querySelectorAll<HTMLElement>('[data-slider]')) {
+		const track = slider.querySelector<HTMLElement>('[data-slider-track]');
+		const prev = slider.querySelector<HTMLButtonElement>('[data-slider-prev]');
+		const next = slider.querySelector<HTMLButtonElement>('[data-slider-next]');
+		if (!track || !prev || !next) continue;
+		const trackEl = track;
+
+		// One card plus the gap per click.
+		const stepWidth = () => (trackEl.querySelector('.popular__item')?.getBoundingClientRect().width ?? 300) + 16;
+		const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const move = (direction: 1 | -1) =>
+			trackEl.scrollBy({ left: direction * stepWidth(), behavior: reduced() ? 'auto' : 'smooth' });
+
+		// Gated, not disabled: the buttons stay focusable at the ends (§11.8).
+		const sync = () => {
+			const max = trackEl.scrollWidth - trackEl.clientWidth - 2;
+			prev.setAttribute('aria-disabled', String(trackEl.scrollLeft <= 2));
+			next.setAttribute('aria-disabled', String(trackEl.scrollLeft >= max));
+		};
+		prev.addEventListener('click', () => prev.getAttribute('aria-disabled') !== 'true' && move(-1));
+		next.addEventListener('click', () => next.getAttribute('aria-disabled') !== 'true' && move(1));
+		trackEl.addEventListener('scroll', sync, { passive: true });
+		new ResizeObserver(sync).observe(trackEl);
+		sync();
+
+		// Mouse drag (fine pointers only; touch already scrolls). A drag past 5px
+		// suppresses the click it ends with, so it doesn't open a tour.
+		let startX = 0;
+		let startScroll = 0;
+		let dragging = false;
+		let moved = false;
+		trackEl.addEventListener('pointerdown', (event) => {
+			if (event.pointerType !== 'mouse' || event.button !== 0) return;
+			dragging = true;
+			moved = false;
+			startX = event.clientX;
+			startScroll = trackEl.scrollLeft;
+		});
+		window.addEventListener('pointermove', (event) => {
+			if (!dragging) return;
+			const dx = event.clientX - startX;
+			if (!moved && Math.abs(dx) > 5) {
+				moved = true;
+				trackEl.classList.add('is-dragging');
+			}
+			if (moved) trackEl.scrollLeft = startScroll - dx;
+		});
+		window.addEventListener('pointerup', () => {
+			if (!dragging) return;
+			dragging = false;
+			trackEl.classList.remove('is-dragging');
+		});
+		trackEl.addEventListener(
+			'click',
+			(event) => {
+				if (moved) {
+					event.preventDefault();
+					event.stopPropagation();
+					moved = false;
+				}
+			},
+			true,
+		);
+		// Links and images would otherwise start a native drag.
+		trackEl.addEventListener('dragstart', (event) => event.preventDefault());
+	}
+</script>
+
+<style>
+	@layer components {
+		.popular__head {
+			max-width: var(--content-max);
+			margin: 0 auto;
+			padding: 0 var(--page-gutter);
+		}
+
+		.popular__arrows {
+			display: flex;
+			gap: var(--space-2);
+		}
+
+		.popular__arrow {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 36px;
+			height: 36px;
+			padding: 0;
+			border: 0.5px solid var(--color-border-secondary);
+			border-radius: 50%;
+			background: var(--color-background-primary);
+			color: var(--color-text-primary);
+			font-size: 16px;
+			cursor: pointer;
+		}
+
+		.popular__arrow:hover {
+			background: var(--color-background-secondary);
+		}
+
+		.popular__arrow[aria-disabled='true'] {
+			color: var(--color-text-tertiary);
+			cursor: default;
+		}
+
+		.popular__arrow[aria-disabled='true']:hover {
+			background: var(--color-background-primary);
+		}
+
+		.popular__frame {
+			position: relative;
+		}
+
+		.popular__track {
+			--slider-gutter: max(var(--space-6), calc((100% - 912px) / 2));
+			overflow-x: auto;
+			scroll-padding-inline: var(--slider-gutter);
+			scroll-snap-type: x mandatory;
+			scrollbar-width: none;
+		}
+
+		.popular__list {
+			display: flex;
+			gap: var(--space-4);
+			width: max-content;
+			margin: 0;
+			padding: 4px var(--slider-gutter) 8px;
+			list-style: none;
+		}
+
+		.popular__track::-webkit-scrollbar {
+			display: none;
+		}
+
+		.popular__track:focus-visible {
+			outline-offset: -2px;
+		}
+
+		.popular__item {
+			display: flex;
+			flex: 0 0 300px; /* board 01 */
+			scroll-snap-align: start;
+		}
+
+		.popular__item > :global(*) {
+			flex: 1;
+		}
+
+		@media (hover: hover) and (pointer: fine) {
+			.popular__track {
+				cursor: grab;
+			}
+		}
+
+		.popular__track.is-dragging {
+			cursor: grabbing;
+			scroll-snap-type: none;
+			user-select: none;
+			-webkit-user-select: none;
+		}
+
+		.popular__track :global(img) {
+			-webkit-user-drag: none;
+		}
+
+		/* The board's edge fades: solid across the left gutter, a soft fade on the right. */
+		.popular__fade {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			z-index: 1;
+			width: max(var(--space-6), calc((100% - 912px) / 2));
+			pointer-events: none;
+		}
+
+		.popular__fade--left {
+			left: 0;
+			background: var(--color-background-primary);
+		}
+
+		.popular__fade--right {
+			right: 0;
+			background: linear-gradient(270deg, var(--color-background-primary) 0%, var(--color-surface-fade) 35%, transparent 100%);
+		}
+
+		@media (max-width: 768px) {
+			.popular__arrows {
+				display: none;
+			}
+
+			.popular__track {
+				--slider-gutter: var(--space-4);
+			}
+
+			.popular__item {
+				flex-basis: min(300px, 82vw); /* the row is full-bleed on phones */
+			}
+
+			.popular__fade {
+				width: var(--space-4);
+			}
+		}
+	}
+</style>

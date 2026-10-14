@@ -72,6 +72,7 @@ export type Destination = {
 export const destinations: Destination[] = [
 	{
 		slug: 'blue-cave',
+		bentoOrder: 1,
 		name: 'Blue Cave (Biševo)',
 		region: 'Central Dalmatia · Vis archipelago',
 		tagline: 'Cave · Swimming · Must-see',
@@ -122,6 +123,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		slug: 'vis',
+		bentoOrder: 5,
 		name: 'Vis island',
 		region: 'Central Dalmatia · Outer islands',
 		tagline: 'Island · Swimming · Hidden bays',
@@ -172,6 +174,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		slug: 'hvar',
+		bentoOrder: 2,
 		name: 'Hvar island',
 		region: 'Central Dalmatia · Hvar archipelago',
 		tagline: 'Island · Culture · Swimming',
@@ -228,6 +231,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		slug: 'pakleni',
+		bentoOrder: 4,
 		name: 'Pakleni islands',
 		region: 'Central Dalmatia · Hvar archipelago',
 		tagline: 'Swimming · Snorkelling · Island chain',
@@ -283,6 +287,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		slug: 'blue-lagoon',
+		bentoOrder: 3,
 		name: 'Blue Lagoon',
 		region: 'Central Dalmatia · Drvenik Veli area',
 		tagline: 'Swimming · Half-day · Snorkelling',

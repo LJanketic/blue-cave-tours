@@ -1,244 +1,221 @@
 ---
 export const prerender = true;
 
-import { getImage, Picture } from 'astro:assets';
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import { HOME_PAGE_TITLE, SITE_DEFAULT_DESCRIPTION } from '../config/site';
 import SiteLayout from '../layouts/SiteLayout.astro';
-import TourCard from '../components/TourCard.astro';
-import HeroCarousel from '../components/vue/HeroCarousel.vue';
-import type { HeroPanel } from '../components/vue/HeroCarousel.vue';
+import HeroCarousel, { type HeroSlideView } from '../components/vue/HeroCarousel.vue';
 import FAQAccordion from '../components/vue/FAQAccordion.vue';
-import { getFeaturedTours } from '../lib/tours';
-import { getAllDestinations } from '../lib/destinations';
-import { ABOUT } from '../data/about';
+import TrustBand from '../components/home/TrustBand.astro';
+import PopularTours from '../components/home/PopularTours.astro';
+import TypeCards from '../components/home/TypeCards.astro';
+import DestinationTile from '../components/home/DestinationTile.astro';
+import HowItWorks from '../components/home/HowItWorks.astro';
+import GuestReviews from '../components/home/GuestReviews.astro';
+import SectionHeader from '../components/ui/SectionHeader.astro';
+import PillLink from '../components/ui/PillLink.astro';
+import CtaBand from '../components/ui/CtaBand.astro';
+import Button from '../components/ui/Button.astro';
+import { getFeaturedTours, getTourCardPhoto, getAllTours } from '../lib/tours';
+import { getAllDestinations, getDestinationPhoto, getDestinationsForTour, getToursForDestination } from '../lib/destinations';
+import { toTourCardDTO } from '../lib/cards';
 import { FAQ_ITEMS } from '../data/faq';
 import { HERO_IMAGE } from '../data/hero-image';
-import { CTA_BAND, HERO_SLIDES, HOW_IT_WORKS, TYPE_CARDS } from '../data/marketing';
+import { firstPhotoForDestination } from '../data/destination-photos';
+import { GALLERY_CARD_SIZE, toCardPhoto, type PhotoRef } from '../data/tour-photos';
+import { REVIEWS } from '../data/reviews';
+import { CTA_BAND, DESTINATIONS_INTRO, HERO_SLIDES, HOW_IT_WORKS, TRUST_ITEMS, TYPE_CARDS } from '../data/marketing';
 import { faqPageJsonLd, organizationJsonLd, websiteJsonLd } from '../lib/seo';
 
+const faqPreview = FAQ_ITEMS.slice(0, 4);
 const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
 const jsonLd = siteUrl
-	? [organizationJsonLd(siteUrl), websiteJsonLd(siteUrl), faqPageJsonLd(FAQ_ITEMS.slice(0, 4))]
-	: faqPageJsonLd(FAQ_ITEMS.slice(0, 4));
+	? [organizationJsonLd(siteUrl), websiteJsonLd(siteUrl), faqPageJsonLd(faqPreview)]
+	: faqPageJsonLd(faqPreview);
 
-const featuredTours = getFeaturedTours();
-const allDestinations = getAllDestinations();
-const homeDestinationOrder = ['blue-cave', 'hvar', 'zlatni-rat', 'pakleni', 'blue-lagoon', 'vis'];
-const destinationStrip = homeDestinationOrder
-	.map((slug) => allDestinations.find((d) => d.slug === slug))
-	.filter((d): d is (typeof allDestinations)[number] => Boolean(d));
-const faqPreview = FAQ_ITEMS.slice(0, 4);
+/*
+ * Hero photos. The design's own images aren't cleared for use yet (C-17), so
+ * the slides use the site's photos: the boat, the Pakleni islands from the
+ * air, and the Blue Cave. Picked for contrast behind the text (measured).
+ */
+function requirePhoto(photo: PhotoRef | undefined, label: string): { src: ImageMetadata; alt: string } {
+	if (!photo?.src) throw new Error(`Homepage photo missing: ${label}`);
+	return { src: photo.src, alt: photo.alt };
+}
+const SLIDE_PHOTOS: Record<(typeof HERO_SLIDES)[number]['id'], { src: ImageMetadata; alt: string }> = {
+	group: { src: HERO_IMAGE.src, alt: HERO_IMAGE.alt },
+	charter: requirePhoto(firstPhotoForDestination('pakleni', 4), 'pakleni 05'),
+	'blue-cave': requirePhoto(firstPhotoForDestination('blue-cave', 0), 'blue-cave 01'),
+};
+const CTA_PHOTO = requirePhoto(firstPhotoForDestination('blue-lagoon', 0), 'blue-lagoon 01');
 
-const HERO_WIDTHS = [800, 1280, 1600, 1920] as const;
+const HERO_WIDTHS = [800, 1280, 1600, 1920];
+const heroSlides: HeroSlideView[] = await Promise.all(
+	HERO_SLIDES.map(async (slide) => {
+		const photo = SLIDE_PHOTOS[slide.id];
+		const image = await getImage({ src: photo.src, widths: HERO_WIDTHS, format: 'webp', quality: 70 });
+		return { ...slide, image: { src: image.src, srcset: image.srcSet.attribute, alt: photo.alt } };
+	}),
+);
+const lcp = heroSlides[0].image;
 
-const heroSources = await Promise.all(
-	HERO_WIDTHS.map((width) =>
-		getImage({
-			src: HERO_IMAGE.src,
-			width,
-			format: 'webp',
-			quality: 70,
-		}),
+const popularTours = await Promise.all(
+	getFeaturedTours().map(async (tour) =>
+		toTourCardDTO(
+			tour,
+			getDestinationsForTour(tour.slug).map((d) => d.slug),
+			await toCardPhoto(getTourCardPhoto(tour), GALLERY_CARD_SIZE),
+		),
 	),
 );
-const heroLcp = heroSources[2] ?? heroSources[0];
-const heroSrcset = heroSources.map((img, i) => `${img.src} ${HERO_WIDTHS[i]}w`).join(', ');
 
-const heroPanels: HeroPanel[] = HERO_SLIDES;
+// The bento: destinations with a bento slot, in order (§6.1.7). The board's
+// six-tile layout (2×2, wide, single, single, wide, wide) leaves a hole with
+// five, so until a sixth destination has a real photo (C-18) it's the big
+// tile plus four singles: two full rows.
+const BENTO_SIZES: readonly ('a' | 'wide' | 'single')[] =
+	getAllDestinations().filter((d) => d.bentoOrder !== undefined).length >= 6
+		? ['a', 'wide', 'single', 'single', 'wide', 'wide']
+		: ['a', 'single', 'single', 'single', 'single'];
+const bento = getAllDestinations()
+	.filter((d) => d.bentoOrder !== undefined)
+	.sort((a, b) => (a.bentoOrder ?? 0) - (b.bentoOrder ?? 0))
+	.map((destination, i) => ({
+		destination,
+		image: getDestinationPhoto(destination).src,
+		tourCount: getToursForDestination(destination.slug).length,
+		size: BENTO_SIZES[i] ?? 'single',
+	}));
+
+const tourNames = Object.fromEntries(getAllTours().map((t) => [t.slug, t.title]));
 ---
 
-<SiteLayout title={HOME_PAGE_TITLE} description={SITE_DEFAULT_DESCRIPTION} solidNav={false} jsonLd={jsonLd}>
+<SiteLayout title={HOME_PAGE_TITLE} description={SITE_DEFAULT_DESCRIPTION} solidNav={false} jsonLd={jsonLd} fontPreload>
 	<link
 		slot="head"
 		rel="preload"
 		as="image"
-		href={heroLcp.src}
+		href={lcp.src}
 		type="image/webp"
-		imagesrcset={heroSrcset}
+		imagesrcset={lcp.srcset}
 		imagesizes="100vw"
 		fetchpriority="high"
 	/>
-	<main id="main">
-		<div class="page home-page">
-			<h1 class="sr-only">Hello Blue Cave: speedboat tours and private charters from Split</h1>
-			<section class="hero hero--home">
-				<div class="hero-media">
-					<div class="hero-media-fallback" aria-hidden="true">
-						<i class="ti ti-sailboat"></i>
-					</div>
-					<Picture
-						src={HERO_IMAGE.src}
-						alt={HERO_IMAGE.alt}
-						formats={['webp']}
-						fallbackFormat="webp"
-						widths={[800, 1280, 1600, 1920]}
-						sizes="100vw"
-						quality={70}
-						layout="none"
-						priority
-						class="hero-banner"
-						pictureAttributes={{ class: 'hero-banner-picture' }}
-					/>
-					<div class="hero-banner-overlay" aria-hidden="true"></div>
-				</div>
-				<HeroCarousel client:load panels={heroPanels} />
+	<main id="main" class="home">
+		<h1 class="sr-only">Hello Blue Cave: speedboat tours and private charters from Split</h1>
+		<HeroCarousel client:load slides={heroSlides} scrollTarget="trust" />
+		<TrustBand items={TRUST_ITEMS} id="trust" />
+
+		<PopularTours tours={popularTours} />
+
+		<div class="home__wrap">
+			<section aria-labelledby="types-heading">
+				<SectionHeader title="Group or private?" id="types-heading" />
+				<TypeCards cards={TYPE_CARDS} />
 			</section>
 
-			<div class="page-shell">
-				<section aria-labelledby="featured-heading">
-					<div class="section-header">
-						<h2 id="featured-heading" class="section-title">Popular tours</h2>
-						<a class="section-link" href="/tours/">See all tours →</a>
-					</div>
-					<div class="cards-scroll">
-						{
-							featuredTours.map((tour) => (
-								<TourCard tour={tour} featured={tour.featured} />
-							))
-						}
-					</div>
-				</section>
-
-				<section aria-labelledby="destinations-heading">
-					<div class="section-header">
-						<h2 id="destinations-heading" class="section-title">Where we go</h2>
-						<a class="section-link" href="/destinations/">All destinations →</a>
-					</div>
-					<div class="dest-grid">
-						{
-							destinationStrip.map((dest) => (
-								<a class="dest-card" href={`/destinations/${dest.slug}/`}>
-									<i class="ti ti-sailboat bg-icon" aria-hidden="true" />
-									<h3 class="dest-name">{dest.name}</h3>
-									<span class="dest-count">
-										{dest.tourSlugs.length} tour{dest.tourSlugs.length === 1 ? '' : 's'}
-									</span>
-								</a>
-							))
-						}
-					</div>
-				</section>
-
-				<section aria-labelledby="how-heading">
-					<div class="section-header">
-						<h2 id="how-heading" class="section-title">How it works</h2>
-					</div>
-					<div class="steps">
-						{
-							HOW_IT_WORKS.map((step, index) => (
-								<div class="step-card">
-									<div class="step-num">{index + 1}</div>
-									<p class="step-title">{step.title}</p>
-									<p class="step-desc">{step.description}</p>
-								</div>
-							))
-						}
-					</div>
-				</section>
-
-				<section aria-labelledby="types-heading">
-					<div class="section-header">
-						<h2 id="types-heading" class="section-title">Group or private?</h2>
-					</div>
-					<div class="types-grid">
-						{
-							TYPE_CARDS.map((card) => (
-								<div class:list={['type-card', card.kind === 'private' && 'featured']}>
-									<div class={`type-icon type-icon--${card.kind}`}>
-										<i class={`ti ti-${card.icon}`} aria-hidden="true"></i>
-									</div>
-									<p class="type-title">{card.title}</p>
-									<p class="type-desc">{card.description}</p>
-									<div class="type-features">
-										{card.features.map((feature) => (
-											<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> {feature}</span>
-										))}
-									</div>
-									{card.kind === 'private' ? (
-										<a class="btn-primary btn-primary--compact" href={card.ctaHref}>{card.ctaLabel}</a>
-									) : (
-										<a class="type-cta" href={card.ctaHref}>{card.ctaLabel}</a>
-									)}
-								</div>
-							))
-						}
-					</div>
-				</section>
-
-				<section class="trust-bar" aria-label="Why guests trust us">
+			<section aria-labelledby="destinations-heading">
+				<SectionHeader title="Destinations" sub={DESTINATIONS_INTRO} id="destinations-heading">
+					<PillLink href="/destinations/" slot="actions">All destinations</PillLink>
+				</SectionHeader>
+				<div class="home__bento-scroller" data-scroll-region="Destinations, scrollable">
+				<ul class="home__bento" role="list">
 					{
-						ABOUT.trustStats.map((stat) => (
-							<div class="trust-item">
-								<i class={`ti ti-${stat.icon}`} aria-hidden="true" />
-								<span class="trust-num">{stat.value}</span>
-								<span class="trust-label">{stat.label}</span>
-							</div>
+						bento.map(({ destination, image, tourCount, size }) => (
+							<DestinationTile
+								slug={destination.slug}
+								name={destination.name}
+								tagline={destination.tagline}
+								tourCount={tourCount}
+								image={image}
+								icon={destination.icon}
+								size={size}
+							/>
 						))
 					}
-				</section>
+				</ul>
+				</div>
+			</section>
 
-				<section aria-labelledby="faq-heading">
-					<div class="section-header">
-						<h2 id="faq-heading" class="section-title">Common questions</h2>
-						<a class="section-link" href="/faq/">All FAQs →</a>
-					</div>
-					<FAQAccordion client:visible items={faqPreview} />
-				</section>
+			<section aria-labelledby="how-heading">
+				<SectionHeader title="How it works" id="how-heading" />
+				<HowItWorks steps={HOW_IT_WORKS} />
+			</section>
 
-				<section class="cta-band" aria-labelledby="cta-heading">
-					<h2 id="cta-heading">{CTA_BAND.heading}</h2>
-					<p>{CTA_BAND.text}</p>
-					<div class="cta-band-btns">
-						<a class="btn-primary" href={CTA_BAND.primary.href}>{CTA_BAND.primary.label}</a>
-						<a class="btn-secondary" href={CTA_BAND.secondary.href}>{CTA_BAND.secondary.label}</a>
-					</div>
-				</section>
+			<GuestReviews reviews={REVIEWS} tourNames={tourNames} />
+
+			<section aria-labelledby="faq-heading">
+				<SectionHeader title="Common questions" id="faq-heading">
+					<PillLink href="/faq/" ghost slot="actions">All FAQs</PillLink>
+				</SectionHeader>
+				<FAQAccordion client:idle items={faqPreview} idPrefix="home-faq" />
+			</section>
+
+			<div class="home__cta">
+				<CtaBand variant="photo" heading={CTA_BAND.heading} text={CTA_BAND.text} image={CTA_PHOTO.src} imagePosition="center 60%">
+					<Button variant="on-image" size="md" href={CTA_BAND.primary.href}>{CTA_BAND.primary.label}</Button>
+					<Button variant="on-image-ghost" size="md" href={CTA_BAND.secondary.href}>{CTA_BAND.secondary.label}</Button>
+				</CtaBand>
 			</div>
 		</div>
 	</main>
 </SiteLayout>
 
+<script>
+	import '../client/scroll-regions';
+</script>
+
 <style>
-	.home-page .page-shell {
-		padding: 3.5rem var(--page-gutter) 4rem;
-	}
+	@layer pages {
+		.home__wrap {
+			max-width: var(--content-max);
+			margin: 0 auto;
+			padding: 0 var(--page-gutter);
+		}
 
-	.home-page .cta-band-btns .btn-primary,
-	.home-page .cta-band-btns .btn-secondary {
-		min-height: unset;
-	}
+		/* The bento (board 01 v4): 4 columns, 190px rows. */
+		.home__bento {
+			display: grid;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			grid-auto-rows: 190px;
+			gap: var(--space-3);
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
 
-	.dest-card {
-		height: 110px;
-		text-decoration: none;
-		color: inherit;
-	}
+		.home__cta {
+			margin: var(--section-gap) 0 48px;
+		}
 
-	.type-icon--group {
-		color: var(--color-accent);
-	}
+		/* Phones: the bento becomes a row of 3:2 tiles that scrolls sideways. */
+		@media (max-width: 768px) {
+			.home__bento-scroller {
+				margin: 0 calc(-1 * var(--page-gutter));
+				overflow-x: auto;
+				scroll-padding-inline: var(--page-gutter);
+				scroll-snap-type: x mandatory;
+				scrollbar-width: none;
+			}
 
-	.type-icon--private {
-		color: var(--color-category-private-icon);
-	}
+			.home__bento {
+				display: flex;
+				width: max-content;
+				padding: 0 var(--page-gutter) 4px;
+			}
 
-	.type-cta {
-		display: inline-block;
-		text-decoration: none;
-		color: var(--color-text-primary);
-	}
+			.home__bento > :global(li) {
+				flex: 0 0 280px;
+				aspect-ratio: 3 / 2;
+				scroll-snap-align: start;
+			}
+		}
 
-	.btn-primary--compact {
-		font-size: 12px;
-		padding: 6px 14px;
-		min-height: unset;
-	}
-
-	.home-page .cards-scroll .tour-card.featured {
-		border: 0.5px solid var(--color-border-tertiary);
-	}
-
-	.home-page .cards-scroll .tour-card.featured:hover {
-		border-color: var(--color-border-primary);
+		@media (max-width: 480px) {
+			.home__bento > :global(li) {
+				flex-basis: min(280px, 80vw);
+			}
+		}
 	}
 </style>

@@ -16,12 +16,30 @@ export type Review = {
 export type ReviewsData = {
 	/** Where the reviews come from, e.g. 'Google' or 'TripAdvisor'; null = none shown. */
 	source: string | null;
-	/** How reviews are checked to come from real guests (Omnibus Directive). */
+	/**
+	 * How reviews are checked to come from real guests (Omnibus Directive), as a
+	 * sentence, e.g. "Google doesn't check that reviewers took the tour."
+	 */
 	verification: string | null;
+	/** "as of" date of the average and count, e.g. '1 October 2026'. */
+	asOf: string | null;
 	sourceUrl: string | null;
 	average: number | null;
 	count: number | null;
 	items: Review[];
 };
 
-export const REVIEWS: ReviewsData = { source: null, verification: null, sourceUrl: null, average: null, count: null, items: [] };
+/**
+ * Selection rule (Omnibus): `items` are the most recent reviews from the
+ * source, never picked by rating. Names are first name + initial only.
+ * `average` and `count` cover all reviews on the source.
+ */
+export const REVIEWS: ReviewsData = {
+	source: null,
+	verification: null,
+	asOf: null,
+	sourceUrl: null,
+	average: null,
+	count: null,
+	items: [],
+};

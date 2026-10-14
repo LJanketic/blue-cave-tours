@@ -58,23 +58,9 @@
 		font-size: 22px;
 	}
 
-	.hero--home h1,
-	.hero--home .hero-h {
-		font-size: clamp(1.75rem, 8vw, 2.25rem);
-	}
-
-	.hero--home {
-		padding-bottom: 0;
-	}
-
 	.hero-media img,
 	.hero-banner {
 		object-position: 78% 42%;
-	}
-
-	.hero--home .hero-content {
-		height: 100%;
-		padding: 0 20px;
 	}
 
 	.trust-bar {
@@ -99,11 +85,6 @@
 		display: none;
 	}
 
-	.cards-scroll > * {
-		flex: 0 0 45%;
-		scroll-snap-align: start;
-	}
-
 	.dest-grid:not(.dest-grid--listing) > * {
 		flex: 0 0 30%;
 		scroll-snap-align: start;
@@ -111,10 +92,6 @@
 
 	.steps {
 		grid-template-columns: repeat(2, 1fr);
-	}
-
-	.types-grid {
-		grid-template-columns: 1fr;
 	}
 
 	/* minmax(0, …), not a bare 1fr: 1fr has an auto minimum, so any max-content
@@ -289,10 +266,6 @@
 	.trust-bar {
 		grid-template-columns: 1fr 1fr;
 		margin-top: 28px;
-	}
-
-	.cards-scroll > * {
-		flex: 0 0 82%;
 	}
 
 	.tour-grid--featured > .tour-cell {

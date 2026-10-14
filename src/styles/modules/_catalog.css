@@ -206,64 +206,6 @@ h3.dest-name {
 }
 
 /* Homepage compact cards (01-homepage .tc-* layout) */
-.cards-scroll .tour-card .card-img {
-	height: 120px;
-}
-
-.cards-scroll .tour-card .card-body {
-	padding: 10px 12px 12px;
-}
-
-.cards-scroll .tour-card .card-title {
-	font-size: 13px;
-	margin-bottom: 4px;
-}
-
-.cards-scroll .tour-card .card-meta {
-	font-size: 11px;
-	gap: 8px;
-	margin-bottom: 6px;
-}
-
-.cards-scroll .tour-card .card-desc,
-.cards-scroll .tour-card .tour-card__actions {
-	display: none;
-}
-
-.cards-scroll .tour-card .card-footer {
-	align-items: baseline;
-	padding-top: 8px;
-}
-
-.cards-scroll .tour-card .price-from,
-.cards-scroll .tour-card .price-per {
-	font-size: 10px;
-	color: var(--color-text-tertiary);
-}
-
-.cards-scroll .tour-card .price-val {
-	font-size: 14px;
-}
-
-.cards-scroll .tour-card .img-badges {
-	top: 7px;
-	left: 7px;
-}
-
-.cards-scroll .tour-card .img-badges .tc-badge,
-.cards-scroll .tour-card .img-badges .img-badge {
-	font-size: 10px;
-	padding: 2px 8px;
-}
-
-.cards-scroll .tour-card .img-badges .badge-bestseller ~ .badge-group,
-.cards-scroll .tour-card .img-badges .badge-bestseller ~ .badge-private {
-	display: none;
-}
-
-.cards-scroll .card-img .placeholder-image .ti {
-	font-size: 30px;
-}
 
 /* ─── Destination cards ────────────────────────────────────────────────── */
 
@@ -339,15 +281,6 @@ h3.dest-name {
 	grid-area: footer;
 }
 
-.dest-card .bg-icon {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -60%);
-	font-size: 36px;
-	color: var(--color-border-secondary);
-}
-
 .dest-card--rich .card-img {
 	height: 160px;
 }
@@ -371,13 +304,6 @@ h3.card-name {
 
 .card-name {
 	font-size: 15px;
-}
-
-.dest-count {
-	font-size: 11px;
-	color: var(--color-text-secondary);
-	position: relative;
-	z-index: 1;
 }
 
 /* ─── Filters ────────────────────────────────────────────────────────── */

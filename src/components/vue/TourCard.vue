@@ -74,6 +74,8 @@ const unit = computed(() => (props.tour?.priceUnit === 'boat' ? '/ boat' : '/ pe
 @layer components {
 	/* board hbc.css .tour-card */
 	.tour-card-ui {
+		/* Contains the absolutely positioned .sr-only text, so it can't escape a scrolling row. */
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;

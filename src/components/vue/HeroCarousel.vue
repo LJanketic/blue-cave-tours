@@ -1,210 +1,621 @@
 <script setup lang="ts">
+/*
+ * Homepage hero carousel (spec §6.1.2). Three photo slides with display
+ * titles; rotates every 6s, but never under reduced motion, never while the
+ * pointer is on the text or controls, never while keyboard focus is inside,
+ * and never after Pause. The pause button is the first control in the DOM.
+ *
+ * Without JavaScript, slide 1 shows on its own. Slides 2 and 3 get their
+ * image source only after hydration, so they don't compete with the LCP.
+ */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import Button from '../ui/Button.vue';
 
-export type HeroPanel = {
+export type HeroSlideView = {
 	id: string;
-	icon: string;
-	heading: string;
-	subtext: string;
+	titleLines: string[];
+	sub: string;
 	ctaLabel: string;
 	ctaHref: string;
-	/** Accessible label for the dot that jumps to this panel. */
-	dotLabel: string;
+	position: string;
+	image: { src: string; srcset: string; alt: string };
 };
 
-const props = withDefaults(
-	defineProps<{
-		panels: HeroPanel[];
-		intervalMs?: number;
-	}>(),
-	{ intervalMs: 6000 },
+const props = withDefaults(defineProps<{ slides: HeroSlideView[]; intervalMs?: number; scrollTarget?: string }>(), {
+	intervalMs: 6000,
+	scrollTarget: 'trust',
+});
+
+const TEXT_SWAP_MS = 450;
+
+/** The photo on screen. */
+const index = ref(0);
+/** The text on screen: it follows the photo after the old text has faded out. */
+const textIndex = ref(0);
+const leaving = ref(false);
+// The text animates in on slide changes only. On load it's simply there: an
+// entrance that starts at opacity 0 hides the slide title from Largest
+// Contentful Paint and delays the page's first meaningful paint.
+const animated = ref(false);
+const loaded = ref<Set<number>>(new Set([0]));
+const reducedMotion = ref(false);
+const userPaused = ref(false);
+const hovering = ref(false);
+const focusWithin = ref(false);
+// Pressing Play overrides hover/focus pausing until the pointer or focus leaves.
+let playRequested = false;
+let timer: ReturnType<typeof setTimeout> | undefined;
+let swapTimer: ReturnType<typeof setTimeout> | undefined;
+
+const count = computed(() => props.slides.length);
+const rotating = computed(
+	() => !reducedMotion.value && !userPaused.value && count.value > 1 && (playRequested || (!hovering.value && !focusWithin.value)),
 );
 
-const index = ref(0);
-const root = ref<HTMLElement | null>(null);
-let timer: ReturnType<typeof setInterval> | undefined;
-const reducedMotion = ref(false);
-// Rotation stops while the pointer or keyboard focus is inside the carousel,
-// so a slide never changes under someone reading or tabbing through it
-// (WCAG 2.2.2), and when the visitor presses Pause.
-const userPaused = ref(false);
-let hovering = false;
-let focusWithin = false;
-// Pressing Play overrides hover/focus pausing until the pointer or focus
-// leaves the carousel; after that, hover and focus pause it again as usual.
-let playRequested = false;
-
-const count = computed(() => props.panels.length);
-
-function setPanel(i: number) {
-	index.value = (i + count.value) % count.value;
+function schedule() {
+	clearTimeout(timer);
+	timer = rotating.value ? setTimeout(() => show(index.value + 1), props.intervalMs) : undefined;
 }
 
-function advance() {
-	setPanel(index.value + 1);
-}
-
-function startRotation() {
-	stopRotation();
-	if (reducedMotion.value || userPaused.value || count.value < 2) return;
-	if (!playRequested && (hovering || focusWithin)) return;
-	timer = setInterval(advance, props.intervalMs);
-}
-
-function stopRotation() {
-	if (timer) {
-		clearInterval(timer);
-		timer = undefined;
+function show(i: number) {
+	const next = (i + count.value) % count.value;
+	loaded.value = new Set([...loaded.value, next, (next + 1) % count.value]);
+	index.value = next;
+	animated.value = true;
+	clearTimeout(swapTimer);
+	if (reducedMotion.value) {
+		textIndex.value = next;
+	} else {
+		leaving.value = true;
+		swapTimer = setTimeout(() => {
+			textIndex.value = next;
+			leaving.value = false;
+		}, TEXT_SWAP_MS);
 	}
-}
-
-function goTo(i: number) {
-	setPanel(i);
-	startRotation();
+	schedule();
 }
 
 function togglePause() {
 	userPaused.value = !userPaused.value;
 	playRequested = !userPaused.value;
-	startRotation();
+	schedule();
 }
 
-// Hovering the slide text or a control pauses (the active panel takes pointer
-// events for this, see .hero-panel.active in _home.css); the rest of the photo
-// doesn't, or the full-screen hero would almost never rotate for mouse users.
-// Mouse only: a tap on a phone fires an "enter" with no matching "leave",
-// which would stop rotation for good.
+// Mouse only: a tap fires an "enter" with no matching "leave".
 function onPointerEnter(event: PointerEvent) {
 	if (event.pointerType !== 'mouse') return;
-	hovering = true;
-	startRotation();
+	hovering.value = true;
+	schedule();
 }
 
 function onPointerLeave(event: PointerEvent) {
 	if (event.pointerType !== 'mouse') return;
-	hovering = false;
+	hovering.value = false;
 	playRequested = false;
-	startRotation();
+	schedule();
 }
 
+// Keyboard focus only: a click also focuses, and hover covers pointer users.
 function onFocusIn(event: FocusEvent) {
-	// Only keyboard focus pauses: a mouse click on an arrow or dot also focuses
-	// the button, and hover already covers pointer users.
 	if (!(event.target instanceof HTMLElement) || !event.target.matches(':focus-visible')) return;
-	focusWithin = true;
-	startRotation();
+	focusWithin.value = true;
+	schedule();
 }
 
 function onFocusOut(event: FocusEvent) {
-	const region = event.currentTarget as HTMLElement;
-	if (region.contains(event.relatedTarget as Node | null)) return;
-	focusWithin = false;
+	if ((event.currentTarget as HTMLElement).contains(event.relatedTarget as Node | null)) return;
+	focusWithin.value = false;
 	playRequested = false;
-	startRotation();
+	schedule();
 }
 
-function next() {
-	goTo(index.value + 1);
+// Phones: swipe left or right (≥40px) instead of the arrows.
+let swipeX: number | null = null;
+function onPointerDown(event: PointerEvent) {
+	if (event.pointerType !== 'mouse') swipeX = event.clientX;
+}
+function onPointerUp(event: PointerEvent) {
+	if (swipeX === null) return;
+	const dx = event.clientX - swipeX;
+	swipeX = null;
+	if (Math.abs(dx) >= 40) show(index.value + (dx < 0 ? 1 : -1));
 }
 
-function prev() {
-	goTo(index.value - 1);
-}
-
-function scrollPastHero() {
-	const hero = document.querySelector('.hero--home');
-	if (!(hero instanceof HTMLElement)) return;
-
-	const top = hero.getBoundingClientRect().bottom + window.scrollY;
+function explore() {
+	const target = document.getElementById(props.scrollTarget);
+	if (!target) return;
+	const header = document.getElementById('site-header')?.offsetHeight ?? 0;
+	const top = target.getBoundingClientRect().top + window.scrollY - header;
 	window.scrollTo({ top, behavior: reducedMotion.value ? 'auto' : 'smooth' });
 }
 
 onMounted(() => {
-	reducedMotion.value =
-		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	// A pointer already resting on the slide text at hydration fires no "enter".
-	hovering = root.value?.matches(':hover') ?? false;
-	startRotation();
+	reducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	// Slide 2's photo loads once the page has finished loading (it shows after
+	// 6s at the earliest); each later photo loads when the slide before it shows.
+	// Anything earlier competes with the first paint on slow connections.
+	const loadNext = () => (loaded.value = new Set([...loaded.value, 1 % count.value]));
+	const afterLoad = () => ('requestIdleCallback' in window ? window.requestIdleCallback(loadNext, { timeout: 2000 }) : setTimeout(loadNext, 1000));
+	if (document.readyState === 'complete') afterLoad();
+	else window.addEventListener('load', afterLoad, { once: true });
+	schedule();
 });
 
-onBeforeUnmount(stopRotation);
+onBeforeUnmount(() => {
+	clearTimeout(timer);
+	clearTimeout(swapTimer);
+});
 </script>
 
 <template>
-	<div
-		class="hero-chrome"
-		role="region"
+	<section
+		class="home-hero on-photo"
 		aria-roledescription="carousel"
-		aria-label="Featured highlights"
-		ref="root"
-		@pointerenter="onPointerEnter"
-		@pointerleave="onPointerLeave"
+		aria-label="Highlights"
+		:style="{ '--hero-interval': `${intervalMs}ms` }"
 		@focusin="onFocusIn"
 		@focusout="onFocusOut"
+		@pointerdown="onPointerDown"
+		@pointerup="onPointerUp"
 	>
-		<button
-			v-if="count > 1"
-			type="button"
-			class="hero-arrow hero-arrow-prev"
-			aria-label="Previous banner"
-			@click.stop="prev"
-		>
-			<i class="ti ti-chevron-left" aria-hidden="true"></i>
-		</button>
-		<button
-			v-if="count > 1"
-			type="button"
-			class="hero-arrow hero-arrow-next"
-			aria-label="Next banner"
-			@click.stop="next"
-		>
-			<i class="ti ti-chevron-right" aria-hidden="true"></i>
-		</button>
-
-		<div class="hero-content">
-			<div
-				v-for="(panel, i) in panels"
-				:id="`hero-panel-${panel.id}`"
-				:key="panel.id"
-				class="hero-panel"
-				:class="{ active: i === index }"
-				role="group"
-				aria-roledescription="slide"
-				:aria-label="`${i + 1} of ${count}`"
-				:aria-hidden="i !== index ? 'true' : 'false'"
-				:inert="i !== index ? true : undefined"
-			>
-				<h2 class="hero-h">{{ panel.heading }}</h2>
-				<p class="hero-sub">{{ panel.subtext }}</p>
-				<a class="btn-primary" :href="panel.ctaHref">{{ panel.ctaLabel }}</a>
-			</div>
+		<div class="home-hero__photos" aria-hidden="true">
+			<img
+				v-for="(slide, i) in slides"
+				:key="slide.id"
+				class="home-hero__photo"
+				:class="{ 'is-on': i === index }"
+				:src="loaded.has(i) ? slide.image.src : undefined"
+				:srcset="loaded.has(i) ? slide.image.srcset : undefined"
+				sizes="100vw"
+				alt=""
+				:fetchpriority="i === 0 ? 'high' : undefined"
+				:style="{ '--hero-position': slide.position }"
+				decoding="async"
+			/>
 		</div>
 
-		<button type="button" class="hero-scroll" @click="scrollPastHero">
-			<span>Explore</span>
-			<i class="ti ti-chevron-down" aria-hidden="true"></i>
-		</button>
-
-		<div v-if="count > 1" class="hero-dots" role="group" aria-label="Choose banner">
-			<button
-				v-for="(panel, i) in panels"
-				:key="`dot-${panel.id}`"
-				type="button"
-				class="hero-dot"
-				:class="{ active: i === index }"
-				:aria-label="panel.dotLabel"
-				:aria-current="i === index ? 'true' : undefined"
-				@click.stop="goTo(i)"
-			></button>
+		<!-- Controls first in the DOM, so Pause is the first thing a keyboard reaches (§11.3). -->
+		<div
+			v-if="count > 1"
+			class="home-hero__controls"
+			:class="{ 'is-paused': !rotating, 'no-rotate': reducedMotion }"
+			@pointerenter="onPointerEnter"
+			@pointerleave="onPointerLeave"
+		>
 			<button
 				v-if="!reducedMotion"
 				type="button"
-				class="hero-pause"
-				:aria-label="userPaused ? 'Play banner rotation' : 'Pause banner rotation'"
-				@click.stop="togglePause"
+				class="home-hero__pause"
+				:aria-pressed="userPaused"
+				:aria-label="userPaused ? 'Play slideshow' : 'Pause slideshow'"
+				@click="togglePause"
 			>
 				<i :class="['ti', userPaused ? 'ti-player-play' : 'ti-player-pause']" aria-hidden="true"></i>
 			</button>
+			<div class="home-hero__dots" role="group" aria-label="Slides">
+				<button
+					v-for="(slide, i) in slides"
+					:key="`dot-${slide.id}`"
+					type="button"
+					class="home-hero__dot"
+					:class="{ 'is-active': i === index }"
+					:aria-label="`Show slide ${i + 1} of ${count}`"
+					:aria-current="i === index ? 'true' : undefined"
+					@click="i === index ? togglePause() : show(i)"
+				></button>
+			</div>
 		</div>
-	</div>
+		<template v-if="count > 1">
+			<button type="button" class="home-hero__arrow home-hero__arrow--prev" aria-label="Previous slide" @click="show(index - 1)">
+				<i class="ti ti-chevron-left" aria-hidden="true"></i>
+			</button>
+			<button type="button" class="home-hero__arrow home-hero__arrow--next" aria-label="Next slide" @click="show(index + 1)">
+				<i class="ti ti-chevron-right" aria-hidden="true"></i>
+			</button>
+		</template>
+
+		<div class="home-hero__content">
+			<div class="home-hero__slides" :class="{ 'is-animated': animated }" :aria-live="rotating ? 'off' : 'polite'">
+				<div
+					v-for="(slide, i) in slides"
+					v-show="i === textIndex"
+					:key="slide.id"
+					class="home-hero__panel"
+					:class="{ 'is-leaving': leaving && i === textIndex }"
+					role="group"
+					aria-roledescription="slide"
+					:aria-label="`${i + 1} of ${count}`"
+					:inert="i !== textIndex ? true : undefined"
+					@pointerenter="onPointerEnter"
+					@pointerleave="onPointerLeave"
+				>
+					<p class="home-hero__title display">
+						<template v-for="(line, l) in slide.titleLines" :key="l">
+							<br v-if="l > 0" />{{ line }}
+						</template>
+					</p>
+					<p class="home-hero__sub">{{ slide.sub }}</p>
+					<Button class="home-hero__cta" variant="on-image" size="lg" icon-end="arrow-right" :href="slide.ctaHref">
+						{{ slide.ctaLabel }}
+					</Button>
+				</div>
+			</div>
+		</div>
+
+		<button type="button" class="home-hero__explore" @click="explore">
+			<i class="ti ti-chevron-down" aria-hidden="true"></i>
+			Explore
+			<i class="ti ti-chevron-down" aria-hidden="true"></i>
+		</button>
+	</section>
 </template>
+
+<style scoped>
+@layer components {
+	.home-hero {
+		position: relative;
+		height: 100vh;
+		height: 100svh;
+		min-height: 580px;
+		max-height: 1140px;
+		overflow: hidden;
+		background: var(--color-background-hero);
+		color: var(--color-text-on-image);
+		touch-action: pan-y;
+	}
+
+	.home-hero__photos {
+		position: absolute;
+		inset: 0;
+	}
+
+	/* A scrim the board defines but never shows, made strong enough for the text
+	   (§6.1.2, measured in PR 3), plus the header fade. */
+	.home-hero__photos::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: var(--color-overlay-header), var(--color-overlay-hero-home);
+	}
+
+	.home-hero__photo {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: var(--hero-position);
+		opacity: 0;
+		transition: opacity 1.2s ease;
+	}
+
+	.home-hero__photo.is-on {
+		opacity: 1;
+	}
+
+	.home-hero__content {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: center;
+		height: 100%;
+		max-width: var(--content-max);
+		margin: 0 auto;
+		padding: 0 var(--space-6);
+	}
+
+	.home-hero__panel {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.home-hero__title {
+		margin: 0 0 var(--space-4);
+		font-size: var(--font-size-display-xl);
+		line-height: var(--line-height-display-hero);
+		letter-spacing: var(--letter-spacing-display-hero);
+		white-space: nowrap;
+	}
+
+	.home-hero__sub {
+		max-width: 375px;
+		margin: 0 0 var(--space-6);
+		font-size: var(--font-size-base);
+		line-height: var(--line-height-relaxed);
+		color: var(--color-text-on-image-muted);
+	}
+
+	.is-animated .home-hero__title {
+		animation: hero-title-in 0.7s var(--ease-out) 0.1s both;
+	}
+
+	.is-animated .home-hero__sub {
+		animation: hero-fade-in 0.6s ease 0.25s both;
+	}
+
+	.is-animated .home-hero__cta {
+		animation: hero-fade-in 0.6s ease 0.4s both;
+	}
+
+	.is-leaving .home-hero__title {
+		opacity: 0;
+		transform: translateY(28px);
+		animation: none;
+		transition:
+			opacity 0.4s ease,
+			transform 0.45s cubic-bezier(0.5, 0, 0.8, 0.4);
+	}
+
+	.is-leaving .home-hero__sub,
+	.is-leaving .home-hero__cta {
+		opacity: 0;
+		animation: none;
+		transition: opacity 0.3s ease;
+	}
+
+	@keyframes hero-title-in {
+		from {
+			opacity: 0;
+			transform: translateY(28px);
+		}
+	}
+
+	@keyframes hero-fade-in {
+		from {
+			opacity: 0;
+		}
+	}
+
+	/* Dots, pause and arrows */
+	.home-hero__controls {
+		position: absolute;
+		bottom: 80px;
+		left: 50%;
+		z-index: 2;
+		display: flex;
+		flex-direction: row-reverse; /* Pause comes first in the DOM, but sits to the right of the dots */
+		align-items: center;
+		gap: var(--space-3);
+		transform: translateX(-50%);
+	}
+
+	.home-hero__dots {
+		display: flex;
+		align-items: center;
+	}
+
+	/* 8px dots with a 24px hit area (WCAG 2.5.8). */
+	.home-hero__dot {
+		position: relative;
+		width: 24px;
+		height: 24px;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+	}
+
+	.home-hero__dot::before {
+		content: '';
+		position: absolute;
+		top: 8px;
+		left: 8px;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--color-text-on-image-eyebrow);
+		transition: transform var(--duration-fast) ease;
+	}
+
+	.home-hero__dot:hover::before {
+		transform: scale(1.4);
+	}
+
+	.home-hero__dot.is-active {
+		width: 44px;
+	}
+
+	/* The active dot is a 28px pill that fills over the interval. */
+	.home-hero__dot.is-active::before {
+		width: 28px;
+		border-radius: 4px;
+		background: var(--color-border-glass);
+	}
+
+	.home-hero__dot.is-active:hover::before {
+		transform: scale(1.25);
+	}
+
+	.home-hero__dot.is-active::after {
+		content: '';
+		position: absolute;
+		top: 8px;
+		left: 8px;
+		width: 28px;
+		height: 8px;
+		border-radius: 4px;
+		background: var(--color-progress);
+		transform-origin: left center;
+		animation: hero-dot-fill var(--hero-interval) linear both;
+	}
+
+	.is-paused .home-hero__dot.is-active::after {
+		animation-play-state: paused;
+	}
+
+	.no-rotate .home-hero__dot.is-active::after {
+		animation: none;
+	}
+
+	@keyframes hero-dot-fill {
+		from {
+			transform: scaleX(0);
+		}
+	}
+
+	.home-hero__pause,
+	.home-hero__arrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		border: 1px solid var(--color-border-glass);
+		border-radius: 50%;
+		background: var(--color-glass-dark);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		color: var(--color-text-on-image);
+		cursor: pointer;
+		transition:
+			background-color var(--duration-fast) ease,
+			opacity var(--duration-fast) ease;
+	}
+
+	.home-hero__pause:hover,
+	.home-hero__arrow:hover {
+		background: var(--color-glass-dark-hover);
+	}
+
+	.home-hero__pause {
+		width: 32px;
+		height: 32px;
+		font-size: 16px;
+	}
+
+	/* 20px from the edges; shown on hover and whenever a control has keyboard focus. */
+	.home-hero__arrow {
+		position: absolute;
+		z-index: 2;
+		top: 50%;
+		width: 40px;
+		height: 40px;
+		font-size: 18px;
+		opacity: 0;
+		transform: translateY(-50%);
+	}
+
+	.home-hero__arrow--prev {
+		left: 20px;
+	}
+
+	.home-hero__arrow--next {
+		right: 20px;
+	}
+
+	.home-hero:hover .home-hero__arrow,
+	.home-hero:focus-within .home-hero__arrow {
+		opacity: 1;
+	}
+
+	.home-hero__explore {
+		position: absolute;
+		bottom: 22px;
+		left: 50%;
+		z-index: 2;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		height: 36px;
+		padding: 0 var(--space-4);
+		border: 0;
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--color-text-on-image);
+		font: inherit;
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-semibold);
+		letter-spacing: 0.02em;
+		cursor: pointer;
+		transform: translateX(-50%);
+		transition: background-color var(--duration-fast) ease;
+	}
+
+	.home-hero__explore:hover {
+		background: var(--color-glass-light);
+	}
+
+	.home-hero__explore .ti {
+		font-size: 16px;
+		animation: explore-bob 1.8s ease-in-out infinite;
+	}
+
+	@keyframes explore-bob {
+		50% {
+			transform: translateY(3px);
+		}
+	}
+
+	@media (max-width: 1024px) {
+		.home-hero__title {
+			text-shadow: var(--text-shadow-hero);
+		}
+
+		.home-hero__sub {
+			text-shadow: var(--text-shadow-hero-sub);
+		}
+	}
+
+	@media (max-width: 768px) {
+		.home-hero__photo {
+			object-position: 70% center;
+		}
+
+		/* Phones put the text at the bottom: darken from there. */
+		.home-hero__photos::after {
+			background: var(--color-overlay-header), var(--color-overlay-hero-home-phone);
+		}
+
+		.home-hero__content {
+			justify-content: flex-end;
+			padding: 0 var(--space-4) 168px;
+		}
+
+		.home-hero__sub {
+			margin-bottom: var(--space-5);
+		}
+
+		.home-hero__controls {
+			bottom: 70px;
+		}
+
+		.home-hero__arrow {
+			display: none;
+		}
+
+		.home-hero__explore {
+			bottom: var(--space-4);
+		}
+	}
+
+	@media (max-width: 480px) {
+		.home-hero__panel {
+			width: 100%;
+			max-width: 375px;
+		}
+	}
+
+	/* Short viewports: the hero takes the height it needs (§11.14). */
+	@media (max-height: 480px) {
+		.home-hero {
+			height: auto;
+			min-height: 0;
+		}
+
+		.home-hero__content {
+			padding-top: calc(var(--site-header-height) + var(--space-6));
+			padding-bottom: calc(var(--space-7) + 70px);
+		}
+
+		.home-hero__controls {
+			bottom: var(--space-7);
+		}
+
+		.home-hero__explore {
+			display: none;
+		}
+	}
+}
+</style>

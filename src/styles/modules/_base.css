@@ -106,10 +106,6 @@ a {
 	max-width: 40rem;
 }
 
-.page-shell--form {
-	max-width: 35rem;
-}
-
 .page {
 	padding: 0 0 2rem;
 	font-size: 14px;
@@ -316,30 +312,6 @@ a.btn-secondary:hover {
 .legal-table td:first-child {
 	font-weight: 500;
 	color: var(--color-text-primary);
-}
-
-.review-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-start;
-	gap: 8px;
-	font-size: 13px;
-	margin-bottom: 8px;
-}
-
-.review-label {
-	color: var(--color-text-secondary);
-}
-
-.review-value {
-	font-weight: 500;
-	text-align: right;
-}
-
-.edit-link {
-	font-size: 12px;
-	color: var(--color-text-info);
-	text-decoration: none;
 }
 
 .policy-box {

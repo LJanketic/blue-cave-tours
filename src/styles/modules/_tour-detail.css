@@ -52,22 +52,6 @@
 	border-radius: 20px;
 }
 
-.tag-priv {
-	background: var(--badge-private-bg);
-	color: var(--badge-private-text);
-}
-
-.tag-grp {
-	background: var(--badge-group-bg);
-	color: var(--badge-group-text);
-}
-
-.tag-dur {
-	background: var(--color-background-secondary);
-	color: var(--color-text-secondary);
-	border: 0.5px solid var(--color-border-tertiary);
-}
-
 .prose {
 	font-size: 13px;
 	color: var(--color-text-secondary);
@@ -351,13 +335,6 @@
 .it-label {
 	font-size: 13px;
 	font-weight: 500;
-}
-
-.it-desc {
-	font-size: 12px;
-	color: var(--color-text-secondary);
-	margin-top: 2px;
-	line-height: 1.5;
 }
 
 .includes-grid {

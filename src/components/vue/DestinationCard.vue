@@ -59,6 +59,8 @@ withDefaults(defineProps<{ destination: DestinationCardDTO; eager?: boolean; hea
 @layer components {
 	/* board 04: a tour card with a 220px image and a footer row */
 	.dest-card-ui {
+		/* Contains the absolutely positioned .sr-only text, so it can't escape a scrolling row. */
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;

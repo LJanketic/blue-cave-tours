@@ -194,15 +194,27 @@
 	--color-border-glass: rgba(255, 255, 255, 0.26); /* glass chip outline */
 	--color-glass-ghost: rgba(255, 255, 255, 0.08); /* ghost button on photos */
 	--color-glass-control: rgba(255, 255, 255, 0.12); /* lightbox buttons */
+	--color-surface-fade: rgba(255, 255, 255, 0.85); /* slider edge fade */
 	--color-glass-control-hover: rgba(255, 255, 255, 0.24);
 	--color-overlay-thumb: rgba(10, 42, 64, 0.55); /* "+N" photos thumbnail */
 	--color-overlay-hero:
 		linear-gradient(90deg, rgba(6, 24, 40, 0.62) 0%, rgba(6, 24, 40, 0.28) 45%, rgba(6, 24, 40, 0) 75%),
 		linear-gradient(0deg, rgba(6, 24, 40, 0.55) 0%, rgba(6, 24, 40, 0) 45%);
+	/* [DEVIATE, a11y] Home hero: the board's scrim measured as low as 1.9:1 behind
+	   the text on the site's photos (PR 3, against the lightest pixel). Darker on
+	   the text side (the stops follow the centred 960px column on wide screens),
+	   and from the bottom where phones put the text. */
+	--color-overlay-hero-home:
+		linear-gradient(90deg, rgba(6, 24, 40, 0.8) 0%, rgba(6, 24, 40, 0.6) max(45%, calc(50% + 120px)), rgba(6, 24, 40, 0) max(80%, calc(50% + 480px))),
+		linear-gradient(0deg, rgba(6, 24, 40, 0.6) 0%, rgba(6, 24, 40, 0) 45%);
+	--color-overlay-hero-home-phone: linear-gradient(0deg, rgba(6, 24, 40, 0.88) 0%, rgba(6, 24, 40, 0.7) 45%, rgba(6, 24, 40, 0.15) 75%);
 	/* [DEVIATE, a11y] stronger than the board's .38 / 160px fade, so the overlay nav text has contrast */
 	--color-overlay-header: linear-gradient(180deg, rgba(6, 24, 40, 0.55) 0, rgba(6, 24, 40, 0) 120px);
-	--color-overlay-band: linear-gradient(rgba(6, 24, 40, 0.45), rgba(6, 24, 40, 0.6));
+	/* [DEVIATE, a11y] the board's .45 → .6 measured 3.1:1 behind the band's text (PR 3) */
+	--color-overlay-band: linear-gradient(rgba(6, 24, 40, 0.66), rgba(6, 24, 40, 0.74));
 	--color-lightbox-backdrop: rgba(4, 14, 24, 0.94);
+	--color-overlay-tile: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.55) 100%); /* photo tiles */
+	--color-tile-fallback: linear-gradient(160deg, var(--palette-blue-500) 0%, var(--palette-blue-900) 100%); /* tiles without a photo */
 
 	/* ---------- 3. Type ---------- */
 	/* [DEVIATE, technical] Roboto, Arial before sans-serif: Android and Linux render as today */

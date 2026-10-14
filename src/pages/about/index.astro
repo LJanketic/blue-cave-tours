@@ -126,24 +126,8 @@ import { ABOUT } from '../../data/about';
 </SiteLayout>
 
 <script>
-	// The crew and press rows only scroll sideways on narrow screens; make them
-	// keyboard-scrollable regions then (WCAG 2.1.1), and plain blocks otherwise
-	// so desktop keyboard users don't get empty tab stops.
-	for (const el of document.querySelectorAll<HTMLElement>('[data-scroll-region]')) {
-		const sync = () => {
-			if (el.scrollWidth > el.clientWidth) {
-				el.tabIndex = 0;
-				el.setAttribute('role', 'region');
-				el.setAttribute('aria-label', el.dataset.scrollRegion ?? '');
-			} else {
-				el.removeAttribute('tabindex');
-				el.removeAttribute('role');
-				el.removeAttribute('aria-label');
-			}
-		};
-		sync();
-		new ResizeObserver(sync).observe(el);
-	}
+	// The crew and press rows only scroll sideways on narrow screens.
+	import '../../client/scroll-regions';
 </script>
 
 <style>

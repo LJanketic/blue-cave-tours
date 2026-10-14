@@ -82,6 +82,18 @@ const hasActions = Astro.slots.has('actions');
 			margin-top: -4px;
 		}
 
+		/* Narrow phones: the intro gets the full width, the actions go under it. */
+		@media (max-width: 480px) {
+			.section-head--sub.section-head--actions {
+				flex-direction: column;
+				gap: var(--space-3);
+			}
+
+			.section-head--sub .section-head__actions {
+				margin-top: 0;
+			}
+		}
+
 		/* board 03 .section-title */
 		.section-head-plain {
 			margin: 0 0 14px;

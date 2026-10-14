@@ -1,0 +1,161 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+
+type Props = {
+	slug: string;
+	name: string;
+	tagline: string;
+	tourCount: number;
+	/** Without a real photo the tile is a blue gradient with an icon (§3.4). */
+	image?: ImageMetadata;
+	icon: string;
+	/** Bento slot: `a` spans 2×2, `wide` spans 2 columns. */
+	size?: 'a' | 'wide' | 'single';
+	eager?: boolean;
+};
+
+const { slug, name, tagline, tourCount, image, icon, size = 'single', eager = false } = Astro.props;
+---
+
+<!-- Spec §6.1.7. The whole tile is the link; the photo is decorative (the name is in the text). -->
+<li class:list={['dest-tile', `dest-tile--${size}`]}>
+	<a href={`/destinations/${slug}/`} class="dest-tile__link">
+		{
+			image ? (
+				<Image
+					src={image}
+					alt=""
+					widths={size === 'single' ? [320, 480, 640] : [480, 720, 960]}
+					sizes={size === 'single' ? '(max-width: 768px) 280px, 228px' : '(max-width: 768px) 280px, 456px'}
+					quality={70}
+					format="webp"
+					loading={eager ? 'eager' : 'lazy'}
+					class="dest-tile__img"
+				/>
+			) : (
+				<i class={`ti ti-${icon} dest-tile__icon`} aria-hidden="true" />
+			)
+		}
+		<span class="dest-tile__blur" aria-hidden="true"></span>
+		<span class="dest-tile__count">
+			<i class="ti ti-sailboat" aria-hidden="true"></i>
+			{tourCount} {tourCount === 1 ? 'tour' : 'tours'}
+		</span>
+		<h3 class="dest-tile__name">{name}</h3>
+		<p class="dest-tile__tagline">{tagline}</p>
+	</a>
+</li>
+
+<style>
+	@layer components {
+		.dest-tile--a {
+			grid-column: span 2;
+			grid-row: span 2;
+		}
+
+		.dest-tile--wide {
+			grid-column: span 2;
+		}
+
+		.dest-tile__link {
+			position: relative;
+			isolation: isolate;
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+			height: 100%;
+			padding: 14px var(--space-4);
+			overflow: hidden;
+			border-radius: var(--radius-lg);
+			background: var(--color-tile-fallback);
+			color: var(--color-text-on-image);
+			text-decoration: none;
+		}
+
+		/* Photos sit under the text; the ring stays visible inside the rounded tile. */
+		.dest-tile__link:focus-visible {
+			outline-offset: -4px;
+		}
+
+		.dest-tile__img {
+			position: absolute;
+			inset: 0;
+			z-index: -2;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			transition: transform 0.4s ease;
+		}
+
+		.dest-tile__link:hover .dest-tile__img {
+			transform: scale(1.04);
+		}
+
+		.dest-tile__icon {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			z-index: -2;
+			font-size: 40px;
+			color: var(--color-border-glass);
+			transform: translate(-50%, -60%);
+		}
+
+		/* The board's darkening gradient… */
+		.dest-tile__link::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			z-index: -1;
+			background: var(--color-overlay-tile);
+		}
+
+		/* …and one masked blur band instead of its eight stacked filters ([DEVIATE, performance]). */
+		.dest-tile__blur {
+			position: absolute;
+			inset: auto 0 0;
+			z-index: -1;
+			height: 42%;
+			backdrop-filter: blur(4px);
+			-webkit-backdrop-filter: blur(4px);
+			-webkit-mask-image: linear-gradient(180deg, transparent, black);
+			mask-image: linear-gradient(180deg, transparent, black);
+			pointer-events: none;
+		}
+
+		.dest-tile__count {
+			position: absolute;
+			top: var(--space-3);
+			left: var(--space-3);
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			padding: 2px 9px;
+			border: 0.5px solid var(--color-border-glass);
+			border-radius: var(--radius-pill);
+			background: var(--color-glass-light);
+			backdrop-filter: blur(6px);
+			-webkit-backdrop-filter: blur(6px);
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.dest-tile__name {
+			margin: 0;
+			font-size: var(--font-size-lg);
+			font-weight: var(--font-weight-semibold);
+			line-height: var(--line-height-tight);
+		}
+
+		.dest-tile--a .dest-tile__name {
+			font-size: var(--font-size-2xl);
+		}
+
+		.dest-tile__tagline {
+			margin: 2px 0 0;
+			font-size: var(--font-size-base);
+			color: var(--color-text-on-image-muted);
+		}
+	}
+</style>

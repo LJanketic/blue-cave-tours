@@ -14,7 +14,8 @@ const items = await Astro.slots.render('default');
 ---
 
 <!--
-	A scrolling strip (spec §3.2, §11.4). Screen readers get the real list once;
+	A scrolling strip (spec §3.2, §11.4). Items must not contain links or
+	buttons: the copy screen readers get is visually hidden. Screen readers get the real list once;
 	the moving copy is hidden from them and from the keyboard. It only moves
 	once the script has added the pause button, and never under reduced motion,
 	where the items wrap instead.
@@ -42,8 +43,8 @@ const items = await Astro.slots.render('default');
 		/* 24px edge fades (board 10 .highlights-marquee); a mask is alpha only, so plain black. */
 		.marquee__viewport {
 			overflow: hidden;
-			-webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
-			mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+			-webkit-mask-image: linear-gradient(to right, transparent, black var(--marquee-fade, 24px), black calc(100% - var(--marquee-fade, 24px)), transparent);
+			mask-image: linear-gradient(to right, transparent, black var(--marquee-fade, 24px), black calc(100% - var(--marquee-fade, 24px)), transparent);
 		}
 
 		.marquee__track {
@@ -51,12 +52,12 @@ const items = await Astro.slots.render('default');
 			width: max-content;
 		}
 
-		/* Each set ends with the gap, so moving by exactly half loops seamlessly. */
+		/* Each set ends with the gap, so moving by exactly half loops seamlessly. Pages tune --marquee-gap and --marquee-fade. */
 		.marquee__set {
 			display: flex;
-			gap: var(--space-2);
+			gap: var(--marquee-gap, var(--space-2));
 			margin: 0;
-			padding: 0 var(--space-2) 0 0;
+			padding: 0 var(--marquee-gap, var(--space-2)) 0 0;
 			list-style: none;
 		}
 
