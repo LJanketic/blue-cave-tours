@@ -1,13 +1,14 @@
 /**
- * Runs in the page (pass it to page.evaluate): it must not use anything from
- * outside its own body.
- */
-/**
- * Every element's computed style. Every letter and digit on the page is
- * first replaced with "x", so sizes resolved from text don't move with the
- * random booking refs. Lines are keyed by the element's path of tags and
- * classes (no positions) and sorted, because records with the same
- * timestamp come back in any order.
+ * Every element's computed style in <body> (and ::before/::after), as text
+ * for comparing two versions of a page. Every letter and digit is first
+ * replaced with "x", so sizes resolved from text don't move with random
+ * content (booking refs). Lines are keyed by the element's path of tags and
+ * classes (no positions) and sorted, because records with the same timestamp
+ * come back in any order. Custom properties are left out: renaming a token
+ * isn't a visual change.
+ *
+ * Runs in the page (pass it to page.evaluate), so it must not use anything
+ * from outside its own body. It rewrites the page's text: reload afterwards.
  */
 export function computedStyles(): string {
 	const texts = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);

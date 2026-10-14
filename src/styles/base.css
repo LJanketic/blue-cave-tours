@@ -14,13 +14,14 @@ body {
 }
 
 /* One focus ring (§4.5); white with a navy halo on photos. Replaces the two
-   conflicting :focus-visible rules of the old global.css and _base.css. */
+   conflicting :focus-visible rules of the old global.css and _base.css.
+   Photo areas only: the FAQ page's light `.hero` keeps the blue ring. */
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
 	outline: 2px solid var(--color-focus-ring);
 	outline-offset: 2px;
 }
 
-:where(.on-photo, .hero, .photo-hero, .cta-band--photo) :focus-visible {
+:where(.on-photo, .hero--home, .photo-hero, .cta-band--photo) :focus-visible {
 	outline-color: var(--color-text-on-image);
 	box-shadow: 0 0 0 4px var(--palette-navy-950);
 }

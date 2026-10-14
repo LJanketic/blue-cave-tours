@@ -513,12 +513,12 @@ Body text becomes `var(--font-size-base)/var(--line-height-normal)`: 16px instea
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--color-focus-ring); outline-offset: 2px;
 }
-:where(.on-photo, .hero, .photo-hero, .cta-band--photo) :focus-visible {
+:where(.on-photo, .hero--home, .photo-hero, .cta-band--photo) :focus-visible {
   outline-color: #fff; box-shadow: 0 0 0 4px var(--palette-navy-950);
 }
 ```
 
-This replaces both `global.css:22-25` and `_base.css:71-74`, which conflict today. Form controls also keep a border-colour change on `:focus`.
+This replaces both `global.css:22-25` and `_base.css:71-74`, which conflict today. (`.hero--home`, not `.hero`: the FAQ page's `.hero` is light.) Form controls also keep a border-colour change on `:focus`.
 
 ### 4.6 Migration aliases and the token check
 
