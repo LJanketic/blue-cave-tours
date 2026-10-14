@@ -7,8 +7,6 @@ import type { TourDetail } from '../types/tour';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
 
-export { MONTH_LABELS };
-
 export function getDestinationPhoto(destination: Destination): PhotoRef {
 	const realPhoto = galleryForDestination(destination.slug).find((photo) => photo.src);
 	if (realPhoto) return realPhoto;
@@ -19,11 +17,19 @@ export function getDestinationGallery(destination: Destination): PhotoRef[] {
 	return galleryForDestination(destination.slug);
 }
 
-export function bestTimeBarStyle(score: number): { height: string; background: string } {
-	if (score >= 3) return { height: '44px', background: 'var(--color-accent-teal)' };
-	if (score === 2) return { height: '30px', background: '#5DCAA5' };
-	if (score === 1) return { height: '16px', background: '#9FE1CB' };
-	return { height: '8px', background: 'var(--color-border-tertiary)' };
+/**
+ * "Jun – Sep": the run of peak months (score 3), or of very good ones (2) when
+ * there's no peak. Null when neither exists.
+ */
+export function bestSeasonLabel(months: readonly number[]): string | null {
+	for (const level of [3, 2]) {
+		const first = months.findIndex((score) => score >= level);
+		if (first === -1) continue;
+		let last = first;
+		while (last + 1 < months.length && months[last + 1] >= level) last++;
+		return first === last ? MONTH_LABELS[first] : `${MONTH_LABELS[first]} – ${MONTH_LABELS[last]}`;
+	}
+	return null;
 }
 
 export function getAllDestinations(): Destination[] {

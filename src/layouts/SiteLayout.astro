@@ -1,4 +1,6 @@
 ---
+// The public stylesheet. Admin pages load src/styles/admin.css instead (AdminLayout).
+import '../styles/global.css';
 import BaseLayout from './BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -16,6 +18,10 @@ type Props = {
 	solidNav?: boolean;
 	robots?: string;
 	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+	/** Passed to BaseLayout: preload the display font on pages with a display hero. */
+	fontPreload?: boolean;
+	/** Space above the footer (spec §5.2), e.g. 'var(--section-gap)'. Default 0. */
+	footerGap?: string;
 };
 
 const {
@@ -28,6 +34,8 @@ const {
 	solidNav = true,
 	robots,
 	jsonLd,
+	fontPreload = false,
+	footerGap,
 } = Astro.props;
 ---
 
@@ -39,12 +47,13 @@ const {
 	canonical={canonical}
 	robots={robots}
 	jsonLd={jsonLd}
+	fontPreload={fontPreload}
 >
 	<slot name="head" slot="head" />
 	<div class:list={['site-shell', checkout && 'site-shell--checkout']}>
 		<a class="skip-link" href="#main">Skip to content</a>
 		{!checkout && <Header solid={solidNav} />}
 		<slot />
-		{!checkout && <Footer />}
+		{!checkout && <Footer gap={footerGap} />}
 	</div>
 </BaseLayout>

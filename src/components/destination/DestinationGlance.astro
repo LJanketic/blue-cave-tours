@@ -1,0 +1,91 @@
+---
+import StickyAside from '../ui/StickyAside.astro';
+import Button from '../ui/Button.astro';
+import { charterUrl } from '../../config/routes';
+
+type Props = {
+	name: string;
+	slug: string;
+	tourCount: number;
+	bestSeason: string | null;
+	fromSplit?: { label: string; value: string };
+};
+
+const { name, slug, tourCount, bestSeason, fromSplit } = Astro.props;
+const shortName = name.split('(')[0].trim();
+---
+
+<!-- Spec §6.5 aside. No "current conditions": static weather would mislead (D-13). -->
+<StickyAside class="glance" aria-labelledby="glance-heading">
+	<h2 id="glance-heading" class="glance__title">{name} at a glance</h2>
+	<dl class="glance__stats">
+		<div>
+			<dt>Tours visiting</dt>
+			<dd>{tourCount} {tourCount === 1 ? 'tour' : 'tours'}</dd>
+		</div>
+		{
+			bestSeason && (
+				<div>
+					<dt>Best season</dt>
+					<dd>{bestSeason}</dd>
+				</div>
+			)
+		}
+		{
+			fromSplit && (
+				<div>
+					<dt>{fromSplit.label}</dt>
+					<dd>{fromSplit.value}</dd>
+				</div>
+			)
+		}
+	</dl>
+	<Button href={`/tours/?destination=${slug}`} block icon="sailboat" class="glance__cta">Browse {shortName} tours</Button>
+	<Button href={charterUrl()} variant="secondary" block icon="crown" class="glance__cta glance__cta--secondary">Plan a private charter</Button>
+</StickyAside>
+
+<style>
+	@layer components {
+		:global(.glance) {
+			padding: 1.1rem 1.25rem;
+		}
+
+		.glance__title {
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-md);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.glance__stats {
+			display: grid;
+			gap: var(--space-2);
+			margin: 0 0 var(--space-4);
+		}
+
+		.glance__stats div {
+			padding: 9px 11px;
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+		}
+
+		.glance__stats dt {
+			font-size: var(--font-size-xs);
+			color: var(--color-text-tertiary);
+		}
+
+		.glance__stats dd {
+			margin: 0;
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-medium);
+		}
+
+		:global(.glance .glance__cta) {
+			padding: 11px;
+		}
+
+		:global(.glance .glance__cta--secondary) {
+			margin-top: var(--space-2);
+			padding: 9px;
+		}
+	}
+</style>

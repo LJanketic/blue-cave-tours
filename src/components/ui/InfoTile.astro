@@ -1,0 +1,40 @@
+---
+type Props = { label: string };
+
+const { label } = Astro.props;
+---
+
+<!-- A grey fact tile (spec §3.2). Never line-clamped: the value is the fact itself. -->
+<div class="info-tile">
+	<dt class="info-tile__label">{label}</dt>
+	<dd class="info-tile__value"><slot /></dd>
+</div>
+
+<style>
+	@layer components {
+		/* board 03 .info-item */
+		.info-tile {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			gap: 2px;
+			padding: 10px 12px;
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+		}
+
+		.info-tile__label {
+			font-size: var(--font-size-micro);
+			color: var(--color-text-tertiary);
+			text-transform: uppercase;
+			letter-spacing: var(--letter-spacing-label);
+		}
+
+		.info-tile__value {
+			margin: 0;
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			font-weight: var(--font-weight-medium);
+		}
+	}
+</style>

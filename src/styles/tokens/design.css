@@ -1,0 +1,344 @@
+/*
+ * Hello Blue Cave design tokens: the October 2026 design (spec §4), from the
+ * design's hbc.css :root. Deviations from it are marked [DEVIATE].
+ *
+ * 1. Palette (--palette-*): raw values. Only the semantic tokens below use them.
+ * 2. Semantic tokens (--color-*): what components use.
+ * 3. Type, space, radius, shadow, layout, z-index, motion.
+ *
+ * Old names still used by pages that aren't rebuilt yet live in
+ * redesign.css as aliases (removed in PR 9).
+ *
+ * Breakpoints (max-width): 1024px tablet · 768px mobile layout and nav ·
+ * 480px small phones · 640px Destinations grid only · (max-height: 480px)
+ * landscape and zoom.
+ */
+
+/* The display face (decision D-4): Anton (SIL OFL 1.1) until the Glorich web
+   licence is confirmed. Built by scripts/fonts.mjs; uppercase use only. */
+@font-face {
+	font-family: 'Display';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('../../assets/fonts/display-700.woff2') format('woff2');
+}
+
+/* Metric-matched fallbacks while it loads, so the swap barely moves the
+   layout. Widths measured against Anton in Chromium and WebKit; ascent and
+   descent are Anton's (2409 / 674 per 2048 em), divided by size-adjust. */
+@font-face {
+	font-family: 'Display Fallback Impact';
+	src: local('Impact');
+	size-adjust: 94.6%;
+	ascent-override: 124.3%;
+	descent-override: 34.8%;
+	line-gap-override: 0%;
+}
+
+@font-face {
+	font-family: 'Display Fallback Arial';
+	src: local('Arial Bold'), local('Arial-BoldMT');
+	size-adjust: 70.1%;
+	ascent-override: 167.8%;
+	descent-override: 46.9%;
+	line-gap-override: 0%;
+}
+
+:root {
+	/* ---------- 1. Palette ---------- */
+	--palette-black: #111;
+	--palette-gray-700: #555;
+	--palette-gray-500: #6b6b6b;
+	--palette-gray-400: #ccc;
+	--palette-gray-300: #aaa;
+	--palette-gray-200: #e5e5e3;
+	--palette-gray-150: #ebebea;
+	--palette-gray-100: #f5f5f4;
+	--palette-gray-input: #8a8a8a; /* [DEVIATE, a11y] form-control borders, 3.45:1 on white */
+	--palette-card-border: #d6d5d1;
+	--palette-white: #fff;
+
+	--palette-blue-900: #0c447c;
+	--palette-blue-600: #155da8;
+	--palette-blue-500: #1a6fc4;
+	--palette-blue-300: #7ab4e8;
+	--palette-blue-100: #e6f1fb;
+	--palette-navy-950: #0a2a40;
+
+	--palette-orange-900: #7c2d12;
+	--palette-orange-600: #c2410c;
+	--palette-orange-500: #f2662b;
+	--palette-orange-100: #ffedd5;
+
+	--palette-amber-900: #633806;
+	--palette-amber-700: #8f5a12; /* kept: amber text that passes 4.5:1 on amber-100 */
+	--palette-amber-500: #ef9f27;
+	--palette-amber-400: #ba7517;
+	--palette-amber-100: #faeeda;
+	--palette-amber-50: #fef3e2;
+
+	--palette-gold-50: #fdf8ec;
+	--palette-gold-100: #f7ebcb;
+	--palette-gold-300: #e3c987;
+	--palette-gold-500: #b8892b;
+	--palette-gold-800: #6e4e0e;
+	--palette-gold-grad-start: #fbdd84;
+	--palette-gold-grad-end: #f2bc3a;
+	--palette-yellow-400: #f5c443;
+	--palette-yellow-950: #2e2100;
+	--palette-star-on-white: #f59e0b;
+	--palette-star-on-photo: #fbbf24;
+
+	--palette-green-600: #1a9e5c;
+	--palette-red-600: #d33a2c;
+	--palette-red-900: #8b1a15;
+	--palette-red-100: #fdecea;
+
+	--palette-purple-900: #3c3489;
+	--palette-purple-500: #534ab7;
+	--palette-purple-100: #eeedfe;
+
+	--palette-coral-500: #e05c34;
+
+	/* ---------- 2. Semantic tokens ---------- */
+
+	/* Text */
+	--color-text-primary: var(--palette-black);
+	--color-text-secondary: var(--palette-gray-700);
+	--color-text-tertiary: var(--palette-gray-500); /* 5.33:1 on white, 4.89:1 on gray-100 */
+	--color-text-info: var(--palette-blue-500);
+	--color-text-brand: var(--palette-blue-900);
+	--color-text-highlight: var(--palette-blue-900);
+	--color-text-success: var(--palette-blue-900);
+	--color-text-danger: var(--palette-red-900);
+	--color-text-warning: var(--palette-amber-700); /* [DEVIATE, a11y] the design's amber-400 is 3.72:1; it's for icons only */
+	--color-text-on-image: var(--palette-white);
+
+	/* Brand: sea blue for identity, actions and selected states */
+	--color-brand: var(--palette-blue-500);
+	--color-brand-dark: var(--palette-blue-900);
+	--color-accent: var(--palette-blue-500);
+	--color-accent-dark: var(--palette-blue-900);
+	--color-highlight: var(--palette-blue-500);
+	--color-highlight-dark: var(--palette-blue-600);
+
+	/* Backgrounds */
+	--color-background-primary: var(--palette-white);
+	--color-background-secondary: var(--palette-gray-100);
+	--color-background-hover: var(--palette-gray-150);
+	--color-background-info: var(--palette-blue-100);
+	--color-background-brand-soft: var(--palette-blue-100);
+	--color-background-highlight-soft: var(--palette-blue-100);
+	--color-background-success: var(--palette-blue-100);
+	--color-background-brand: var(--palette-blue-500);
+	--color-background-highlight: var(--palette-blue-500);
+	--color-background-warning: var(--palette-amber-100);
+	--color-background-warning-soft: var(--palette-amber-50);
+	--color-background-danger: var(--palette-red-100);
+	--color-background-hero: var(--palette-navy-950);
+
+	/* Borders: primary/secondary/tertiary/card are decorative; inputs need 3:1 */
+	--color-border-primary: var(--palette-gray-300);
+	--color-border-secondary: var(--palette-gray-400);
+	--color-border-tertiary: var(--palette-gray-200);
+	--color-border-card: var(--palette-card-border);
+	--color-border-input: var(--palette-gray-input);
+	--color-border-info: var(--palette-blue-300);
+	--color-border-brand: var(--palette-blue-500);
+	--color-border-highlight: var(--palette-blue-500);
+	--color-border-warning: var(--palette-amber-500);
+
+	/* Orange only for buttons on photos (hero, video play, photo CTA band): white text 5.18:1 */
+	--color-cta-on-image: var(--palette-orange-600);
+	--color-cta-on-image-dark: var(--palette-orange-900);
+	--color-progress: var(--palette-orange-500); /* hero-dot fill, decorative */
+
+	/* Premium (private charters): gold */
+	--color-premium-gradient: linear-gradient(135deg, var(--palette-gold-grad-start), var(--palette-gold-grad-end));
+	--color-premium-bg: var(--palette-gold-50);
+	--color-premium-bg-strong: var(--palette-gold-100);
+	--color-premium-border: var(--palette-gold-300);
+	--color-premium-icon: var(--palette-gold-500);
+	--color-premium-text: var(--palette-gold-800);
+	--color-premium-solid: var(--palette-yellow-400);
+	--color-premium-on-solid: var(--palette-yellow-950);
+
+	/* Categories and icons */
+	--color-category-private-bg: var(--palette-purple-100);
+	--color-category-private-text: var(--palette-purple-900);
+	--color-category-private-icon: var(--palette-purple-500);
+	--color-category-tip-bg: var(--palette-amber-100);
+	--color-category-tip-text: var(--palette-amber-900);
+	--color-category-info-icon: var(--palette-blue-900);
+	--color-category-warning-icon: var(--palette-amber-500);
+	--color-icon-sunset: var(--palette-coral-500);
+	--color-icon-included: var(--palette-green-600);
+	--color-icon-excluded: var(--palette-red-600);
+	--color-star: var(--palette-star-on-white); /* always aria-hidden */
+	--color-star-on-photo: var(--palette-star-on-photo);
+
+	/* Focus, glass, overlays */
+	--color-focus-ring: var(--palette-blue-500);
+	--color-glass-dark: rgba(8, 28, 48, 0.42);
+	--color-glass-dark-hover: rgba(8, 28, 48, 0.62);
+	--color-glass-light: rgba(255, 255, 255, 0.18);
+	/* White surfaces over content and photos (header, mobile bar, pills, chips) */
+	--color-surface-bar: rgba(255, 255, 255, 0.92); /* solid header */
+	--color-surface-bar-solid: rgba(255, 255, 255, 0.97); /* overlay header once scrolled; mobile bar */
+	--color-surface-pill: rgba(255, 255, 255, 0.95); /* photo count pill */
+	--color-surface-chip-active: rgba(255, 255, 255, 0.96); /* pressed glass chip */
+	--color-text-on-image-muted: rgba(255, 255, 255, 0.88); /* nav links and leads on photos */
+	--color-text-on-image-eyebrow: rgba(255, 255, 255, 0.85);
+	--color-border-on-image: rgba(255, 255, 255, 0.75); /* outline button on photos */
+	--color-border-glass: rgba(255, 255, 255, 0.26); /* glass chip outline */
+	--color-glass-ghost: rgba(255, 255, 255, 0.08); /* ghost button on photos */
+	--color-glass-control: rgba(255, 255, 255, 0.12); /* lightbox buttons */
+	--color-surface-fade: rgba(255, 255, 255, 0.85); /* slider edge fade */
+	--color-glass-control-hover: rgba(255, 255, 255, 0.24);
+	--color-overlay-thumb: rgba(10, 42, 64, 0.55); /* "+N" photos thumbnail */
+	--color-overlay-hero:
+		linear-gradient(90deg, rgba(6, 24, 40, 0.62) 0%, rgba(6, 24, 40, 0.28) 45%, rgba(6, 24, 40, 0) 75%),
+		linear-gradient(0deg, rgba(6, 24, 40, 0.55) 0%, rgba(6, 24, 40, 0) 45%);
+	/* [DEVIATE, a11y] Home hero: the board's scrim measured as low as 1.9:1 behind
+	   the text on the site's photos (PR 3, against the lightest pixel). Darker on
+	   the text side (the stops follow the centred 960px column on wide screens),
+	   and from the bottom where phones put the text. */
+	--color-overlay-hero-home:
+		linear-gradient(90deg, rgba(6, 24, 40, 0.8) 0%, rgba(6, 24, 40, 0.6) max(45%, calc(50% + 120px)), rgba(6, 24, 40, 0) max(80%, calc(50% + 480px))),
+		linear-gradient(0deg, rgba(6, 24, 40, 0.6) 0%, rgba(6, 24, 40, 0) 45%);
+	/* Photo heroes (Tours, Destinations): the same, with the text bottom-left. */
+	--color-overlay-photo-hero:
+		linear-gradient(90deg, rgba(6, 24, 40, 0.75) 0%, rgba(6, 24, 40, 0.5) max(45%, calc(50% + 120px)), rgba(6, 24, 40, 0) max(80%, calc(50% + 480px))),
+		linear-gradient(0deg, rgba(6, 24, 40, 0.75) 0%, rgba(6, 24, 40, 0) 65%);
+	--color-overlay-hero-home-phone: linear-gradient(0deg, rgba(6, 24, 40, 0.88) 0%, rgba(6, 24, 40, 0.7) 45%, rgba(6, 24, 40, 0.15) 75%);
+	/* [DEVIATE, a11y] stronger than the board's .38 / 160px fade, so the overlay nav text has contrast */
+	--color-overlay-header: linear-gradient(180deg, rgba(6, 24, 40, 0.55) 0, rgba(6, 24, 40, 0) 120px);
+	/* [DEVIATE, a11y] the board's .45 → .6 measured 3.1:1 behind the band's text (PR 3) */
+	--color-overlay-band: linear-gradient(rgba(6, 24, 40, 0.66), rgba(6, 24, 40, 0.74));
+	--color-lightbox-backdrop: rgba(4, 14, 24, 0.94);
+	--color-overlay-tile: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.55) 100%); /* photo tiles */
+	--color-tile-fallback: linear-gradient(160deg, var(--palette-blue-500) 0%, var(--palette-blue-900) 100%); /* tiles without a photo */
+
+	/* ---------- 3. Type ---------- */
+	/* [DEVIATE, technical] Roboto, Arial before sans-serif: Android and Linux render as today */
+	--font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+	--font-display: 'Display', 'Display Fallback Impact', 'Display Fallback Arial', var(--font-sans);
+
+	--font-size-micro: 0.75rem;
+	--font-size-xs: 0.8125rem;
+	--font-size-sm: 0.875rem;
+	--font-size-base: 1rem;
+	--font-size-md: 1.0625rem;
+	--font-size-lg: 1.125rem;
+	--font-size-xl: 1.25rem;
+	--font-size-2xl: 1.375rem;
+	--font-size-hero: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem); /* the sans h1, 28–40px */
+	--font-size-icon-hero: 3.5rem;
+	--font-size-display-xl: 5rem; /* home slide titles */
+	--font-size-display-lg: 4.5rem; /* Tours and Destinations h1 */
+	--font-size-display-md: 1.75rem; /* display section titles, CTA band h2 */
+	--font-size-score: 2.75rem;
+
+	--line-height-display-hero: 0.94;
+	--line-height-display-section: 1;
+	--line-height-display-band: 0.96;
+	--letter-spacing-display-hero: -0.02em;
+	--letter-spacing-display-section: -0.01em;
+	--line-height-tight: 1.3;
+	--line-height-normal: 1.5;
+	--line-height-relaxed: 1.6;
+
+	--font-size-body-md: var(--font-size-base); /* running text */
+	--line-height-body-md: 1.6;
+	--font-size-body-sm: var(--font-size-sm); /* compact facts */
+	--line-height-body-sm: 1.5;
+
+	--font-weight-regular: 400;
+	--font-weight-medium: 500;
+	--font-weight-semibold: 600;
+	--font-weight-bold: 700;
+	--letter-spacing-label: 0.05em;
+	--letter-spacing-eyebrow: 0.08em;
+
+	/* ---------- 4. Space, radius, shadow ---------- */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 20px;
+	--space-6: 24px;
+	--space-7: 32px;
+	--space-8: 48px;
+	--space-9: 56px;
+	--space-10: 72px;
+	--section-gap: 72px;
+	--detail-gap: 36px;
+
+	--radius-sm: 6px;
+	--radius-md: 8px;
+	--radius-btn-sm: 10px;
+	--radius-btn: 11px;
+	--radius-lg: 12px;
+	--radius-xl: 16px;
+	--radius-2xl: 20px;
+	--radius-pill: 999px;
+
+	--shadow-card-hover: 0 6px 24px rgba(0, 0, 0, 0.06);
+	--shadow-card-hover-lg: 0 8px 28px rgba(0, 0, 0, 0.06);
+	--shadow-panel: 0 16px 40px rgba(10, 42, 64, 0.16);
+	--shadow-media: 0 18px 48px rgba(6, 24, 40, 0.28);
+	--shadow-cta: 0 8px 24px rgba(0, 0, 0, 0.18);
+	--shadow-cta-band: 0 8px 24px rgba(0, 0, 0, 0.2);
+	--shadow-play: 0 8px 24px rgba(194, 65, 12, 0.35), 0 0 0 8px rgba(255, 255, 255, 0.18);
+	--shadow-play-hover: 0 10px 28px rgba(194, 65, 12, 0.4), 0 0 0 12px rgba(255, 255, 255, 0.22);
+	--shadow-nav: 0 1px 16px rgba(0, 0, 0, 0.05);
+	--shadow-bar: 0 -2px 16px rgba(0, 0, 0, 0.06);
+	--shadow-badge: 0 2px 8px rgba(0, 0, 0, 0.12);
+	--shadow-pill: 0 2px 8px rgba(0, 0, 0, 0.15);
+	--text-shadow-hero: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 24px rgba(0, 0, 0, 0.45);
+	--text-shadow-hero-sub: 0 1px 2px rgba(0, 0, 0, 0.45), 0 2px 12px rgba(0, 0, 0, 0.4);
+	--text-shadow-title: 0 2px 24px rgba(0, 0, 0, 0.18);
+
+	/* ---------- 5. Layout, z-index, motion ---------- */
+	--content-max: 960px;
+	--page-gutter: 24px;
+	--flow-width: 628px; /* booking and charter column */
+	--legal-width: 680px; /* the whole legal wrap, TOC included */
+	--aside-width: 322px;
+	--site-header-height: 62px; /* the solid header bar as measured (PR 2): 61.5px with its hairline */
+	--mobile-bar-height: 72px;
+	--touch-min: 2.75rem; /* only where §11.12 asks for it */
+
+	--z-mobile-bar: 90;
+	--z-header: 100;
+	--z-menu: 200;
+	--z-dialog: 300;
+
+	--duration-fast: 0.15s;
+	--duration-base: 0.3s;
+	--duration-slow: 0.6s;
+	--ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (max-width: 1024px) {
+	:root {
+		--section-gap: 56px;
+	}
+}
+
+@media (max-width: 768px) {
+	:root {
+		--page-gutter: 16px;
+		--detail-gap: 28px;
+		--font-size-display-xl: clamp(2.75rem, 12vw, 4rem);
+		--font-size-display-lg: clamp(2.75rem, 12vw, 3.75rem);
+	}
+}
+
+@media (max-width: 480px) {
+	:root {
+		--section-gap: 44px;
+		--page-gutter: 12px;
+	}
+}

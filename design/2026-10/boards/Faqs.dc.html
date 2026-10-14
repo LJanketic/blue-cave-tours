@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FAQs — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-text-info)}a:hover{color:var(--color-accent-dark)}
+.hero h1{font-size:var(--font-size-hero);font-weight:500;margin:0 0 5px;line-height:var(--line-height-tight)}
+.hero p{font-size:var(--font-size-base);color:var(--color-text-secondary);margin:0 0 16px;line-height:var(--line-height-relaxed)}
+.search-bar{display:flex;gap:8px;margin-bottom:24px}
+.hbc .search-bar input{flex:1;font-size:var(--font-size-base)}
+.hbc .search-bar button{padding:0 16px;font-size:var(--font-size-sm);cursor:pointer;border-radius:var(--border-radius-md);background:var(--color-background-brand);color:var(--color-background-primary);border:none}
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:24px;align-items:start}
+.cat-nav{position:sticky;top:76px;display:flex;flex-direction:column;gap:4px}
+.hbc .cat-link{font-size:var(--font-size-sm);padding:7px 12px;border-radius:var(--border-radius-md);color:var(--color-text-secondary);cursor:pointer;display:flex;align-items:center;gap:8px;border:0.5px solid transparent;background:none;text-align:left;width:100%}
+.hbc .cat-link:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.hbc .cat-link.active{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-tertiary);font-weight:500}
+.cat-link i{font-size:14px}
+.cat-count{margin-left:auto;font-size:var(--font-size-xs);color:var(--color-text-tertiary);background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:1px 7px;font-weight:400}
+.cat-section{margin-bottom:28px}
+.cat-header{display:flex;align-items:center;gap:9px;margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.cat-icon{width:30px;height:30px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ci-booking{background:var(--color-background-success);color:var(--color-text-success)}
+.ci-weather{background:var(--color-background-info);color:var(--color-category-info-icon)}
+.ci-onboard,.ci-private{background:var(--color-category-private-bg);color:var(--color-category-private-text)}
+.ci-guests{background:var(--color-category-tip-bg);color:var(--color-category-tip-text)}
+.cat-title{font-size:var(--font-size-lg);font-weight:500;margin:0}
+.faq-list{border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);overflow:hidden}
+.faq-item{border-bottom:0.5px solid var(--color-border-tertiary)}
+.faq-item.last{border-bottom:none}
+.hbc .faq-q{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;width:100%;border:none;border-radius:0;background:var(--color-background-primary);text-align:left}
+.hbc .faq-q:hover,.faq-item.open .faq-q{background:var(--color-background-secondary)}
+.faq-q-text{font-size:var(--font-size-base);font-weight:500;line-height:var(--line-height-tight)}
+.faq-chevron{font-size:15px;color:var(--color-text-tertiary);flex-shrink:0;transition:transform 0.15s}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.faq-a{padding:14px 14px 16px;font-size:var(--font-size-base);color:var(--color-text-secondary);line-height:var(--line-height-relaxed)}
+.faq-a p{margin:0}
+.no-results{text-align:center;padding:2.5rem;color:var(--color-text-secondary);font-size:var(--font-size-base)}
+.contact-band{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:8px;flex-wrap:wrap}
+.contact-band h3{font-size:var(--font-size-md);font-weight:500;margin:0 0 3px}
+.contact-band p{font-size:var(--font-size-base);color:var(--color-text-secondary);margin:0;line-height:var(--line-height-relaxed)}
+.contact-band-btns{display:flex;gap:8px}
+.hbc .btn-sm{font-size:var(--font-size-sm);padding:7px 14px;display:flex;align-items:center;gap:5px;border-radius:var(--border-radius-md);font-weight:500}
+.hbc .btn-outline{background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary)}
+.hbc .btn-dark{background:var(--color-background-brand);color:var(--color-background-primary);border:none}
+.hbc .btn-outline:hover{color:var(--color-text-primary)}.hbc .btn-dark:hover{color:var(--color-background-primary);opacity:0.88}
+@media (max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .cat-nav{position:static}
+}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="nav-bar">
+    <nav class="nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+      <div class="nav-links">
+        <a class="nav-link" href="Tours.dc.html">Tours</a>
+        <a class="nav-link" href="Destinations.dc.html">Destinations</a>
+        <a class="nav-link" href="About.dc.html">About</a>
+        <a class="nav-link current" href="Faqs.dc.html">FAQ</a>
+      </div>
+      <a class="nav-cta" href="Tours.dc.html">Book now</a>
+      <button class="nav-hamburger" aria-label="Menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+    </nav>
+  </div>
+  <div class="wrap">
+    <div class="hero"><h1>Frequently asked questions</h1><p>Everything you need to know before you book. Can't find the answer? We're happy to help directly.</p></div>
+    <div class="search-bar"><input type="text" aria-label="Search FAQs" placeholder="Search — e.g. cancel, children, weather…" value="{{ search }}" onChange="{{ onSearch }}"><button><i class="ti ti-search" style="font-size: 13px; vertical-align: -1px" aria-hidden="true"></i> Search</button></div>
+    <div class="layout">
+      <nav class="cat-nav" aria-label="FAQ categories">
+        <sc-for list="{{ catLinks }}" as="c" hint-placeholder-count="6">
+          <button class="{{ c.cls }}" aria-pressed="{{ c.pressed }}" onClick="{{ c.pick }}"><i class="{{ c.iconCls }}" aria-hidden="true"></i> {{ c.label }} <span class="cat-count">{{ c.count }}</span></button>
+        </sc-for>
+      </nav>
+      <div>
+        <sc-for list="{{ sections }}" as="s" hint-placeholder-count="5">
+          <div class="cat-section">
+            <div class="cat-header"><div class="{{ s.iconBoxCls }}"><i class="{{ s.iconCls }}" aria-hidden="true"></i></div><h2 class="cat-title">{{ s.title }}</h2></div>
+            <div class="faq-list">
+              <sc-for list="{{ s.items }}" as="f" hint-placeholder-count="4">
+                <div class="{{ f.cls }}">
+                  <button class="faq-q" aria-expanded="{{ f.expanded }}" onClick="{{ f.toggle }}"><span class="faq-q-text">{{ f.q }}</span><i class="ti ti-chevron-down faq-chevron" aria-hidden="true"></i></button>
+                  <sc-if value="{{ f.open }}" hint-placeholder-val="{{ false }}"><div class="faq-a"><p>{{ f.a }}</p></div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+          <div class="no-results"><i class="ti ti-mood-sad" style="font-size: 28px; display: block; margin-bottom: 8px; color: var(--color-border-secondary)" aria-hidden="true"></i>No questions match your search.</div>
+        </sc-if>
+      </div>
+    </div>
+    <div class="contact-band"><div><h3>Still have a question?</h3><p>We usually reply within a couple of hours during the season.</p></div><div class="contact-band-btns"><a class="btn-sm btn-outline" href="Contact.dc.html"><i class="ti ti-mail" aria-hidden="true"></i> Email us</a><a class="btn-sm btn-dark" href="Contact.dc.html"><i class="ti ti-phone" aria-hidden="true"></i> Call us</a></div></div>
+
+    <footer class="footer">
+      <div class="footer-brand"><div class="nav-logo" style="margin-bottom: 6px"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</div><p>Small-boat tours along the Dalmatian coast since 2015. Licensed, insured, and obsessed with the sea.</p></div>
+      <div class="footer-col"><h4>Tours</h4><a href="Tours.dc.html">Group tours</a><a href="PrivateBooking.dc.html">Private charters</a><a href="Tours.dc.html">Day trips</a><a href="Tours.dc.html">Sunset cruises</a></div>
+      <div class="footer-col"><h4>Info</h4><a href="About.dc.html">About us</a><a href="Destinations.dc.html">Destinations</a><a href="Faqs.dc.html">FAQs</a><a href="Contact.dc.html">Contact</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="Legal.dc.html">Terms &amp; conditions</a><a href="Legal.dc.html">Privacy policy</a><a href="Legal.dc.html">Cancellation policy</a></div>
+    </footer>
+    <div class="footer-bottom"><span>© 2025 Hello Blue Cave</span><span>Licensed maritime operator · Croatia</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { cat: 'all', search: '', open: null };
+  }
+  renderVals() {
+    const cats = [
+      { id: 'booking', title: 'Booking & cancellation', nav: 'Booking', icon: 'ti-calendar-check', style: 'background: var(--color-background-success); color: var(--color-text-success)', items: [
+        ['How do I book a tour?', "Choose your tour from the tours page, pick your date and departure time, select the number of guests, and proceed to secure checkout. You'll receive an instant email confirmation."],
+        ['Can I cancel or reschedule my booking?', "Free cancellation up to 48 hours before departure. Cancellations within 48 hours are non-refundable. To reschedule, contact us as early as possible and we'll do our best to move you to another date, subject to availability."],
+        ['Do I need to pay in full when I book?', 'Group tours are paid in full at booking. Private charters require a 30% deposit to confirm your reservation, with the balance due 7 days before departure.'],
+        ['Will I receive a confirmation after booking?', "Yes — immediately after payment. It includes your booking reference, meeting point, departure time, and everything you need to bring. Check spam if it doesn't arrive within a few minutes."],
+        ['Is my payment secure?', 'All payments are processed by Teya. We never store your card details. Transactions are encrypted and 3D Secure verified where required.']
+      ] },
+      { id: 'weather', title: 'Weather & cancellations', nav: 'Weather', icon: 'ti-cloud-storm', style: 'background: var(--color-background-info); color: var(--color-category-info-icon)', items: [
+        ['What happens if the weather is bad?', "We monitor sea conditions closely. If conditions are unsafe, we'll notify you at least 4 hours before departure. You'll receive a full refund or the option to rebook — your choice."],
+        ['How do you decide if conditions are safe to sail?', 'Our captains make the final call based on wind speed, wave height, and visibility — using official forecasts and local knowledge. Guest safety always comes first.'],
+        ['What if it rains but the sea is calm?', "Light rain doesn't cancel a tour. Tours are cancelled only when sea conditions make it unsafe to operate. We'll always contact you if there's any doubt."]
+      ] },
+      { id: 'onboard', title: 'On board', nav: 'On board', icon: 'ti-sailboat', style: 'background: var(--color-category-private-bg); color: var(--color-category-private-text)', items: [
+        ['What should I bring?', 'Swimwear, a towel, sunscreen (reef-safe if possible), sunglasses, and a light layer for the evening. Drinks are provided — no need to bring food.'],
+        ['Is food and drink provided on board?', 'A welcome drink is included on all tours. Water is available throughout. Additional drinks can be purchased on board. Food is not included on group tours, but most day-trip routes include a stop where you can eat ashore.'],
+        ['Are life jackets provided?', "Yes — life jackets in all sizes including children's, provided on every tour as standard. A safety briefing is given at the start of each departure."],
+        ['Do I need to know how to swim?', "No. Life jackets are provided and swimming stops are always optional — you're welcome to stay on the boat."],
+        ['Is the boat wheelchair accessible?', 'Our Aliskaf 37 vessels are accessible for guests with limited mobility. Please mention any accessibility needs in special requests when booking.']
+      ] },
+      { id: 'guests', title: 'Guests & suitability', nav: 'Guests', icon: 'ti-users', style: 'background: var(--color-category-tip-bg); color: var(--color-category-tip-text)', items: [
+        ['Can I bring young children?', "Children aged 3 and above are welcome on all group tours. Life jackets are available in children's sizes. Children under 3 travel free. Private charters have no minimum age."],
+        ['Is the tour suitable for elderly guests or non-swimmers?', 'Yes — tours are designed for all fitness levels. No physical activity is required beyond boarding. Swimming stops are optional.'],
+        ['Can I bring my dog or other pet?', 'Small, well-behaved dogs are welcome on private charters — please let us know in advance. Pets are not permitted on group tour departures out of consideration for other guests.'],
+        ['I have a food allergy — what should I do?', "Please mention any allergies in special requests when booking. For private charters with catered food, we'll work with you to make sure everything is safe."]
+      ] },
+      { id: 'private', title: 'Private charters', nav: 'Private', icon: 'ti-crown', style: 'background: var(--color-category-private-bg); color: var(--color-category-private-text)', items: [
+        ["What's included in a private charter?", 'Every private charter includes a licensed captain, fuel, life jackets, and a welcome drink. You choose the boat, route, departure time, and duration. Optional add-ons can be added during booking.'],
+        ['Can I choose my own route?', "Yes — that's the point. Choose from our suggested routes or describe your own idea in special requests. Your captain will help you plan the best possible day."],
+        ['How far in advance should I book a private charter?', 'At least 2 weeks ahead in peak season (July–August) and 1 week in shoulder months. Last-minute bookings are sometimes possible — contact us directly.']
+      ] }
+    ];
+    const st = this.state;
+    const term = st.search.toLowerCase().trim();
+    let visible = 0;
+    const sections = [];
+    cats.forEach(c => {
+      if (st.cat !== 'all' && st.cat !== c.id) return;
+      const shown = c.items.map((it, i) => ({ q: it[0], a: it[1], key: c.id + i }))
+        .filter(it => !term || it.q.toLowerCase().indexOf(term) > -1 || it.a.toLowerCase().indexOf(term) > -1);
+      if (!shown.length) return;
+      visible += shown.length;
+      sections.push({
+        title: c.title, iconCls: 'ti ' + c.icon, iconBoxCls: 'cat-icon ci-' + c.id,
+        items: shown.map((it, idx) => {
+          const open = st.open === it.key;
+          return {
+            q: it.q, a: it.a, open: open, expanded: open ? 'true' : 'false',
+            cls: 'faq-item' + (open ? ' open' : '') + (idx === shown.length - 1 ? ' last' : ''),
+            toggle: () => this.setState({ open: open ? null : it.key })
+          };
+        })
+      });
+    });
+    const navDefs = [{ id: 'all', nav: 'All', icon: 'ti-list', count: null }].concat(cats.map(c => ({ id: c.id, nav: c.nav, icon: c.icon, count: c.items.length })));
+    const catLinks = navDefs.map(n => ({
+      label: n.nav, iconCls: 'ti ' + n.icon,
+      count: n.count === null ? visible : n.count,
+      cls: 'cat-link' + (st.cat === n.id ? ' active' : ''),
+      pressed: st.cat === n.id ? 'true' : 'false',
+      pick: () => this.setState({ cat: n.id })
+    }));
+    return {
+      search: st.search,
+      onSearch: e => this.setState({ search: e.target.value }),
+      catLinks: catLinks,
+      sections: sections,
+      noResults: visible === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

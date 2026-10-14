@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-	bookingReviewPath,
 	contactHrefForTour,
 	groupBookHref,
 	hasRequiredBookingDetails,
@@ -69,22 +68,22 @@ describe('booking paths', () => {
 	it('uses trailing-slash URLs so links skip the 301', () => {
 		expect(groupBookHref({ slug: 'blue-lagoon-morning' })).toBe('/book/blue-lagoon-morning/group/');
 		expect(contactHrefForTour({ slug: 'a b' })).toBe('/contact/?tour=a%20b');
-		expect(bookingReviewPath('x', { date: '2027-07-15', notes: ' ' })).toBe('/book/x/review/?date=2027-07-15');
 	});
 });
 
 describe('instant book and price unit', () => {
 	it('only group tours with a real price book instantly', () => {
-		expect(supportsInstantBook({ types: ['group'], fromPrice: '€75' })).toBe(true);
-		expect(supportsInstantBook({ types: ['group'], fromPrice: 'Price on request' })).toBe(false);
-		expect(supportsInstantBook({ types: ['private'], fromPrice: 'On request' })).toBe(false);
+		expect(supportsInstantBook({ types: ['group'], adultPrice: 75 })).toBe(true);
+		expect(supportsInstantBook({ types: ['group'], adultPrice: null })).toBe(false);
+		expect(supportsInstantBook({ types: ['private'], adultPrice: null })).toBe(false);
+		expect(supportsInstantBook({ types: ['private'], adultPrice: 900 })).toBe(false);
 	});
 
-	it('labels the unit by tour type, not by bookability', () => {
-		expect(tourPriceUnit({ types: ['group', 'private'], fromPrice: '€169' })).toBe('/ person');
-		expect(tourPriceUnit({ types: ['group'], fromPrice: 'Price on request' })).toBe('');
-		expect(tourPriceUnit({ types: ['private'], fromPrice: '€900' })).toBe('/ boat');
-		expect(tourPriceUnit({ types: ['private'], fromPrice: 'On request' })).toBe('');
+	it('labels the unit from the price unit, and none on request', () => {
+		expect(tourPriceUnit({ adultPrice: 169, priceUnit: 'person' })).toBe('/ person');
+		expect(tourPriceUnit({ adultPrice: null, priceUnit: 'person' })).toBe('');
+		expect(tourPriceUnit({ adultPrice: 900, priceUnit: 'boat' })).toBe('/ boat');
+		expect(tourPriceUnit({ adultPrice: null, priceUnit: 'boat' })).toBe('');
 	});
 });
 

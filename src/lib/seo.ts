@@ -5,7 +5,6 @@ import type { FaqItem } from '../data/faq';
 import type { PhotoRef } from '../data/tour-photos';
 import { APPLE_TOUCH_ICON_PATH, SITE_NAME, SITE_EMAIL, SITE_PHONE, SITE_DEFAULT_DESCRIPTION } from '../config/site';
 import { isGroupTour } from './booking';
-import { parseAdultPrice } from './price';
 
 /** 1200×630 JPG: social platforms don't render SVG previews. */
 export const DEFAULT_OG_IMAGE = '/og-default.jpg';
@@ -86,7 +85,7 @@ export function websiteJsonLd(siteUrl: string) {
 
 export function tourJsonLd(tour: TourDetail, siteUrl: string) {
 	const tourUrl = absoluteUrl(`/tours/${tour.slug}/`, siteUrl);
-	const adultPrice = parseAdultPrice(tour.fromPrice);
+	const adultPrice = tour.adultPrice;
 
 	return {
 		'@context': 'https://schema.org',

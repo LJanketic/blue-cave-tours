@@ -1,0 +1,128 @@
+{
+	"/": {
+		"count": 0,
+		"rules": []
+	},
+	"/tours/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/": {
+		"count": 0,
+		"rules": []
+	},
+	"/faq/": {
+		"count": 0,
+		"rules": []
+	},
+	"/about/": {
+		"count": 0,
+		"rules": []
+	},
+	"/contact/": {
+		"count": 0,
+		"rules": []
+	},
+	"/legal/terms/": {
+		"count": 0,
+		"rules": []
+	},
+	"/legal/privacy/": {
+		"count": 1,
+		"rules": [
+			"link-in-text-block"
+		]
+	},
+	"/legal/cancellation/": {
+		"count": 0,
+		"rules": []
+	},
+	"/not-a-page/": {
+		"count": 0,
+		"rules": []
+	},
+	"/tours/blue-cave-hvar-5-islands/": {
+		"count": 0,
+		"rules": []
+	},
+	"/tours/blue-lagoon-afternoon/": {
+		"count": 0,
+		"rules": []
+	},
+	"/tours/blue-lagoon-morning/": {
+		"count": 0,
+		"rules": []
+	},
+	"/tours/create-perfect-day-private/": {
+		"count": 0,
+		"rules": []
+	},
+	"/tours/dubrovnik-one-way/": {
+		"count": 0,
+		"rules": []
+	},
+	"/tours/golden-horn-brac-hvar/": {
+		"count": 0,
+		"rules": []
+	},
+	"/tours/hvar-red-rocks-pakleni/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/blue-cave/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/blue-lagoon/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/dubrovnik/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/hvar/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/korcula/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/pakleni/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/split/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/trogir/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/vis/": {
+		"count": 0,
+		"rules": []
+	},
+	"/destinations/zlatni-rat/": {
+		"count": 0,
+		"rules": []
+	},
+	"/book/blue-cave-hvar-5-islands/group/": {
+		"count": 0,
+		"rules": []
+	},
+	"/book/blue-lagoon-afternoon/group/": {
+		"count": 0,
+		"rules": []
+	},
+	"/book/blue-lagoon-morning/group/": {
+		"count": 0,
+		"rules": []
+	},
+	"/book/golden-horn-brac-hvar/group/": {
+		"count": 0,
+		"rules": []
+	}
+}

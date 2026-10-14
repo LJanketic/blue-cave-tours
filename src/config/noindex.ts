@@ -2,7 +2,7 @@
  * Path prefixes kept out of the sitemap. These pages carry a `noindex` robots
  * meta tag. Shared by astro.config.mjs (sitemap filter).
  */
-export const NOINDEX_PATH_PREFIXES = ['/book/', '/booking/', '/api/', '/admin'];
+export const NOINDEX_PATH_PREFIXES = ['/book/', '/booking/', '/api/', '/admin', '/dev/', '/contact/sent', '/contact/problem'];
 
 /**
  * robots.txt Disallow rules. Only server-rendered routes: every crawl of them

@@ -1,0 +1,342 @@
+---
+/**
+ * The three legal pages (spec §7.2, board 12): the document switcher, an "On
+ * this page" list that follows the reader, the summary box, and the section
+ * styles. Each page passes its sections as the default slot.
+ */
+import SiteLayout from './SiteLayout.astro';
+import { LEGAL_UPDATED } from '../config/legal';
+import { pageTitle } from '../config/site';
+
+type Doc = 'terms' | 'privacy' | 'cancellation';
+
+type Props = {
+	doc: Doc;
+	title: string;
+	description: string;
+	/** "The short version" bullets. */
+	summary: string[];
+	/** In page order; the ids match the sections' ids. */
+	sections: { id: string; title: string }[];
+	/** An extra line under "Last updated" (e.g. what the page applies to). */
+	meta?: string;
+};
+
+const { doc, title, description, summary, sections, meta } = Astro.props;
+const DOCS: { id: Doc; label: string; href: string }[] = [
+	{ id: 'terms', label: 'Terms & conditions', href: '/legal/terms/' },
+	{ id: 'privacy', label: 'Privacy policy', href: '/legal/privacy/' },
+	{ id: 'cancellation', label: 'Cancellation policy', href: '/legal/cancellation/' },
+];
+---
+
+<SiteLayout title={pageTitle(title)} description={description} footerGap="32px">
+	<main id="main" class="legal">
+		<nav class="legal__docs" aria-label="Legal documents">
+			{
+				DOCS.map((d) => (
+					<a href={d.href} class="legal__doc" aria-current={d.id === doc ? 'page' : undefined}>
+						{d.label}
+					</a>
+				))
+			}
+		</nav>
+
+		<div class="legal__layout">
+			<nav class="legal__toc" aria-label="On this page" data-legal-toc>
+				<ul role="list">
+					{
+						sections.map((section) => (
+							<li>
+								<a href={`#${section.id}`}>{section.title}</a>
+							</li>
+						))
+					}
+				</ul>
+			</nav>
+
+			<div class="legal__body">
+				<h1>{title}</h1>
+				<p class="legal__meta">
+					Last updated {LEGAL_UPDATED}{meta && <> · {meta}</>}
+				</p>
+
+				<div class="legal__summary">
+					<h2 class="legal__summary-label">The short version</h2>
+					<ul role="list">
+						{
+							summary.map((line) => (
+								<li>
+									<i class="ti ti-circle-check" aria-hidden="true" />
+									{line}
+								</li>
+							))
+						}
+					</ul>
+				</div>
+
+				<slot />
+			</div>
+		</div>
+	</main>
+</SiteLayout>
+
+<script>
+	// Marks the section being read in the "On this page" list (aria-current):
+	// the first section whose top part is on screen.
+	const toc = document.querySelector<HTMLElement>('[data-legal-toc]');
+	const links = toc ? [...toc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')] : [];
+	const targets = links.map((a) => document.getElementById(a.hash.slice(1))).filter((el): el is HTMLElement => el !== null);
+	if (links.length && targets.length === links.length) {
+		const visible = new Set<Element>();
+		const mark = () => {
+			const current = targets.find((t) => visible.has(t));
+			if (!current) return;
+			for (const a of links) {
+				if (a.hash === `#${current.id}`) a.setAttribute('aria-current', 'true');
+				else a.removeAttribute('aria-current');
+			}
+		};
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) visible.add(entry.target);
+					else visible.delete(entry.target);
+				}
+				mark();
+			},
+			{ rootMargin: '-80px 0px -60% 0px' },
+		);
+		targets.forEach((t) => observer.observe(t));
+		links[0].setAttribute('aria-current', 'true');
+	}
+</script>
+
+<style>
+	@layer pages {
+		/* The whole wrap is 680px, TOC included, as designed (§7.2). */
+		.legal {
+			width: 100%;
+			max-width: calc(var(--legal-width) + 2 * var(--page-gutter));
+			margin: 0 auto;
+			padding: calc(24px + 1.5rem) var(--page-gutter) 0;
+		}
+
+		.legal__docs {
+			display: flex;
+			gap: var(--space-2);
+			margin-bottom: 28px;
+		}
+
+		.legal__doc {
+			flex: 1;
+			padding: 9px;
+			border: 0.5px solid var(--color-border-secondary);
+			border-radius: var(--radius-md);
+			background: var(--color-background-primary);
+			color: var(--color-text-secondary);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-medium);
+			text-align: center;
+			text-decoration: none;
+		}
+
+		.legal__doc:hover {
+			color: var(--color-text-primary);
+		}
+
+		.legal__doc[aria-current='page'] {
+			border-color: var(--color-border-primary);
+			background: var(--color-background-secondary);
+			color: var(--color-text-primary);
+		}
+
+		.legal__layout {
+			display: grid;
+			grid-template-columns: 180px minmax(0, 1fr);
+			gap: var(--space-6);
+			align-items: start;
+		}
+
+		.legal__toc {
+			position: sticky;
+			top: calc(var(--site-header-height) + var(--space-4));
+		}
+
+		.legal__toc ul {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.legal__toc a {
+			display: block;
+			padding: 6px 10px;
+			border-left: 2px solid transparent;
+			border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+			color: var(--color-text-secondary);
+			font-size: var(--font-size-sm);
+			text-decoration: none;
+		}
+
+		.legal__toc a:hover {
+			color: var(--color-text-primary);
+		}
+
+		.legal__toc a[aria-current='true'] {
+			border-left-color: var(--color-accent);
+			background: var(--color-background-secondary);
+			color: var(--color-text-primary);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.legal__body h1 {
+			margin: 0 0 6px;
+			font-size: var(--font-size-hero);
+			font-weight: var(--font-weight-medium);
+			line-height: var(--line-height-tight);
+		}
+
+		.legal__meta {
+			margin: 0 0 var(--space-5);
+			font-size: var(--font-size-sm);
+			color: var(--color-text-tertiary);
+		}
+
+		.legal__summary {
+			margin-bottom: 28px;
+			padding: var(--space-4) 18px;
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+		}
+
+		.legal__summary-label {
+			margin: 0 0 var(--space-2);
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-medium);
+			text-transform: uppercase;
+			letter-spacing: var(--letter-spacing-label);
+			color: var(--color-text-tertiary);
+		}
+
+		.legal__summary ul {
+			display: grid;
+			gap: 6px;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.legal__summary li {
+			display: flex;
+			align-items: flex-start;
+			gap: var(--space-2);
+			font-size: var(--font-size-base);
+			color: var(--color-text-secondary);
+		}
+
+		.legal__summary .ti {
+			flex-shrink: 0;
+			margin-top: 3px;
+			color: var(--color-accent);
+		}
+
+		/* The pages' sections (slot content) */
+		.legal__body :global(section) {
+			margin-bottom: 28px;
+			scroll-margin-top: calc(var(--site-header-height) + var(--space-4));
+		}
+
+		.legal__body :global(section > h2) {
+			display: flex;
+			align-items: center;
+			gap: var(--space-2);
+			margin: 0 0 10px;
+			padding-bottom: var(--space-2);
+			border-bottom: 0.5px solid var(--color-border-tertiary);
+			font-size: var(--font-size-lg);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.legal__body :global(section > h2 .ti) {
+			color: var(--color-accent);
+		}
+
+		.legal__body :global(section p),
+		.legal__body :global(section li) {
+			font-size: var(--font-size-body-md);
+			line-height: var(--line-height-body-md);
+			color: var(--color-text-secondary);
+		}
+
+		.legal__body :global(section p) {
+			margin: 0 0 var(--space-3);
+		}
+
+		.legal__body :global(section a) {
+			color: var(--color-text-info);
+		}
+
+		.legal__body :global(.notice) {
+			margin: var(--space-3) 0;
+		}
+
+		.legal__body :global(.notice p) {
+			margin: 0;
+			color: inherit;
+		}
+
+		.legal__body :global(.table-wrap) {
+			margin: 10px 0;
+			overflow-x: auto;
+		}
+
+		.legal__body :global(table) {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: var(--font-size-sm);
+		}
+
+		.legal__body :global(th),
+		.legal__body :global(td) {
+			padding: var(--space-2) 10px;
+			border-bottom: 0.5px solid var(--color-border-tertiary);
+			text-align: left;
+			vertical-align: top;
+		}
+
+		.legal__body :global(th) {
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-medium);
+			text-transform: uppercase;
+			letter-spacing: var(--letter-spacing-label);
+			color: var(--color-text-tertiary);
+		}
+
+		.legal__body :global(td) {
+			color: var(--color-text-secondary);
+		}
+
+		.legal__body :global(td:first-child) {
+			font-weight: var(--font-weight-medium);
+			color: var(--color-text-primary);
+		}
+
+		@media (max-width: 768px) {
+			.legal__docs {
+				flex-direction: column;
+			}
+
+			.legal__layout {
+				grid-template-columns: minmax(0, 1fr);
+			}
+
+			.legal__toc {
+				position: static;
+			}
+		}
+	}
+</style>

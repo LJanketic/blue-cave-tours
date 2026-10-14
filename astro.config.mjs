@@ -4,6 +4,7 @@ import sitemap from '@astrojs/sitemap';
 import vue from '@astrojs/vue';
 import { defineConfig } from 'astro/config';
 import { NOINDEX_PATH_PREFIXES } from './src/config/noindex.ts';
+import { devKitIntegration } from './src/dev/integration.ts';
 
 const site = process.env.PUBLIC_SITE_URL;
 
@@ -68,6 +69,11 @@ const loadDotenvInDev = {
 // https://astro.build/config — Netlify adapter for SSR + API routes.
 export default defineConfig({
 	output: 'server',
+	// Astro's default, set explicitly: server endpoints and form posts reject
+	// requests whose Origin isn't this site (CSRF protection).
+	security: { checkOrigin: true },
+	// Playwright's dev server (CONTEXT=playwright) runs without the toolbar, so it isn't in screenshots.
+	devToolbar: { enabled: process.env.CONTEXT !== 'playwright' },
 	// imageCDN defaults to true, which silently routes every astro:assets image
 	// through Netlify's metered on-demand Image CDN — even on fully prerendered
 	// pages. Disabling it restores Astro's own Sharp-based image service, which
@@ -91,6 +97,7 @@ export default defineConfig({
 	integrations: [
 		requireSiteUrlOnBuild,
 		loadDotenvInDev,
+		devKitIntegration,
 		vue(),
 		...(site
 			? [

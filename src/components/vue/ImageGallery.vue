@@ -1,320 +1,508 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+/*
+ * Photo gallery with a lightbox (spec §6.3.2). The hero is the first real
+ * photo; four thumbnails follow. The lightbox is a native <dialog> opened
+ * with showModal(): focus moves into it, Escape closes it, and focus goes
+ * back to the control that opened it.
+ *
+ * Without JavaScript the hero and thumbnails are plain links to the
+ * full-size photos.
+ */
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import type { GalleryViewPhoto } from '../../data/tour-photos';
+import type { BadgeTone } from '../ui/Badge.vue';
+import Badge from '../ui/Badge.vue';
 
-type GalleryPhoto = {
-	color: string;
-	alt: string;
-	icon: string;
-	src?: string;
-	srcset?: string;
-};
+export type GalleryTag = { icon: string; label: string; tone: BadgeTone };
 
-export type GalleryTag = {
-	icon: string;
-	label: string;
-	/** Visual treatment; maps to a semantic colour. */
-	variant?: 'feat' | 'group' | 'private' | 'tip';
-};
+const props = withDefaults(defineProps<{ photos: GalleryViewPhoto[]; tags?: GalleryTag[] }>(), { tags: () => [] });
 
-const props = withDefaults(
-	defineProps<{
-		hero: GalleryPhoto;
-		gallery: GalleryPhoto[];
-		/** Optional pills overlaid on the top-left of the hero image. */
-		tags?: GalleryTag[];
-	}>(),
-	{ tags: () => [] },
-);
+const THUMB_COUNT = 4;
 
-/** Thumbs are destination-owned photos; the large hero stays a placeholder until selected. */
-const thumbPhotos = computed(() => props.gallery.slice(0, 4));
-const overflowCount = computed(() => Math.max(0, props.gallery.length - 4));
-const selectedIndex = ref<number | null>(null);
+/** Real photos only; placeholders have nothing to show full-size. */
+const realPhotos = computed(() => props.photos.filter((photo) => photo.src));
+const placeholder = computed(() => props.photos[0]);
+const count = computed(() => realPhotos.value.length);
+const thumbs = computed(() => realPhotos.value.slice(1, 1 + THUMB_COUNT));
+/** Photos beyond the hero and the four thumbnails, shown as "+N" on the last thumbnail. */
+const moreCount = computed(() => Math.max(0, count.value - 1 - THUMB_COUNT));
 
-// The last thumb shows "+N" when photos overflow; its accessible name has to
-// include that visible text (WCAG 2.5.3).
-function thumbLabel(photo: { alt: string }, index: number): string {
-	const more = index === thumbPhotos.value.length - 1 && overflowCount.value > 0 ? `+${overflowCount.value} more photos. ` : '';
-	return `${more}View image ${index + 2} of ${totalCount.value}: ${photo.alt}`;
+const hydrated = ref(false);
+const dialog = ref<HTMLDialogElement | null>(null);
+const index = ref(0);
+const current = computed(() => realPhotos.value[index.value]);
+let opener: HTMLElement | null = null;
+
+function fullSrc(photo: GalleryViewPhoto): string | undefined {
+	// The srcset's last candidate is the largest width.
+	return photo.srcset?.split(',').pop()?.trim().split(' ')[0] ?? photo.src;
 }
 
-const activePhoto = computed(() => {
-	if (selectedIndex.value === null) return props.hero;
-	return props.gallery[selectedIndex.value] ?? props.hero;
+function thumbLabel(position: number): string {
+	const isLast = position === thumbs.value.length - 1 && moreCount.value > 0;
+	return `Open photo ${position + 2} of ${count.value}${isLast ? `, +${moreCount.value} more` : ''}`;
+}
+
+async function open(at: number, event: Event) {
+	opener = event.currentTarget as HTMLElement;
+	index.value = at;
+	dialog.value?.showModal();
+	document.documentElement.style.overflow = 'hidden';
+	await nextTick();
+	scrollStripToCurrent();
+}
+
+function close() {
+	dialog.value?.close();
+}
+
+// Runs however the dialog closed: button, Escape, backdrop.
+function onClose() {
+	document.documentElement.style.overflow = '';
+	opener?.focus();
+	opener = null;
+}
+
+function step(delta: number) {
+	index.value = (index.value + delta + count.value) % count.value;
+	nextTick(scrollStripToCurrent);
+}
+
+function show(at: number) {
+	index.value = at;
+	nextTick(scrollStripToCurrent);
+}
+
+function scrollStripToCurrent() {
+	dialog.value
+		?.querySelector('.gallery-ui__strip-thumb[aria-current="true"]')
+		?.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+
+function onKeydown(event: KeyboardEvent) {
+	if (event.key === 'ArrowRight') step(1);
+	else if (event.key === 'ArrowLeft') step(-1);
+	else return;
+	event.preventDefault();
+}
+
+// The backdrop is everything around the photo and the controls.
+function onDialogClick(event: MouseEvent) {
+	const target = event.target as HTMLElement;
+	if (target === dialog.value || target.classList.contains('gallery-ui__stage') || target.classList.contains('gallery-ui__frame')) {
+		close();
+	}
+}
+
+// Swipe left/right on touch screens.
+let swipeStartX: number | null = null;
+function onPointerDown(event: PointerEvent) {
+	if (event.pointerType === 'touch') swipeStartX = event.clientX;
+}
+function onPointerUp(event: PointerEvent) {
+	if (swipeStartX === null) return;
+	const dx = event.clientX - swipeStartX;
+	swipeStartX = null;
+	if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+}
+
+onMounted(() => {
+	hydrated.value = true;
 });
 
-const totalCount = computed(() => props.gallery.length + 1);
-const displayIndex = computed(() => (selectedIndex.value === null ? 1 : selectedIndex.value + 2));
-
-function selectPhoto(index: number) {
-	selectedIndex.value = index;
-}
-
-// Steps through hero + every gallery photo (null = hero), wrapping at both
-// ends. The thumbs only show the first four, so this is the way to the rest.
-function step(delta: number) {
-	const position = selectedIndex.value === null ? 0 : selectedIndex.value + 1;
-	const next = (position + delta + totalCount.value) % totalCount.value;
-	selectedIndex.value = next === 0 ? null : next - 1;
-}
-
-// Announced after an arrow or thumb press; empty on load so nothing speaks.
-const liveText = ref('');
-watch(selectedIndex, () => {
-	liveText.value = `Image ${displayIndex.value} of ${totalCount.value}: ${activePhoto.value.alt}`;
+onBeforeUnmount(() => {
+	document.documentElement.style.overflow = '';
 });
 </script>
 
 <template>
-	<div class="image-gallery">
-		<div class="image-gallery__stage">
-		<div
-			class="img-hero"
-			:style="activePhoto.src ? undefined : { background: activePhoto.color }"
-			role="img"
-			:aria-label="activePhoto.alt"
-		>
-			<img
-				v-if="activePhoto.src"
-				class="img-hero__photo"
-				:src="activePhoto.src"
-				:srcset="activePhoto.srcset"
-				sizes="(max-width: 700px) 100vw, 700px"
-				:alt="activePhoto.alt"
-				loading="eager"
-				fetchpriority="high"
-				decoding="async"
-			/>
-			<i
-				v-else
-				class="image-gallery__hero-icon"
-				:class="`ti ti-${activePhoto.icon}`"
-				aria-hidden="true"
-			></i>
-			<div v-if="tags.length" class="image-gallery__tags">
-				<span
-					v-for="tag in tags"
-					:key="tag.label"
-					class="image-gallery__tag"
-					:class="`image-gallery__tag--${tag.variant ?? 'feat'}`"
-				>
-					<i :class="`ti ti-${tag.icon}`" aria-hidden="true"></i>
-					{{ tag.label }}
-				</span>
-			</div>
-			<div class="image-gallery__counter">
-				<i class="ti ti-photo" aria-hidden="true"></i>
-				{{ displayIndex }} / {{ totalCount }}
-			</div>
-		</div>
-		<!-- Outside .img-hero: its role="img" would hide these buttons from screen readers. -->
-		<template v-if="totalCount > 1">
-			<button type="button" class="image-gallery__arrow image-gallery__arrow--prev" aria-label="Previous photo" @click="step(-1)">
-				<i class="ti ti-chevron-left" aria-hidden="true"></i>
-			</button>
-			<button type="button" class="image-gallery__arrow image-gallery__arrow--next" aria-label="Next photo" @click="step(1)">
-				<i class="ti ti-chevron-right" aria-hidden="true"></i>
-			</button>
-		</template>
-		<p class="sr-only" aria-live="polite">{{ liveText }}</p>
-		</div>
-		<div v-if="thumbPhotos.length" class="img-thumbs">
-			<button
-				v-for="(photo, index) in thumbPhotos"
-				:key="`${photo.alt}-${index}`"
-				type="button"
-				class="img-thumb"
-				:class="{ 'img-thumb--active': selectedIndex === index }"
-				:style="photo.src ? undefined : { background: photo.color }"
-				:aria-label="thumbLabel(photo, index)"
-				:aria-current="selectedIndex === index ? 'true' : undefined"
-				@click="selectPhoto(index)"
+	<div class="gallery-ui">
+		<div class="gallery-ui__hero-wrap">
+			<component
+				:is="hydrated ? 'button' : 'a'"
+				v-if="count > 0"
+				class="gallery-ui__hero"
+				:type="hydrated ? 'button' : undefined"
+				:href="hydrated ? undefined : fullSrc(realPhotos[0])"
+				:aria-label="`Open photo gallery, ${count} ${count === 1 ? 'photo' : 'photos'}`"
+				@click="hydrated && open(0, $event)"
 			>
 				<img
-					v-if="photo.src"
-					class="img-thumb__photo"
-					:src="photo.src"
-					:srcset="photo.srcset"
-					sizes="(max-width: 700px) 90px, 160px"
-					alt=""
-					loading="lazy"
+					:src="realPhotos[0].src"
+					:srcset="realPhotos[0].srcset"
+					sizes="(max-width: 960px) 100vw, 912px"
+					:alt="realPhotos[0].alt"
+					fetchpriority="high"
 					decoding="async"
 				/>
-				<template v-else>
-					<i v-if="index < 3" :class="`ti ti-${photo.icon}`" aria-hidden="true"></i>
-					<span v-else-if="overflowCount > 0" class="img-thumb__more">+{{ overflowCount }}</span>
-					<i v-else :class="`ti ti-${photo.icon}`" aria-hidden="true"></i>
-				</template>
-				<span
-					v-if="photo.src && index === 3 && overflowCount > 0"
-					class="img-thumb__more img-thumb__more--overlay"
-				>+{{ overflowCount }}</span>
-			</button>
+				<span class="gallery-ui__count" aria-hidden="true">
+					<i class="ti ti-photo"></i>
+					{{ count === 1 ? 'View photo' : `View all ${count} photos` }}
+				</span>
+			</component>
+			<div v-else class="gallery-ui__hero gallery-ui__hero--placeholder" role="img" :aria-label="placeholder?.alt">
+				<i :class="`ti ti-${placeholder?.icon ?? 'sailboat'}`" aria-hidden="true"></i>
+			</div>
+			<ul v-if="tags.length" class="gallery-ui__tags" role="list">
+				<li v-for="tag in tags" :key="tag.label">
+					<Badge :tone="tag.tone" :icon="tag.icon">{{ tag.label }}</Badge>
+				</li>
+			</ul>
 		</div>
+
+		<ul v-if="thumbs.length" class="gallery-ui__thumbs" role="list">
+			<li v-for="(photo, position) in thumbs" :key="photo.src">
+				<component
+					:is="hydrated ? 'button' : 'a'"
+					class="gallery-ui__thumb"
+					:type="hydrated ? 'button' : undefined"
+					:href="hydrated ? undefined : fullSrc(photo)"
+					:aria-label="thumbLabel(position)"
+					@click="hydrated && open(position + 1, $event)"
+				>
+					<img :src="photo.src" :srcset="photo.srcset" sizes="(max-width: 768px) 25vw, 222px" alt="" loading="lazy" decoding="async" />
+					<span v-if="position === thumbs.length - 1 && moreCount > 0" class="gallery-ui__more" aria-hidden="true">
+						+{{ moreCount }}
+					</span>
+				</component>
+			</li>
+		</ul>
+
+		<dialog
+			v-if="count > 0"
+			ref="dialog"
+			class="gallery-ui__dialog"
+			aria-label="Photo gallery"
+			@close="onClose"
+			@click="onDialogClick"
+			@keydown="onKeydown"
+		>
+			<div class="gallery-ui__top">
+				<p class="gallery-ui__position" aria-live="polite">{{ index + 1 }} / {{ count }}</p>
+				<button type="button" class="gallery-ui__btn" aria-label="Close gallery" @click="close">
+					<i class="ti ti-x" aria-hidden="true"></i>
+				</button>
+			</div>
+			<div class="gallery-ui__stage" @pointerdown="onPointerDown" @pointerup="onPointerUp">
+				<button v-if="count > 1" type="button" class="gallery-ui__btn gallery-ui__prev" aria-label="Previous photo" @click="step(-1)">
+					<i class="ti ti-chevron-left" aria-hidden="true"></i>
+				</button>
+				<div class="gallery-ui__frame">
+					<img v-if="current" :key="current.src" class="gallery-ui__full" :src="current.src" :srcset="current.srcset" sizes="100vw" :alt="current.alt" />
+				</div>
+				<button v-if="count > 1" type="button" class="gallery-ui__btn gallery-ui__next" aria-label="Next photo" @click="step(1)">
+					<i class="ti ti-chevron-right" aria-hidden="true"></i>
+				</button>
+			</div>
+			<ul v-if="count > 1" class="gallery-ui__strip" role="list">
+				<li v-for="(photo, position) in realPhotos" :key="photo.src">
+					<button
+						type="button"
+						class="gallery-ui__strip-thumb"
+						:aria-label="`Show photo ${position + 1}`"
+						:aria-current="position === index ? 'true' : undefined"
+						@click="show(position)"
+					>
+						<img :src="photo.src" :srcset="photo.srcset" sizes="72px" alt="" loading="lazy" decoding="async" />
+					</button>
+				</li>
+			</ul>
+		</dialog>
 	</div>
 </template>
 
 <style scoped>
-.image-gallery__stage {
-	position: relative;
-	margin-bottom: 10px;
-}
+@layer components {
+	.gallery-ui__hero-wrap {
+		position: relative;
+		margin-bottom: 10px;
+	}
 
-.image-gallery__stage .img-hero {
-	margin-bottom: 0;
-}
+	/* board 03 .img-hero */
+	.gallery-ui__hero {
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		max-height: 540px;
+		padding: 0;
+		overflow: hidden;
+		border: 0;
+		border-radius: var(--radius-lg);
+		background: var(--color-background-secondary);
+		cursor: zoom-in;
+	}
 
-.image-gallery__arrow {
-	position: absolute;
-	top: 50%;
-	transform: translateY(-50%);
-	width: 36px;
-	height: 36px;
-	border: 0;
-	border-radius: 50%;
-	background: var(--color-background-primary);
-	color: var(--color-text-primary);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	box-shadow: 0 1px 4px rgb(0 0 0 / 20%);
-}
+	.gallery-ui__hero--placeholder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: default;
+	}
 
-.image-gallery__arrow--prev {
-	left: 10px;
-}
+	.gallery-ui__hero--placeholder .ti {
+		font-size: 52px;
+		color: var(--color-border-secondary);
+	}
 
-.image-gallery__arrow--next {
-	right: 10px;
-}
+	.gallery-ui__hero img,
+	.gallery-ui__thumb img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.4s ease;
+	}
 
-.image-gallery__arrow .ti {
-	font-size: 20px;
-}
+	.gallery-ui__hero:hover img,
+	.gallery-ui__thumb:hover img {
+		transform: scale(1.03);
+	}
 
-.image-gallery__hero-icon {
-	font-size: 48px;
-	color: rgb(255 255 255 / 85%);
-}
+	.gallery-ui__count {
+		position: absolute;
+		right: var(--space-3);
+		bottom: var(--space-3);
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px var(--space-3);
+		border-radius: var(--radius-md);
+		background: var(--color-surface-pill);
+		box-shadow: var(--shadow-pill);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-medium);
+	}
 
-.image-gallery__tags {
-	position: absolute;
-	top: 10px;
-	left: 10px;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
-	max-width: calc(100% - 90px);
-}
+	.gallery-ui__count .ti {
+		font-size: 15px;
+	}
 
-.image-gallery__tag {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 4px 9px;
-	border-radius: 20px;
-	font-size: 11px;
-	font-weight: 500;
-	background: var(--color-background-primary);
-	color: var(--color-text-secondary);
-	border: 0.5px solid var(--color-border-tertiary);
-}
+	.gallery-ui__tags {
+		position: absolute;
+		top: 10px;
+		left: 10px;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		max-width: calc(100% - 90px);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		pointer-events: none;
+	}
 
-.image-gallery__tag .ti {
-	font-size: 12px;
-	color: var(--color-accent);
-}
+	.gallery-ui__thumbs {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: var(--space-2);
+		margin: 0 0 28px;
+		padding: 0;
+		list-style: none;
+	}
 
-.image-gallery__tag--group {
-	background: var(--color-background-success);
-	color: var(--color-text-success);
-}
+	.gallery-ui__thumb {
+		position: relative;
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		padding: 0;
+		overflow: hidden;
+		border: 0;
+		border-radius: var(--radius-md);
+		background: var(--color-background-secondary);
+		cursor: zoom-in;
+	}
 
-.image-gallery__tag--group .ti {
-	color: var(--color-text-success);
-}
+	.gallery-ui__more {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--color-overlay-thumb);
+		color: var(--color-text-on-image);
+		font-size: var(--font-size-lg);
+		font-weight: var(--font-weight-semibold);
+	}
 
-.image-gallery__tag--private {
-	background: var(--color-category-private-bg);
-	color: var(--color-category-private-text);
-}
+	/* Lightbox (board 03 .lb) */
+	.gallery-ui__dialog {
+		width: 100%;
+		max-width: none;
+		height: 100vh;
+		height: 100dvh;
+		max-height: none;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--color-text-on-image);
+	}
 
-.image-gallery__tag--private .ti {
-	color: var(--color-category-private-icon);
-}
+	.gallery-ui__dialog[open] {
+		display: flex;
+		flex-direction: column;
+		animation: gallery-fade-in 0.2s ease;
+	}
 
-.image-gallery__tag--tip {
-	background: var(--color-category-tip-bg);
-	color: var(--color-category-tip-text);
-}
+	.gallery-ui__dialog::backdrop {
+		background: var(--color-lightbox-backdrop);
+	}
 
-.image-gallery__tag--tip .ti {
-	color: var(--color-category-warning-icon);
-}
+	@keyframes gallery-fade-in {
+		from {
+			opacity: 0;
+		}
+	}
 
-.image-gallery__counter {
-	position: absolute;
-	top: 10px;
-	right: 10px;
-	background: var(--color-background-primary);
-	border-radius: var(--radius-md);
-	padding: 4px 10px;
-	font-size: 12px;
-	font-weight: 500;
-	border: 0.5px solid var(--color-border-tertiary);
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
+	.gallery-ui__top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--space-4) var(--space-5);
+		font-size: var(--font-size-sm);
+	}
 
-.image-gallery__counter .ti {
-	font-size: 13px;
-}
+	.gallery-ui__position {
+		margin: 0;
+	}
 
-.img-thumb {
-	border: 0.5px solid var(--color-border-tertiary);
-}
+	.gallery-ui__btn {
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		width: var(--touch-min);
+		height: var(--touch-min);
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: var(--color-glass-control);
+		color: var(--color-text-on-image);
+		font-size: 22px;
+		cursor: pointer;
+		transition: background-color var(--duration-fast) ease;
+	}
 
-.img-thumb--active {
-	border-color: var(--color-border-primary);
-}
+	.gallery-ui__btn:hover {
+		background: var(--color-glass-control-hover);
+	}
 
-.img-thumb:hover {
-	border-color: var(--color-border-primary);
-}
+	/* White ring on the dark backdrop. */
+	.gallery-ui__dialog :focus-visible {
+		outline-color: var(--color-text-on-image);
+	}
 
-.img-thumb .ti {
-	font-size: 18px;
-	color: rgb(255 255 255 / 85%);
-}
+	.gallery-ui__stage {
+		position: relative;
+		display: flex;
+		flex: 1;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-4);
+		min-height: 0;
+		padding: 0 var(--space-5);
+		touch-action: pan-y;
+	}
 
-.img-hero__photo,
-.img-thumb__photo {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	display: block;
-}
+	.gallery-ui__frame {
+		display: flex;
+		flex: 1;
+		align-items: center;
+		justify-content: center;
+		min-width: 0;
+		height: 100%;
+	}
 
-.img-thumb {
-	position: relative;
-	overflow: hidden;
-	padding: 0;
-}
+	.gallery-ui__full {
+		display: block;
+		max-width: 100%;
+		max-height: 100%;
+		object-fit: contain;
+		border-radius: var(--radius-md);
+	}
 
-.img-thumb__more {
-	font-size: 12px;
-	font-weight: 500;
-	color: rgb(255 255 255 / 90%);
-}
+	.gallery-ui__strip {
+		display: flex;
+		justify-content: center;
+		gap: var(--space-2);
+		margin: 0;
+		padding: var(--space-4) var(--space-5) var(--space-5);
+		overflow-x: auto;
+		list-style: none;
+		scrollbar-width: none;
+	}
 
-.img-thumb__more--overlay {
-	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: rgb(0 0 0 / 45%);
+	.gallery-ui__strip li {
+		flex: 0 0 72px;
+	}
+
+	.gallery-ui__strip-thumb {
+		display: block;
+		width: 72px;
+		height: 52px;
+		padding: 0;
+		overflow: hidden;
+		border: 2px solid transparent;
+		border-radius: var(--radius-sm);
+		background: none;
+		opacity: 0.5;
+		cursor: pointer;
+		transition:
+			opacity var(--duration-fast) ease,
+			border-color var(--duration-fast) ease;
+	}
+
+	.gallery-ui__strip-thumb:hover {
+		opacity: 0.85;
+	}
+
+	.gallery-ui__strip-thumb[aria-current='true'] {
+		border-color: var(--color-text-on-image);
+		opacity: 1;
+	}
+
+	.gallery-ui__strip-thumb img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	@media (max-width: 768px) {
+		.gallery-ui__hero {
+			aspect-ratio: 3 / 2;
+		}
+
+		.gallery-ui__thumbs {
+			margin-bottom: var(--space-5);
+		}
+
+		.gallery-ui__stage {
+			gap: 0;
+			padding: 0 var(--space-2);
+		}
+
+		.gallery-ui__prev,
+		.gallery-ui__next {
+			position: absolute;
+			top: 50%;
+			z-index: 1;
+			transform: translateY(-50%);
+		}
+
+		.gallery-ui__prev {
+			left: var(--space-3);
+		}
+
+		.gallery-ui__next {
+			right: var(--space-3);
+		}
+
+		.gallery-ui__strip {
+			justify-content: flex-start;
+		}
+	}
 }
 </style>

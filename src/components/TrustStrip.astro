@@ -1,12 +1,67 @@
 ---
-import { SITE_EMAIL } from '../config/site';
+import { PAYMENTS_ARE_DEMO } from '../config/payments';
+import { LICENCE_CONFIRMED, SITE_EMAIL, SITE_PHONE, SITE_PHONE_DISPLAY } from '../config/site';
 ---
 
+<!--
+	The last block of <main> on every checkout page, so help is always in the
+	same place (WCAG 3.2.6, spec §5.3 and §11.16).
+-->
 <div class="trust-strip">
-	<span><i class="ti ti-lock" aria-hidden="true"></i> Secure payment</span>
+	{
+		PAYMENTS_ARE_DEMO ? (
+			<span>
+				<i class="ti ti-info-circle" aria-hidden="true"></i> Demo checkout: no money is taken
+			</span>
+		) : (
+			<span>
+				<i class="ti ti-lock" aria-hidden="true"></i> Secure payment
+			</span>
+		)
+	}
 	<span>
 		<i class="ti ti-headset" aria-hidden="true"></i> Need help?
+		<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>
+		·
 		<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>
 	</span>
-	<span>Licensed maritime operator · Croatia</span>
+	{LICENCE_CONFIRMED && <span>Licensed maritime operator · Croatia</span>}
 </div>
+
+<style>
+	@layer components {
+		/* Spec §5.3 (board hbc.css .trust-strip). */
+		.trust-strip {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 14px;
+			margin-top: var(--space-6);
+			padding-top: var(--space-4);
+			border-top: 0.5px solid var(--color-border-tertiary);
+			font-size: var(--font-size-xs);
+			color: var(--color-text-tertiary);
+		}
+
+		.trust-strip span {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: center;
+			gap: 5px;
+		}
+
+		.trust-strip a {
+			display: inline-flex;
+			align-items: center;
+			min-height: 24px;
+			color: var(--color-text-tertiary);
+			text-decoration: underline;
+			text-underline-offset: 3px;
+		}
+
+		.trust-strip a:hover {
+			color: var(--color-text-secondary);
+		}
+	}
+</style>

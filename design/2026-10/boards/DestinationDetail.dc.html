@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Destination Detail — Hvar — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.hbc{--td-sec:36px}
+/* overflow-x:hidden on .hbc breaks sticky; clip keeps the same look */
+.hbc{overflow-x:clip}
+a{color:var(--color-text-info)}a:hover{color:var(--color-accent-dark)}
+.breadcrumb{font-size:var(--font-size-sm);color:var(--color-text-tertiary);margin-bottom:16px}
+.breadcrumb a{color:var(--color-text-info);text-decoration:none}
+.hbc .img-hero{width:100%;aspect-ratio:16/9;max-height:540px;background:var(--color-background-secondary);border:none;border-radius:var(--border-radius-lg);padding:0;position:relative;margin-bottom:10px;overflow:hidden;cursor:zoom-in;display:block}
+.img-hero img,.img-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease}
+.img-hero:hover img,.img-thumb:hover img{transform:scale(1.03)}
+.img-count{position:absolute;bottom:12px;right:12px;background:rgba(255,255,255,0.95);border-radius:var(--border-radius-md);padding:6px 12px;font-size:var(--font-size-sm);font-weight:500;color:var(--color-text-primary);display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.img-count i{font-size:15px}
+.img-thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:28px}
+.img-thumb{aspect-ratio:16/10;background:var(--color-background-secondary);border-radius:var(--border-radius-md);overflow:hidden;position:relative;cursor:zoom-in}
+.img-more{position:absolute;inset:0;background:rgba(6,24,40,0.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--font-size-lg);font-weight:600}
+.lb{position:fixed;inset:0;z-index:500;background:rgba(4,14,24,0.94);display:flex;flex-direction:column;animation:lb-in 0.2s ease}
+@keyframes lb-in{from{opacity:0}to{opacity:1}}
+.lb-top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;color:#fff;font-size:var(--font-size-sm)}
+.hbc .lb-btn{background:rgba(255,255,255,0.12);border:none;color:#fff;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background 0.2s ease}
+.hbc .lb-btn:hover{background:rgba(255,255,255,0.24)}
+.lb-btn i{font-size:22px}
+.lb-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:16px;padding:0 20px}
+.lb-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--border-radius-md);display:block}
+.lb-frame{flex:1;min-width:0;height:100%;display:flex;align-items:center;justify-content:center}
+.lb-strip{display:flex;gap:8px;padding:16px 20px 20px;overflow-x:auto;justify-content:center;scrollbar-width:none}
+.hbc .lb-th{flex:0 0 72px;height:52px;padding:0;border:2px solid transparent;border-radius:6px;overflow:hidden;opacity:0.5;cursor:pointer;background:none;transition:opacity 0.2s ease,border-color 0.2s ease}
+.hbc .lb-th:hover{opacity:0.85}
+.hbc .lb-th.on{opacity:1;border-color:#fff}
+.lb-th img{width:100%;height:100%;object-fit:cover;display:block}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 322px;column-gap:32px;row-gap:var(--td-sec);align-items:start;margin-bottom:var(--td-sec)}
+.main-col{min-width:0}
+.main-col>.section:last-child{margin-bottom:0}
+.layout~.footer{margin-top:0}
+.tag{font-size:var(--font-size-micro);font-weight:500;padding:4px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:4px}
+.tag-feat{background:var(--color-background-success);color:var(--color-text-success)}
+.tag-tip{background:var(--color-category-tip-bg);color:var(--color-category-tip-text)}
+h1{font-size:var(--font-size-hero);font-weight:500;margin:0 0 12px;line-height:var(--line-height-tight)}
+.intro{font-size:var(--font-size-body-md);line-height:var(--line-height-body-md);color:var(--color-text-secondary);margin:0 0 var(--td-sec)}
+.section{margin-bottom:var(--td-sec)}
+.sec-title{font-size:var(--font-size-lg);font-weight:500;margin:0 0 14px;padding-bottom:10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.highlights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hl{display:flex;align-items:flex-start;gap:8px;padding:9px 11px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-secondary)}
+.hl i{color:var(--color-highlight);font-size:1.2em;padding-top:3px;flex-shrink:0}
+.highlights-marquee{display:none;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent,#000 24px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to right,transparent,#000 24px,#000 calc(100% - 24px),transparent)}
+.marquee-track{display:flex;gap:8px;width:max-content;animation:marquee-scroll 26s linear infinite}
+.marquee-track .hl{flex:0 0 220px}
+@keyframes marquee-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.geo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.geo-item{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)}
+.geo-label{font-size:var(--font-size-micro);color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em}
+.geo-val{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);font-weight:500}
+.map-stub{height:100px;background:var(--color-background-secondary);border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);display:flex;align-items:center;justify-content:center;gap:8px;font-size:var(--font-size-sm);color:var(--color-text-secondary);cursor:pointer;margin-bottom:8px}
+.insider-item{display:flex;gap:10px;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:8px}
+.insider-num{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);font-weight:500;color:var(--color-accent);min-width:18px}
+.insider-text{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-secondary)}
+.dd-tours{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.sidebar-col{position:-webkit-sticky;position:sticky;top:76px;align-self:start;min-width:0}
+#dd-tours{scroll-margin-top:72px}
+.sticky-card{background:var(--color-background-primary);border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:1.1rem 1.25rem}
+.sc-heading{font-size:var(--font-size-md);font-weight:500;margin:0 0 12px}
+.sc-stat{display:flex;flex-direction:column;gap:2px;padding:9px 11px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:8px}
+.sc-stat-label{font-size:var(--font-size-xs);color:var(--color-text-tertiary)}
+.sc-stat-val{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);font-weight:500}
+.mobile-book-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:90;background:rgba(255,255,255,0.97);border-top:0.5px solid var(--color-border-tertiary);padding:12px 16px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 16px rgba(0,0,0,0.06)}
+.mobile-book-bar{cursor:pointer;transition:transform 0.3s ease,opacity 0.3s ease}
+.mobile-book-bar.is-hidden{transform:translateY(110%);opacity:0;pointer-events:none}
+.mbb-price{font-size:var(--font-size-base);font-weight:500}
+.mbb-per{font-size:var(--font-size-xs);color:var(--color-text-secondary)}
+.hbc .mobile-book-bar a{padding:10px 22px;background:var(--color-background-brand);color:var(--color-background-primary);border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500;text-decoration:none;white-space:nowrap}
+.sc-divider{border-top:0.5px solid var(--color-border-tertiary);margin:12px 0}
+.btn-primary i,.btn-secondary i{font-size:1.15em}
+.hbc .btn-primary{width:100%;padding:11px;background:var(--color-background-brand);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px}
+.hbc .btn-primary:hover{opacity:0.88;color:var(--color-background-primary)}
+.hbc .btn-secondary{width:100%;padding:9px;background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px}
+.hbc .btn-secondary:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+@media (max-width:768px){
+  .hbc{--td-sec:28px;padding-bottom:72px}
+  .img-thumbs{margin-bottom:20px}
+  .hbc .img-hero{aspect-ratio:3/2}
+  .lb-stage{padding:0 8px;gap:0}
+  .lb-stage .lb-btn{position:absolute;top:50%;transform:translateY(-50%);z-index:1}
+  .lb-stage .lb-prev{left:12px}
+  .lb-stage .lb-next{right:12px}
+  .lb-strip{justify-content:flex-start}
+  .mobile-book-bar{display:flex}
+  .layout{grid-template-columns:1fr}
+  .highlights{display:none}
+  .highlights-marquee{display:block}
+  .geo-grid{grid-template-columns:1fr}
+  .sidebar-col{display:none}
+}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="nav-bar">
+    <nav class="nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+      <div class="nav-links">
+        <a class="nav-link" href="Tours.dc.html">Tours</a>
+        <a class="nav-link current" href="Destinations.dc.html">Destinations</a>
+        <a class="nav-link" href="About.dc.html">About</a>
+        <a class="nav-link" href="Faqs.dc.html">FAQ</a>
+      </div>
+      <a class="nav-cta" href="Tours.dc.html">Book now</a>
+      <button class="nav-hamburger" aria-label="Menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+    </nav>
+  </div>
+  <div class="wrap">
+    <div class="breadcrumb"><a href="Destinations.dc.html">Destinations</a> › Hvar island</div>
+    <button type="button" class="img-hero" aria-label="Open photo gallery" onClick="{{ openFirst }}">
+      <img src="{{ heroSrc }}" alt="Hvar island">
+      <div style="position: absolute; top: 10px; left: 10px; display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 90px)">
+        <span class="tag tag-feat"><i class="ti ti-swimming" aria-hidden="true"></i> Swimming</span>
+        <span class="tag tag-feat"><i class="ti ti-island" aria-hidden="true"></i> Island</span>
+        <span class="tag tag-tip"><i class="ti ti-sun" aria-hidden="true"></i> Sunniest island in Croatia</span>
+      </div>
+      <span class="img-count"><i class="ti ti-photo" aria-hidden="true"></i> View all {{ photoCount }} photos</span>
+    </button>
+    <div class="img-thumbs">
+      <sc-for list="{{ thumbs }}" as="t" hint-placeholder-count="4">
+        <button type="button" class="img-thumb" aria-label="{{ t.label }}" onClick="{{ t.open }}" style="padding: 0; border: none">
+          <img src="{{ t.src }}" alt="">
+          <sc-if value="{{ t.more }}" hint-placeholder-val="{{ false }}"><span class="img-more">+{{ t.moreCount }}</span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+
+    <div class="layout">
+      <div class="main-col">
+        <h1>Hvar island</h1>
+        <p class="intro body-md">Croatia's sunniest island — lavender fields running down to the sea, a hilltop fortress you can walk to in twenty minutes, and water so clear you can see the bottom from the boat. It's busy in July and August, but arrive by tender from the water and you sidestep the crowds entirely.</p>
+        <div class="section"><p class="sec-title">Highlights</p>
+          <div class="highlights"><div class="hl body-sm"><i class="ti ti-droplet" aria-hidden="true"></i>Some of the clearest water on the Adriatic</div><div class="hl body-sm"><i class="ti ti-tower" aria-hidden="true"></i>Venetian fortress with panoramic views</div><div class="hl body-sm"><i class="ti ti-leaf" aria-hidden="true"></i>Lavender fields in June and early July</div><div class="hl body-sm"><i class="ti ti-glass-full" aria-hidden="true"></i>Local plavac mali wine worth tasting</div><div class="hl body-sm"><i class="ti ti-beach" aria-hidden="true"></i>Hidden coves only reachable by boat</div><div class="hl body-sm"><i class="ti ti-moon" aria-hidden="true"></i>Lively old town squares in the evening</div></div>
+          <div class="highlights-marquee" aria-hidden="true"><div class="marquee-track"><div class="hl body-sm"><i class="ti ti-droplet"></i>Some of the clearest water on the Adriatic</div><div class="hl body-sm"><i class="ti ti-tower"></i>Venetian fortress with panoramic views</div><div class="hl body-sm"><i class="ti ti-leaf"></i>Lavender fields in June and early July</div><div class="hl body-sm"><i class="ti ti-glass-full"></i>Local plavac mali wine worth tasting</div><div class="hl body-sm"><i class="ti ti-beach"></i>Hidden coves only reachable by boat</div><div class="hl body-sm"><i class="ti ti-moon"></i>Lively old town squares in the evening</div><div class="hl body-sm"><i class="ti ti-droplet"></i>Some of the clearest water on the Adriatic</div><div class="hl body-sm"><i class="ti ti-tower"></i>Venetian fortress with panoramic views</div><div class="hl body-sm"><i class="ti ti-leaf"></i>Lavender fields in June and early July</div><div class="hl body-sm"><i class="ti ti-glass-full"></i>Local plavac mali wine worth tasting</div><div class="hl body-sm"><i class="ti ti-beach"></i>Hidden coves only reachable by boat</div><div class="hl body-sm"><i class="ti ti-moon"></i>Lively old town squares in the evening</div></div></div>
+        </div>
+        <div class="section"><p class="sec-title">Location &amp; getting there</p><div class="map-stub"><i class="ti ti-map-2" style="font-size: 18px; color: var(--color-accent)" aria-hidden="true"></i> View on map — 60 km from Split by sea</div><div class="geo-grid"><div class="geo-item"><span class="geo-label">Distance from Split</span><span class="geo-val body-sm">~60 km by sea</span></div><div class="geo-item"><span class="geo-label">Travel time by boat</span><span class="geo-val body-sm">~2.5 hours</span></div><div class="geo-item"><span class="geo-label">Island size</span><span class="geo-val body-sm">68 km long</span></div><div class="geo-item"><span class="geo-label">How we get there</span><span class="geo-val body-sm">Direct charter or day trip</span></div></div></div>
+        <div class="section"><p class="sec-title">Insider tips</p><div class="insider-item"><span class="insider-num">1</span><span class="insider-text body-sm">The fortress walk takes about 20 minutes from the main square and the view from the top is worth every step. Go in the late afternoon for the best light.</span></div><div class="insider-item"><span class="insider-num">2</span><span class="insider-text body-sm">The Pakleni islands just offshore are where the good swimming is — the main town beach is pretty but crowded. We always anchor off Palmižana.</span></div><div class="insider-item"><span class="insider-num">3</span><span class="insider-text body-sm">Arriving by boat means you dock right in the heart of the old town. Guests coming by ferry land a short walk away — another reason the water approach wins.</span></div></div>
+        <div class="section" id="dd-tours"><p class="sec-title">Tours that visit Hvar <span style="font-weight: 400; color: var(--color-text-tertiary); font-size: var(--font-size-sm)">(4)</span></p>
+          <div class="dd-tours">
+            <div class="tour-card">
+              <div class="tc-img"><img src="/_blob/b5535f758995bdf694c8c2468734b0c5" alt=""></div>
+              <div class="tc-body">
+                <p class="tc-name">Island hopping — Elafiti day trip</p>
+                <div class="tc-foot"><div><span class="tc-from">From</span><span class="tc-price">€89</span> <span class="tc-per">/ person</span></div><span class="tc-duration"><i class="ti ti-clock" aria-hidden="true"></i>7h</span></div>
+                <a class="tc-btn" href="TourDetail.dc.html">View tour</a>
+              </div>
+            </div>
+            <div class="tour-card">
+              <div class="tc-img"><img src="/_blob/5207d5d0f4d27c542bd2802443a85c29" alt=""><span class="tc-badge b-best">Best seller</span></div>
+              <div class="tc-body">
+                <p class="tc-name">Blue Cave &amp; Hvar full day</p>
+                <div class="tc-foot"><div><span class="tc-from">From</span><span class="tc-price">€110</span> <span class="tc-per">/ person</span></div><span class="tc-duration"><i class="ti ti-clock" aria-hidden="true"></i>10h</span></div>
+                <a class="tc-btn" href="TourDetail.dc.html">View tour</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-col">
+        <div class="sticky-card">
+          <p class="sc-heading">Hvar at a glance</p>
+          <div class="sc-stat"><span class="sc-stat-label">Tours visiting</span><span class="sc-stat-val body-sm">4 tours</span></div>
+          <div class="sc-stat"><span class="sc-stat-label">Best season</span><span class="sc-stat-val body-sm">May – Oct</span></div>
+          <div class="sc-stat"><span class="sc-stat-label">From Split</span><span class="sc-stat-val body-sm">~2.5h by boat</span></div>
+          <div class="sc-divider"></div>
+          <p style="font-size: var(--font-size-sm); font-weight: 500; margin: 0 0 6px; color: var(--color-text-secondary)">Current conditions</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--font-size-sm)"><span style="color: var(--color-text-secondary)"><i class="ti ti-sun" style="font-size: 1.15em; vertical-align: -0.15em; color: var(--color-text-warning)" aria-hidden="true"></i> Sunny</span><span style="font-weight: 500">28°C</span></div>
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-bottom: 12px">Sea temp 24°C · Light winds</div>
+          <div class="sc-divider"></div>
+          <a class="btn-primary" href="Tours.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Browse Hvar tours</a>
+          <a class="btn-secondary" href="PrivateBooking.dc.html"><i class="ti ti-crown" aria-hidden="true"></i> Plan a private charter</a>
+        </div>
+      </div>
+    </div>
+
+    <sc-if value="{{ lbOpen }}" hint-placeholder-val="{{ false }}">
+      <div class="lb" role="dialog" aria-modal="true" aria-label="Photo gallery">
+        <div class="lb-top"><span>{{ lbPos }} / {{ photoCount }}</span><button type="button" class="lb-btn" aria-label="Close gallery" onClick="{{ closeLb }}"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+        <div class="lb-stage">
+          <button type="button" class="lb-btn lb-prev" aria-label="Previous photo" onClick="{{ prevPhoto }}"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+          <div class="lb-frame" onClick="{{ closeLb }}"><img class="lb-img" src="{{ lbSrc }}" alt="Photo {{ lbPos }} of {{ photoCount }}" onClick="{{ stop }}"></div>
+          <button type="button" class="lb-btn lb-next" aria-label="Next photo" onClick="{{ nextPhoto }}"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+        </div>
+        <div class="lb-strip">
+          <sc-for list="{{ strip }}" as="p" hint-placeholder-count="12">
+            <button type="button" class="{{ p.cls }}" aria-label="{{ p.label }}" onClick="{{ p.pick }}"><img src="{{ p.src }}" alt=""></button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <div class="{{ barCls }}" role="button" tabindex="0" aria-label="Go to tours that visit Hvar" onClick="{{ goTours }}">
+      <span class="mbb-price">4 tours <span class="mbb-per">visit Hvar</span></span>
+      <a href="#dd-tours" onClick="{{ goTours }}">See tours</a>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-brand"><div class="nav-logo" style="margin-bottom: 6px"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</div><p>Small-boat tours along the Dalmatian coast since 2015. Licensed, insured, and obsessed with the sea.</p></div>
+      <div class="footer-col"><h4>Tours</h4><a href="Tours.dc.html">Group tours</a><a href="PrivateBooking.dc.html">Private charters</a><a href="Tours.dc.html">Day trips</a><a href="Tours.dc.html">Sunset cruises</a></div>
+      <div class="footer-col"><h4>Info</h4><a href="About.dc.html">About us</a><a href="Destinations.dc.html">Destinations</a><a href="Faqs.dc.html">FAQs</a><a href="Contact.dc.html">Contact</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="Legal.dc.html">Terms &amp; conditions</a><a href="Legal.dc.html">Privacy policy</a><a href="Legal.dc.html">Cancellation policy</a></div>
+    </footer>
+    <div class="footer-bottom"><span>© 2025 Hello Blue Cave</span><span>Licensed maritime operator · Croatia</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2200}}'>
+const PHOTOS = ['f80742f991078a1db049ece637c4a2b9','32dfc7c5ccd7f71a00ac9e2c4b28646f','017adfe4e2ef7be5d0d94d4957daa087','5207d5d0f4d27c542bd2802443a85c29','b5535f758995bdf694c8c2468734b0c5','796f7f6baf909bac630a446041e4b831','cbc2b610fa31e9081789057f1607038a','85382a42d38b04ccac1ac10f45ce36bf','f155a16b9e88c1741a9e475ada1cbbdf','6db22cf5a8d634b0343f7323ec5796a6'].map(id => '/_blob/' + id);
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { lb: -1, bookInView: false };
+    this.onKey = e => {
+      if (this.state.lb < 0) return;
+      if (e.key === 'Escape') this.setState({ lb: -1 });
+      else if (e.key === 'ArrowRight') this.step(1);
+      else if (e.key === 'ArrowLeft') this.step(-1);
+    };
+  }
+  componentDidMount() {
+    window.addEventListener('keydown', this.onKey);
+    const el = document.getElementById('dd-tours');
+    if (el && 'IntersectionObserver' in window) {
+      this.io = new IntersectionObserver(entries => {
+        const v = entries.some(en => en.isIntersecting);
+        if (v !== this.state.bookInView) this.setState({ bookInView: v });
+      }, { threshold: 0.15 });
+      this.io.observe(el);
+    }
+  }
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.onKey);
+    if (this.io) this.io.disconnect();
+  }
+  step(d) { const n = PHOTOS.length; this.setState({ lb: (this.state.lb + d + n) % n }); }
+  open(i) { this.setState({ lb: i }); }
+  renderVals() {
+    const n = PHOTOS.length, lb = this.state.lb;
+    return {
+      heroSrc: PHOTOS[0],
+      barCls: 'mobile-book-bar' + (this.state.bookInView ? ' is-hidden' : ''),
+      photoCount: n,
+      openFirst: () => this.open(0),
+      thumbs: [1, 2, 3, 4].map((i, k) => ({ src: PHOTOS[i], label: k === 3 ? 'View all ' + n + ' photos' : 'Open photo ' + (i + 1), open: () => this.open(i), more: k === 3 && n > 5, moreCount: n - 5 })),
+      lbOpen: lb >= 0,
+      lbSrc: PHOTOS[Math.max(lb, 0)],
+      lbPos: lb + 1,
+      closeLb: () => this.setState({ lb: -1 }),
+      goTours: e => {
+        if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation && e.stopPropagation(); }
+        const el = document.getElementById('dd-tours');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      },
+      stop: e => e && e.stopPropagation && e.stopPropagation(),
+      prevPhoto: () => this.step(-1),
+      nextPhoto: () => this.step(1),
+      strip: PHOTOS.map((src, i) => ({ src: src, cls: 'lb-th' + (i === lb ? ' on' : ''), label: 'Show photo ' + (i + 1), pick: () => this.open(i) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

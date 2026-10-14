@@ -1,0 +1,296 @@
+/* Hello Blue Cave — shared tokens, base, icons, nav & footer.
+   Ported from iLabura/HBC: assets/css/variables.css + assets/css/nav-footer.css.
+   Icons: Tabler Icons 3.48 webfont, subset to the glyphs the site uses. */
+
+@font-face {
+  font-family: "tabler-icons";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("/_blob/4ee868969e6f51720130fbb10ce9f37b") format("woff2");
+}
+
+:root {
+  /* ---------- 1. Palette ---------- */
+  --palette-black: #111;
+  --palette-gray-700: #555;
+  --palette-gray-500: #6b6b6b;
+  --palette-gray-400: #ccc;
+  --palette-gray-300: #aaa;
+  --palette-gray-200: #e5e5e3;
+  --palette-gray-150: #ebebea;
+  --palette-gray-100: #f5f5f4;
+  --palette-white: #fff;
+  --palette-teal-900: #085041;
+  --palette-teal-500: #1D9E75;
+  --palette-teal-100: #E1F5EE;
+  --palette-blue-900: #0C447C;
+  --palette-blue-600: #155DA8;
+  --palette-blue-500: #1a6fc4;
+  --palette-blue-300: #7ab4e8;
+  --palette-blue-100: #E6F1FB;
+  --palette-amber-900: #633806;
+  --palette-amber-500: #EF9F27;
+  --palette-amber-400: #BA7517;
+  --palette-amber-100: #FAEEDA;
+  --palette-amber-50: #FEF3E2;
+  --palette-orange-900: #7C2D12;
+  --palette-orange-600: #C2410C;
+  --palette-orange-100: #FFEDD5;
+  --palette-red-900: #8B1A15;
+  --palette-red-100: #FDECEA;
+  --palette-purple-900: #3C3489;
+  --palette-purple-500: #534AB7;
+  --palette-purple-100: #EEEDFE;
+  --palette-coral-500: #E05C34;
+  --palette-gold-50: #FDF8EC;
+  --palette-gold-100: #F7EBCB;
+  --palette-gold-300: #E3C987;
+  --palette-gold-500: #B8892B;
+  --palette-gold-800: #6E4E0E;
+  --palette-yellow-400: #F5C443;
+  --palette-yellow-950: #2E2100;
+
+  /* ---------- 2. Semantic tokens ---------- */
+  --color-text-primary: var(--palette-black);
+  --color-text-secondary: var(--palette-gray-700);
+  --color-text-tertiary: var(--palette-gray-500);
+  --color-text-info: var(--palette-blue-500);
+  --color-text-success: var(--palette-blue-900);   /* was teal — site palette is blue + orange */
+  --color-text-danger: var(--palette-red-900);
+  --color-text-warning: var(--palette-amber-400);
+
+  --color-background-primary: var(--palette-white);
+  --color-background-secondary: var(--palette-gray-100);
+  --color-background-hover: var(--palette-gray-150);
+  --color-background-info: var(--palette-blue-100);
+  --color-background-success: var(--palette-blue-100);
+  --color-background-warning: var(--palette-amber-100);
+  --color-background-warning-soft: var(--palette-amber-50);
+  --color-background-danger: var(--palette-red-100);
+
+  --color-border-primary: var(--palette-gray-300);
+  --color-border-secondary: var(--palette-gray-400);
+  --color-border-tertiary: var(--palette-gray-200);
+  --color-border-card: #D6D5D1;   /* card outlines: a touch stronger than dividers */
+  --color-border-info: var(--palette-blue-300);
+  --color-border-warning: var(--palette-amber-500);
+
+  --color-accent: var(--palette-blue-500);
+  --color-accent-dark: var(--palette-blue-900);
+
+  /* Brand = sea blue for identity AND for actions / selected states (primary CTAs) */
+  --color-brand: var(--palette-blue-500);
+  --color-brand-dark: var(--palette-blue-900);
+  --color-text-brand: var(--palette-blue-900);
+  --color-background-brand: var(--palette-blue-500);
+  --color-background-brand-soft: var(--palette-blue-100);
+  --color-border-brand: var(--palette-blue-500);
+
+  --color-highlight: var(--palette-blue-500);
+  --color-highlight-dark: var(--palette-blue-600);
+  --color-text-highlight: var(--palette-blue-900);
+  --color-background-highlight: var(--palette-blue-500);
+  --color-background-highlight-soft: var(--palette-blue-100);
+  --color-border-highlight: var(--palette-blue-500);
+
+  /* Orange is kept only for CTAs that sit on photos (hero, bottom CTA band, video play) */
+  --color-cta-on-image: var(--palette-orange-600);
+  --color-cta-on-image-dark: var(--palette-orange-900);
+
+  --color-category-private-bg: var(--palette-purple-100);
+  --color-category-private-text: var(--palette-purple-900);
+  --color-category-private-icon: var(--palette-purple-500);
+  --color-category-info-icon: var(--palette-blue-900);
+  --color-category-tip-bg: var(--palette-amber-100);
+  --color-category-tip-text: var(--palette-amber-900);
+  --color-category-warning-icon: var(--palette-amber-500);
+  --color-icon-sunset: var(--palette-coral-500);
+  /* Premium / private (gold) */
+  --color-premium-bg: var(--palette-gold-50);
+  --color-premium-bg-strong: var(--palette-gold-100);
+  --color-premium-border: var(--palette-gold-300);
+  --color-premium-icon: var(--palette-gold-500);
+  --color-premium-text: var(--palette-gold-800);
+  --color-premium-solid: var(--palette-yellow-400);
+  --color-premium-on-solid: var(--palette-yellow-950);
+
+  /* ---------- 3. Typography scale ---------- */
+  --font-size-micro: 0.75rem;
+  --font-size-xs: 0.8125rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-md: 1.0625rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.375rem;
+  --font-size-hero: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem);
+  --font-size-icon-hero: 3.5rem;
+
+  --line-height-tight: 1.3;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+
+  /* ---------- 3b. Body type styles ---------- */
+  /* body-md — running text: descriptions, itinerary notes, tips, reviews */
+  --font-size-body-md: var(--font-size-base);   /* 16px */
+  --line-height-body-md: 1.6;
+  /* body-sm — compact facts in tiles & lists: highlights, included, good to know, sidebar facts */
+  --font-size-body-sm: var(--font-size-sm);     /* 14px */
+  --line-height-body-sm: 1.5;
+
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+
+  /* Booking-flow column width (05–09), padding included */
+  --flow-width: 628px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ---------- Body type style utilities ---------- */
+.body-md { font-size: var(--font-size-body-md); line-height: var(--line-height-body-md); }
+.body-sm { font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); }
+
+/* ---------- Base ---------- */
+.hbc, .hbc * { box-sizing: border-box; }
+.hbc {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  min-height: 100%;
+  overflow-x: hidden;
+}
+.hbc input, .hbc select, .hbc button, .hbc textarea {
+  font-family: var(--font-sans);
+  padding: 8px 10px;
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  outline: none;
+}
+.hbc input:focus, .hbc select:focus, .hbc textarea:focus { border-color: var(--color-border-primary); }
+.hbc a.btn-primary, .hbc a.btn-secondary, .hbc a.cta-btn, .hbc a.cta-primary, .hbc a.cta-secondary,
+.hbc a.back-btn, .hbc a.also-btn, .hbc a.type-cta, .hbc a.btn-sm, .hbc a.tc-cta, .hbc a.card-cta {
+  text-decoration: none; display: inline-block; text-align: center;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
+
+/* ---------- Icons (Tabler webfont subset) ---------- */
+.ti {
+  font-family: "tabler-icons" !important;
+  speak: none; font-style: normal; font-weight: normal; font-variant: normal;
+  text-transform: none; line-height: 1;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+.ti-accessible:before{content:"\eba9"}.ti-alert-circle:before{content:"\ea05"}.ti-alert-triangle:before{content:"\ea06"}.ti-anchor:before{content:"\eb76"}.ti-arrow-right:before{content:"\ea1f"}.ti-arrows-sort:before{content:"\eb5a"}.ti-baby-carriage:before{content:"\f05d"}.ti-beach:before{content:"\ef3d"}.ti-binoculars:before{content:"\fefe"}.ti-bottle:before{content:"\ef0b"}.ti-brand-whatsapp:before{content:"\ec74"}.ti-building:before{content:"\ea4f"}.ti-building-bank:before{content:"\ebe2"}.ti-building-castle:before{content:"\ed88"}.ti-calendar:before{content:"\ea53"}.ti-calendar-check:before{content:"\f824"}.ti-calendar-x:before{content:"\f832"}.ti-camera:before{content:"\ea54"}.ti-cash:before{content:"\ea55"}.ti-certificate:before{content:"\ed76"}.ti-check:before{content:"\ea5e"}.ti-chevron-down:before{content:"\ea5f"}.ti-chevron-left:before{content:"\ea60"}.ti-chevron-right:before{content:"\ea61"}.ti-circle-check:before{content:"\ea67"}.ti-clock:before{content:"\ea70"}.ti-cloud-storm:before{content:"\ea74"}.ti-compass-off:before{content:"\f0d5"}.ti-cookie:before{content:"\fdb1"}.ti-credit-card:before{content:"\ea84"}.ti-crown:before{content:"\ed12"}.ti-database:before{content:"\ea88"}.ti-droplet:before{content:"\ea97"}.ti-edit:before{content:"\ea98"}.ti-fish:before{content:"\ef2b"}.ti-glass-full:before{content:"\eab7"}.ti-headset:before{content:"\eb90"}.ti-heart:before{content:"\eabe"}.ti-help-circle:before{content:"\f91d"}.ti-info-circle:before{content:"\eac5"}.ti-leaf:before{content:"\ed4f"}.ti-list:before{content:"\eb6b"}.ti-list-check:before{content:"\eb6a"}.ti-lock:before{content:"\eae2"}.ti-mail:before{content:"\eae5"}.ti-map:before{content:"\eae9"}.ti-map-2:before{content:"\eae7"}.ti-map-pin:before{content:"\eae8"}.ti-menu-2:before{content:"\ec42"}.ti-message:before{content:"\eaef"}.ti-mood-sad:before{content:"\eaf6"}.ti-moon:before{content:"\eaf8"}.ti-mountain:before{content:"\ef97"}.ti-news:before{content:"\eafd"}.ti-phone:before{content:"\eb09"}.ti-photo:before{content:"\eb0a"}.ti-refresh:before{content:"\eb13"}.ti-sailboat:before{content:"\ec83"}.ti-scale:before{content:"\ebc2"}.ti-search:before{content:"\eb1c"}.ti-settings:before{content:"\eb20"}.ti-share:before{content:"\eb21"}.ti-shield:before{content:"\eb24"}.ti-shield-check:before{content:"\eb22"}.ti-ship:before{content:"\ec84"}.ti-sparkles:before{content:"\f6d7"}.ti-star:before{content:"\eb2e"}.ti-sun:before{content:"\eb30"}.ti-sunset:before{content:"\ec31"}.ti-sunset-2:before{content:"\f23a"}.ti-swimming:before{content:"\ec92"}.ti-tools-kitchen-2:before{content:"\eeff"}.ti-tower:before{content:"\f2cb"}.ti-trees:before{content:"\ec10"}.ti-user:before{content:"\eb4d"}.ti-user-check:before{content:"\eb49"}.ti-user-circle:before{content:"\ef68"}.ti-users:before{content:"\ebf2"}.ti-wifi-off:before{content:"\ecfa"}.ti-x:before{content:"\eb55"}
+/* ti-island and ti-cave are not Tabler icons (they render blank in the repo); mapped to the closest real glyphs */
+.ti-island:before{content:"\ef3d"}.ti-cave:before{content:"\ed82"}
+
+/* ---------- Variant 1: full nav (sticky on the canvas instead of fixed) ---------- */
+.nav-bar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+}
+.nav { display: flex; align-items: center; justify-content: space-between; max-width: 960px; margin: 0 auto; padding: 14px 24px; }
+.nav-hamburger { display: none; background: none !important; border: none !important; cursor: pointer; padding: 4px; font-size: 22px; color: var(--color-text-primary); align-items: center; justify-content: center; }
+.nav-logo { font-size: var(--font-size-md); font-weight: 500; display: flex; align-items: center; gap: 7px; text-decoration: none; color: inherit; cursor: pointer; }
+.nav-logo i { font-size: var(--font-size-lg); color: var(--color-brand); }
+.nav-links { display: flex; gap: 18px; }
+.nav-link { font-size: var(--font-size-sm); color: var(--color-text-secondary); cursor: pointer; text-decoration: none; }
+.nav-link:hover { color: var(--color-text-primary); }
+.nav-link.current { color: var(--color-text-primary); font-weight: 500; }
+.nav .nav-cta {
+  font-size: var(--font-size-sm); padding: 6px 14px; width: auto;
+  background: var(--color-background-brand); color: var(--color-background-primary);
+  border-radius: var(--border-radius-md); font-weight: 500; text-decoration: none; display: inline-block;
+}
+.nav .nav-cta:hover { opacity: 0.88; }
+
+.footer {
+  border-top: 0.5px solid var(--color-border-tertiary);
+  padding-top: 20px; margin-top: 32px;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 16px;
+}
+.footer-brand p { font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); color: var(--color-text-secondary); margin: 6px 0 0; max-width: 240px; }
+.footer-col h4 { font-size: var(--font-size-micro); font-weight: 500; margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-tertiary); }
+.footer-col a { display: block; font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); color: var(--color-text-secondary); margin-bottom: 8px; cursor: pointer; text-decoration: none; }
+.footer-col a:hover { color: var(--color-text-primary); }
+.footer-bottom { margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--color-border-tertiary); display: flex; justify-content: space-between; font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); color: var(--color-text-tertiary); flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 768px) {
+  .wrap { padding: 16px; }
+  .nav-hamburger { display: flex; }
+  .nav-links { display: none; }
+  .nav .nav-cta { display: none; }
+  .footer { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .wrap { padding: 12px; }
+  .footer { grid-template-columns: 1fr; }
+}
+
+/* ---------- Variant 2: minimal booking-flow nav ---------- */
+.mini-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.exit-link { font-size: var(--font-size-sm); color: var(--color-text-secondary); text-decoration: none; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.exit-link:hover { color: var(--color-text-primary); }
+.trust-strip {
+  border-top: 0.5px solid var(--color-border-tertiary);
+  margin-top: 24px; padding-top: 16px;
+  display: flex; justify-content: center; flex-wrap: wrap; gap: 14px;
+  font-size: var(--font-size-xs); color: var(--color-text-tertiary);
+}
+.trust-strip span { display: flex; align-items: center; gap: 5px; }
+.trust-strip a { color: var(--color-text-tertiary); text-decoration: none; }
+.trust-strip a:hover { color: var(--color-text-secondary); }
+
+/* ---------- Booking-flow step bar (shared by 05–07) ---------- */
+.step-bar { display: flex; align-items: center; margin-bottom: 28px; }
+.step { display: flex; align-items: center; gap: 6px; font-size: var(--font-size-sm); }
+.step-dot { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-micro); font-weight: 500; flex-shrink: 0; }
+.done .step-dot { background: var(--color-background-success); color: var(--color-text-success); }
+.done .step-lbl { color: var(--color-text-secondary); }
+.active .step-dot { background: var(--color-background-brand); color: var(--color-background-primary); }
+.active .step-lbl { color: var(--color-text-primary); font-weight: 500; }
+.next .step-dot { background: var(--color-background-secondary); color: var(--color-text-tertiary); border: 0.5px solid var(--color-border-secondary); }
+.next .step-lbl { color: var(--color-text-tertiary); }
+.step-line { flex: 1; height: 0.5px; background: var(--color-border-secondary); margin: 0 8px; }
+
+/* ---------- Tour card (homepage slider, tours overview, destination detail) ---------- */
+.tour-card{background:var(--color-background-primary);border:1px solid var(--color-border-card);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;padding:0;color:inherit;transition:border-color 0.2s ease,box-shadow 0.2s ease}
+.tour-card:hover{border-color:var(--color-border-primary);box-shadow:0 6px 24px rgba(0,0,0,0.06)}
+.tc-img{position:relative;height:180px;border-radius:0;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.tc-img i{font-size:40px;color:var(--color-border-secondary)}
+.tc-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease}
+.tour-card:hover .tc-img img{transform:scale(1.04)}
+.tc-body{padding:14px;display:flex;flex-direction:column;flex:1}
+.tc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tc-badge{font-size:var(--font-size-xs);font-weight:500;padding:4px 10px;border-radius:6px}
+.tc-img .tc-badge{position:absolute;top:12px;left:12px;z-index:1;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+.b-best,.b-new{background:var(--color-background-success);color:var(--color-text-success)}
+.b-priv{background:var(--color-category-private-bg);color:var(--color-category-private-text)}
+.tc-duration{display:flex;align-items:center;gap:4px;font-size:var(--font-size-sm);font-weight:500;color:var(--color-text-secondary);padding-bottom:3px}
+.tc-duration i{font-size:16px}
+.tc-name{font-size:var(--font-size-lg);font-weight:600;line-height:var(--line-height-tight);margin:0 0 14px}
+.tc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tc-chip{font-size:var(--font-size-xs);color:var(--color-text-secondary);background:var(--color-background-secondary);padding:3px 9px;border-radius:999px}
+.tc-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end}
+.tc-from{display:block;font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-bottom:1px}
+.tc-price{font-size:var(--font-size-2xl);font-weight:600;line-height:1.1}
+.tc-per{font-size:var(--font-size-sm);color:var(--color-text-secondary)}
+.tc-rating{font-size:var(--font-size-sm);font-weight:500;color:var(--color-text-primary);padding-bottom:2px}
+.hbc .tc-btn{display:flex;align-items:center;justify-content:center;width:100%;height:46px;margin-top:10px;padding:0 14px;text-align:center;text-decoration:none;font-size:var(--font-size-base);font-weight:500;color:var(--color-text-primary);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:11px;transition:background 0.2s ease,color 0.2s ease,border-color 0.2s ease}
+.hbc .tc-btn:hover,.hbc .tour-card:hover .tc-btn,.hbc .tc-btn:focus-visible{background:var(--color-background-highlight);border-color:var(--color-border-highlight);color:#fff}
+.tour-card.featured{border:2px solid var(--color-border-info)}
+
+/* ---------- Glorich display titles: force ligatures (CA wave, LO, RO…) even with negative letter-spacing ---------- */
+.hero h1, .font-display, .tours-title, .dest-title, .sb-title {
+  text-transform: uppercase; /* Glorich is all-caps anyway; this lets mixed-case pairs like "Ca" in "Cave" join */
+  font-variant-ligatures: common-ligatures;
+  -webkit-font-feature-settings: "liga" 1, "kern" 1;
+  font-feature-settings: "liga" 1, "kern" 1;
+}

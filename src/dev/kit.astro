@@ -1,0 +1,360 @@
+---
+/**
+ * Component kit (spec §14.3): every shared component in its states, on one
+ * page. Dev server and deploy previews only (src/dev/integration.ts); noindex.
+ * Facts on this page come from the real data files.
+ */
+import SiteLayout from '../layouts/SiteLayout.astro';
+import MiniNav from '../components/MiniNav.astro';
+import TrustStrip from '../components/TrustStrip.astro';
+import Badge from '../components/ui/Badge.astro';
+import Breadcrumb from '../components/ui/Breadcrumb.astro';
+import Button from '../components/ui/Button.astro';
+import CtaBand from '../components/ui/CtaBand.astro';
+import EmptyState from '../components/ui/EmptyState.astro';
+import FormField from '../components/ui/FormField.astro';
+import InfoTile from '../components/ui/InfoTile.astro';
+import InfoTileGrid from '../components/ui/InfoTileGrid.astro';
+import Marquee from '../components/ui/Marquee.astro';
+import MobileActionBar from '../components/ui/MobileActionBar.astro';
+import Notice from '../components/ui/Notice.astro';
+import PhotoHero from '../components/ui/PhotoHero.astro';
+import PillLink from '../components/ui/PillLink.astro';
+import SectionHeader from '../components/ui/SectionHeader.astro';
+import StickyAside from '../components/ui/StickyAside.astro';
+import Timeline from '../components/ui/Timeline.astro';
+import StepBar from '../components/booking/StepBar.astro';
+import SummaryCard from '../components/booking/SummaryCard.astro';
+import TourCard from '../components/vue/TourCard.vue';
+import DestinationCard from '../components/vue/DestinationCard.vue';
+import ImageGallery from '../components/vue/ImageGallery.vue';
+import KitChips from './KitChips.vue';
+import { ABOUT } from '../data/about';
+import { HERO_IMAGE } from '../data/hero-image';
+import { GALLERY_CARD_SIZE, GALLERY_PHOTO_SIZE, toCardPhoto, toGalleryView } from '../data/tour-photos';
+import { getAllDestinations, getDestinationPhoto, getDestinationsForTour, getToursForDestination } from '../lib/destinations';
+import { getAllTours, getTourCardPhoto } from '../lib/tours';
+import { toDestinationCardDTO, toTourCardDTO, mandatoryFeeLabel } from '../lib/cards';
+import { CANCELLATION_SHORT } from '../config/cancellation';
+import { seasonLabel } from '../config/season';
+
+const tours = getAllTours();
+const tourCards = await Promise.all(
+	tours.map(async (tour) =>
+		toTourCardDTO(
+			tour,
+			getDestinationsForTour(tour.slug).map((d) => d.slug),
+			await toCardPhoto(getTourCardPhoto(tour), GALLERY_CARD_SIZE),
+		),
+	),
+);
+const blueCave = tours.find((t) => t.slug === 'blue-cave-hvar-5-islands') ?? tours[0];
+const destinations = getAllDestinations();
+const destinationCards = await Promise.all(
+	destinations.slice(0, 4).map(async (d) =>
+		toDestinationCardDTO(d, getToursForDestination(d.slug).length, await toCardPhoto(getDestinationPhoto(d), GALLERY_CARD_SIZE)),
+	),
+);
+const galleryPhotos = await Promise.all(blueCave.gallery.map((p) => toGalleryView(p, 'sailboat', GALLERY_PHOTO_SIZE)));
+const hvar = destinations.find((d) => d.slug === 'hvar') ?? destinations[0];
+const fee = mandatoryFeeLabel(blueCave);
+---
+
+<SiteLayout title="Component kit" robots="noindex, nofollow" solidNav={false} footerGap="var(--section-gap)">
+	<main id="main" class="kit">
+		<PhotoHero
+			image={HERO_IMAGE.src}
+			imagePosition="70% center"
+			eyebrow="Split · Dalmatian coast"
+			eyebrowIcon="map-pin"
+			title="Component kit"
+			lead="Every shared component of the October 2026 design, in its states. Dev server and deploy previews only."
+		>
+			<KitChips client:load />
+		</PhotoHero>
+
+		<div class="kit__wrap">
+			<SectionHeader title="Buttons" sub="Primary, secondary and tile on white; on-image and ghost on photos only.">
+				<PillLink href="/tours/" slot="actions">See all tours</PillLink>
+			</SectionHeader>
+			<div class="kit__row">
+				<Button href="/tours/">Primary</Button>
+				<Button variant="secondary">Secondary</Button>
+				<Button variant="tile">Tile</Button>
+				<Button size="sm">Small</Button>
+				<Button size="md" iconEnd="arrow-right">Medium</Button>
+				<Button size="lg" icon="sailboat">Large</Button>
+				<Button aria-disabled="true" aria-describedby="kit-gated-hint">Gated</Button>
+				<span id="kit-gated-hint" class="kit__hint">Pick a date first</span>
+			</div>
+			<div class="kit__row kit__row--photo on-photo">
+				<Button variant="on-image" size="lg" iconEnd="arrow-right">Browse all tours</Button>
+				<Button variant="on-image-ghost" size="md">Plan a private charter</Button>
+			</div>
+			<div class="kit__row">
+				<PillLink href="/tours/">Pill link</PillLink>
+				<PillLink href="/tours/" ghost>Ghost pill</PillLink>
+			</div>
+
+			<SectionHeader title="Badges" />
+			<div class="kit__row">
+				<Badge tone="brand" shape="card">Our pick</Badge>
+				<Badge tone="neutral" shape="card">New</Badge>
+				<Badge tone="private" shape="card">Private</Badge>
+				<Badge tone="premium" shape="card" icon="crown">Private charter</Badge>
+				<Badge tone="brand" icon="users">Group tour</Badge>
+				<Badge tone="private" icon="crown">Private available</Badge>
+				<Badge tone="tip" icon="sun">Sunniest island in Croatia</Badge>
+			</div>
+
+			<SectionHeader title="Tour cards" sub="One link per card. Default, slider (no hover effects) and see-all." />
+			<div class="kit__grid">
+				{tourCards.map((tour, i) => <TourCard tour={tour} variant={i === 1 ? 'slider' : 'default'} />)}
+				<TourCard variant="see-all" href="/tours/" />
+			</div>
+
+			<SectionHeader title="Destination cards" />
+			<div class="kit__grid kit__grid--2">
+				{destinationCards.map((destination) => <DestinationCard destination={destination} />)}
+			</div>
+
+			<EmptyState icon="mood-sad" text="No tours match your filters.">
+				<Button variant="secondary" size="sm">Clear filters</Button>
+			</EmptyState>
+
+			<SectionHeader title="Gallery" sub="Opens a lightbox: arrows, Escape, swipe, focus returns." />
+			<Breadcrumb items={[{ label: 'Tours', href: '/tours/' }, { label: 'Blue Cave (Biševo)', href: '/destinations/blue-cave/' }, { label: blueCave.title }]} />
+			<ImageGallery
+				client:visible
+				photos={galleryPhotos}
+				tags={[
+					{ icon: 'crown', label: 'Private available', tone: 'private' },
+					{ icon: 'users', label: 'Group tour', tone: 'brand' },
+				]}
+			/>
+
+			<div class="kit__detail">
+				<div>
+					<SectionHeader variant="plain" title="Itinerary" />
+					<Timeline variant="itinerary" items={blueCave.itinerary} />
+
+					<SectionHeader variant="plain" title="Good to know" />
+					<InfoTileGrid>
+						<InfoTile label="Departure">{blueCave.departure}</InfoTile>
+						<InfoTile label="Return">{blueCave.returnTime}</InfoTile>
+						<InfoTile label="Meeting point">{blueCave.meetingPoint}</InfoTile>
+						<InfoTile label="Season">{seasonLabel()}</InfoTile>
+					</InfoTileGrid>
+
+					<SectionHeader variant="plain" title="Notices" />
+					<div class="kit__stack">
+						<Notice tone="info">We confirm your seats as soon as you pay.</Notice>
+						<Notice tone="warn">{blueCave.disclaimers[0]}</Notice>
+						<Notice tone="danger">The payment didn't go through. Nothing was charged.</Notice>
+						<Notice tone="neutral">Your details are only used for this booking.</Notice>
+					</div>
+
+					<SectionHeader variant="plain" title="How we got here" />
+					<Timeline variant="history" items={ABOUT.foundingTimeline} />
+				</div>
+				<StickyAside id="book" aria-labelledby="kit-aside-title">
+					<h2 id="kit-aside-title" class="kit__aside-title">Sticky aside</h2>
+					<p class="kit__price">From <strong>€{blueCave.adultPrice}</strong> / adult</p>
+					{fee && <p class="kit__fee">{fee}</p>}
+					<Button href={`/book/${blueCave.slug}/group/`} block>Book group tour</Button>
+					<p class="kit__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {CANCELLATION_SHORT}</p>
+				</StickyAside>
+			</div>
+
+			<SectionHeader variant="plain" title={`${hvar.name} highlights (marquee)`} />
+			<Marquee label="Highlights" duration={26}>
+				{
+					hvar.highlights.map((item) => (
+						<li class="kit__highlight">
+							<i class={`ti ti-${item.icon}`} aria-hidden="true" />
+							{item.text}
+						</li>
+					))
+				}
+			</Marquee>
+
+			<SectionHeader variant="plain" title="Booking chrome" />
+			<div class="kit__flow">
+				<MiniNav exitHref={`/tours/${blueCave.slug}/`} />
+				<StepBar current={2} />
+				<div class="kit__fields">
+					<FormField label="First name" name="kit-first" autocomplete="given-name" required />
+					<FormField label="Email" name="kit-email" type="email" autocomplete="email" required error="Enter an email address like name@example.com" value="name@" />
+					<FormField
+						label="Anything the crew should know? (optional)"
+						name="kit-notes"
+						as="textarea"
+						maxlength={500}
+						hint="For example, a child seat or a late arrival."
+					/>
+					<FormField label="Subject" name="kit-subject" as="select" options={[{ value: 'booking', label: 'A booking' }, { value: 'other', label: 'Something else' }]} />
+				</div>
+				<SummaryCard
+					title="Your booking"
+					rows={[
+						{ label: 'Tour', value: blueCave.title },
+						{ label: 'Guests', value: '2 adults, 1 child' },
+						{ label: 'Adults', value: `2 × €${blueCave.adultPrice}` },
+						{ label: 'Children', value: `1 × €${blueCave.childPrice}` },
+					]}
+					total={{ label: 'Total', value: `€${2 * (blueCave.adultPrice ?? 0) + (blueCave.childPrice ?? 0)}` }}
+					note={fee}
+				/>
+				<StepBar current={4} />
+				<TrustStrip />
+			</div>
+
+			<SectionHeader title="CTA bands" />
+			<CtaBand variant="photo" heading="Ready to get on the water?" text="Tours run daily from Split in season." image={HERO_IMAGE.src} id="kit-cta-photo">
+				<Button variant="on-image" size="md" href="/tours/">Browse all tours</Button>
+				<Button variant="on-image-ghost" size="md" href="/contact/">Plan a private charter</Button>
+			</CtaBand>
+			<div class="kit__gap"></div>
+			<CtaBand heading="Come sailing with us" text="Group tours depart daily in season." id="kit-cta-plain">
+				<Button href="/tours/">Browse tours</Button>
+				<Button variant="secondary" href="/contact/">Plan a private charter</Button>
+			</CtaBand>
+		</div>
+
+		<MobileActionBar target="book" label="Book now">
+			<p><strong>€{blueCave.adultPrice}</strong> / adult</p>
+			{fee && <p>{fee}</p>}
+		</MobileActionBar>
+	</main>
+</SiteLayout>
+
+<style>
+	@layer pages {
+		.kit__wrap {
+			max-width: var(--content-max);
+			margin: 0 auto;
+			padding: 0 var(--page-gutter) var(--section-gap);
+		}
+
+		.kit__row {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: var(--space-3);
+			margin-bottom: var(--space-4);
+		}
+
+		.kit__row--photo {
+			padding: var(--space-6);
+			border-radius: var(--radius-lg);
+			background: var(--color-background-hero);
+		}
+
+		.kit__hint {
+			font-size: var(--font-size-xs);
+			color: var(--color-text-tertiary);
+		}
+
+		.kit__grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+			gap: var(--space-4);
+			margin-bottom: var(--space-6);
+		}
+
+		.kit__grid--2 {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: var(--space-5);
+		}
+
+		.kit__detail {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) var(--aside-width);
+			gap: var(--space-7);
+			align-items: start;
+		}
+
+		.kit :global(.section-head-plain) {
+			margin-top: var(--detail-gap);
+		}
+
+		.kit__stack {
+			display: grid;
+			gap: var(--space-3);
+		}
+
+		.kit__aside-title {
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-md);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.kit__price,
+		.kit__fee,
+		.kit__policy {
+			margin: 0 0 var(--space-2);
+		}
+
+		.kit__price strong {
+			font-size: var(--font-size-2xl);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		.kit__fee {
+			font-size: var(--font-size-xs);
+			color: var(--color-text-secondary);
+		}
+
+		.kit__policy {
+			margin-top: 10px;
+			text-align: center;
+			font-size: var(--font-size-xs);
+			color: var(--color-text-success);
+		}
+
+		.kit__highlight {
+			display: flex;
+			align-items: flex-start;
+			gap: var(--space-2);
+			width: 220px;
+			padding: 9px 11px;
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.kit__highlight .ti {
+			flex-shrink: 0;
+			margin-top: 2px;
+			color: var(--color-highlight);
+		}
+
+		.kit__flow {
+			max-width: var(--flow-width);
+			padding: var(--space-6);
+			border: 1px dashed var(--color-border-secondary);
+			border-radius: var(--radius-lg);
+		}
+
+		.kit__fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: var(--space-3);
+			margin-bottom: var(--space-4);
+		}
+
+		.kit__gap {
+			height: var(--space-6);
+		}
+
+		@media (max-width: 768px) {
+			.kit__grid--2,
+			.kit__detail,
+			.kit__fields {
+				grid-template-columns: 1fr;
+			}
+		}
+	}
+</style>

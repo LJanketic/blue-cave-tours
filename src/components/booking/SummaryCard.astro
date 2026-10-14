@@ -1,0 +1,42 @@
+---
+import '../../styles/components/summary-card.css';
+
+type Props = {
+	title?: string;
+	rows: { label: string; value: string }[];
+	total?: { label: string; value: string };
+	/** Under the total, e.g. "+ Blue Cave ticket, paid on site". */
+	note?: string;
+	/** The review page's bigger total (20px). */
+	large?: boolean;
+	/** Heading level of the title (cards are h2 on booking pages, §8.1.1). */
+	level?: 2 | 3;
+};
+
+const { title, rows, total, note, large = false, level = 2 } = Astro.props;
+const Heading = `h${level}` as 'h2' | 'h3';
+---
+
+<div class:list={['summary-card-ui', large && 'summary-card-ui--large']}>
+	{title && <Heading class="summary-card-ui__title">{title}</Heading>}
+	<dl class="summary-card-ui__rows">
+		{
+			rows.map((row) => (
+				<div class="summary-card-ui__row">
+					<dt>{row.label}</dt>
+					<dd>{row.value}</dd>
+				</div>
+			))
+		}
+	</dl>
+	{
+		total && (
+			<p class="summary-card-ui__total">
+				<span>{total.label}</span>
+				<span>{total.value}</span>
+			</p>
+		)
+	}
+	{note && <p class="summary-card-ui__note">{note}</p>}
+	<slot />
+</div>

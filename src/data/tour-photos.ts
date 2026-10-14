@@ -1,5 +1,6 @@
 import type { ImageMetadata } from 'astro';
 import { getImage } from 'astro:assets';
+import type { CardPhoto } from '../lib/cards';
 
 /** Photo registry — placeholders omit `src`; destination galleries include it. */
 export type PhotoRef = {
@@ -98,19 +99,13 @@ type GalleryImageSize = { widths: number[]; sizes: string };
  * guessing wrong on either end is not.
  */
 
-/** Matches ImageGallery.vue's fixed-height boxes (.img-hero / .img-thumb). */
-export const GALLERY_HERO_SIZE: GalleryImageSize = {
-	widths: [400, 800, 1200],
-	sizes: '(max-width: 700px) 100vw, 700px',
-};
 /**
- * Gallery photos (tour.gallery / destination galleries): rendered as an
- * ~160px thumbnail, AND promoted into the ~700px hero box in
- * ImageGallery.vue once clicked (see its `activePhoto` computed) — the
- * ladder must cover both, hence hero-grade widths included here too.
+ * Gallery photos (tour.gallery / destination galleries): rendered as a
+ * thumbnail, as the 912px gallery hero, and full-screen in the lightbox of
+ * ImageGallery.vue: the ladder covers all three, up to the 1600px originals.
  */
 export const GALLERY_PHOTO_SIZE: GalleryImageSize = {
-	widths: [80, 160, 240, 400, 800, 1200],
+	widths: [160, 240, 400, 800, 1200, 1600],
 	sizes: '80px', // unused directly — sizes is hardcoded per <img> instead, since the same photo renders in two different boxes depending on template
 };
 /** Matches the tour/destination card grids (ToursCatalog.vue / DestinationsCatalog.vue). */
@@ -148,4 +143,11 @@ export async function toGalleryView(
 		src: optimized.src,
 		srcset: optimized.srcSet.attribute,
 	};
+}
+
+/** Card photo for TourCard.vue / DestinationCard.vue; null when the place has no real photo yet (grey fallback, §3.4). */
+export async function toCardPhoto(photo: PhotoRef, imageSize: GalleryImageSize): Promise<CardPhoto | null> {
+	if (!photo.src) return null;
+	const optimized = await getImage({ src: photo.src, widths: imageSize.widths, format: 'webp', quality: 70 });
+	return { srcset: optimized.srcSet.attribute, alt: photo.alt };
 }

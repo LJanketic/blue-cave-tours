@@ -1,0 +1,165 @@
+---
+type Props = {
+	/** Accessible name of the list, e.g. "Highlights". */
+	label: string;
+	/** One loop, in seconds: 40 for the trust band, 26 for destination highlights (§4.4.1). */
+	duration?: number;
+	class?: string;
+};
+
+const { label, duration = 26, class: className } = Astro.props;
+// The items are <li> elements. Rendered once for screen readers and twice for
+// the moving track (the second copy makes the loop seamless).
+const items = await Astro.slots.render('default');
+---
+
+<!--
+	A scrolling strip (spec §3.2, §11.4). Items must not contain links or
+	buttons: the copy screen readers get is visually hidden. Screen readers get the real list once;
+	the moving copy is hidden from them and from the keyboard. It only moves
+	once the script has started it, and never under reduced motion or without
+	JavaScript, where the items wrap instead.
+-->
+<div class:list={['marquee', className]} data-marquee style={`--marquee-duration: ${duration}s`}>
+	<button type="button" class="marquee__toggle" aria-pressed="false" hidden>
+		<i class="ti ti-player-pause" aria-hidden="true"></i>
+		<span class="sr-only">Pause {label.toLowerCase()}</span>
+	</button>
+	<ul class="sr-only" aria-label={label} set:html={items} />
+	<div class="marquee__viewport" aria-hidden="true" inert>
+		<div class="marquee__track">
+			<ul class="marquee__set" role="list" set:html={items} />
+			<ul class="marquee__set marquee__copy" role="list" set:html={items} />
+		</div>
+	</div>
+</div>
+
+<style>
+	@layer components {
+		.marquee {
+			position: relative;
+		}
+
+		/* 24px edge fades (board 10 .highlights-marquee); a mask is alpha only, so plain black. */
+		.marquee__viewport {
+			overflow: hidden;
+			-webkit-mask-image: linear-gradient(to right, transparent, black var(--marquee-fade, 24px), black calc(100% - var(--marquee-fade, 24px)), transparent);
+			mask-image: linear-gradient(to right, transparent, black var(--marquee-fade, 24px), black calc(100% - var(--marquee-fade, 24px)), transparent);
+		}
+
+		.marquee__track {
+			display: flex;
+			width: max-content;
+		}
+
+		/* Each set ends with the gap, so moving by exactly half loops seamlessly. Pages tune --marquee-gap and --marquee-fade. */
+		.marquee__set {
+			display: flex;
+			gap: var(--marquee-gap, var(--space-2));
+			margin: 0;
+			padding: 0 var(--marquee-gap, var(--space-2)) 0 0;
+			list-style: none;
+		}
+
+		.marquee__set > :global(li) {
+			flex: 0 0 auto;
+		}
+
+		.marquee.is-running .marquee__track {
+			animation: marquee-scroll var(--marquee-duration) linear infinite;
+		}
+
+		.marquee.is-paused .marquee__track {
+			animation-play-state: paused;
+		}
+
+		@keyframes marquee-scroll {
+			to {
+				transform: translateX(-50%);
+			}
+		}
+
+		.marquee__toggle {
+			position: absolute;
+			top: 50%;
+			right: 0;
+			z-index: 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 28px;
+			height: 28px;
+			padding: 0;
+			border: 0.5px solid var(--color-border-secondary);
+			border-radius: var(--radius-pill);
+			background: var(--color-background-primary);
+			color: var(--color-text-primary);
+			font-size: 14px;
+			transform: translateY(-50%);
+			cursor: pointer;
+		}
+
+		/* Room for the pause button. */
+		.marquee__viewport {
+			margin-right: 36px;
+		}
+
+		/*
+		 * Still (reduced motion, or no JavaScript): one set, wrapped. Chosen by
+		 * media queries, not by the script, so the strip has its final layout
+		 * from the first paint and nothing shifts when the script starts it.
+		 */
+		@media (prefers-reduced-motion: reduce), (scripting: none) {
+			.marquee__viewport {
+				margin-right: 0;
+				-webkit-mask-image: none;
+				mask-image: none;
+			}
+
+			.marquee__track {
+				width: auto;
+			}
+
+			.marquee__set {
+				flex-wrap: wrap;
+				padding-right: 0;
+			}
+
+			.marquee__copy {
+				display: none;
+			}
+		}
+	}
+</style>
+
+<script>
+	// Starts each strip, unless motion is reduced, and wires its pause button.
+	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	for (const marquee of document.querySelectorAll<HTMLElement>('[data-marquee]')) {
+		const toggle = marquee.querySelector<HTMLButtonElement>('.marquee__toggle');
+		if (!toggle) continue;
+
+		const label = toggle.querySelector('.sr-only');
+		const icon = toggle.querySelector('.ti');
+		const name = label?.textContent?.replace(/^Pause /, '') ?? '';
+
+		function setPaused(paused: boolean) {
+			marquee.classList.toggle('is-paused', paused);
+			toggle!.setAttribute('aria-pressed', String(paused));
+			if (label) label.textContent = `${paused ? 'Play' : 'Pause'} ${name}`;
+			icon?.classList.toggle('ti-player-pause', !paused);
+			icon?.classList.toggle('ti-player-play', paused);
+		}
+
+		function sync() {
+			const run = !reduced.matches;
+			marquee.classList.toggle('is-running', run);
+			toggle!.hidden = !run;
+		}
+
+		toggle.addEventListener('click', () => setPaused(!marquee.classList.contains('is-paused')));
+		reduced.addEventListener('change', sync);
+		sync();
+	}
+</script>

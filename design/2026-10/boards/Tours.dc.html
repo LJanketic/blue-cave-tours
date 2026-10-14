@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tours Overview — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-text-info)}a:hover{color:var(--color-accent-dark)}
+.nav-bar.nav-overlay{position:fixed;top:0;left:0;right:0;background:transparent;border-bottom-color:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;transition:background 0.3s ease,border-color 0.3s ease,box-shadow 0.3s ease}
+.nav-overlay.on-photo .nav-logo,.nav-overlay.on-photo .nav-logo i,.nav-overlay.on-photo .nav-hamburger{color:#fff}
+.nav-overlay.on-photo .nav-link{color:rgba(255,255,255,0.88)}
+.nav-overlay.on-photo .nav-link:hover,.nav-overlay.on-photo .nav-link.current{color:#fff}
+.hbc .nav .nav-cta{background:transparent;color:var(--color-text-primary);border:1px solid var(--color-border-primary, rgba(0,0,0,0.35));padding:5px 14px;transition:background 0.2s ease,color 0.2s ease,border-color 0.2s ease}
+.hbc .nav .nav-cta:hover{opacity:1;background:var(--color-text-primary);color:var(--color-background-primary)}
+.hbc .nav-overlay.on-photo .nav-cta{color:#fff;border-color:rgba(255,255,255,0.75)}
+.hbc .nav-overlay.on-photo .nav-cta:hover{background:#fff;color:#0a2a40;border-color:#fff}
+.nav-bar.nav-overlay.is-solid{background:rgba(255,255,255,0.97);border-bottom-color:var(--color-border-tertiary);box-shadow:0 1px 16px rgba(0,0,0,0.05);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.page-topfade{position:absolute;left:0;right:0;top:0;height:160px;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,0.38),rgba(0,0,0,0));pointer-events:none}
+@font-face{font-family:"Glorich";font-style:normal;font-weight:700;font-display:swap;src:url("/_blob/fe81462958ba52eeab1049987b005385") format("woff2")}
+.tours-hero{position:relative;height:540px;overflow:hidden;background:#0a2a40;color:#fff}
+.tours-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:70% center;display:block}
+.tours-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,24,40,0.62) 0%,rgba(6,24,40,0.28) 45%,rgba(6,24,40,0) 75%),linear-gradient(0deg,rgba(6,24,40,0.55) 0%,rgba(6,24,40,0) 45%);pointer-events:none}
+.tours-hero-inner{position:relative;z-index:1;height:100%;max-width:960px;margin:0 auto;padding:0 24px 28px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start}
+.tours-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:var(--font-size-xs);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.85);margin:0 0 12px}
+.tours-eyebrow i{font-size:15px}
+.tours-title{font-family:"Glorich",var(--font-sans);font-size:72px;font-weight:700;line-height:0.94;letter-spacing:-0.02em;margin:0 0 14px;color:#fff;text-shadow:0 2px 24px rgba(0,0,0,0.18)}
+.tours-desc{font-size:var(--font-size-base);color:rgba(255,255,255,0.88);line-height:var(--line-height-relaxed);max-width:440px;margin:0 0 22px}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%}
+.hbc .filter-chip{display:inline-flex;align-items:center;gap:6px;height:38px;font-size:var(--font-size-sm);font-weight:500;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,0.26);background:rgba(8,28,48,0.42);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);color:#fff;cursor:pointer;white-space:nowrap;transition:background 0.2s ease,color 0.2s ease,border-color 0.2s ease}
+.hbc .filter-chip i{font-size:16px}
+.hbc .filter-chip:hover{background:rgba(8,28,48,0.62);color:#fff}
+.hbc .filter-chip.active{background:rgba(255,255,255,0.96);color:var(--color-text-primary);border-color:#fff}
+.hbc .sort-chip{margin-left:auto}
+.hbc .sort-chip select{border:none;background:transparent;padding:0;margin:0;font-size:var(--font-size-sm);font-weight:500;color:#fff;cursor:pointer;-webkit-appearance:none;appearance:none}
+.hbc .sort-chip select option{color:var(--color-text-primary)}
+.hbc{--sec-gap:72px}
+@media (max-width:1024px){.hbc{--sec-gap:56px}}
+@media (max-width:480px){.hbc{--sec-gap:44px}}
+.tours-results{padding-top:32px}
+.results-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:28px;margin:0 0 16px}
+.results-count{font-size:var(--font-size-sm);color:var(--color-text-secondary);margin:0}
+.results-count strong{color:var(--color-text-primary);font-weight:600}
+.hbc .clear-filters{font-size:var(--font-size-sm);font-weight:500;color:var(--color-text-info);background:none;border:none;padding:0;cursor:pointer}
+.hbc .clear-filters:hover{text-decoration:underline}
+.tour-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.section-header{display:flex;justify-content:space-between;align-items:baseline;margin:var(--sec-gap) 0 20px}
+.section-title{font-family:"Glorich",var(--font-sans);font-size:28px;font-weight:700;line-height:1;letter-spacing:-0.01em;margin:0;text-transform:uppercase;font-variant-ligatures:common-ligatures;-webkit-font-feature-settings:"liga" 1,"kern" 1;font-feature-settings:"liga" 1,"kern" 1}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:0}
+.step-card{display:flex;flex-direction:column;gap:8px;padding:14px;background:var(--color-background-secondary);border-radius:var(--border-radius-lg)}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:var(--font-size-micro);font-weight:500}
+.step-title{font-size:var(--font-size-base);font-weight:500;margin:0}
+.step-desc{font-size:var(--font-size-base);color:var(--color-text-secondary);margin:0;line-height:var(--line-height-relaxed)}
+@media (max-width:768px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.steps{grid-template-columns:1fr}}
+.types-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:0}
+.type-card{position:relative;border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:18px 20px 26px;background:var(--color-background-primary)}
+.type-badge{position:absolute;top:16px;right:16px;display:inline-flex;align-items:center;gap:5px;font-size:var(--font-size-xs);font-weight:600;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.type-badge i{font-size:1.2em}
+.tb-group{background:var(--color-background-info);color:var(--color-accent-dark)}
+.tb-private{background:linear-gradient(135deg,#FBDD84 0%,#F2BC3A 100%);color:var(--color-premium-on-solid);font-weight:600}
+.type-card{transition:border-color 0.2s ease,box-shadow 0.2s ease}
+.type-card:hover{border-color:var(--color-border-primary);box-shadow:0 8px 28px rgba(0,0,0,0.06)}
+.hbc .type-card .type-cta{transition:background 0.2s ease,color 0.2s ease,border-color 0.2s ease}
+.hbc .type-card:hover .type-cta{background:var(--color-background-highlight);border-color:var(--color-border-highlight);color:#fff}
+.type-card.featured{border:1px solid var(--color-border-card);background:linear-gradient(180deg,var(--color-premium-bg) 0%,var(--color-background-primary) 55%)}
+.type-card.featured:hover{border-color:var(--color-border-primary);box-shadow:0 8px 28px rgba(0,0,0,0.06)}
+.type-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;background:var(--color-background-info)}
+.type-card.featured .type-icon{background:linear-gradient(135deg,#FBDD84 0%,#F2BC3A 100%);color:var(--color-premium-on-solid)}
+.type-title{font-size:var(--font-size-md);font-weight:500;margin:0 0 5px}
+.type-desc{font-size:var(--font-size-base);color:var(--color-text-secondary);line-height:var(--line-height-relaxed);margin:0 0 12px}
+.type-features{display:flex;flex-direction:column;gap:4px;margin-bottom:0}
+.type-card{display:flex;flex-direction:column;align-items:flex-start}
+.hbc .type-card .type-cta{margin-top:auto}
+.type-feat{font-size:var(--font-size-base);color:var(--color-text-secondary);display:flex;align-items:center;gap:8px}
+.type-feat i{color:var(--color-accent);font-size:1.2em;flex-shrink:0}
+.hbc .type-cta{font-size:var(--font-size-sm);padding:6px 14px;cursor:pointer;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:none;font-weight:500;color:var(--color-text-primary)}
+.hbc .type-cta.btn-primary{padding:6px 14px;background:var(--color-background-brand);border:none;color:var(--color-background-primary)}
+@media (max-width:768px){.types-grid{grid-template-columns:1fr}}
+.no-results{text-align:center;padding:2rem;color:var(--color-text-secondary);font-size:var(--font-size-base)}
+@media (max-width:768px){
+  .tours-hero{height:480px}
+  .tours-hero-inner{padding:0 16px 20px}
+  .tours-title{font-size:clamp(44px, 12vw, 60px)}
+  .filter-bar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-right:-16px;padding-right:16px}
+  .filter-bar::-webkit-scrollbar{display:none}
+  .filter-bar .filter-chip{flex:0 0 auto}
+  .hbc .sort-chip{margin-left:0}
+}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="{{ navClass }}">
+    <nav class="nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+      <div class="nav-links">
+        <a class="nav-link current" href="Tours.dc.html">Tours</a>
+        <a class="nav-link" href="Destinations.dc.html">Destinations</a>
+        <a class="nav-link" href="About.dc.html">About</a>
+        <a class="nav-link" href="Faqs.dc.html">FAQ</a>
+      </div>
+      <a class="nav-cta" href="Contact.dc.html">Contact</a>
+      <button class="nav-hamburger" aria-label="Menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+    </nav>
+  </div>
+  <section class="tours-hero">
+    <img class="tours-hero-img" src="{{ heroImage }}" alt="">
+    <div class="page-topfade" aria-hidden="true"></div>
+    <div class="tours-hero-inner">
+      <p class="tours-eyebrow">Split · Dalmatian coast</p>
+      <h1 class="tours-title">Our tours</h1>
+      <p class="tours-desc">Group departures and private charters, from short sunset runs to full-day island hops.</p>
+      <div class="filter-bar">
+        <sc-for list="{{ chips }}" as="c" hint-placeholder-count="4">
+          <button class="{{ c.cls }}" aria-pressed="{{ c.pressed }}" onClick="{{ c.toggle }}"><i class="{{ c.icon }}" aria-hidden="true"></i> {{ c.label }}</button>
+        </sc-for>
+        <label class="filter-chip sort-chip">
+          <i class="ti ti-arrows-sort" aria-hidden="true"></i>
+          <select aria-label="Sort tours" onChange="{{ onSort }}">
+            <option value="popular">Most popular</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+            <option value="duration">Duration</option>
+            <option value="rating">Top rated</option>
+          </select>
+          <i class="ti ti-chevron-down" aria-hidden="true"></i>
+        </label>
+      </div>
+    </div>
+  </section>
+  <div class="wrap tours-results">
+
+    <div class="results-bar">
+      <p class="results-count" aria-live="polite"><strong>{{ resultCount }}</strong> {{ resultNoun }}</p>
+      <sc-if value="{{ hasFilters }}" hint-placeholder-val="{{ false }}"><button type="button" class="clear-filters" onClick="{{ clearFilters }}">Clear filters</button></sc-if>
+    </div>
+    <sc-for list="{{ sections }}" as="s" hint-placeholder-count="1">
+      <div class="tour-grid">
+        <sc-for list="{{ s.cards }}" as="t" hint-placeholder-count="3">
+          <div class="{{ t.cls }}">
+            <div class="tc-img"><img src="{{ t.img }}" alt=""><sc-if value="{{ t.hasBadge }}" hint-placeholder-val="{{ true }}"><span class="{{ t.badgeCls }}">{{ t.badge }}</span></sc-if></div>
+            <div class="tc-body">
+              <p class="tc-name">{{ t.title }}</p>
+              <div class="tc-foot"><div><span class="tc-from">From</span><span class="tc-price">{{ t.priceLabel }}</span> <span class="tc-per">{{ t.per }}</span></div><span class="tc-duration"><i class="ti ti-clock" aria-hidden="true"></i>{{ t.duration }}</span></div>
+              <a class="tc-btn" href="TourDetail.dc.html">View tour</a>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+
+    <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+      <div class="no-results"><i class="ti ti-mood-sad" style="font-size: 28px; display: block; margin-bottom: 8px; color: var(--color-border-secondary)" aria-hidden="true"></i>No tours match your filters.</div>
+    </sc-if>
+
+    <div class="section-header"><h2 class="section-title font-display">Group or private?</h2></div>
+    <div class="types-grid">
+      <div class="type-card"><span class="type-badge tb-group"><i class="ti ti-users" aria-hidden="true"></i>Other people on board</span><div class="type-icon" style="color: var(--color-accent)"><i class="ti ti-users" aria-hidden="true"></i></div><p class="type-title">Group tour</p><p class="type-desc">Join a small shared departure — max 12 guests. Great for solo travellers, couples, and anyone who likes meeting people on the water.</p><div class="type-features"><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> From €45 per person</span><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fixed departures, daily</span><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Guided commentary included</span></div></div>
+      <div class="type-card featured"><span class="type-badge tb-private"><i class="ti ti-crown" aria-hidden="true"></i>Just you on board</span><div class="type-icon"><i class="ti ti-crown" aria-hidden="true"></i></div><p class="type-title">Private charter</p><p class="type-desc">The whole boat is yours. Choose your route, set your pace, bring your own food and music. Ideal for families, celebrations, and corporate groups.</p><div class="type-features"><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> From €280 for the boat</span><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fully customisable route</span><span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Flexible departure time</span></div></div>
+    </div>
+
+    <div class="section-header"><h2 class="section-title font-display">How it works</h2></div>
+    <div class="steps">
+      <div class="step-card"><div class="step-num">1</div><p class="step-title">Choose a tour</p><p class="step-desc">Browse by destination, activity, or duration. Group or private — your call.</p></div>
+      <div class="step-card"><div class="step-num">2</div><p class="step-title">Pick your date</p><p class="step-desc">Check live availability and choose a departure that suits your schedule.</p></div>
+      <div class="step-card"><div class="step-num">3</div><p class="step-title">Book securely</p><p class="step-desc">Pay online via secure checkout. Instant confirmation to your inbox.</p></div>
+      <div class="step-card"><div class="step-num">4</div><p class="step-title">Show up and sail</p><p class="step-desc">Meet your captain at the marina. Everything else is taken care of.</p></div>
+    </div>
+
+    <footer class="footer" style="margin-top: var(--sec-gap)">
+      <div class="footer-brand"><div class="nav-logo" style="margin-bottom: 6px"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</div><p>Small-boat tours along the Dalmatian coast since 2015. Licensed, insured, and obsessed with the sea.</p></div>
+      <div class="footer-col"><h4>Tours</h4><a href="Tours.dc.html">Group tours</a><a href="PrivateBooking.dc.html">Private charters</a><a href="Tours.dc.html">Day trips</a><a href="Tours.dc.html">Sunset cruises</a></div>
+      <div class="footer-col"><h4>Info</h4><a href="About.dc.html">About us</a><a href="Destinations.dc.html">Destinations</a><a href="Faqs.dc.html">FAQs</a><a href="Contact.dc.html">Contact</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="Legal.dc.html">Terms &amp; conditions</a><a href="Legal.dc.html">Privacy policy</a><a href="Legal.dc.html">Cancellation policy</a></div>
+    </footer>
+    <div class="footer-bottom"><span>© 2025 Hello Blue Cave</span><span>Licensed maritime operator · Croatia</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"heroImage":{"editor":"text","default":"/_blob/6db22cf5a8d634b0343f7323ec5796a6","section":"Header photo"},"$preview":{"width":1280,"height":2900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { filters: [], sort: 'popular', scrolled: false };
+    this.onScroll = e => {
+      const t = e && e.target;
+      const y = window.scrollY || (document.documentElement && document.documentElement.scrollTop) || (t && t.scrollTop) || 0;
+      const scrolled = y > 40;
+      if (scrolled !== this.state.scrolled) this.setState({ scrolled: scrolled });
+    };
+  }
+  componentDidMount() {
+    window.addEventListener('scroll', this.onScroll, { passive: true, capture: true });
+  }
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.onScroll, { capture: true });
+  }
+  renderVals() {
+    const tours = [
+      { id: 1, title: 'Sunset Bay coastal cruise', img: '/_blob/4f05356ebee03f5016b43a559bc34c5b', icon: 'ti-sailboat', duration: '3h', type: ['group', 'private'], tags: ['sunset', 'swim'], price: 55, rating: 4.9, reviews: 128, desc: 'Sea caves, hidden coves, and golden-hour views past the old town walls.', badge: 'bestseller', featured: true, hasDetailPage: true },
+      { id: 2, title: 'Island hopping — Elafiti day trip', img: '/_blob/b5535f758995bdf694c8c2468734b0c5', icon: 'ti-ship', duration: '7h', type: ['group'], tags: ['swim'], price: 89, rating: 4.8, reviews: 94, desc: 'Visit three islands in one day with swimming stops, a village lunch, and a local guide.', badge: null, featured: true },
+      { id: 3, title: 'Private sunset charter', img: '/_blob/cbc2b610fa31e9081789057f1607038a', icon: 'ti-sailboat', duration: '2h', type: ['private'], tags: ['sunset'], price: 320, rating: 5.0, reviews: 41, desc: 'Fully private boat for up to 8 guests. Champagne, custom route, no shared departures.', badge: 'private', featured: false },
+      { id: 4, title: 'Morning snorkel tour', img: '/_blob/cde84cb92d3381b507a1c6f1a012a9c6', icon: 'ti-swimming', duration: '2h', type: ['group'], tags: ['swim'], price: 45, rating: 4.7, reviews: 67, desc: 'Early-morning calm water, mask and fins included, reef guide on board.', badge: 'new', featured: false },
+      { id: 5, title: 'Blue Cave & Hvar full day', img: '/_blob/5207d5d0f4d27c542bd2802443a85c29', icon: 'ti-map', duration: '10h', type: ['group'], tags: ['swim'], price: 110, rating: 4.9, reviews: 203, desc: 'The classic Dalmatian bucket-list route. Blue Cave, Vis, Hvar, and back by sunset.', badge: 'bestseller', featured: false },
+      { id: 6, title: 'Romantic private dinner cruise', img: '/_blob/07056f2593f867a3e97043cc9ea27185', icon: 'ti-heart', duration: '3h', type: ['private'], tags: ['sunset'], price: 280, rating: 4.9, reviews: 29, desc: 'Candlelit dinner on the water for two, with a chef-prepared three-course menu.', badge: 'private', featured: false },
+      { id: 7, title: 'Pakleni islands swim day', img: '/_blob/32dfc7c5ccd7f71a00ac9e2c4b28646f', icon: 'ti-swimming', duration: '6h', type: ['group', 'private'], tags: ['swim'], price: 75, rating: 4.8, reviews: 52, desc: 'Turquoise bays off Hvar, two long swim stops and lunch in Palmižana.', badge: null, featured: false },
+      { id: 8, title: 'Private Hvar & Pakleni charter', img: '/_blob/f80742f991078a1db049ece637c4a2b9', icon: 'ti-crown', duration: '8h', type: ['private'], tags: ['swim'], price: 650, rating: 5.0, reviews: 18, desc: 'Your own boat for the day: Hvar town, hidden coves and the Pakleni islands.', badge: 'private', featured: false }
+    ];
+    const filters = this.state.filters;
+    const matches = (t, f) => {
+      if (f === 'group') return t.type.indexOf('group') > -1;
+      if (f === 'private') return t.type.indexOf('private') > -1;
+      if (f === 'short') return parseInt(t.duration, 10) < 4;
+      if (f === 'sunset') return t.tags.indexOf('sunset') > -1;
+      return false;
+    };
+    const sort = this.state.sort;
+    const sorted = tours.slice().sort((a, b) => {
+      if (sort === 'price-asc') return a.price - b.price;
+      if (sort === 'price-desc') return b.price - a.price;
+      if (sort === 'duration') return parseInt(a.duration, 10) - parseInt(b.duration, 10);
+      if (sort === 'rating') return b.rating - a.rating;
+      return b.reviews - a.reviews;
+    });
+    const filtered = sorted.filter(t => filters.length === 0 || filters.some(f => matches(t, f)));
+    const badgeMap = { bestseller: ['b-best', 'Best seller'], new: ['b-new', 'New'], private: ['b-priv', 'Private'] };
+    const toCard = t => {
+      const privateOnly = t.type.length === 1 && t.type[0] === 'private';
+      return {
+        title: t.title, duration: t.duration, img: t.img,
+        iconCls: 'ti ' + t.icon,
+        cls: 'tour-card',
+        hasBadge: !!t.badge, noBadge: !t.badge,
+        badge: t.badge ? badgeMap[t.badge][1] : '',
+        badgeCls: 'tc-badge ' + (t.badge ? badgeMap[t.badge][0] : ''),
+        chips: t.type.map(ty => ty === 'group' ? 'Group' : 'Private'),
+        priceLabel: '€' + t.price,
+        per: privateOnly ? '/ boat' : '/ person',
+        ratingLabel: String(t.rating) + ' (' + t.reviews + ')'
+      };
+    };
+    const showFeatured = false;
+    const featured = showFeatured ? filtered.filter(t => t.featured) : [];
+    const rest = showFeatured ? filtered.filter(t => !t.featured) : filtered;
+    const sections = [];
+    if (featured.length) sections.push({ label: 'Featured (' + featured.length + ')', cards: featured.map(toCard) });
+    if (rest.length) sections.push({ label: 'All tours (' + rest.length + ')', cards: rest.map(toCard) });
+    const chipDefs = [
+      { id: 'group', label: 'Group', icon: 'ti ti-users' },
+      { id: 'private', label: 'Private only', icon: 'ti ti-crown' },
+      { id: 'short', label: 'Under 4h', icon: 'ti ti-clock' },
+      { id: 'sunset', label: 'Sunset', icon: 'ti ti-sunset' }
+    ];
+    const chips = chipDefs.map(c => {
+      const on = filters.indexOf(c.id) > -1;
+      return {
+        label: c.label, icon: c.icon, pressed: on ? 'true' : 'false',
+        cls: 'filter-chip' + (on ? ' active' : ''),
+        toggle: () => this.setState({ filters: on ? filters.filter(f => f !== c.id) : filters.concat([c.id]) })
+      };
+    });
+    return {
+      navClass: 'nav-bar nav-overlay' + (this.state.scrolled ? ' is-solid' : ' on-photo'),
+      heroImage: (this.props.heroImage ?? '/_blob/6db22cf5a8d634b0343f7323ec5796a6').trim(),
+      chips: chips,
+      sections: sections,
+      noResults: filtered.length === 0,
+      resultCount: filtered.length,
+      resultNoun: (filtered.length === 1 ? 'tour' : 'tours') + (filters.length ? ' match your filters' : ''),
+      hasFilters: filters.length > 0,
+      clearFilters: () => this.setState({ filters: [] }),
+      onSort: e => this.setState({ sort: e.target.value })
+    };
+  }
+}
+</script>
+</body>
+</html>

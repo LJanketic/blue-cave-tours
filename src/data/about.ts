@@ -1,3 +1,7 @@
+import { LICENCE_CONFIRMED } from '../config/site';
+import { MAX_GUESTS } from '../lib/booking';
+import { yearsOperating } from './marketing';
+
 export type TimelineEvent = {
 	year: string;
 	title: string;
@@ -17,18 +21,19 @@ export type ValueItem = {
 	description: string;
 };
 
-export type GuestQuote = {
-	quote: string;
-	author: string;
-	context: string;
-};
-
 export type TrustStat = {
 	icon: string;
 	value: string;
 	label: string;
+	/** The owner's sign-off (§17): unconfirmed stats aren't shown. */
+	confirmed: boolean;
 };
 
+/**
+ * About page content (C-5: crew and history as on the current site, not yet
+ * confirmed by the owner). Guest quotes were removed: they need a source and
+ * the Omnibus disclosures (D-5).
+ */
 export const ABOUT = {
 	headline: 'Split locals, open-sea specialists',
 	intro:
@@ -56,7 +61,7 @@ export const ABOUT = {
 			year: '2025',
 			title: 'Seven tours, one harbour',
 			description:
-				'Today we run seven scheduled routes from Split, from half-day lagoon escapes to full-day island-hopping, still with licensed local skippers on every departure.',
+				'Today we run seven scheduled routes from Split, from half-day lagoon escapes to full-day island-hopping, still with local skippers on every departure.',
 		},
 	] satisfies TimelineEvent[],
 	crew: [
@@ -102,33 +107,16 @@ export const ABOUT = {
 			icon: 'shield-check',
 			title: 'Safety without shortcuts',
 			description:
-				'Licensed crew, maintained boats, life jackets for every size, and briefings before every departure. Non-negotiable.',
+				'Experienced crew, maintained boats, life jackets for every size, and briefings before every departure. Non-negotiable.',
 		},
 	] satisfies ValueItem[],
-	pressMentions: [
-		{
-			quote:
-				'Best day of our Croatia trip. The crew timed the Blue Cave perfectly and still had us swimming in three different bays.',
-			author: 'Sarah & James',
-			context: 'Blue Cave & 5 islands · July 2024',
-		},
-		{
-			quote:
-				'We booked the morning lagoon tour with two kids under six: short day, calm water, and the skipper was patient with every question.',
-			author: 'Elena M.',
-			context: 'Blue Lagoon morning · August 2024',
-		},
-		{
-			quote:
-				'Private charter for our anniversary. They built the route around our pace and found a quiet cove near Pakleni for lunch on the boat.',
-			author: 'Thomas R.',
-			context: 'Create your perfect day · June 2025',
-		},
-	] satisfies GuestQuote[],
 	trustStats: [
-		{ icon: 'calendar', value: '9 yrs', label: 'operating from Split' },
-		{ icon: 'users', value: '12 max', label: 'guests per group tour' },
-		{ icon: 'star', value: '4.9 ★', label: 'average guest rating' },
-		{ icon: 'certificate', value: 'Licensed', label: 'Croatian Maritime Authority' },
+		// Years from FOUNDING_YEAR (D-14, C-1).
+		{ icon: 'calendar', value: `${yearsOperating()} years`, label: 'operating from Split', confirmed: true },
+		{ icon: 'users', value: `${MAX_GUESTS} max`, label: 'guests per group tour', confirmed: true },
+		// Hidden until there's a rating source with its disclosures (D-5, C-2).
+		{ icon: 'star', value: '4.9', label: 'average guest rating', confirmed: false },
+		// Hidden until the licence is confirmed (C-7); see LICENCE_CONFIRMED.
+		{ icon: 'certificate', value: 'Licensed', label: 'Croatian Maritime Authority', confirmed: LICENCE_CONFIRMED },
 	] satisfies TrustStat[],
 };

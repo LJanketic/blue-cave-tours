@@ -1,0 +1,13 @@
+---
+import '../../styles/components/empty-state.css';
+
+type Props = { icon?: string; text: string };
+
+const { icon = 'mood-sad', text } = Astro.props;
+---
+
+<div class="empty-state">
+	<i class={`ti ti-${icon}`} aria-hidden="true"></i>
+	<p>{text}</p>
+	<slot />
+</div>

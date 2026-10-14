@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { formatBookingDate, guestSummaryFromCounts } from '../../../lib/booking';
+import { formatBookingDate, guestSummaryFromCounts, seatCount } from '../../../lib/booking';
 import { departureHasLeft, formatTimestamp } from '../../../lib/bookings/dates';
 import { isRecordId } from '../../../lib/bookings/ids';
 import { applyAdminAction, STATUS_LABELS, type AdminAction } from '../../../lib/bookings/service';
@@ -120,7 +120,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 				<p>
 					<strong>This booking overbooked the boat by {overbooking.seatsOver}.</strong> {overbooking.seatsBefore} of{' '}
 					{overbooking.capacity} seats were taken when it {booking.seatsSince ? 'was put back' : 'was paid'}; its{' '}
-					{booking.adults + booking.children} guests made it {overbooking.seatsAfter}. Move it to another departure or
+					{seatCount(booking)} guests made it {overbooking.seatsAfter}. Move it to another departure or
 					contact the guest. <a href={`/admin/?from=${booking.date}#day`}>See the departure</a>
 				</p>
 			</div>
@@ -164,8 +164,13 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 				<dl class="a-rows">
 					<div><dt><i class="ti ti-calendar" aria-hidden="true"></i>Date</dt><dd>{formatBookingDate(booking.date)}</dd></div>
 					<div><dt><i class="ti ti-clock" aria-hidden="true"></i>Departure</dt><dd class="a-tnum">{booking.slot || 'To be confirmed'}</dd></div>
-					<div><dt><i class="ti ti-users" aria-hidden="true"></i>Guests</dt><dd>{guestSummaryFromCounts(booking.adults, booking.children)}</dd></div>
+					<div><dt><i class="ti ti-users" aria-hidden="true"></i>Guests</dt><dd>{guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}</dd></div>
 				</dl>
+				{
+					booking.personalDataRemovedAt && (
+						<p class="a-muted">Personal data removed on {formatBookingDate(booking.personalDataRemovedAt.slice(0, 10))} (retention policy).</p>
+					)
+				}
 				{
 					booking.customerNotes && (
 						<p class="hold-warn request">
@@ -349,7 +354,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 	}
 
 	.outcome {
-		border: 0.5px solid var(--color-border-tertiary);
+		border: 0.5px solid var(--a-border-tertiary);
 	}
 
 	.tour-row {
@@ -405,7 +410,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 		display: block;
 		font-size: 12px;
 		font-weight: 400;
-		color: var(--color-text-tertiary);
+		color: var(--a-text-tertiary);
 	}
 
 	.total-row {
@@ -434,8 +439,8 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 
 	.note-list li {
 		padding: 10px 12px;
-		border-radius: var(--radius-md);
-		background: var(--color-background-secondary);
+		border-radius: var(--a-radius-md);
+		background: var(--a-background-secondary);
 		font-size: 13px;
 	}
 
@@ -446,7 +451,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 
 	.note-meta {
 		font-size: 12px;
-		color: var(--color-text-tertiary);
+		color: var(--a-text-tertiary);
 	}
 
 	.note-form .btn-secondary {
@@ -462,11 +467,11 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		border-top: 0.5px solid var(--color-border-tertiary);
+		border-top: 0.5px solid var(--a-border-tertiary);
 	}
 
 	.emails li + li {
-		border-top: 0.5px solid var(--color-border-tertiary);
+		border-top: 0.5px solid var(--a-border-tertiary);
 	}
 
 	.timeline {
@@ -493,11 +498,11 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		background: var(--color-accent-teal);
+		background: var(--a-accent-teal);
 	}
 
 	.timeline li:not(:first-child)::before {
-		background: var(--color-border-secondary);
+		background: var(--a-border-secondary);
 	}
 
 	.manage-actions {

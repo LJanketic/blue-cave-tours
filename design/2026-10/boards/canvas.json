@@ -1,0 +1,232 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "About.dc.html": {
+      "expand": "fill",
+      "h": 2710,
+      "is_interactive": true,
+      "title": "13 About",
+      "w": 1280,
+      "x": 2720,
+      "y": 8390
+    },
+    "Artboard-qbg9.dc.html": {
+      "h": 600,
+      "page": "page-ytpj3d",
+      "title": "Artboard 1",
+      "w": 800,
+      "x": 0,
+      "y": 0
+    },
+    "BookingSummary.dc.html": {
+      "expand": "fill",
+      "h": 1570,
+      "is_interactive": true,
+      "title": "07 Booking summary",
+      "w": 1280,
+      "x": 2720,
+      "y": 5790
+    },
+    "Contact.dc.html": {
+      "expand": "fill",
+      "h": 1790,
+      "is_interactive": true,
+      "title": "14 Contact",
+      "w": 1280,
+      "x": 4080,
+      "y": 8390
+    },
+    "DestinationDetail.dc.html": {
+      "expand": "fill",
+      "h": 2660,
+      "is_interactive": true,
+      "title": "10 Destination detail — Hvar",
+      "w": 1280,
+      "x": 5440,
+      "y": 0
+    },
+    "Destinations.dc.html": {
+      "expand": "fill",
+      "h": 2384,
+      "is_interactive": true,
+      "title": "04 Destinations overview",
+      "w": 1280,
+      "x": 4080,
+      "y": 0
+    },
+    "Faqs.dc.html": {
+      "expand": "fill",
+      "h": 1990,
+      "is_interactive": true,
+      "title": "11 FAQs",
+      "w": 1280,
+      "x": 0,
+      "y": 8390
+    },
+    "GroupBooking.dc.html": {
+      "expand": "fill",
+      "h": 1770,
+      "is_interactive": true,
+      "title": "05 Group booking",
+      "w": 1280,
+      "x": 0,
+      "y": 5790
+    },
+    "Legal.dc.html": {
+      "expand": "fill",
+      "h": 2240,
+      "is_interactive": true,
+      "title": "12 Legal pages",
+      "w": 1280,
+      "x": 1360,
+      "y": 8390
+    },
+    "Main-n19w-fhxd-j4z6.dc.html": {
+      "expand": "fill",
+      "h": 5211,
+      "is_interactive": true,
+      "title": "01 Homepage v4 — trust band below hero",
+      "w": 1280,
+      "x": -1610,
+      "y": 0
+    },
+    "Main-n19w-fhxd.dc.html": {
+      "expand": "fill",
+      "h": 5190,
+      "is_interactive": true,
+      "title": "01 Homepage v3",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Main-n19w.dc.html": {
+      "expand": "fill",
+      "h": 5080,
+      "is_interactive": true,
+      "title": "01 Homepage v2",
+      "w": 1280,
+      "x": -6285,
+      "y": -33
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 4120,
+      "is_interactive": true,
+      "title": "01 Homepage",
+      "w": 1280,
+      "x": -4856,
+      "y": 0
+    },
+    "PaymentError.dc.html": {
+      "expand": "fill",
+      "h": 1170,
+      "is_interactive": true,
+      "title": "09 Payment error",
+      "w": 1280,
+      "x": 5440,
+      "y": 5790
+    },
+    "PaymentSuccess.dc.html": {
+      "expand": "fill",
+      "h": 1560,
+      "is_interactive": true,
+      "title": "08 Payment success",
+      "w": 1280,
+      "x": 4080,
+      "y": 5790
+    },
+    "PrivateBooking.dc.html": {
+      "expand": "fill",
+      "h": 2000,
+      "is_interactive": true,
+      "title": "06 Private charter",
+      "w": 1280,
+      "x": 1360,
+      "y": 5790
+    },
+    "TourDetail.dc.html": {
+      "expand": "fill",
+      "h": 2770,
+      "is_interactive": true,
+      "title": "03 Tour detail",
+      "w": 1280,
+      "x": 2720,
+      "y": 0
+    },
+    "Tours.dc.html": {
+      "expand": "fill",
+      "h": 2810,
+      "is_interactive": true,
+      "title": "02 Tours overview",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-11T21:06:04Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "rowBooking": {
+      "kind": "title1",
+      "maxW": 6720,
+      "text": "Booking flow",
+      "w": 240,
+      "x": 0,
+      "y": 5490
+    },
+    "rowBrowse": {
+      "kind": "title1",
+      "maxW": 6720,
+      "text": "Browse — tours & destinations",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "rowInfo": {
+      "kind": "title1",
+      "maxW": 5360,
+      "text": "Info pages",
+      "w": 240,
+      "x": 0,
+      "y": 8090
+    }
+  },
+  "order": [
+    "Artboard-qbg9.dc.html",
+    "Main.dc.html",
+    "Tours.dc.html",
+    "TourDetail.dc.html",
+    "Destinations.dc.html",
+    "DestinationDetail.dc.html",
+    "GroupBooking.dc.html",
+    "PrivateBooking.dc.html",
+    "BookingSummary.dc.html",
+    "PaymentSuccess.dc.html",
+    "PaymentError.dc.html",
+    "Faqs.dc.html",
+    "Legal.dc.html",
+    "About.dc.html",
+    "Contact.dc.html",
+    "Main-n19w.dc.html",
+    "Main-n19w-fhxd.dc.html",
+    "Main-n19w-fhxd-j4z6.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Page 1"
+    },
+    {
+      "id": "page-ytpj3d",
+      "name": "Page 2"
+    }
+  ],
+  "title": "Hello Blue Cave"
+}

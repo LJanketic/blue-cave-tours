@@ -1,0 +1,191 @@
+---
+import SectionHeader from '../ui/SectionHeader.astro';
+import type { ReviewsData } from '../../data/reviews';
+
+type Props = { reviews: ReviewsData; tourNames: Record<string, string> };
+
+const { reviews, tourNames } = Astro.props;
+// D-5: nothing renders without a named source, its average and count, and at
+// least two reviews. The Omnibus disclosure below is part of the section.
+const show =
+	reviews.source !== null &&
+	reviews.sourceUrl !== null &&
+	reviews.average !== null &&
+	reviews.count !== null &&
+	reviews.asOf !== null &&
+	reviews.items.length >= 2;
+
+const monthYear = (iso: string) =>
+	new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+const initials = (name: string) =>
+	name
+		.split(/\s+/)
+		.map((part) => part[0])
+		.join('')
+		.slice(0, 2)
+		.toUpperCase();
+const stars = (rating: number) => '★'.repeat(Math.round(rating));
+---
+
+{
+	show && (
+		<section class="reviews" aria-labelledby="reviews-heading">
+			<SectionHeader title="What guests say" id="reviews-heading" />
+			<div class="reviews__grid" data-scroll-region="Guest reviews">
+				<div class="reviews__summary">
+					<p class="reviews__score">
+						{reviews.average?.toFixed(1)}
+						<span class="sr-only"> out of 5</span>
+					</p>
+					<p class="reviews__stars" aria-hidden="true">
+						{stars(reviews.average ?? 0)}
+					</p>
+					<p class="reviews__count">Average across {reviews.count} reviews</p>
+					<p class="reviews__disclosure">
+						Reviews from {reviews.source}, as of {reviews.asOf}. {reviews.verification}{' '}
+						We show the most recent reviews and don't edit them.{' '}
+						<a href={reviews.sourceUrl ?? undefined} rel="noopener" target="_blank">
+							All {reviews.count} reviews on {reviews.source}
+							<span class="sr-only"> (opens in a new tab)</span>
+						</a>
+					</p>
+				</div>
+				{reviews.items.slice(0, 2).map((review) => (
+					<figure class="reviews__card">
+						<p class="reviews__stars" aria-hidden="true">
+							{stars(review.rating)}
+						</p>
+						<p class="sr-only">{review.rating} out of 5</p>
+						<blockquote>{review.text}</blockquote>
+						<figcaption>
+							<span class="reviews__avatar" aria-hidden="true">
+								{initials(review.author)}
+							</span>
+							<span>
+								<span class="reviews__name">{review.author}</span>
+								<span class="reviews__meta">
+									{[review.tourSlug ? tourNames[review.tourSlug] : null, monthYear(review.date)].filter(Boolean).join(' · ')}
+								</span>
+							</span>
+						</figcaption>
+					</figure>
+				))}
+			</div>
+		</section>
+	)
+}
+
+<style>
+	@layer components {
+		/* Spec §6.1.9 (D-5). */
+		.reviews__grid {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: var(--space-3);
+		}
+
+		.reviews__summary {
+			display: flex;
+			flex-direction: column;
+			padding: var(--space-5);
+			border-radius: var(--radius-lg);
+			background: var(--color-background-info);
+			color: var(--color-text-brand);
+		}
+
+		.reviews p {
+			margin: 0;
+		}
+
+		.reviews__score {
+			font-size: var(--font-size-score);
+			font-weight: var(--font-weight-semibold);
+			line-height: 1;
+		}
+
+		.reviews__stars {
+			color: var(--color-star);
+			letter-spacing: 2px;
+		}
+
+		.reviews .reviews__count {
+			margin-top: var(--space-2);
+			font-size: var(--font-size-base);
+		}
+
+		.reviews .reviews__disclosure {
+			margin-top: auto;
+			padding-top: var(--space-4);
+			font-size: var(--font-size-sm);
+		}
+
+		.reviews__disclosure a {
+			color: inherit;
+		}
+
+		.reviews__card {
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-3);
+			margin: 0;
+			padding: var(--space-5);
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
+		}
+
+		.reviews__card blockquote {
+			margin: 0;
+			font-size: var(--font-size-body-md);
+			line-height: var(--line-height-body-md);
+		}
+
+		.reviews__card figcaption {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-top: auto;
+		}
+
+		.reviews__avatar {
+			display: flex;
+			flex-shrink: 0;
+			align-items: center;
+			justify-content: center;
+			width: 36px;
+			height: 36px;
+			border-radius: 50%;
+			background: var(--color-category-private-bg);
+			color: var(--color-category-private-text);
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		.reviews__name {
+			display: block;
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		.reviews__meta {
+			display: block;
+			font-size: var(--font-size-xs);
+			color: var(--color-text-tertiary);
+		}
+
+		@media (max-width: 1024px) {
+			.reviews__grid {
+				display: flex;
+				overflow-x: auto;
+				scroll-snap-type: x mandatory;
+				scrollbar-width: none;
+				margin: 0 calc(-1 * var(--page-gutter));
+				padding: 0 var(--page-gutter) 4px;
+			}
+
+			.reviews__grid > * {
+				flex: 0 0 min(320px, 82%);
+				scroll-snap-align: start;
+			}
+		}
+	}
+</style>

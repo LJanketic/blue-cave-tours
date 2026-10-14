@@ -62,6 +62,8 @@ air-balloon
 air-conditioning
 air-conditioning-disabled
 air-traffic-control
+airpods-l
+airpods-r
 alarm
 alarm-average
 alarm-minus
@@ -144,6 +146,10 @@ api-app-off
 api-book
 api-off
 app-window
+app-window-bottom
+app-window-bottom-left
+app-window-bottom-right
+app-window-center
 apple
 apps
 apps-off
@@ -217,6 +223,7 @@ arrow-down-to-arc
 arrow-elbow-left
 arrow-elbow-right
 arrow-fork
+arrow-fork-triple
 arrow-forward
 arrow-forward-up
 arrow-forward-up-double
@@ -637,6 +644,7 @@ brand-4chan
 brand-abstract
 brand-adobe
 brand-adobe-after-effect
+brand-adobe-after-effects
 brand-adobe-illustrator
 brand-adobe-indesign
 brand-adobe-photoshop
@@ -805,6 +813,7 @@ brand-itch
 brand-javascript
 brand-jira
 brand-juejin
+brand-kakao-talk
 brand-kako-talk
 brand-kbin
 brand-kick
@@ -901,6 +910,7 @@ brand-sentry
 brand-sharik
 brand-shazam
 brand-shopee
+brand-signal
 brand-sketch
 brand-skype
 brand-slack
@@ -1213,6 +1223,7 @@ cash-banknote-move
 cash-banknote-move-back
 cash-banknote-off
 cash-banknote-plus
+cash-coin
 cash-edit
 cash-heart
 cash-minus
@@ -1801,6 +1812,7 @@ currency-renminbi
 currency-ripple
 currency-riyal
 currency-rubel
+currency-ruble
 currency-rufiyaa
 currency-rupee
 currency-rupee-nepalese
@@ -2026,6 +2038,7 @@ device-tv-old
 device-unknown
 device-usb
 device-vision-pro
+device-vision-pro-wifi
 device-watch
 device-watch-bolt
 device-watch-cancel
@@ -2049,6 +2062,7 @@ device-watch-stats
 device-watch-stats-2
 device-watch-up
 device-watch-x
+device-workstation
 devices
 devices-2
 devices-bolt
@@ -2129,6 +2143,7 @@ download
 download-off
 drag-drop
 drag-drop-2
+dragon
 drone
 drone-off
 drop-circle
@@ -2159,6 +2174,7 @@ droplets
 dual-screen
 dumbbell
 dumpling
+duplicate
 e-passport
 ear
 ear-off
@@ -2171,6 +2187,7 @@ ease-in-out-control-points
 ease-out
 ease-out-control-point
 edit
+edit-bulk
 edit-circle
 edit-circle-off
 edit-off
@@ -2471,6 +2488,7 @@ fold
 fold-down
 fold-up
 folder
+folder-ai
 folder-bolt
 folder-cancel
 folder-check
@@ -2490,13 +2508,17 @@ folder-question
 folder-root
 folder-search
 folder-share
+folder-sparkle
 folder-star
+folder-stats
 folder-symlink
 folder-up
+folder-user
 folder-x
 folders
 folders-off
 foodsteps
+footsteps
 forbid
 forbid-2
 forklift
@@ -2544,6 +2566,7 @@ gender-neutrois
 gender-third
 gender-transgender
 gender-trasvesti
+gender-travesti
 geometry
 ghost
 ghost-2
@@ -2554,16 +2577,21 @@ gift
 gift-card
 gift-off
 git-branch
+git-branch-check
 git-branch-deleted
+git-branch-x
 git-cherry-pick
 git-commit
 git-compare
 git-fork
 git-merge
+git-merge-queue
 git-pull-request
 git-pull-request-closed
 git-pull-request-conflict
 git-pull-request-draft
+git-pull-request-locked
+git-pull-request-unlisted
 gizmo
 glass
 glass-champagne
@@ -2577,6 +2605,8 @@ go-game
 golf
 golf-off
 gps
+gpu
+gpu-2
 gradienter
 grain
 grape
@@ -2832,6 +2862,7 @@ ice-skating
 iceberg
 icons
 icons-off
+icosahedron
 id
 id-badge
 id-badge-2
@@ -2879,6 +2910,7 @@ irregular-polyhedron
 irregular-polyhedron-off
 irregular-polyhedron-plus
 italic
+italic-off
 jacket
 jetpack
 jetski
@@ -3223,6 +3255,7 @@ map-pin-share
 map-pin-star
 map-pin-up
 map-pin-x
+map-pinned
 map-pins
 map-plus
 map-question
@@ -3308,6 +3341,7 @@ menu-order
 mesh
 message
 message-2
+message-2-ai
 message-2-bolt
 message-2-cancel
 message-2-check
@@ -3325,9 +3359,11 @@ message-2-plus
 message-2-question
 message-2-search
 message-2-share
+message-2-sparkle
 message-2-star
 message-2-up
 message-2-x
+message-ai
 message-bolt
 message-cancel
 message-chatbot
@@ -3374,6 +3410,7 @@ message-reply
 message-report
 message-search
 message-share
+message-sparkle
 message-star
 message-up
 message-user
@@ -3411,6 +3448,7 @@ mist
 mist-off
 mobiledata
 mobiledata-off
+model-ai
 moneybag
 moneybag-edit
 moneybag-heart
@@ -3426,6 +3464,7 @@ mood-bitcoin
 mood-boy
 mood-check
 mood-cog
+mood-confused
 mood-confuzed
 mood-crazy-happy
 mood-cry
@@ -3702,6 +3741,9 @@ olympics-off
 om
 omega
 option
+orbit
+orbit-vertical
+orbits
 outbound
 outlet
 oval
@@ -3743,6 +3785,7 @@ paywall
 pdf
 peace
 pencil
+pencil-ai
 pencil-bolt
 pencil-cancel
 pencil-check
@@ -3857,6 +3900,7 @@ photo-star
 photo-up
 photo-video
 photo-x
+physiotherapist
 physotherapist
 piano
 pick
@@ -3898,6 +3942,8 @@ plant-2
 plant-2-off
 plant-off
 play-basketball
+play-bug
+play-bugs
 play-card
 play-card-1
 play-card-10
@@ -4068,6 +4114,8 @@ rectangular-prism-off
 rectangular-prism-plus
 recycle
 recycle-off
+reduce-motion
+reference-image
 refresh
 refresh-alert
 refresh-dot
@@ -4079,6 +4127,7 @@ relation-many-to-many
 relation-one-to-many
 relation-one-to-one
 reload
+remote-control
 reorder
 repeat
 repeat-off
@@ -4125,6 +4174,7 @@ robot-face
 robot-off
 rocket
 rocket-off
+rocking-chair
 roller-skating
 rollercoaster
 rollercoaster-off
@@ -4180,6 +4230,7 @@ ruler-measure
 ruler-measure-2
 ruler-off
 run
+run-sprint
 rv-truck
 s-turn-down
 s-turn-left
@@ -4231,6 +4282,7 @@ scuba-mask-off
 sdk
 search
 search-off
+secret-phrases
 section
 section-sign
 seeding
@@ -4440,6 +4492,7 @@ sparkle-2
 sparkle-highlight
 sparkles
 sparkles-2
+sparkles-2-off
 speakerphone
 speedboat
 sphere
@@ -4450,6 +4503,7 @@ spider
 spiral
 spiral-off
 sport-billard
+sport-billiard
 spray
 spy
 spy-off
@@ -4611,11 +4665,15 @@ stack-2
 stack-3
 stack-back
 stack-backward
+stack-check
 stack-forward
 stack-front
 stack-middle
+stack-minus
+stack-plus
 stack-pop
 stack-push
+stack-x
 stairs
 stairs-down
 stairs-up
@@ -4635,6 +4693,7 @@ stethoscope
 stethoscope-off
 sticker
 sticker-2
+sticker-smile
 stopwatch
 storm
 storm-off
@@ -4680,6 +4739,7 @@ switch-vertical
 sword
 sword-off
 swords
+tab-close
 table
 table-alias
 table-column
@@ -4696,12 +4756,17 @@ table-row
 table-share
 table-shortcut
 table-spark
+tabs
 tag
 tag-minus
 tag-off
 tag-plus
 tag-starred
 tags
+tags-chevron-down
+tags-chevron-left
+tags-chevron-right
+tags-chevron-up
 tags-off
 taiwan-dollar
 tallymark-1
@@ -4746,8 +4811,14 @@ text-direction-rtl
 text-grammar
 text-increase
 text-orientation
+text-outline
 text-plus
 text-recognition
+text-regex-asterisk
+text-regex-end
+text-regex-plus
+text-regex-question
+text-regex-start
 text-resize
 text-scan-2
 text-scan-ai
@@ -4759,6 +4830,9 @@ text-wrap-disabled
 texture
 theater
 thermometer
+thinking-high
+thinking-low
+thinking-medium
 thumb-down
 thumb-down-off
 thumb-up
@@ -4856,6 +4930,7 @@ trash
 trash-off
 trash-x
 treadmill
+treasure-chest
 tree
 trees
 trekking
@@ -4885,6 +4960,7 @@ truck-delivery
 truck-loading
 truck-off
 truck-return
+twig
 txt
 typeface
 typography
@@ -4900,6 +4976,7 @@ umbrella-closed
 umbrella-closed-2
 umbrella-off
 underline
+underline-off
 unicycle
 universe
 unlink
@@ -4953,6 +5030,7 @@ variable
 variable-minus
 variable-off
 variable-plus
+vault
 vector
 vector-bezier
 vector-bezier-2
@@ -4984,11 +5062,14 @@ vinyl
 vip
 vip-2
 vip-off
+virtual-space
 virus
 virus-off
 virus-search
 vocabulary
 vocabulary-off
+voice
+voice-2
 volcano
 volume
 volume-2
@@ -5110,6 +5191,7 @@ xbox-x
 xbox-y
 xd
 xxx
+yarn
 yin-yang
 yoga
 zeppelin

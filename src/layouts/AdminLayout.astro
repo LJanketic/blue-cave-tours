@@ -1,4 +1,6 @@
 ---
+// The admin's frozen look; it never loads the public global.css (spec §12).
+import '../styles/admin.css';
 import BaseLayout from './BaseLayout.astro';
 import { SITE_NAME } from '../config/site';
 import { enquiries } from '../lib/bookings/store';
@@ -125,7 +127,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 
 		min-height: 100vh;
 		min-height: 100dvh;
-		background: var(--color-background-primary);
+		background: var(--a-background-primary);
 		font-size: 14px;
 		-webkit-text-size-adjust: 100%;
 		text-size-adjust: 100%;
@@ -138,7 +140,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	}
 
 	.admin a:not([class]) {
-		color: var(--color-text-info);
+		color: var(--a-text-info);
 	}
 
 	.admin--wide .admin-main {
@@ -159,14 +161,14 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		margin-left: 2px;
 		padding: 2px 8px;
 		border-radius: 20px;
-		background: var(--color-background-secondary);
-		color: var(--color-text-secondary);
+		background: var(--a-background-secondary);
+		color: var(--a-text-secondary);
 		font-size: 11px;
 		font-weight: 500;
 	}
 
 	.admin-back {
-		min-height: var(--touch-min);
+		min-height: var(--a-touch-min);
 		margin-left: -4px;
 		font-size: 14px;
 	}
@@ -194,8 +196,8 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		margin-left: 5px;
 		padding: 0 5px;
 		border-radius: 20px;
-		background: var(--badge-bestseller-bg);
-		color: var(--badge-bestseller-text);
+		background: var(--a-badge-bestseller-bg);
+		color: var(--a-badge-bestseller-text);
 		font-size: 11px;
 		font-weight: 500;
 		line-height: 1;
@@ -205,7 +207,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	.admin-main {
 		max-width: var(--admin-width);
 		margin: 0 auto;
-		padding: 20px var(--page-gutter) calc(var(--admin-tabs) + env(safe-area-inset-bottom) + 40px);
+		padding: 20px var(--a-page-gutter) calc(var(--admin-tabs) + env(safe-area-inset-bottom) + 40px);
 	}
 
 	.admin--bare .admin-main {
@@ -224,7 +226,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	.admin-lede {
 		margin: 0 0 20px;
 		font-size: 14px;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 		line-height: 1.6;
 	}
 
@@ -237,7 +239,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		grid-template-columns: repeat(5, 1fr);
 		padding: 0 max(8px, calc((100% - 560px) / 2)) env(safe-area-inset-bottom);
 		background: rgb(255 255 255 / 97%);
-		border-top: 0.5px solid var(--color-border-tertiary);
+		border-top: 0.5px solid var(--a-border-tertiary);
 		backdrop-filter: blur(10px);
 		-webkit-backdrop-filter: blur(10px);
 	}
@@ -250,12 +252,12 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		gap: 3px;
 		height: var(--admin-tabs);
 		font-size: 11px;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 		text-decoration: none;
 	}
 
 	.admin .admin-tabs a[aria-current='page'] {
-		color: var(--color-text-primary);
+		color: var(--a-text-primary);
 		font-weight: 500;
 	}
 
@@ -266,7 +268,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	}
 
 	.admin-tabs a[aria-current='page'] .admin-tab-icon {
-		color: var(--color-accent-teal);
+		color: var(--a-accent-teal);
 	}
 
 	.admin-count--dot {
@@ -274,12 +276,12 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		top: -6px;
 		left: 14px;
 		margin: 0;
-		box-shadow: 0 0 0 2px var(--color-background-primary);
+		box-shadow: 0 0 0 2px var(--a-background-primary);
 	}
 
 	.admin-tabs a:focus-visible {
 		outline-offset: -4px;
-		border-radius: var(--radius-md);
+		border-radius: var(--a-radius-md);
 	}
 
 	@media (min-width: 769px) {
@@ -302,7 +304,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		.admin-links .nav-link {
 			display: inline-flex;
 			align-items: center;
-			min-height: var(--touch-min);
+			min-height: var(--a-touch-min);
 		}
 
 		.admin-title {
@@ -314,9 +316,9 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 
 	/* Card: the checkout review card. */
 	.a-card {
-		background: var(--color-background-primary);
-		border: 0.5px solid var(--color-border-tertiary);
-		border-radius: var(--radius-lg);
+		background: var(--a-background-primary);
+		border: 0.5px solid var(--a-border-tertiary);
+		border-radius: var(--a-radius-lg);
 		padding: 1.25rem;
 		margin: 0 0 12px;
 	}
@@ -340,14 +342,14 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	.a-card-title a {
 		font-size: 12px;
 		font-weight: 400;
-		color: var(--color-text-info);
+		color: var(--a-text-info);
 		text-decoration: none;
 	}
 
 	/* Grey tile: the site's summary / meetup cards. */
 	.a-tile {
-		background: var(--color-background-secondary);
-		border-radius: var(--radius-lg);
+		background: var(--a-background-secondary);
+		border-radius: var(--a-radius-lg);
 		padding: 1.1rem 1.25rem;
 		margin: 0 0 12px;
 	}
@@ -369,7 +371,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 
 	.a-rows dt {
 		font-size: 13px;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 	}
 
 	.a-rows dt .ti {
@@ -388,7 +390,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 
 	.a-divider {
 		border: 0;
-		border-top: 0.5px solid var(--color-border-tertiary);
+		border-top: 0.5px solid var(--a-border-tertiary);
 		margin: 12px 0;
 	}
 
@@ -397,13 +399,13 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		list-style: none;
 		margin: 0 0 12px;
 		padding: 0;
-		border: 0.5px solid var(--color-border-tertiary);
-		border-radius: var(--radius-lg);
+		border: 0.5px solid var(--a-border-tertiary);
+		border-radius: var(--a-radius-lg);
 		overflow: hidden;
 	}
 
 	.a-list > li + li {
-		border-top: 0.5px solid var(--color-border-tertiary);
+		border-top: 0.5px solid var(--a-border-tertiary);
 	}
 
 	.a-item {
@@ -417,7 +419,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	}
 
 	a.a-item:hover {
-		background: var(--color-background-secondary);
+		background: var(--a-background-secondary);
 	}
 
 	a.a-item:focus-visible {
@@ -439,13 +441,13 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 
 	.a-item-sub {
 		font-size: 12px;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 		line-height: 1.45;
 	}
 
 	.a-chevron {
 		font-size: 14px;
-		color: var(--color-text-tertiary);
+		color: var(--a-text-tertiary);
 		flex-shrink: 0;
 	}
 
@@ -458,16 +460,16 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		font-weight: 500;
 		line-height: 1.4;
 		white-space: nowrap;
-		background: var(--color-background-secondary);
-		color: var(--color-text-secondary);
+		background: var(--a-background-secondary);
+		color: var(--a-text-secondary);
 	}
 
 	.a-badge--confirmed,
 	.a-badge--paid,
 	.a-badge--sent,
 	.a-badge--replied {
-		background: var(--badge-group-bg);
-		color: var(--badge-group-text);
+		background: var(--a-badge-group-bg);
+		color: var(--a-badge-group-text);
 	}
 
 	.a-badge--pending_payment,
@@ -475,26 +477,26 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	.a-badge--new,
 	.a-badge--no_show,
 	.a-badge--busy {
-		background: var(--badge-bestseller-bg);
-		color: var(--badge-bestseller-text);
+		background: var(--a-badge-bestseller-bg);
+		color: var(--a-badge-bestseller-text);
 	}
 
 	.a-badge--cancelled,
 	.a-badge--refunded,
 	.a-badge--failed,
 	.a-badge--full {
-		background: var(--color-background-danger);
-		color: var(--color-text-danger);
+		background: var(--a-background-danger);
+		color: var(--a-text-danger);
 	}
 
 	.a-badge--outbox {
-		background: var(--color-background-info);
-		color: var(--color-category-info-icon);
+		background: var(--a-background-info);
+		color: var(--a-category-info-icon);
 	}
 
 	.a-badge--demo {
-		background: var(--badge-private-bg);
-		color: var(--badge-private-text);
+		background: var(--a-badge-private-bg);
+		color: var(--a-badge-private-text);
 	}
 
 	/* Buttons: .btn-primary / .btn-secondary from the site, plus a few admin variants. */
@@ -508,7 +510,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	}
 
 	.admin .btn-secondary .ti {
-		color: var(--color-accent-teal);
+		color: var(--a-accent-teal);
 	}
 
 	.admin .btn-primary .ti,
@@ -522,15 +524,15 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 
 	.btn-secondary.a-danger,
 	.btn-secondary.a-danger .ti {
-		color: var(--color-text-danger);
+		color: var(--a-text-danger);
 	}
 
 	.btn-secondary.a-danger:hover {
-		background: var(--color-background-danger);
+		background: var(--a-background-danger);
 	}
 
 	.btn-primary.a-danger {
-		background: var(--color-text-danger);
+		background: var(--a-text-danger);
 	}
 
 	/* Round icon button: the site's stepper / calendar buttons at touch size. */
@@ -538,18 +540,18 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		display: inline-grid;
 		place-items: center;
 		flex-shrink: 0;
-		width: var(--touch-min);
-		height: var(--touch-min);
+		width: var(--a-touch-min);
+		height: var(--a-touch-min);
 		border-radius: 50%;
-		border: 0.5px solid var(--color-border-secondary);
-		background: var(--color-background-primary);
-		color: var(--color-accent-teal);
+		border: 0.5px solid var(--a-border-secondary);
+		background: var(--a-background-primary);
+		color: var(--a-accent-teal);
 		font-size: 18px;
 		text-decoration: none;
 	}
 
 	.a-icon-btn:hover {
-		background: var(--color-background-secondary);
+		background: var(--a-background-secondary);
 	}
 
 	/* Equal-width row of buttons. */
@@ -578,7 +580,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	}
 
 	.admin .filter-chip .count {
-		color: var(--color-text-tertiary);
+		color: var(--a-text-tertiary);
 	}
 
 	.admin .filter-chip.active .count {
@@ -637,15 +639,15 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	}
 
 	.admin .highlight-box > .ti {
-		color: var(--color-accent-teal);
+		color: var(--a-accent-teal);
 	}
 
 	.a-danger-box {
-		border-left: 3px solid var(--color-text-danger);
+		border-left: 3px solid var(--a-text-danger);
 		padding: 10px 14px;
-		border-radius: 0 var(--radius-md) var(--radius-md) 0;
-		background: var(--color-background-danger);
-		color: var(--color-text-danger);
+		border-radius: 0 var(--a-radius-md) var(--a-radius-md) 0;
+		background: var(--a-background-danger);
+		color: var(--a-text-danger);
 		font-size: 13px;
 		line-height: 1.6;
 	}
@@ -672,7 +674,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	}
 
 	.admin a.next-item:hover {
-		background: var(--color-background-hover);
+		background: var(--a-background-hover);
 	}
 
 	.admin .next-item .next-main {
@@ -681,15 +683,15 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	}
 
 	.admin .next-icon--warn .ti {
-		color: var(--color-text-warning);
+		color: var(--a-text-warning);
 	}
 
 	.admin .next-icon--danger {
-		background: var(--color-background-danger);
+		background: var(--a-background-danger);
 	}
 
 	.admin .next-icon--danger .ti {
-		color: var(--color-text-danger);
+		color: var(--a-text-danger);
 	}
 
 	/* Stat tiles: the home page's trust bar. */
@@ -725,7 +727,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		margin: 0 auto 16px;
 		max-width: 34ch;
 		font-size: 13px;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 	}
 
 	/* Forms: the site's inputs, at 16px so iOS doesn't zoom in. */
@@ -742,7 +744,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	.a-hint {
 		margin: 0;
 		font-size: 12px;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 	}
 
 	.a-input,
@@ -750,7 +752,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		-webkit-appearance: none;
 		appearance: none;
 		width: 100%;
-		min-height: var(--touch-min);
+		min-height: var(--a-touch-min);
 		padding: 10px 12px;
 		font-size: 16px;
 		line-height: 1.4;
@@ -763,7 +765,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 
 	.a-input::placeholder,
 	.a-textarea::placeholder {
-		color: var(--color-text-tertiary);
+		color: var(--a-text-tertiary);
 		opacity: 1;
 	}
 
@@ -792,7 +794,7 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 	}
 
 	.a-muted {
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 	}
 
 	.a-tnum {

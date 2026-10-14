@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Private Charter Customisation — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-text-tertiary)}a:hover{color:var(--color-text-secondary)}
+.max-w{max-width:var(--flow-width);margin:0 auto;padding:24px}
+.hbc input,.hbc select,.hbc textarea{font-size:var(--font-size-base)}
+.hbc p{margin:0}
+.card{background:var(--color-background-primary);border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:14px}
+.hbc .card-title{font-size:var(--font-size-lg);font-weight:500;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.card-title i{font-size:16px;color:var(--color-accent)}
+.hbc .card-sub{font-size:var(--font-size-base);color:var(--color-text-secondary);margin:0 0 14px;line-height:var(--line-height-relaxed)}
+.dtd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:var(--font-size-xs);font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em}
+.guests-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.guest-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)}
+.stepper{display:flex;align-items:center;gap:8px}
+.hbc .step-btn{width:28px;height:28px;padding:0;border-radius:50%;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:var(--font-size-base);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.step-val{font-size:var(--font-size-base);font-weight:500;min-width:20px;text-align:center}
+.route-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hbc .route-option{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:11px 13px;cursor:pointer;display:flex;align-items:flex-start;gap:9px;text-align:left;background:var(--color-background-primary);width:100%}
+.hbc .route-option:hover{border-color:var(--color-border-primary)}
+.hbc .route-option.sel{border:2px solid var(--color-border-brand);background:var(--color-background-brand-soft)}
+.route-icon{font-size:18px;color:var(--color-accent);margin-top:1px;flex-shrink:0}
+.route-name{font-size:var(--font-size-base);font-weight:500;margin:0 0 2px;display:block}
+.route-desc{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-secondary);display:block}
+.extras-list{display:flex;flex-direction:column;gap:8px}
+.hbc .extra-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--color-border-card);border-radius:var(--border-radius-md);cursor:pointer;text-align:left;background:var(--color-background-primary);width:100%}
+.hbc .extra-item:hover{border-color:var(--color-border-secondary)}
+.hbc .extra-item.sel{border:0.5px solid var(--color-border-brand);background:var(--color-background-brand-soft)}
+.extra-icon{width:34px;height:34px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--color-accent);flex-shrink:0}
+.extra-item.sel .extra-icon{background:var(--color-background-primary)}
+.extra-name{font-size:var(--font-size-base);font-weight:500;margin:0 0 2px;display:block}
+.extra-desc{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-secondary);display:block}
+.extra-price{font-size:var(--font-size-base);font-weight:500;white-space:nowrap;margin-left:auto}
+.extra-check{width:18px;height:18px;border-radius:4px;border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.extra-check i{font-size:11px}
+.extra-item.sel .extra-check{background:var(--color-background-brand);border-color:var(--color-border-brand);color:var(--color-background-primary)}
+.summary-card{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.1rem 1.25rem;margin-bottom:16px}
+.hbc .sum-title{font-size:var(--font-size-base);font-weight:500;margin:0 0 10px}
+.sum-row{display:flex;justify-content:space-between;font-size:var(--font-size-base);margin-bottom:5px}
+.sum-label{color:var(--color-text-secondary)}.sum-val{font-weight:500}
+.sum-div{border-top:0.5px solid var(--color-border-tertiary);margin:10px 0}
+.sum-total{display:flex;justify-content:space-between;font-size:var(--font-size-md);font-weight:500}
+.hbc .cta-btn{width:100%;padding:13px;background:var(--color-background-brand);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500}
+.hbc .cta-btn:hover{opacity:0.88;color:var(--color-background-primary)}
+.cta-btn i{font-size:14px;vertical-align:-2px}
+.hbc .back-btn{width:100%;padding:10px;background:none;color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:var(--font-size-sm);margin-top:8px}
+.policy-note{display:flex;align-items:center;gap:6px;font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-success);justify-content:center;margin-top:10px}
+@media (max-width:768px){
+  .max-w{padding:16px}
+  .dtd-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .guests-grid,.route-grid{grid-template-columns:1fr}
+}
+@media (max-width:480px){
+  .dtd-grid{grid-template-columns:1fr}
+}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="max-w">
+    <div class="mini-nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+    </div>
+    <div class="step-bar">
+      <div class="step done"><div class="step-dot"><i class="ti ti-check" style="font-size: 11px" aria-hidden="true"></i></div><span class="step-lbl">Tour type</span></div>
+      <div class="step-line"></div>
+      <div class="step active"><div class="step-dot">2</div><span class="step-lbl">Customise</span></div>
+      <div class="step-line"></div>
+      <div class="step next"><div class="step-dot">3</div><span class="step-lbl">Review</span></div>
+      <div class="step-line"></div>
+      <div class="step next"><div class="step-dot">4</div><span class="step-lbl">Payment</span></div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-map-2" aria-hidden="true"></i> Choose your route</p>
+      <p class="card-sub">Pick a suggested route or describe your own in special requests.</p>
+      <div class="route-grid">
+        <sc-for list="{{ routes }}" as="r" hint-placeholder-count="4">
+          <button class="{{ r.cls }}" aria-pressed="{{ r.pressed }}" onClick="{{ r.pick }}"><i class="{{ r.iconCls }}" aria-hidden="true"></i><span><span class="route-name">{{ r.name }}</span><span class="route-desc body-sm">{{ r.desc }}</span></span></button>
+        </sc-for>
+      </div>
+    </div><div class="card">
+      <p class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> When and how long</p>
+      <p class="card-sub">Private charters depart at any time — we'll confirm availability after booking.</p>
+      <div class="dtd-grid">
+        <div class="field"><label for="pc-date">Date</label><input id="pc-date" type="date"></div>
+        <div class="field"><label for="pc-time">Departure time</label><input id="pc-time" type="time" value="10:00"></div>
+        <div class="field"><label for="pc-dur">Duration</label><select id="pc-dur" value="{{ duration }}" onChange="{{ onDuration }}"><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option><option value="6">6 hours</option><option value="8">Full day (8h)</option></select></div>
+      </div>
+    </div><div class="card">
+      <p class="card-title"><i class="ti ti-users" aria-hidden="true"></i> Guests</p>
+      <p class="card-sub">Maximum 12 guests per charter.</p>
+      <div class="guests-grid">
+        <div class="guest-row"><div><p style="font-size: var(--font-size-base)">Adults</p><p style="font-size: var(--font-size-xs); color: var(--color-text-tertiary)">Age 13+</p></div><div class="stepper"><button class="step-btn" aria-label="Fewer adults" onClick="{{ adultsDown }}">−</button><span class="step-val">{{ adults }}</span><button class="step-btn" aria-label="More adults" onClick="{{ adultsUp }}">+</button></div></div>
+        <div class="guest-row"><div><p style="font-size: var(--font-size-base)">Children</p><p style="font-size: var(--font-size-xs); color: var(--color-text-tertiary)">Age 3–12</p></div><div class="stepper"><button class="step-btn" aria-label="Fewer children" onClick="{{ childrenDown }}">−</button><span class="step-val">{{ children }}</span><button class="step-btn" aria-label="More children" onClick="{{ childrenUp }}">+</button></div></div>
+      </div>
+    </div>
+
+    
+
+    
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-sparkles" aria-hidden="true"></i> Add extras <span style="font-size: var(--font-size-sm); font-weight: 400; color: var(--color-text-tertiary)">— optional</span></p>
+      <p class="card-sub">Per-booking add-ons — all prepared before you arrive.</p>
+      <div class="extras-list">
+        <sc-for list="{{ extras }}" as="x" hint-placeholder-count="4">
+          <button class="{{ x.cls }}" aria-pressed="{{ x.pressed }}" onClick="{{ x.toggle }}"><span class="extra-icon"><i class="{{ x.iconCls }}" aria-hidden="true"></i></span><span><span class="extra-name">{{ x.name }}</span><span class="extra-desc body-sm">{{ x.desc }}</span></span><span class="extra-price">{{ x.priceLabel }}</span><span class="extra-check"><sc-if value="{{ x.on }}" hint-placeholder-val="{{ false }}"><i class="ti ti-check" aria-hidden="true"></i></sc-if></span></button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-message" aria-hidden="true"></i> Special requests</p>
+      <p class="card-sub">Allergies, accessibility needs, celebrations, custom route ideas.</p>
+      <textarea aria-label="Special requests" style="width: 100%; min-height: 72px; resize: vertical" placeholder="e.g. It's our anniversary — can you have flowers on board?"></textarea>
+    </div>
+
+    <div class="summary-card">
+      <p class="sum-title">Your charter</p>
+      <div class="sum-row"><span class="sum-label">Duration</span><span class="sum-val">{{ durLabel }}</span></div>
+      <div class="sum-row"><span class="sum-label">Guests</span><span class="sum-val">{{ guestsLabel }}</span></div>
+      <div class="sum-row"><span class="sum-label">Route</span><span class="sum-val">{{ routeLabel }}</span></div>
+      <div class="sum-div"></div>
+      <div class="sum-row"><span class="sum-label">Charter base price</span><span class="sum-val">{{ baseLabel }}</span></div>
+      <sc-if value="{{ hasExtras }}" hint-placeholder-val="{{ false }}">
+        <div class="sum-row"><span class="sum-label">Extras</span><span class="sum-val">{{ extrasLabel }}</span></div>
+      </sc-if>
+      <div class="sum-div"></div>
+      <div class="sum-total"><span>Total</span><span>{{ totalLabel }}</span></div>
+      <p style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin: 4px 0 0; text-align: right">Includes all taxes and fees</p>
+    </div>
+    <a class="cta-btn" href="BookingSummary.dc.html">Review booking <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    <a class="back-btn" href="TourDetail.dc.html">← Back to tour type</a>
+    <div class="policy-note"><i class="ti ti-shield-check" style="font-size: 13px" aria-hidden="true"></i> Free cancellation up to 48h before departure</div>
+    <div class="trust-strip">
+      <span><i class="ti ti-lock" aria-hidden="true"></i> Secure payment</span>
+      <span><i class="ti ti-headset" aria-hidden="true"></i> Need help? <a href="mailto:help@hellobluecave.com">help@hellobluecave.com</a></span>
+      <span>Licensed maritime operator · Croatia</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { adults: 2, children: 0, duration: '3', route: 0, extras: [] };
+  }
+  changeGuest(type, delta) {
+    const a = this.state.adults, c = this.state.children;
+    if (type === 'adults') { const n = a + delta; if (n < 1 || n + c > 12) return; this.setState({ adults: n }); }
+    else { const n = c + delta; if (n < 0 || a + n > 12) return; this.setState({ children: n }); }
+  }
+  renderVals() {
+    const s = this.state;
+    const durMult = { '2': 1, '3': 1.2, '4': 1.4, '6': 1.7, '8': 2.2 };
+    const durLabel = { '2': '2 hours', '3': '3 hours', '4': '4 hours', '6': '6 hours', '8': 'Full day (8h)' };
+    const routeDefs = [
+      { name: 'Sunset coast', desc: 'Sea caves, old town walls, golden hour views', icon: 'ti-sunset' },
+      { name: 'Elafiti islands', desc: 'Three car-free islands, swimming, village lunch', icon: 'ti-island' },
+      { name: 'Blue Cave & Vis', desc: 'The full outer-island bucket list', icon: 'ti-droplet' },
+      { name: 'Hidden coves', desc: 'Snorkelling and swimming stops only locals know', icon: 'ti-swimming' }
+    ];
+    const extraDefs = [
+      { name: 'Champagne welcome', desc: 'Chilled on ice, ready when you board', icon: 'ti-bottle', price: 40 },
+      { name: 'Professional photo package', desc: 'Photographer on board, edited gallery within 24h', icon: 'ti-camera', price: 80 },
+      { name: 'Chef-prepared picnic lunch', desc: 'Local produce, seafood, bread, and a cheese board', icon: 'ti-tools-kitchen-2', price: 65 },
+      { name: 'Snorkelling gear', desc: 'Mask, fins, and vest for all guests', icon: 'ti-fish', price: 30 }
+    ];
+    const routes = routeDefs.map((r, i) => ({
+      name: r.name, desc: r.desc, iconCls: 'ti ' + r.icon + ' route-icon',
+      cls: 'route-option' + (s.route === i ? ' sel' : ''),
+      pressed: s.route === i ? 'true' : 'false',
+      pick: () => this.setState({ route: i })
+    }));
+    let extrasTotal = 0;
+    const extras = extraDefs.map((x, i) => {
+      const on = s.extras.indexOf(i) > -1;
+      if (on) extrasTotal += x.price;
+      return {
+        name: x.name, desc: x.desc, iconCls: 'ti ' + x.icon, priceLabel: '+€' + x.price, on: on,
+        cls: 'extra-item' + (on ? ' sel' : ''), pressed: on ? 'true' : 'false',
+        toggle: () => this.setState({ extras: on ? s.extras.filter(e => e !== i) : s.extras.concat([i]) })
+      };
+    });
+    const base = Math.round(280 * (durMult[s.duration] || 1));
+    const a = s.adults, c = s.children;
+    return {
+      adults: a, children: c,
+      adultsUp: () => this.changeGuest('adults', 1),
+      adultsDown: () => this.changeGuest('adults', -1),
+      childrenUp: () => this.changeGuest('children', 1),
+      childrenDown: () => this.changeGuest('children', -1),
+      duration: s.duration,
+      onDuration: e => this.setState({ duration: e.target.value }),
+      routes: routes,
+      extras: extras,
+      durLabel: durLabel[s.duration],
+      guestsLabel: a + ' adult' + (a !== 1 ? 's' : '') + (c > 0 ? ', ' + c + ' child' + (c !== 1 ? 'ren' : '') : ''),
+      routeLabel: routeDefs[s.route].name,
+      baseLabel: '€' + base,
+      hasExtras: extrasTotal > 0,
+      extrasLabel: '€' + extrasTotal,
+      totalLabel: '€' + (base + extrasTotal)
+    };
+  }
+}
+</script>
+</body>
+</html>

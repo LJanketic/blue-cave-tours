@@ -9,6 +9,7 @@ import { getTourBySlug } from '../../lib/tours';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
 import { bookings } from '../../lib/bookings/store';
+import { BOOKING_COOKIE } from '../../lib/bookings/session';
 import { CANCELLATION_WEATHER } from '../../config/cancellation';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 
@@ -22,6 +23,11 @@ if (booking.paymentStatus !== 'paid' || booking.status === 'cancelled') {
 	return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
 }
 
+// The booking is done: the browser no longer needs its booking cookie (S-12).
+Astro.cookies.delete(BOOKING_COOKIE, { path: '/' });
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+
 const bookedTour = getTourBySlug(booking.tourSlug);
 const details = {
 	email: booking.email,
@@ -29,7 +35,7 @@ const details = {
 	notes: booking.customerNotes || null,
 };
 const guestName = `${booking.firstName} ${booking.lastName}`;
-const guestLine = guestSummaryFromCounts(booking.adults, booking.children);
+const guestLine = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 const dateLine = formatBookingDate(booking.date);
 const departureLine = booking.slot || bookedTour?.departure || null;
 const bookingRef = booking.ref;
@@ -241,7 +247,7 @@ const bringList =
 
 	.payment-success-page .card-title .ti {
 		font-size: 15px;
-		color: #1d9e75;
+		color: var(--color-accent);
 	}
 
 	.payment-success-page .card-title--meetup {
@@ -338,7 +344,7 @@ const bringList =
 
 	.payment-success-page .map-stub .ti {
 		font-size: 18px;
-		color: #1d9e75;
+		color: var(--color-accent);
 	}
 
 	.payment-success-page .next-icon .ti {

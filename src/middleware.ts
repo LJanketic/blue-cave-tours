@@ -1,7 +1,7 @@
 import type { APIContext, MiddlewareNext } from 'astro';
 import { defineMiddleware } from 'astro:middleware';
 import { ADMIN_COOKIE, verifySessionToken } from './lib/admin/auth';
-import { SECURITY_HEADERS } from './config/security-headers';
+import { securityHeadersFor } from './config/security-headers';
 
 const LOGIN_PATH = '/admin/login/';
 
@@ -38,7 +38,7 @@ function noStore(response: Response, robots: boolean): Response {
  */
 export const onRequest = defineMiddleware(async (context, next) => {
 	if (context.isPrerendered) return next();
-	return setHeaders(await guard(context, next), SECURITY_HEADERS);
+	return setHeaders(await guard(context, next), securityHeadersFor(context.url.pathname));
 });
 
 async function guard(context: APIContext, next: MiddlewareNext): Promise<Response> {

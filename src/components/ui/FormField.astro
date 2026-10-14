@@ -1,0 +1,63 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import '../../styles/components/form-field.css';
+
+type Props = Omit<HTMLAttributes<'input'>, 'id' | 'name' | 'class'> & {
+	label: string;
+	name: string;
+	/** Defaults to the name. */
+	id?: string;
+	as?: 'input' | 'textarea' | 'select';
+	/** For `as="select"`. */
+	options?: { value: string; label: string }[];
+	hint?: string;
+	/** Server-side error to show (the entered value stays in the field, §11.8). */
+	error?: string;
+	/** For `as="textarea"`. */
+	rows?: number;
+	class?: string;
+};
+
+const { label, name, id = name, as = 'input', options = [], hint, error, required, value, class: className, ...rest } = Astro.props;
+const hintId = hint ? `${id}-hint` : undefined;
+const errorId = error ? `${id}-error` : undefined;
+const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined;
+const controlAttrs = {
+	id,
+	name,
+	required,
+	class: 'form-field-ui__control',
+	'aria-describedby': describedBy,
+	'aria-invalid': error ? ('true' as const) : undefined,
+};
+---
+
+<div class:list={['form-field-ui', className]}>
+	<label class="form-field-ui__label" for={id}>
+		{label}{required && <span class="form-field-ui__required" aria-hidden="true">*</span>}
+	</label>
+	{
+		as === 'textarea' ? (
+			<textarea {...controlAttrs} {...(rest as HTMLAttributes<'textarea'>)}>{value}</textarea>
+		) : as === 'select' ? (
+			<select {...controlAttrs} {...(rest as HTMLAttributes<'select'>)}>
+				{options.map((option) => (
+					<option value={option.value} selected={option.value === value}>
+						{option.label}
+					</option>
+				))}
+			</select>
+		) : (
+			<input {...controlAttrs} value={value} {...rest} />
+		)
+	}
+	{hint && <p class="form-field-ui__hint" id={hintId}>{hint}</p>}
+	{
+		error && (
+			<p class="form-field-ui__error" id={errorId}>
+				<i class="ti ti-alert-circle" aria-hidden="true" />
+				{error}
+			</p>
+		)
+	}
+</div>

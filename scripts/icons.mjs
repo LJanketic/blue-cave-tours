@@ -17,7 +17,7 @@ import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const TABLER_VERSION = '3.44.0';
+const TABLER_VERSION = '3.48.0';
 const CDN = `https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@${TABLER_VERSION}/dist`;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

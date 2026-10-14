@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Legal Pages — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-text-info)}a:hover{color:var(--color-accent-dark)}
+.nav{max-width:680px}
+.wrap{max-width:680px}
+.tab-bar{display:flex;gap:8px;margin-bottom:28px}
+.hbc .tab{flex:1;padding:9px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:var(--font-size-sm);font-weight:500;cursor:pointer;text-align:center;background:var(--color-background-primary);color:var(--color-text-secondary)}
+.hbc .tab.act{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-primary)}
+.legal-layout{display:grid;grid-template-columns:180px minmax(0,1fr);gap:24px;align-items:start}
+.side-nav{position:sticky;top:76px;display:flex;flex-direction:column;gap:2px}
+.side-link{font-size:var(--font-size-sm);padding:6px 10px;border-radius:var(--border-radius-md);color:var(--color-text-secondary);cursor:pointer;border-left:2px solid transparent}
+.side-link:hover{color:var(--color-text-primary);background:var(--color-background-secondary)}
+.side-link.active{color:var(--color-text-primary);border-left-color:var(--color-accent);font-weight:500;background:var(--color-background-secondary)}
+.legal-hero h1{font-size:var(--font-size-hero);font-weight:500;margin:0 0 5px;line-height:var(--line-height-tight)}
+.legal-meta{font-size:var(--font-size-sm);color:var(--color-text-tertiary);margin:0 0 14px}
+.summary-box{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:24px}
+.summary-box>p{font-size:var(--font-size-xs);font-weight:500;color:var(--color-text-secondary);margin:0 0 8px;text-transform:uppercase;letter-spacing:0.05em}
+.sum-item{display:flex;align-items:flex-start;gap:8px;font-size:var(--font-size-base);color:var(--color-text-secondary);margin-bottom:5px}
+.sum-item i{font-size:14px;color:var(--color-accent);flex-shrink:0;margin-top:5px}
+.legal-section{margin-bottom:24px}
+.legal-section h2{font-size:var(--font-size-lg);font-weight:500;margin:0 0 10px;padding-bottom:8px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:8px}
+.legal-section h2 i{font-size:15px;color:var(--color-accent)}
+.legal-section p{font-size:var(--font-size-base);color:var(--color-text-secondary);line-height:var(--line-height-relaxed);margin:0 0 10px}
+.highlight-box{border-left:3px solid var(--color-border-highlight);padding:10px 14px;background:var(--color-background-highlight-soft);border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;margin:12px 0}
+.legal-section .highlight-box p{color:var(--color-text-primary);margin:0;font-weight:500}
+.warn-box{border-left:3px solid var(--color-category-warning-icon);padding:10px 14px;background:var(--color-background-warning-soft);border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;margin:12px 0}
+.legal-section .warn-box p{color:var(--color-category-tip-text);margin:0}
+.table-wrap{overflow-x:auto;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:var(--font-size-base)}
+th{text-align:left;font-size:var(--font-size-xs);font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em;padding:7px 10px;border-bottom:0.5px solid var(--color-border-secondary)}
+td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td:first-child{font-weight:500;color:var(--color-text-primary)}
+.contact-note{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;display:flex;align-items:flex-start;gap:10px;margin-top:8px}
+.contact-note i{font-size:16px;color:var(--color-accent);flex-shrink:0;margin-top:5px}
+.legal-section .contact-note p{margin:0}
+.contact-note a{color:var(--color-text-info);text-decoration:none}
+@media (max-width:768px){
+  .legal-layout{grid-template-columns:1fr}
+  .side-nav{position:static}
+}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="nav-bar">
+    <nav class="nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+      <div class="nav-links">
+        <a class="nav-link" href="Tours.dc.html">Tours</a>
+        <a class="nav-link" href="Destinations.dc.html">Destinations</a>
+        <a class="nav-link" href="About.dc.html">About</a>
+        <a class="nav-link" href="Faqs.dc.html">FAQ</a>
+      </div>
+      <a class="nav-cta" href="Tours.dc.html">Book now</a>
+      <button class="nav-hamburger" aria-label="Menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+    </nav>
+  </div>
+  <div class="wrap">
+    <div class="tab-bar" role="tablist">
+      <button class="{{ termsTab }}" role="tab" aria-selected="{{ termsSel }}" onClick="{{ showTerms }}">Terms &amp; conditions</button>
+      <button class="{{ privacyTab }}" role="tab" aria-selected="{{ privacySel }}" onClick="{{ showPrivacy }}">Privacy policy</button>
+      <button class="{{ cancelTab }}" role="tab" aria-selected="{{ cancelSel }}" onClick="{{ showCancel }}">Cancellation policy</button>
+    </div>
+
+    <sc-if value="{{ isTerms }}" hint-placeholder-val="{{ true }}">
+      <div class="legal-layout">
+        <nav class="side-nav" aria-label="Sections"><div class="side-link active">Bookings</div><div class="side-link">Payment</div><div class="side-link">Conduct</div><div class="side-link">Liability</div><div class="side-link">Safety</div><div class="side-link">Governing law</div></nav>
+        <div>
+          <div class="legal-hero"><h1>Terms &amp; conditions</h1><p class="legal-meta">Last updated: 1 June 2025 · Hello Blue Cave d.o.o.</p></div>
+          <div class="summary-box"><p>The short version</p><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> Book online, pay securely, get instant confirmation</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> Free cancellation up to 48h before departure</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> Weather cancellations always get a full refund or rebook</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> We can remove guests who endanger safety without refund</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> Croatian law applies to all disputes</div></div>
+          <div class="legal-section"><h2><i class="ti ti-calendar-check" aria-hidden="true"></i> 1. Bookings</h2><p>A booking is confirmed once full payment (group tours) or the required deposit (private charters) has been received and a confirmation email has been sent. You must be 18 or older to make a booking.</p><p>Changes to guest numbers or departure date are subject to availability and must be requested at least 48 hours before departure.</p></div>
+          <div class="legal-section"><h2><i class="ti ti-credit-card" aria-hidden="true"></i> 2. Payment</h2><p>Group tours are payable in full at the time of booking. Private charters require a non-refundable deposit of 30% at booking, with the balance due 7 days before departure.</p><div class="warn-box"><p>If the balance for a private charter is not received 7 days before departure, Hello Blue Cave reserves the right to cancel the booking and retain the deposit.</p></div><p>All payments are processed securely via Teya. Prices are quoted in Euros and include all applicable taxes.</p></div>
+          <div class="legal-section"><h2><i class="ti ti-users" aria-hidden="true"></i> 3. Guest conduct</h2><p>All guests must follow the instructions of the captain and crew at all times. The captain has the right to refuse boarding or remove a guest if their behaviour poses a risk to the safety or enjoyment of others.</p><div class="warn-box"><p>Guests removed for conduct reasons are not entitled to a refund, partial or otherwise.</p></div></div>
+          <div class="legal-section"><h2><i class="ti ti-shield" aria-hidden="true"></i> 4. Liability</h2><p>Hello Blue Cave holds full public liability insurance covering all passengers. We are not liable for loss or damage to personal belongings brought on board. Nothing in these terms limits liability for death or personal injury caused by negligence.</p></div>
+          <div class="legal-section"><h2><i class="ti ti-anchor" aria-hidden="true"></i> 5. Safety</h2><p>All vessels are inspected and certified in accordance with Croatian Maritime Authority requirements. The captain's decision regarding sailing conditions is final.</p></div>
+          <div class="legal-section"><h2><i class="ti ti-scale" aria-hidden="true"></i> 6. Governing law</h2><p>These terms are governed by the laws of the Republic of Croatia. Disputes shall be subject to the exclusive jurisdiction of the courts of Split-Dalmatia County.</p><div class="contact-note"><i class="ti ti-mail" aria-hidden="true"></i><p>Questions? Email <a href="mailto:hello@hellobluecave.com">hello@hellobluecave.com</a></p></div></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPrivacy }}" hint-placeholder-val="{{ false }}">
+      <div class="legal-layout">
+        <nav class="side-nav" aria-label="Sections"><div class="side-link active">What we collect</div><div class="side-link">How we use it</div><div class="side-link">Third parties</div><div class="side-link">Cookies</div><div class="side-link">Your rights</div><div class="side-link">Contact</div></nav>
+        <div>
+          <div class="legal-hero"><h1>Privacy policy</h1><p class="legal-meta">Last updated: 1 June 2025 · GDPR compliant</p></div>
+          <div class="summary-box"><p>The short version</p><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> We collect only what we need to run your booking</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> We never sell your data to third parties</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> Payment details go directly to Teya — we never see them</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> You can request deletion of your data at any time</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> We use essential cookies only — no ad tracking</div></div>
+          <div class="legal-section"><h2><i class="ti ti-database" aria-hidden="true"></i> 1. What we collect</h2><p>When you make a booking or contact us, we may collect: name, email address, phone number, booking details, and correspondence sent via the contact form or email. We do not collect payment card details — handled directly by Teya.</p></div>
+          <div class="legal-section"><h2><i class="ti ti-settings" aria-hidden="true"></i> 2. How we use it</h2><p>We use the information solely to process and manage your booking, send confirmations and pre-departure information, contact you about weather changes, and respond to enquiries.</p><div class="highlight-box"><p>We do not use your data for marketing without your explicit consent.</p></div></div>
+          <div class="legal-section"><h2><i class="ti ti-share" aria-hidden="true"></i> 3. Third-party services</h2><div class="table-wrap"><table><thead><tr><th>Service</th><th>Purpose</th><th>Data shared</th></tr></thead><tbody><tr><td>Teya</td><td>Payment processing</td><td>Name, email, payment data</td></tr><tr><td>Google Analytics</td><td>Anonymous site usage</td><td>Anonymised, no personal data</td></tr><tr><td>Mailchimp</td><td>Confirmation emails</td><td>Name, email, booking ref</td></tr></tbody></table></div></div>
+          <div class="legal-section"><h2><i class="ti ti-cookie" aria-hidden="true"></i> 4. Cookies</h2><p>We use essential cookies only — those required for the site and booking flow to function. No advertising or tracking cookies.</p><div class="table-wrap"><table><thead><tr><th>Cookie</th><th>Purpose</th><th>Duration</th></tr></thead><tbody><tr><td>session_id</td><td>Maintains your booking session</td><td>Session</td></tr><tr><td>csrf_token</td><td>Security — prevents form tampering</td><td>Session</td></tr><tr><td>cookie_consent</td><td>Stores your cookie preference</td><td>1 year</td></tr></tbody></table></div></div>
+          <div class="legal-section"><h2><i class="ti ti-user-check" aria-hidden="true"></i> 5. Your rights</h2><p>Under GDPR you have the right to access, correct, or delete your data, and to lodge a complaint with the Croatian Personal Data Protection Agency (AZOP). We retain booking data for 5 years to comply with Croatian financial record-keeping obligations.</p></div>
+          <div class="legal-section"><h2><i class="ti ti-mail" aria-hidden="true"></i> 6. Contact</h2><div class="contact-note"><i class="ti ti-shield-check" aria-hidden="true"></i><p>For privacy requests, contact <a href="mailto:privacy@hellobluecave.com">privacy@hellobluecave.com</a>. We will respond within 30 days as required by GDPR.</p></div></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isCancel }}" hint-placeholder-val="{{ false }}">
+      <div class="legal-layout">
+        <nav class="side-nav" aria-label="Sections"><div class="side-link active">Overview</div><div class="side-link">Group tours</div><div class="side-link">Private charters</div><div class="side-link">Weather</div><div class="side-link">Refunds</div><div class="side-link">How to cancel</div></nav>
+        <div>
+          <div class="legal-hero"><h1>Cancellation policy</h1><p class="legal-meta">Last updated: 1 June 2025 · Applies to all bookings via hellobluecave.com</p></div>
+          <div class="summary-box"><p>The short version</p><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> Cancel 48h+ before departure — full refund, no questions</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> Cancel within 48h — non-refundable</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> We cancel for weather — full refund or free rebook</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> Private charter deposits are non-refundable</div><div class="sum-item"><i class="ti ti-circle-check" aria-hidden="true"></i> Refunds processed within 5–10 business days</div></div>
+          <div class="legal-section"><h2><i class="ti ti-calendar-x" aria-hidden="true"></i> 1. Group tours</h2><div class="table-wrap"><table><thead><tr><th>Notice given</th><th>Refund</th></tr></thead><tbody><tr><td>More than 48 hours before departure</td><td>100% — full refund</td></tr><tr><td>Less than 48 hours before departure</td><td>0% — non-refundable</td></tr><tr><td>No show</td><td>0% — non-refundable</td></tr></tbody></table></div><div class="highlight-box"><p>If you need to cancel within 48 hours due to a medical emergency, contact us directly. We'll do our best to offer a credit or rebook where possible, at our discretion.</p></div></div>
+          <div class="legal-section"><h2><i class="ti ti-crown" aria-hidden="true"></i> 2. Private charters</h2><div class="table-wrap"><table><thead><tr><th>Notice given</th><th>Deposit (30%)</th><th>Balance</th></tr></thead><tbody><tr><td>More than 14 days before</td><td>Non-refundable</td><td>Full refund</td></tr><tr><td>7–14 days before</td><td>Non-refundable</td><td>50% refund</td></tr><tr><td>Less than 7 days before</td><td>Non-refundable</td><td>Non-refundable</td></tr><tr><td>No show</td><td>Non-refundable</td><td>Non-refundable</td></tr></tbody></table></div></div>
+          <div class="legal-section"><h2><i class="ti ti-cloud-storm" aria-hidden="true"></i> 3. Weather cancellations</h2><p>If Hello Blue Cave cancels a tour due to unsafe conditions, you receive either a full refund (within 5–10 business days) or a free rebook to any available date within the same season — your choice.</p><div class="highlight-box"><p>We will notify you at least 4 hours before the scheduled departure in the event of a weather cancellation.</p></div></div>
+          <div class="legal-section"><h2><i class="ti ti-cash" aria-hidden="true"></i> 4. Refunds</h2><p>Eligible refunds are returned to the original payment method within 5–10 business days. Refunds are issued in Euros; we are not liable for exchange rate fluctuations.</p></div>
+          <div class="legal-section"><h2><i class="ti ti-mail" aria-hidden="true"></i> 5. How to cancel</h2><p>To cancel, contact us with your booking reference via email (hello@hellobluecave.com), WhatsApp (+385 91 234 5678), or phone (+385 20 123 456).</p><div class="contact-note"><i class="ti ti-info-circle" aria-hidden="true"></i><p>Keep a record of when you sent your cancellation request. We recommend using email so you have a timestamp in case of any dispute.</p></div></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <footer class="footer">
+      <div class="footer-brand"><div class="nav-logo" style="margin-bottom: 6px"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</div><p>Small-boat tours along the Dalmatian coast since 2015. Licensed, insured, and obsessed with the sea.</p></div>
+      <div class="footer-col"><h4>Tours</h4><a href="Tours.dc.html">Group tours</a><a href="PrivateBooking.dc.html">Private charters</a><a href="Tours.dc.html">Day trips</a><a href="Tours.dc.html">Sunset cruises</a></div>
+      <div class="footer-col"><h4>Info</h4><a href="About.dc.html">About us</a><a href="Destinations.dc.html">Destinations</a><a href="Faqs.dc.html">FAQs</a><a href="Contact.dc.html">Contact</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="#" onClick="{{ footTerms }}">Terms &amp; conditions</a><a href="#" onClick="{{ footPrivacy }}">Privacy policy</a><a href="#" onClick="{{ footCancel }}">Cancellation policy</a></div>
+    </footer>
+    <div class="footer-bottom"><span>© 2025 Hello Blue Cave</span><span>Licensed maritime operator · Croatia</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"startTab":{"editor":"enum","options":["terms","privacy","cancel"],"default":"terms"},"$preview":{"width":1280,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: null };
+  }
+  renderVals() {
+    const tab = this.state.tab || this.props.startTab || 'terms';
+    const go = t => e => { if (e && e.preventDefault) e.preventDefault(); this.setState({ tab: t }); };
+    return {
+      isTerms: tab === 'terms', isPrivacy: tab === 'privacy', isCancel: tab === 'cancel',
+      termsTab: 'tab' + (tab === 'terms' ? ' act' : ''),
+      privacyTab: 'tab' + (tab === 'privacy' ? ' act' : ''),
+      cancelTab: 'tab' + (tab === 'cancel' ? ' act' : ''),
+      termsSel: tab === 'terms' ? 'true' : 'false',
+      privacySel: tab === 'privacy' ? 'true' : 'false',
+      cancelSel: tab === 'cancel' ? 'true' : 'false',
+      showTerms: go('terms'), showPrivacy: go('privacy'), showCancel: go('cancel'),
+      footTerms: go('terms'), footPrivacy: go('privacy'), footCancel: go('cancel')
+    };
+  }
+}
+</script>
+</body>
+</html>

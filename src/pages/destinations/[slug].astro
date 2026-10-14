@@ -1,33 +1,43 @@
 ---
 export const prerender = true;
 
-import { isGroupTour, tourPriceUnit } from '../../lib/booking';
-import { MEETING_POINT_MAP_URL, pageTitle } from '../../config/site';
+/**
+ * Destination detail (spec §6.5, board 10): gallery, intro, highlights,
+ * location, insider tips and the tours that visit; the "at a glance" aside
+ * follows the main column on phones (D-24). No "best time" chart, "also
+ * nearby" or weather (D-11, D-13).
+ */
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import ImageGallery from '../../components/vue/ImageGallery.vue';
-import TourImage from '../../components/TourImage.astro';
+import ImageGallery, { type GalleryTag } from '../../components/vue/ImageGallery.vue';
+import TourCard from '../../components/vue/TourCard.vue';
+import Breadcrumb from '../../components/ui/Breadcrumb.astro';
+import SectionHeader from '../../components/ui/SectionHeader.astro';
+import InfoTile from '../../components/ui/InfoTile.astro';
+import InfoTileGrid from '../../components/ui/InfoTileGrid.astro';
+import MobileActionBar from '../../components/ui/MobileActionBar.astro';
+import DestinationHighlights from '../../components/destination/DestinationHighlights.astro';
+import DestinationGlance from '../../components/destination/DestinationGlance.astro';
 import {
-	bestTimeBarStyle,
+	bestSeasonLabel,
 	getAllDestinations,
 	getDestinationGallery,
 	getDestinationPhoto,
+	getDestinationsForTour,
 	getToursForDestination,
-	MONTH_LABELS,
 } from '../../lib/destinations';
 import { getTourCardPhoto } from '../../lib/tours';
+import { toTourCardDTO } from '../../lib/cards';
 import { breadcrumbJsonLd, destinationJsonLd, socialImageFor } from '../../lib/seo';
-import { GALLERY_HERO_SIZE, GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
+import { GALLERY_CARD_SIZE, GALLERY_PHOTO_SIZE, toCardPhoto, toGalleryView } from '../../data/tour-photos';
 
 export function getStaticPaths() {
-	return getAllDestinations().map((destination) => ({
-		params: { slug: destination.slug },
-		props: { destination },
-	}));
+	return getAllDestinations().map((destination) => ({ params: { slug: destination.slug }, props: { destination } }));
 }
 
 const TAG_ICONS: Record<string, string> = {
 	Swimming: 'swimming',
-	Island: 'building-lighthouse',
+	Island: 'beach',
 	Cave: 'droplet',
 	Culture: 'building-castle',
 	'Half-day': 'clock',
@@ -39,53 +49,35 @@ const TAG_ICONS: Record<string, string> = {
 	'Hidden bays': 'beach',
 };
 
-const HIGHLIGHT_ICONS = ['droplet', 'building-fortress', 'leaf', 'glass-full', 'beach', 'moon-stars'];
-
-function tagIcon(tag: string): string {
-	return TAG_ICONS[tag] ?? 'star';
-}
-
-function nearbyTourCount(slug: string): number {
-	return getToursForDestination(slug).length;
-}
-
 const { destination } = Astro.props;
 const tours = getToursForDestination(destination.slug);
-const destinationPhoto = getDestinationPhoto(destination);
-const heroPhoto = await toGalleryView(destinationPhoto, 'sailboat', GALLERY_HERO_SIZE);
-const galleryPhotos = await Promise.all(
-	getDestinationGallery(destination).map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)),
+const tourCards = await Promise.all(
+	tours.map(async (tour) =>
+		toTourCardDTO(tour, getDestinationsForTour(tour.slug).map((d) => d.slug), await toCardPhoto(getTourCardPhoto(tour), GALLERY_CARD_SIZE)),
+	),
 );
 
-type HeroTag = { icon: string; label: string; variant: 'feat' | 'group' | 'private' | 'tip' };
-const heroTags: HeroTag[] = [
-	...destination.tags.map((tag): HeroTag => ({ icon: tagIcon(tag), label: tag, variant: 'feat' })),
-	...(destination.tipTag
-		? [{ icon: destination.tipTag.icon, label: destination.tipTag.label, variant: 'tip' } as HeroTag]
-		: []),
+// The gallery opens on the first real photo; places without photos get the placeholder.
+const destinationPhoto = getDestinationPhoto(destination);
+const galleryRefs = getDestinationGallery(destination);
+const galleryPhotos = await Promise.all(
+	(galleryRefs.some((photo) => photo.src) ? galleryRefs : [destinationPhoto]).map((photo) =>
+		toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE),
+	),
+);
+const galleryTags: GalleryTag[] = [
+	...destination.tags.map((tag): GalleryTag => ({ icon: TAG_ICONS[tag] ?? 'star', label: tag, tone: 'brand' })),
+	...(destination.tipTag ? [{ icon: destination.tipTag.icon, label: destination.tipTag.label, tone: 'tip' as const }] : []),
 ];
 
-const mapUrl = MEETING_POINT_MAP_URL;
-const bestSeason = destination.bestTimeMonths.some((s, i) => s >= 2 && i >= 4 && i <= 9)
-	? 'May – Oct'
-	: 'Jun – Sep';
-const visitLabel = destination.name.replace(/\s+island$/i, '').split('(')[0].trim();
-const distanceGeo = destination.geo.find((g) => /distance/i.test(g.label));
-const travelGeo = destination.geo.find((g) => /travel time/i.test(g.label)) ?? destination.geo[1];
-const fromLabel = distanceGeo
-	? distanceGeo.label.replace(/^Distance from\s+/i, 'From ')
-	: 'From Split';
-const mapStubLabel = distanceGeo
-	? `View on map — ${distanceGeo.value}`
-	: 'View on map — depart from Split Riva';
+const shortName = destination.name.split('(')[0].trim();
+const distance = destination.geo.find((g) => /^distance/i.test(g.label));
+const travel = destination.geo.find((g) => /travel time/i.test(g.label));
+const mapLabel = distance ? `View on map: ${distance.value.replace(/^~/, 'about ')} from Split` : `View ${shortName} on the map`;
+const toursHeading = destination.isDepartureHub ? `Tours from ${shortName} (${tours.length})` : `Tours that visit ${shortName} (${tours.length})`;
 
-// Split is where every tour leaves from, not a stop, so it gets its own title.
-const titleSegment = destination.isDepartureHub
-	? `${destination.name} Riva: boat tour departure point`
-	: `${destination.name} boat trips from Split`;
 const shareImage = await socialImageFor(destinationPhoto);
 const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
-// Matches the visible breadcrumb above the gallery (Destinations › name), with Home first.
 const jsonLd = siteUrl
 	? [
 			destinationJsonLd(destination, siteUrl),
@@ -96,6 +88,10 @@ const jsonLd = siteUrl
 			]),
 		]
 	: undefined;
+// Split is where every tour leaves from, not a stop, so it gets its own title.
+const titleSegment = destination.isDepartureHub
+	? `${destination.name} Riva: boat tour departure point`
+	: `${destination.name} boat trips from Split`;
 ---
 
 <SiteLayout
@@ -105,603 +101,195 @@ const jsonLd = siteUrl
 	ogImageAlt={shareImage.alt}
 	jsonLd={jsonLd}
 >
-	<main id="main" class="page-shell dest-detail-page">
-		<article class="page">
-			<nav class="breadcrumb" aria-label="Breadcrumb">
-				<a href="/destinations/">Destinations</a>
-				<span aria-hidden="true"> › </span>
-				<span aria-current="page">{destination.name}</span>
-			</nav>
+	<main id="main" class="dest">
+		<Breadcrumb items={[{ label: 'Destinations', href: '/destinations/' }, { label: destination.name }]} />
+		<ImageGallery client:visible photos={galleryPhotos} tags={galleryTags} />
 
-			<ImageGallery
-				client:visible
-				hero={heroPhoto}
-				gallery={galleryPhotos}
-				tags={heroTags}
-			/>
+		<div class="dest__layout">
+			<div class="dest__main">
+				<h1 class="dest__title">{destination.name}</h1>
+				<p class="dest__intro">{destination.intro}</p>
 
-			<div class="layout">
-				<div>
-					<h1 class="dest-title">{destination.name}</h1>
-					<p class="intro-text dest-intro">{destination.intro}</p>
+				<section class="dest__section" aria-labelledby="highlights-heading">
+					<SectionHeader variant="plain" title="Highlights" id="highlights-heading" />
+					<DestinationHighlights items={destination.highlights} />
+				</section>
 
-					<section class="section" aria-labelledby="highlights-heading">
-						<h2 id="highlights-heading" class="sec-title">Highlights</h2>
-						<div class="highlights">
-							{
-								destination.highlights.map((hl, index) => (
-									<div class="hl-item">
-										<i
-											class={`ti ti-${HIGHLIGHT_ICONS[index % HIGHLIGHT_ICONS.length]}`}
-											aria-hidden="true"
-										></i>
-										{hl}
-									</div>
-								))
-							}
-						</div>
-						<div class="highlights-marquee" aria-hidden="true">
-							<div class="marquee-track">
-								{
-									[...destination.highlights, ...destination.highlights].map((hl, index) => {
-										const originalIndex = index % destination.highlights.length;
-										return (
-											<div class="hl-item">
-												<i
-													class={`ti ti-${HIGHLIGHT_ICONS[originalIndex % HIGHLIGHT_ICONS.length]}`}
-													aria-hidden="true"
-												></i>
-												{hl}
-											</div>
-										);
-									})
-								}
-							</div>
-						</div>
-						<button type="button" class="marquee-toggle" aria-label="Pause highlights animation">Pause</button>
-					</section>
+				<section class="dest__section" aria-labelledby="location-heading">
+					<SectionHeader variant="plain" title="Location & getting there" id="location-heading" />
+					<a class="dest__map" href={destination.mapUrl} target="_blank" rel="noopener">
+						<i class="ti ti-map-2" aria-hidden="true"></i>
+						{mapLabel}
+						<span class="sr-only"> (opens in a new tab)</span>
+					</a>
+					<InfoTileGrid>
+						{destination.geo.map((fact) => <InfoTile label={fact.label}>{fact.value}</InfoTile>)}
+					</InfoTileGrid>
+				</section>
 
-					<section class="section" aria-labelledby="best-time-heading">
-						<h2 id="best-time-heading" class="sec-title">Best time to visit</h2>
-						<div class="best-time-grid" role="img" aria-label="Seasonality chart by month">
-							{
-								destination.bestTimeMonths.map((score, index) => {
-									const bar = bestTimeBarStyle(score);
-									return (
-										<div class="month-col">
-											<div class="month-bar-wrap">
-												<div
-													class="month-bar"
-													style={`height: ${bar.height}; background: ${bar.background}`}
-												></div>
-											</div>
-											<span class="month-lbl">{MONTH_LABELS[index]}</span>
-										</div>
-									);
-								})
-							}
-						</div>
-						<div class="month-note">
-							<span>
-								<span class="legend-dot legend-dot--peak"></span>
-								Peak season
-							</span>
-							<span>
-								<span class="legend-dot legend-dot--good"></span>
-								Good
-							</span>
-							<span>
-								<span class="legend-dot legend-dot--off"></span>
-								Off season
-							</span>
-						</div>
-						<p class="best-time-note">{destination.bestTimeNote}</p>
-					</section>
-
-					<section class="section" aria-labelledby="location-heading">
-						<h2 id="location-heading" class="sec-title">Location &amp; getting there</h2>
-						<a class="map-stub" href={mapUrl} target="_blank" rel="noopener noreferrer">
-							<i class="ti ti-map-2" aria-hidden="true"></i>
-							{mapStubLabel}
-						</a>
-						<div class="info-grid">
-							{
-								destination.geo.map((fact) => (
-									<div class="info-item">
-										<span class="info-label">{fact.label}</span>
-										<span class="info-val">{fact.value}</span>
-									</div>
-								))
-							}
-						</div>
-					</section>
-
-					<section class="section" aria-labelledby="nearby-heading">
-						<h2 id="nearby-heading" class="sec-title">Also nearby</h2>
-						{
-							destination.nearby.map((stop) => (
-								<a class="nearby-item" href={`/destinations/${stop.slug}/`}>
-									<i class={`ti ti-${stop.icon}`} aria-hidden="true"></i>
-									{stop.name}
-									<span class="nearby-dist">{stop.distance}</span>
-								</a>
-							))
-						}
-					</section>
-
-					<section class="section" aria-labelledby="tips-heading">
-						<h2 id="tips-heading" class="sec-title">Insider tips</h2>
+				<section class="dest__section" aria-labelledby="tips-heading">
+					<SectionHeader variant="plain" title="Insider tips" id="tips-heading" />
+					<ol class="dest__tips" role="list">
 						{
 							destination.insiderTips.map((tip, index) => (
-								<div class="insider-item">
-									<span class="insider-num">{index + 1}</span>
-									<span class="insider-text">{tip}</span>
-								</div>
+								<li>
+									<span class="dest__tip-num" aria-hidden="true">
+										{index + 1}
+									</span>
+									{tip}
+								</li>
 							))
 						}
-					</section>
+					</ol>
+				</section>
 
-					<section class="section" aria-labelledby="tours-heading">
-						<h2 id="tours-heading" class="sec-title">
-							Tours that visit {visitLabel}
-							<span class="tours-count">({tours.length})</span>
-						</h2>
+				<section class="dest__section" id="tours" aria-labelledby="tours-heading">
+					<SectionHeader variant="plain" title={toursHeading} id="tours-heading" />
+					<ul class="dest__tours" role="list">
 						{
-							tours.map((tour) => {
-								const isGroup = isGroupTour(tour);
-								const priceUnit = tourPriceUnit(tour);
-								return (
-									<a class="tour-link-card" href={`/tours/${tour.slug}/`}>
-										<div class="tc-head">
-											<div class="tc-thumb">
-												<TourImage photo={getTourCardPhoto(tour)} layout="thumb" icon="sailboat" />
-											</div>
-											<div>
-												<h3 class="tc-name">{tour.title}</h3>
-												<div class="tc-meta">
-													<span class="tc-tag">
-														<i class="ti ti-clock" aria-hidden="true"></i>
-														{tour.duration}
-													</span>
-													<span class="tc-tag">
-														<i class={`ti ti-${isGroup ? 'users' : 'crown'}`} aria-hidden="true"></i>
-														{isGroup ? 'Group' : 'Private'}
-													</span>
-													<span class="tc-tag">
-														<i class="ti ti-map-pin" aria-hidden="true"></i>
-														Stops at {visitLabel}
-													</span>
-													{
-														tour.featured && (
-															<span class="tc-tag tc-tag--featured">
-																<i class="ti ti-star" aria-hidden="true"></i>
-																Best seller
-															</span>
-														)
-													}
-												</div>
-											</div>
-										</div>
-										<div class="tc-foot">
-											<div>
-												{priceUnit && <span class="tc-from">From </span>}
-												<span class="tc-price">{tour.fromPrice}</span>
-												{priceUnit && <span class="tc-per"> {priceUnit}</span>}
-											</div>
-											<span class="tc-cta">View tour</span>
-										</div>
-									</a>
-								);
-							})
+							tourCards.map((tour) => (
+								<li>
+									<TourCard tour={tour} />
+								</li>
+							))
 						}
-					</section>
-				</div>
-
-				<aside class="sticky-card" aria-label="Destination summary">
-					<p class="sidebar-title">{destination.name} at a glance</p>
-					<div class="sc-stat">
-						<span class="sc-stat-label">Tours visiting</span>
-						<span class="sc-stat-val">
-							{tours.length} tour{tours.length === 1 ? '' : 's'}
-						</span>
-					</div>
-					<div class="sc-stat">
-						<span class="sc-stat-label">Best season</span>
-						<span class="sc-stat-val">{bestSeason}</span>
-					</div>
-					{
-						travelGeo && (
-							<div class="sc-stat">
-								<span class="sc-stat-label">{fromLabel}</span>
-								<span class="sc-stat-val">{travelGeo.value}</span>
-							</div>
-						)
-					}
-					<hr class="sc-divider" />
-					<p class="conditions-label">Current conditions</p>
-					<div class="conditions-row">
-						<span class="conditions-weather">
-							<i class="ti ti-sun" aria-hidden="true"></i>
-							Check forecast
-						</span>
-						<span class="conditions-temp">—</span>
-					</div>
-					<p class="conditions-note">Sea temp varies · Light winds typical in season</p>
-					<hr class="sc-divider" />
-					<a class="cta-primary" href={`/tours/?destination=${destination.slug}`}>
-						<i class="ti ti-sailboat" aria-hidden="true"></i>
-						Browse {visitLabel} tours
-					</a>
-					<a class="cta-secondary" href="/contact/?tour=create-perfect-day-private">
-						<i class="ti ti-crown" aria-hidden="true"></i>
-						Plan a private charter
-					</a>
-					<div class="sidebar-nearby-block">
-						<hr class="sc-divider" />
-						<p class="sidebar-nearby-label">Also nearby</p>
-						<div class="sidebar-nearby-list">
-							{
-								destination.nearby.slice(0, 3).map((stop) => {
-									const count = nearbyTourCount(stop.slug);
-									return (
-										<a class="sidebar-link" href={`/destinations/${stop.slug}/`}>
-											<span>{stop.name}</span>
-											<span>
-												{count} tour{count === 1 ? '' : 's'} →
-											</span>
-										</a>
-									);
-								})
-							}
-						</div>
-					</div>
-				</aside>
+					</ul>
+				</section>
 			</div>
-		</article>
+
+			<DestinationGlance
+				name={destination.name}
+				slug={destination.slug}
+				tourCount={tours.length}
+				bestSeason={bestSeasonLabel(destination.bestTimeMonths)}
+				fromSplit={travel ? { label: 'From Split', value: travel.value } : undefined}
+			/>
+		</div>
+
+		<MobileActionBar target="tours" label="See tours">
+			<p><strong>{tours.length} {tours.length === 1 ? 'tour' : 'tours'}</strong> visit {shortName}</p>
+		</MobileActionBar>
 	</main>
 </SiteLayout>
 
-<script>
-	// Moving content that runs longer than 5 s needs a pause control (WCAG 2.2.2).
-	for (const button of document.querySelectorAll<HTMLButtonElement>('.marquee-toggle')) {
-		const marquee = button.closest('section')?.querySelector('.highlights-marquee');
-		button.addEventListener('click', () => {
-			const paused = marquee?.classList.toggle('is-paused') ?? false;
-			button.textContent = paused ? 'Play' : 'Pause';
-			button.setAttribute('aria-label', `${button.textContent} highlights animation`);
-		});
-	}
-</script>
-
 <style>
-	.dest-detail-page .page {
-		padding: 0 0 2rem;
-		font-size: 14px;
-	}
-
-	.dest-detail-page .layout {
-		grid-template-columns: minmax(0, 1fr) 260px;
-	}
-
-	.dest-detail-page .dest-title {
-		font-size: 21px;
-		font-weight: 500;
-		margin: 0 0 8px;
-	}
-
-	.dest-detail-page .dest-intro {
-		margin: 0 0 20px;
-		line-height: 1.75;
-	}
-
-	.dest-detail-page .section {
-		margin-bottom: 24px;
-	}
-
-	.dest-detail-page .hl-item {
-		padding: 9px 11px;
-		line-height: 1.4;
-	}
-
-	.dest-detail-page .hl-item .ti {
-		color: var(--color-accent);
-	}
-
-	.dest-detail-page .highlights-marquee {
-		display: none;
-		overflow: hidden;
-		-webkit-mask-image: linear-gradient(
-			to right,
-			transparent,
-			#000 24px,
-			#000 calc(100% - 24px),
-			transparent
-		);
-		mask-image: linear-gradient(
-			to right,
-			transparent,
-			#000 24px,
-			#000 calc(100% - 24px),
-			transparent
-		);
-	}
-
-	.dest-detail-page .marquee-track {
-		display: flex;
-		gap: 8px;
-		width: max-content;
-		animation: dest-highlights-marquee 26s linear infinite;
-	}
-
-	.dest-detail-page .marquee-track .hl-item {
-		flex: 0 0 220px;
-		white-space: normal;
-	}
-
-	.dest-detail-page .highlights-marquee:active .marquee-track,
-	.dest-detail-page .highlights-marquee.is-paused .marquee-track {
-		animation-play-state: paused;
-	}
-
-	.dest-detail-page .marquee-toggle {
-		display: none;
-		margin: 8px 0 0 auto;
-		padding: 6px 12px;
-		min-height: 32px;
-		font-size: 12px;
-		color: var(--color-text-secondary);
-		background: var(--color-background-primary);
-		border: 0.5px solid var(--color-border-secondary);
-		border-radius: var(--radius-md);
-		cursor: pointer;
-	}
-
-	@keyframes dest-highlights-marquee {
-		from {
-			transform: translateX(0);
+	@layer pages {
+		/* width: 100%: <main> is a flex item of the page shell, and auto margins
+		   would shrink it to its content until the gallery lays out (CLS). */
+		.dest {
+			width: 100%;
+			max-width: var(--content-max);
+			margin: 0 auto;
+			padding: var(--space-6) var(--page-gutter) 0;
 		}
 
-		to {
-			transform: translateX(-50%);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.dest-detail-page .marquee-track {
-			animation: none;
-		}
-	}
-
-	.dest-detail-page .best-time-note {
-		font-size: 12px;
-		color: var(--color-text-secondary);
-		margin: 10px 0 0;
-		line-height: 1.6;
-	}
-
-	.dest-detail-page .legend-dot--peak {
-		background: var(--color-accent);
-	}
-
-	.dest-detail-page .map-stub .ti {
-		color: var(--color-accent);
-	}
-
-	.dest-detail-page .tc-name {
-		margin: 0 0 3px;
-	}
-
-	.dest-detail-page .conditions-label {
-		font-size: 12px;
-		font-weight: 500;
-		margin: 0 0 6px;
-		color: var(--color-text-secondary);
-	}
-
-	.dest-detail-page .conditions-row {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		font-size: 13px;
-	}
-
-	.dest-detail-page .conditions-weather {
-		color: var(--color-text-secondary);
-	}
-
-	.dest-detail-page .conditions-weather .ti {
-		font-size: 14px;
-		vertical-align: -2px;
-		color: var(--color-text-warning);
-		margin-right: 2px;
-	}
-
-	.dest-detail-page .conditions-temp {
-		font-weight: 500;
-	}
-
-	.dest-detail-page .conditions-note {
-		font-size: 11px;
-		color: var(--color-text-tertiary);
-		margin: 0 0 12px;
-	}
-
-	.dest-detail-page .legend-dot--good {
-		background: #9fe1cb;
-	}
-
-	.dest-detail-page .legend-dot--off {
-		background: var(--color-border-tertiary);
-	}
-
-	.dest-detail-page .tours-count {
-		font-weight: 400;
-		color: var(--color-text-tertiary);
-		font-size: 13px;
-	}
-
-	.dest-detail-page .tc-meta {
-		margin-bottom: 0;
-	}
-
-	.dest-detail-page .tc-tag--featured .ti {
-		color: var(--color-text-warning);
-	}
-
-	.dest-detail-page .tc-foot {
-		align-items: center;
-	}
-
-	.dest-detail-page .tc-price {
-		font-size: 13px;
-	}
-
-	.dest-detail-page .tc-per {
-		font-size: 11px;
-		color: var(--color-text-tertiary);
-	}
-
-	.dest-detail-page .tc-cta {
-		display: inline-flex;
-		align-items: center;
-		flex-shrink: 0;
-	}
-
-	.dest-detail-page .sticky-card {
-		padding: 1.1rem 1.25rem;
-	}
-
-	.dest-detail-page .sidebar-title {
-		font-size: 13px;
-		font-weight: 500;
-		margin: 0 0 12px;
-	}
-
-	.dest-detail-page .sidebar-nearby-label {
-		font-size: 12px;
-		font-weight: 500;
-		margin: 0 0 8px;
-		color: var(--color-text-secondary);
-	}
-
-	.dest-detail-page .sidebar-nearby-list {
-		display: flex;
-		flex-direction: column;
-		gap: 5px;
-	}
-
-	.dest-detail-page .cta-primary {
-		padding: 11px;
-		font-size: 13px;
-		min-height: unset;
-		margin-top: 0;
-		text-decoration: none;
-	}
-
-	.dest-detail-page .cta-secondary {
-		padding: 9px;
-		min-height: unset;
-	}
-
-	.dest-detail-page :global(.img-hero) {
-		height: 240px;
-	}
-
-	.dest-detail-page :global(.image-gallery__hero-icon) {
-		font-size: 56px;
-	}
-
-	.dest-detail-page :global(.img-thumb) {
-		height: 58px;
-	}
-
-	.dest-detail-page :global(.image-gallery__counter) {
-		top: auto;
-		bottom: 10px;
-	}
-
-	.dest-detail-page .tc-thumb :global(.placeholder-image) {
-		width: 44px;
-		height: 44px;
-		min-height: 44px;
-		border-radius: var(--radius-md);
-	}
-
-	.dest-detail-page .tc-thumb :global(.photo-frame),
-	.dest-detail-page .tc-thumb :global(.photo-frame__img) {
-		width: 44px;
-		height: 44px;
-	}
-
-	.dest-detail-page .tc-thumb :global(.placeholder-image .ti) {
-		font-size: 20px;
-	}
-
-	@media (max-width: 768px) {
-		.dest-detail-page .layout {
-			grid-template-columns: minmax(0, 1fr);
+		.dest__layout {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) var(--aside-width);
+			column-gap: var(--space-7);
+			align-items: start;
+			margin-bottom: var(--detail-gap);
 		}
 
-		.dest-detail-page .sidebar-nearby-block {
-			display: none;
+		.dest__title {
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-hero);
+			font-weight: var(--font-weight-medium);
+			line-height: var(--line-height-tight);
 		}
 
-		.dest-detail-page .info-grid {
-			grid-template-columns: 1fr;
+		.dest__intro {
+			margin: 0 0 var(--detail-gap);
+			font-size: var(--font-size-body-md);
+			line-height: var(--line-height-body-md);
+			color: var(--color-text-secondary);
 		}
 
-		/* The moving strip is aria-hidden, so keep the list for screen readers. */
-		.dest-detail-page .highlights {
-			position: absolute;
-			width: 1px;
-			height: 1px;
-			overflow: hidden;
-			clip-path: inset(50%);
-			white-space: nowrap;
+		.dest__section {
+			margin-bottom: var(--detail-gap);
 		}
 
-		.dest-detail-page .marquee-toggle {
-			display: block;
+		.dest__section:last-child {
+			margin-bottom: 0;
 		}
 
-		.dest-detail-page .highlights-marquee {
-			display: block;
+		/* A real link to the map (board 10's map stub was a dead box). */
+		.dest__map {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: var(--space-2);
+			height: 100px;
+			margin-bottom: var(--space-3);
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+			color: var(--color-text-primary);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-medium);
+			text-decoration: none;
 		}
 
-		.dest-detail-page .best-time-grid {
-			grid-template-columns: repeat(4, 1fr);
-		}
-	}
-
-	@media (max-width: 480px) {
-		.dest-detail-page .best-time-grid {
-			grid-template-columns: repeat(3, 1fr);
+		.dest__map:hover {
+			background: var(--color-background-hover);
 		}
 
-		.dest-detail-page .tc-foot {
-			flex-wrap: wrap;
-			gap: 8px;
+		.dest__map .ti {
+			font-size: 20px;
+			color: var(--color-accent);
 		}
 
-		.dest-detail-page .tc-cta {
-			margin-left: auto;
-		}
-	}
-
-	/* Without motion the strip would stay cut off after two items: show the list. */
-	@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
-		.dest-detail-page .highlights {
-			position: static;
-			width: auto;
-			height: auto;
-			overflow: visible;
-			clip-path: none;
-			white-space: normal;
+		.dest__tips {
+			display: grid;
+			gap: var(--space-2);
+			margin: 0;
+			padding: 0;
+			list-style: none;
 		}
 
-		.dest-detail-page .highlights-marquee,
-		.dest-detail-page .marquee-toggle {
-			display: none;
+		.dest__tips li {
+			display: flex;
+			gap: 10px;
+			padding: 10px var(--space-3);
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.dest__tip-num {
+			flex-shrink: 0;
+			font-weight: var(--font-weight-semibold);
+			color: var(--color-accent);
+		}
+
+		#tours {
+			scroll-margin-top: 72px;
+		}
+
+		.dest__tours {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+			gap: 14px;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.dest__tours > li {
+			display: flex;
+		}
+
+		.dest__tours > li > :global(*) {
+			flex: 1;
+		}
+
+		@media (max-width: 768px) {
+			.dest__layout {
+				grid-template-columns: minmax(0, 1fr);
+				row-gap: var(--detail-gap);
+			}
 		}
 	}
 </style>

@@ -52,3 +52,9 @@ Desktop.ini
 # local Claude Code state and vendored agent skills
 .claude/
 skills-lock.json
+
+# Playwright: results, reports, and the day-dependent admin style baselines
+test-results/
+playwright-report/
+tests/visual/admin.spec.ts-snapshots/
+screenshots/

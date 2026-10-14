@@ -1,7 +1,6 @@
 ---
 export const prerender = true;
 
-import NotFoundPanel from '../../components/NotFoundPanel.astro';
 import TourDetailView from '../../components/tour/TourDetailView.astro';
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
@@ -16,16 +15,15 @@ export function getStaticPaths() {
 const { slug } = Astro.params;
 const tour = slug ? getTourBySlug(slug) : undefined;
 
-if (!tour) {
-	Astro.response.status = 404;
-}
+// getStaticPaths only lists real tours, so every built page has one.
+if (!tour) throw new Error(`Unknown tour: ${slug}`);
 
 const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
 // Matches the visible breadcrumb in TourDetailView.astro, which also routes
 // its middle crumb through the tour's primary destination when it has one.
-const primaryDestination = tour ? getPrimaryDestinationForTour(tour) : undefined;
+const primaryDestination = getPrimaryDestinationForTour(tour);
 const jsonLd =
-	tour && siteUrl
+	siteUrl
 		? [
 				tourJsonLd(tour, siteUrl),
 				breadcrumbJsonLd([
@@ -38,31 +36,17 @@ const jsonLd =
 				]),
 			]
 		: undefined;
-const sharePhoto = tour ? getTourCardPhoto(tour) : undefined;
-const shareImage = sharePhoto ? await socialImageFor(sharePhoto) : undefined;
+const shareImage = await socialImageFor(getTourCardPhoto(tour));
 ---
 
 <SiteLayout
-	title={tour ? pageTitle(tour.title) : pageTitle('Tour not found')}
-	description={tour?.shortDescription ?? 'The requested tour does not exist.'}
+	title={pageTitle(tour.title)}
+	description={tour.shortDescription}
 	jsonLd={jsonLd}
-	ogImage={shareImage?.src}
-	ogImageAlt={shareImage?.alt}
+	ogImage={shareImage.src}
+	ogImageAlt={shareImage.alt}
 >
-	<main id="main" class="page-shell">
-		{
-			tour ? (
-				<TourDetailView tour={tour} />
-			) : (
-				<NotFoundPanel
-					title="Tour not found"
-					description="The requested tour does not exist or the link may be outdated."
-				>
-					<a href="/tours/">View all tours</a>
-					{' · '}
-					<a href="/">Home</a>
-				</NotFoundPanel>
-			)
-		}
+	<main id="main">
+		<TourDetailView tour={tour} />
 	</main>
 </SiteLayout>

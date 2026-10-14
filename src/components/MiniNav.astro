@@ -2,25 +2,62 @@
 import { SITE_NAME } from '../config/site';
 
 type Props = {
-	/** Optional exit link (e.g. back to the tour) shown on the right. */
+	/** Where "Exit" leads: the tour page, or /tours/ (spec §5.3: checkout always has a way out). */
 	exitHref?: string;
 	exitLabel?: string;
 };
 
-const { exitHref, exitLabel = 'Exit' } = Astro.props;
+const { exitHref = '/tours/', exitLabel = 'Exit' } = Astro.props;
 ---
 
 <div class="mini-nav">
-	<a class="nav-logo" href="/">
+	<a class="mini-nav__logo" href="/">
 		<i class="ti ti-sailboat" aria-hidden="true"></i>
 		{SITE_NAME}
 	</a>
-	{
-		exitHref && (
-			<a class="exit-link" href={exitHref}>
-				<i class="ti ti-x" aria-hidden="true" />
-				{exitLabel}
-			</a>
-		)
-	}
+	<a class="mini-nav__exit" href={exitHref}>
+		<i class="ti ti-x" aria-hidden="true"></i>
+		{exitLabel}
+	</a>
 </div>
+
+<style>
+	@layer components {
+		/* Spec §5.3 (board hbc.css .mini-nav / .exit-link). */
+		.mini-nav {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: var(--space-5);
+		}
+
+		.mini-nav__logo {
+			display: flex;
+			align-items: center;
+			gap: 7px;
+			font-size: var(--font-size-md);
+			font-weight: var(--font-weight-medium);
+			color: var(--color-text-primary);
+			text-decoration: none;
+		}
+
+		.mini-nav__logo .ti {
+			font-size: var(--font-size-lg);
+			color: var(--color-brand);
+		}
+
+		.mini-nav__exit {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			min-height: 24px;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+			text-decoration: none;
+		}
+
+		.mini-nav__exit:hover {
+			color: var(--color-text-primary);
+		}
+	}
+</style>

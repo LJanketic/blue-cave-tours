@@ -9,10 +9,15 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "check": "astro check && node scripts/icons.mjs --check",
+    "check": "astro check && node scripts/icons.mjs --check && node scripts/tokens-check.mjs",
     "icons": "node scripts/icons.mjs",
     "test": "vitest run",
-    "astro": "astro"
+    "astro": "astro",
+    "test:e2e": "playwright test tests/e2e",
+    "test:visual": "playwright test tests/visual",
+    "test:a11y": "playwright test tests/a11y --project=chromium",
+    "tokens": "node scripts/tokens-check.mjs",
+    "fonts": "node scripts/fonts.mjs"
   },
   "dependencies": {
     "@astrojs/netlify": "^7.0.13",
@@ -25,6 +30,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.64.0",
     "subset-font": "^2.9.0",
     "typescript": "^6.0.3",
     "vitest": "^3.2.7"

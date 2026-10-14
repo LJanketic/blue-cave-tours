@@ -34,7 +34,7 @@
     # challenges.cloudflare.com is the Turnstile widget on the contact form (a
     # script plus an iframe); it only loads once PUBLIC_TURNSTILE_SITE_KEY is set.
     # Everything else, including the icon font, is served from this origin.
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src https://challenges.cloudflare.com; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 
 [[headers]]
   for = "/_astro/*"

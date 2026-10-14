@@ -1,0 +1,58 @@
+/* SummaryCard (spec §3.2; board 05 .summary-card), shared by booking/SummaryCard.astro and .vue. */
+@layer components {
+	.summary-card-ui {
+		padding: 1.1rem 1.25rem;
+		border-radius: var(--radius-lg);
+		background: var(--color-background-secondary);
+	}
+
+	.summary-card-ui__title {
+		margin: 0 0 10px;
+		font-size: var(--font-size-base);
+		font-weight: var(--font-weight-medium);
+	}
+
+	.summary-card-ui__rows {
+		margin: 0;
+	}
+
+	.summary-card-ui__row {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--space-4);
+		margin-bottom: 5px;
+		font-size: var(--font-size-base);
+	}
+
+	.summary-card-ui__row dt {
+		color: var(--color-text-secondary);
+	}
+
+	.summary-card-ui__row dd {
+		margin: 0;
+		font-weight: var(--font-weight-medium);
+		text-align: right;
+	}
+
+	.summary-card-ui__total {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--space-4);
+		margin-top: 10px;
+		padding-top: 10px;
+		border-top: 0.5px solid var(--color-border-tertiary);
+		font-size: var(--font-size-md);
+		font-weight: var(--font-weight-medium);
+	}
+
+	.summary-card-ui--large .summary-card-ui__total {
+		font-size: var(--font-size-xl);
+	}
+
+	.summary-card-ui__note {
+		margin: 4px 0 0;
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		text-align: right;
+	}
+}

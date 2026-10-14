@@ -2,59 +2,348 @@
 import { SITE_NAME } from '../config/site';
 
 type Props = {
-	/** When false the bar floats (fixed) over a full-bleed hero (homepage). */
+	/**
+	 * False on pages with a full-bleed photo hero (home, Tours, Destinations):
+	 * the bar floats over the photo and turns solid after 40px of scroll.
+	 */
 	solid?: boolean;
 };
 
-const { solid = false } = Astro.props;
-// Production serves directory-style URLs (/about/), dev serves /about — strip the
+const { solid = true } = Astro.props;
+// Production serves directory-style URLs (/about/), dev serves /about: strip the
 // trailing slash so exact-match checks work in both.
 const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
 
 // `exact`: only highlight on the page itself, not on pages below it.
+// Contact is a link in the phone menu only; on wide screens it's the overlay
+// pages' right-hand button, the footer and the FAQ band (spec §5.1).
 const NAV_LINKS = [
-	{ href: '/tours/', label: 'Tours', exact: false },
-	{ href: '/destinations/', label: 'Destinations', exact: false },
-	{ href: '/about/', label: 'About', exact: true },
-	{ href: '/faq/', label: 'FAQ', exact: false },
-	{ href: '/contact/', label: 'Contact', exact: false },
+	{ href: '/tours/', label: 'Tours', exact: false, menuOnly: false },
+	{ href: '/destinations/', label: 'Destinations', exact: false, menuOnly: false },
+	{ href: '/about/', label: 'About', exact: true, menuOnly: false },
+	{ href: '/faq/', label: 'FAQ', exact: false, menuOnly: false },
+	{ href: '/contact/', label: 'Contact', exact: false, menuOnly: true },
 ];
+
+// Decision D-2: photo-hero pages offer Contact, solid pages Book now.
+const action = solid ? { href: '/tours/', label: 'Book now' } : { href: '/contact/', label: 'Contact' };
 ---
 
-<header class:list={['nav', !solid && 'nav--floating']} id="site-header" data-floating={String(!solid)}>
-	<div class="nav-inner">
-		<a class="nav-logo" href="/">
+<header
+	class:list={['site-header', solid ? 'nav-solid' : 'site-header--overlay on-photo']}
+	id="site-header"
+	data-overlay={String(!solid)}
+>
+	<div class="site-header__bar">
+		<a class="site-header__logo" href="/">
 			<i class="ti ti-sailboat" aria-hidden="true"></i>
 			{SITE_NAME}
 		</a>
-		<nav class="nav-links" id="primary-nav" aria-label="Main">
-			<button type="button" class="nav-close" id="menu-close" aria-label="Close menu">
+		<nav class="site-header__nav" id="primary-nav" aria-label="Main">
+			<button type="button" class="site-header__close" id="menu-close" aria-label="Close menu">
 				<i class="ti ti-x" aria-hidden="true"></i>
 			</button>
-			{
-				NAV_LINKS.map(({ href, label, exact }) => {
-					const path = href.replace(/\/$/, '');
-					const isPage = currentPath === path;
-					const inSection = !exact && currentPath.startsWith(`${path}/`);
-					return (
-						<a
-							class:list={['nav-link', (isPage || inSection) && 'nav-link--active']}
-							aria-current={isPage ? 'page' : inSection ? 'location' : undefined}
-							href={href}
-						>
-							{label}
-						</a>
-					);
-				})
-			}
+			<ul class="site-header__links" role="list">
+				{
+					NAV_LINKS.map(({ href, label, exact, menuOnly }) => {
+						const path = href.replace(/\/$/, '');
+						const isPage = currentPath === path;
+						const inSection = !exact && currentPath.startsWith(`${path}/`);
+						return (
+							<li class:list={[menuOnly && 'site-header__menu-only']}>
+								<a
+									class="site-header__link"
+									aria-current={isPage ? 'page' : inSection ? 'location' : undefined}
+									href={href}
+								>
+									{label}
+								</a>
+							</li>
+						);
+					})
+				}
+			</ul>
+			<a class="site-header__menu-cta site-header__menu-only" href="/tours/">Book now</a>
 		</nav>
-		<a class="btn-primary nav-cta" href="/tours/">Book now</a>
-		<button type="button" class="nav-toggle" id="menu-toggle" aria-expanded="false" aria-controls="primary-nav">
+		<a class:list={['site-header__action', !solid && 'site-header__action--outline']} href={action.href}>
+			{action.label}
+		</a>
+		<button type="button" class="site-header__toggle" id="menu-toggle" aria-expanded="false" aria-controls="primary-nav">
 			<span class="sr-only">Menu</span>
 			<i class="ti ti-menu-2" aria-hidden="true"></i>
 		</button>
 	</div>
 </header>
+
+<style>
+	@layer components {
+		/* Spec §5.1 (board hbc.css .nav-bar / .nav). */
+		.site-header {
+			position: sticky;
+			top: 0;
+			z-index: var(--z-header);
+			background: var(--color-surface-bar);
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+			border-bottom: 0.5px solid var(--color-border-tertiary);
+			transition:
+				background-color var(--duration-base) ease,
+				border-color var(--duration-base) ease,
+				box-shadow var(--duration-base) ease;
+		}
+
+		/* Over a photo hero: fixed, transparent, on the header scrim. */
+		.site-header--overlay {
+			position: fixed;
+			inset: 0 0 auto;
+			background: transparent;
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			border-bottom-color: transparent;
+		}
+
+		.site-header--overlay::before {
+			content: '';
+			position: absolute;
+			inset: 0 0 auto;
+			height: 120px;
+			background: var(--color-overlay-header);
+			pointer-events: none;
+			transition: opacity var(--duration-base) ease;
+		}
+
+		/* Scrolled past 40px (overlay pages), or always (solid pages). */
+		.site-header--overlay.nav-solid {
+			background: var(--color-surface-bar-solid);
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+			border-bottom-color: var(--color-border-tertiary);
+			box-shadow: var(--shadow-nav);
+		}
+
+		.site-header--overlay.nav-solid::before {
+			opacity: 0;
+		}
+
+		.site-header__bar {
+			position: relative;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: var(--space-3);
+			max-width: var(--content-max);
+			margin-inline: auto;
+			padding: 14px var(--page-gutter);
+		}
+
+		.site-header__logo {
+			display: flex;
+			align-items: center;
+			gap: 7px;
+			flex-shrink: 0;
+			font-size: var(--font-size-md);
+			font-weight: var(--font-weight-medium);
+			color: var(--color-text-primary);
+			text-decoration: none;
+		}
+
+		.site-header__logo .ti {
+			font-size: var(--font-size-lg);
+			color: var(--color-brand);
+		}
+
+		.site-header__links {
+			display: flex;
+			gap: 18px;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.site-header__link {
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+			text-decoration: none;
+		}
+
+		.site-header__link:hover,
+		.site-header__link[aria-current] {
+			color: var(--color-text-primary);
+		}
+
+		.site-header__link[aria-current] {
+			font-weight: var(--font-weight-medium);
+		}
+
+		.site-header__action {
+			flex-shrink: 0;
+			padding: 6px 14px;
+			border-radius: var(--radius-md);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-medium);
+			text-decoration: none;
+			background: var(--color-background-brand);
+			color: var(--color-text-on-image);
+		}
+
+		.site-header__action:hover {
+			opacity: 0.88;
+		}
+
+		.site-header__action--outline {
+			padding: 5px 14px;
+			background: transparent;
+			border: 1px solid var(--color-border-primary);
+			color: var(--color-text-primary);
+			transition:
+				background-color var(--duration-base) ease,
+				color var(--duration-base) ease,
+				border-color var(--duration-base) ease;
+		}
+
+		.site-header__action--outline:hover {
+			opacity: 1;
+			background: var(--color-text-primary);
+			border-color: var(--color-text-primary);
+			color: var(--color-text-on-image);
+		}
+
+		/* White text while over the photo (the script drops .on-photo once solid or open). */
+		.site-header.on-photo .site-header__logo,
+		.site-header.on-photo .site-header__logo .ti,
+		.site-header.on-photo .site-header__toggle {
+			color: var(--color-text-on-image);
+		}
+
+		.site-header.on-photo .site-header__link {
+			color: var(--color-text-on-image-muted);
+		}
+
+		.site-header.on-photo .site-header__link:hover,
+		.site-header.on-photo .site-header__link[aria-current] {
+			color: var(--color-text-on-image);
+		}
+
+		.site-header.on-photo .site-header__action--outline {
+			border-color: var(--color-border-on-image);
+			color: var(--color-text-on-image);
+		}
+
+		.site-header.on-photo .site-header__action--outline:hover {
+			background: var(--color-background-primary);
+			border-color: var(--color-background-primary);
+			color: var(--palette-navy-950);
+		}
+
+		.site-header__toggle,
+		.site-header__close,
+		.site-header__menu-only {
+			display: none;
+		}
+
+		/* Phones: hamburger and a full-screen menu panel (kept from the current site). */
+		@media (max-width: 768px) {
+			.site-header__action {
+				display: none;
+			}
+
+			.site-header__toggle {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: var(--touch-min);
+				height: var(--touch-min);
+				margin: -6px -10px -6px 0;
+				padding: 0;
+				border: 0;
+				border-radius: var(--radius-md);
+				background: none;
+				color: var(--color-text-primary);
+				font-size: 22px;
+				cursor: pointer;
+			}
+
+			.site-header__nav {
+				display: none;
+				position: fixed;
+				inset: 0;
+				z-index: var(--z-menu);
+				flex-direction: column;
+				padding: 72px var(--page-gutter) var(--space-6);
+				overflow-y: auto;
+				background: var(--color-background-primary);
+			}
+
+			/* backdrop-filter makes the header the containing block for fixed
+			   descendants, which would squeeze the panel into the bar. */
+			.site-header.is-open {
+				backdrop-filter: none;
+				-webkit-backdrop-filter: none;
+			}
+
+			.site-header.is-open .site-header__nav {
+				display: flex;
+			}
+
+			.site-header__close {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				position: absolute;
+				top: var(--space-2);
+				right: calc(var(--page-gutter) - 10px);
+				width: var(--touch-min);
+				height: var(--touch-min);
+				border: 0;
+				background: none;
+				color: var(--color-text-primary);
+				font-size: 26px;
+				cursor: pointer;
+			}
+
+			.site-header__links {
+				flex-direction: column;
+				gap: 0;
+			}
+
+			.site-header__menu-only {
+				display: block;
+			}
+
+			.site-header__link {
+				display: flex;
+				align-items: center;
+				min-height: var(--touch-min);
+				padding: 10px 0;
+				border-bottom: 0.5px solid var(--color-border-tertiary);
+				font-size: var(--font-size-xl);
+				font-weight: var(--font-weight-medium);
+				color: var(--color-text-primary);
+			}
+
+			.site-header__menu-cta {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: var(--touch-min);
+				margin-top: auto;
+				border-radius: var(--radius-btn);
+				background: var(--color-background-brand);
+				color: var(--color-text-on-image);
+				font-size: var(--font-size-base);
+				font-weight: var(--font-weight-semibold);
+				text-decoration: none;
+			}
+		}
+
+		/* Short viewports (landscape phones, zoom): don't pin the bar (§11.14). */
+		@media (max-height: 480px) {
+			.site-header:not(.site-header--overlay) {
+				position: static;
+			}
+		}
+	}
+</style>
 
 <script>
 	const header = document.getElementById('site-header');
@@ -71,34 +360,40 @@ const NAV_LINKS = [
 			'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 		// The open menu covers the whole screen, so the trap cycles through the panel
-		// only (close button + links). getClientRects() also counts the close button,
-		// which is position: fixed and so has no offsetParent.
+		// only (close button, links and Book now).
 		function getFocusables(): HTMLElement[] {
 			return Array.from(navEl.querySelectorAll<HTMLElement>(focusableSelector)).filter(
-				(el) => !el.hasAttribute('disabled') && el.getClientRects().length > 0,
+				(el) => el.getClientRects().length > 0,
 			);
 		}
 
 		// Everything the panel covers is taken out of the tab order and the
 		// accessibility tree while it's open.
 		function coveredElements(): HTMLElement[] {
-			const covered = [
-				...headerEl.querySelectorAll<HTMLElement>('.nav-logo, .nav-cta, #menu-toggle'),
-				...document.querySelectorAll<HTMLElement>('main, .footer-shell, .skip-link'),
+			return [
+				...headerEl.querySelectorAll<HTMLElement>('.site-header__logo, .site-header__action, #menu-toggle'),
+				...document.querySelectorAll<HTMLElement>('main, .site-footer, .skip-link'),
 			];
-			return covered.filter((el) => !navEl.contains(el));
+		}
+
+		const overlay = headerEl.dataset.overlay === 'true';
+
+		// White text and the white focus ring only while the bar sits on the photo:
+		// not once it's solid, and not while the white menu panel is open.
+		function syncOnPhoto() {
+			const onPhoto = overlay && !headerEl.classList.contains('nav-solid') && !headerEl.classList.contains('is-open');
+			headerEl.classList.toggle('on-photo', onPhoto);
 		}
 
 		function setOpen(open: boolean) {
-			headerEl.classList.toggle('nav--open', open);
-			document.body.classList.toggle('nav-menu-open', open);
+			headerEl.classList.toggle('is-open', open);
+			syncOnPhoto();
 			toggleEl.setAttribute('aria-expanded', String(open));
 			document.body.style.overflow = open ? 'hidden' : '';
 			for (const el of coveredElements()) el.inert = open;
 
 			if (open) {
-				const firstNavLink = navEl.querySelector<HTMLElement>('a.nav-link');
-				firstNavLink?.focus();
+				navEl.querySelector<HTMLElement>('.site-header__link')?.focus();
 			} else if (toggleEl.getClientRects().length > 0) {
 				// Skipped when the menu closes because the window widened past the
 				// mobile breakpoint: the toggle is hidden there and can't take focus.
@@ -107,29 +402,18 @@ const NAV_LINKS = [
 		}
 
 		function closeMenu() {
-			if (headerEl.classList.contains('nav--open')) {
-				setOpen(false);
-			}
+			if (headerEl.classList.contains('is-open')) setOpen(false);
 		}
 
-		toggleEl.addEventListener('click', () => {
-			setOpen(!headerEl.classList.contains('nav--open'));
-		});
-
+		toggleEl.addEventListener('click', () => setOpen(!headerEl.classList.contains('is-open')));
 		closeBtn?.addEventListener('click', closeMenu);
 
-		// The overlay only exists below the mobile breakpoint. If the window grows
+		// The panel only exists below the mobile breakpoint. If the window grows
 		// past it while open (rotation, resize), close it so the page isn't left
-		// inert with scrolling locked. Same query as the mobile block in _base.css,
-		// negated, so fractional widths (e.g. 768.4px when zoomed) can't fall between.
+		// inert with scrolling locked. Same query as the CSS, negated, so
+		// fractional widths (768.4px when zoomed) can't fall between.
 		window.matchMedia('(max-width: 768px)').addEventListener('change', (event) => {
 			if (!event.matches) closeMenu();
-		});
-
-		document.addEventListener('click', (event) => {
-			if (!headerEl.contains(event.target as Node)) {
-				closeMenu();
-			}
 		});
 
 		document.addEventListener('keydown', (event) => {
@@ -137,61 +421,41 @@ const NAV_LINKS = [
 				closeMenu();
 				return;
 			}
-
-			if (event.key !== 'Tab' || !headerEl.classList.contains('nav--open')) {
-				return;
-			}
+			if (event.key !== 'Tab' || !headerEl.classList.contains('is-open')) return;
 
 			const focusables = getFocusables();
-			if (focusables.length === 0) {
-				return;
-			}
-
+			if (focusables.length === 0) return;
 			const first = focusables[0];
 			const last = focusables[focusables.length - 1];
-			const active = document.activeElement;
-
-			if (event.shiftKey && active === first) {
+			if (event.shiftKey && document.activeElement === first) {
 				event.preventDefault();
 				last.focus();
-			} else if (!event.shiftKey && active === last) {
+			} else if (!event.shiftKey && document.activeElement === last) {
 				event.preventDefault();
 				first.focus();
 			}
 		});
 
-		// Scroll behaviour: solidify past 40px, hide on scroll-down / show on
-		// scroll-up (never while the mobile menu is open). rAF-throttled.
-		let lastY = window.scrollY;
-		let ticking = false;
-
-		function onScroll() {
-			const y = window.scrollY;
-			headerEl.classList.toggle('nav-solid', y > 40);
-
-			const menuOpen = headerEl.classList.contains('nav--open');
-			if (!menuOpen) {
-				if (y > lastY && y > 80) {
-					headerEl.classList.add('nav-hidden');
-				} else {
-					headerEl.classList.remove('nav-hidden');
-				}
-			}
-			lastY = y;
-			ticking = false;
+		// Overlay pages: solid after 40px of scroll. The bar never hides (§5.1),
+		// so it can't cover a focused element on its way back in.
+		if (overlay) {
+			let ticking = false;
+			const update = () => {
+				headerEl.classList.toggle('nav-solid', window.scrollY > 40);
+				syncOnPhoto();
+				ticking = false;
+			};
+			window.addEventListener(
+				'scroll',
+				() => {
+					if (!ticking) {
+						requestAnimationFrame(update);
+						ticking = true;
+					}
+				},
+				{ passive: true },
+			);
+			update();
 		}
-
-		window.addEventListener(
-			'scroll',
-			() => {
-				if (!ticking) {
-					requestAnimationFrame(onScroll);
-					ticking = true;
-				}
-			},
-			{ passive: true },
-		);
-
-		onScroll();
 	}
 </script>

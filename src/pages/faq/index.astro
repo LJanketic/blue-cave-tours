@@ -1,9 +1,11 @@
 ---
 export const prerender = true;
 
-import { pageTitle, SITE_EMAIL, SITE_PHONE, SITE_PHONE_DISPLAY } from '../../config/site';
+import { pageTitle, REPLY_TIME, SITE_EMAIL, SITE_PHONE } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import FAQPage from '../../components/vue/FAQPage.vue';
+import CtaBand from '../../components/ui/CtaBand.astro';
+import Button from '../../components/ui/Button.astro';
 import { FAQ_ITEMS } from '../../data/faq';
 import { faqPageJsonLd } from '../../lib/seo';
 
@@ -14,21 +16,52 @@ const jsonLd = faqPageJsonLd(FAQ_ITEMS);
 	title={pageTitle('Split boat tour FAQ: Blue Cave, weather, safety')}
 	description="Frequently asked questions about boat tours from Split, Blue Cave visits, weather, and safety."
 	jsonLd={jsonLd}
+	footerGap="32px"
 >
-	<main id="main" class="page-shell">
-		<FAQPage
-			client:visible
-			siteEmail={SITE_EMAIL}
-			sitePhone={SITE_PHONE}
-			sitePhoneDisplay={SITE_PHONE_DISPLAY}
-		/>
+	<main id="main" class="faq-page">
+		<h1 class="faq-page__title">Frequently asked questions</h1>
+		<p class="faq-page__lead">Everything you need to know before you book. Can't find the answer? We're happy to help directly.</p>
+		<FAQPage client:load />
+		<CtaBand heading="Still have a question?" text={`We reply ${REPLY_TIME}.`} id="faq-contact">
+			<Button href={`mailto:${SITE_EMAIL}`} variant="secondary" size="sm" icon="mail">Email us</Button>
+			<Button href={`tel:${SITE_PHONE}`} size="sm" icon="phone">Call us</Button>
+		</CtaBand>
 	</main>
 </SiteLayout>
 
+<!-- Without JavaScript every answer shows (same layer and specificity as base.css's [hidden], later). -->
+<noscript><style>@layer base { [data-faq-answer][hidden] { display: block !important; } }</style></noscript>
+
 <style>
-	.page-shell :global(.faq-page) {
-		padding: 0 0 2rem;
-		font-size: 14px;
-		color: var(--color-text-primary);
+	@layer pages {
+		.faq-page {
+			width: 100%;
+			max-width: var(--content-max);
+			margin: 0 auto;
+			padding: calc(24px + 1.5rem) var(--page-gutter) 0;
+		}
+
+		.faq-page__title {
+			margin: 0 0 var(--space-2);
+			font-size: var(--font-size-hero);
+			font-weight: var(--font-weight-medium);
+			line-height: var(--line-height-tight);
+		}
+
+		.faq-page__lead {
+			max-width: 560px;
+			margin: 0 0 var(--space-6);
+			font-size: var(--font-size-body-md);
+			line-height: var(--line-height-body-md);
+			color: var(--color-text-secondary);
+		}
+
+		.faq-page :global(.cta-band--plain) {
+			padding: 1.25rem 1.5rem;
+		}
+
+		.faq-page :global(.cta-band--plain .cta-band__heading) {
+			font-size: var(--font-size-md);
+		}
 	}
 </style>

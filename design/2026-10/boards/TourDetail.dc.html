@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tour Detail — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.hbc{--td-sec:36px}
+a{color:var(--color-text-info)}a:hover{color:var(--color-accent-dark)}
+.breadcrumb{font-size:var(--font-size-sm);color:var(--color-text-tertiary);margin-bottom:16px}
+.breadcrumb a{color:var(--color-text-info);text-decoration:none}
+.hbc .img-hero{width:100%;aspect-ratio:16/9;max-height:540px;background:var(--color-background-secondary);border:none;border-radius:var(--border-radius-lg);padding:0;position:relative;margin-bottom:10px;overflow:hidden;cursor:zoom-in;display:block}
+.img-hero img,.img-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease}
+.img-hero:hover img,.img-thumb:hover img{transform:scale(1.03)}
+.img-count{position:absolute;bottom:12px;right:12px;background:rgba(255,255,255,0.95);border-radius:var(--border-radius-md);padding:6px 12px;font-size:var(--font-size-sm);font-weight:500;color:var(--color-text-primary);display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.img-count i{font-size:15px}
+.img-thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:28px}
+.img-thumb{aspect-ratio:16/10;background:var(--color-background-secondary);border-radius:var(--border-radius-md);overflow:hidden;position:relative;cursor:zoom-in}
+.img-more{position:absolute;inset:0;background:rgba(6,24,40,0.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--font-size-lg);font-weight:600}
+.lb{position:fixed;inset:0;z-index:500;background:rgba(4,14,24,0.94);display:flex;flex-direction:column;animation:lb-in 0.2s ease}
+@keyframes lb-in{from{opacity:0}to{opacity:1}}
+.lb-top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;color:#fff;font-size:var(--font-size-sm)}
+.hbc .lb-btn{background:rgba(255,255,255,0.12);border:none;color:#fff;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background 0.2s ease}
+.hbc .lb-btn:hover{background:rgba(255,255,255,0.24)}
+.lb-btn i{font-size:22px}
+.lb-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:16px;padding:0 20px}
+.lb-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--border-radius-md);display:block}
+.lb-frame{flex:1;min-width:0;height:100%;display:flex;align-items:center;justify-content:center}
+.lb-strip{display:flex;gap:8px;padding:16px 20px 20px;overflow-x:auto;justify-content:center;scrollbar-width:none}
+.hbc .lb-th{flex:0 0 72px;height:52px;padding:0;border:2px solid transparent;border-radius:6px;overflow:hidden;opacity:0.5;cursor:pointer;background:none;transition:opacity 0.2s ease,border-color 0.2s ease}
+.hbc .lb-th:hover{opacity:0.85}
+.hbc .lb-th.on{opacity:1;border-color:#fff}
+.lb-th img{width:100%;height:100%;object-fit:cover;display:block}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:var(--font-size-micro);font-weight:500;padding:4px 10px;border-radius:20px}
+.tag i{font-size:11px}
+.tag-priv{background:var(--color-category-private-bg);color:var(--color-category-private-text)}
+.tag-grp{background:var(--color-background-success);color:var(--color-text-success)}
+h1{font-size:var(--font-size-hero);font-weight:500;margin:0 0 6px;line-height:var(--line-height-tight)}
+.rating-row{display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:var(--font-size-sm);color:var(--color-text-secondary)}
+.rating-row i{font-size:13px}
+.stars{color:var(--color-text-warning);font-size:var(--font-size-xs);margin-left:4px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 322px;grid-template-rows:auto auto;column-gap:32px;row-gap:var(--td-sec);align-items:start;margin-bottom:var(--td-sec)}
+.main-col{grid-column:1;grid-row:1;min-width:0}
+.reviews-col{grid-column:1;grid-row:2;min-width:0}
+/* overflow-x:hidden on .hbc turns it into a scroll box and breaks sticky; clip keeps the same look without that */
+.hbc{overflow-x:clip}
+.sidebar-col{grid-column:2;grid-row:1 / span 2;min-width:0;position:-webkit-sticky;position:sticky;top:76px;align-self:start}
+.section{margin-bottom:var(--td-sec)}
+.main-col>.section:last-child,.reviews-col>.section:last-child{margin-bottom:0}
+.layout+.mobile-book-bar+.footer,.layout~.footer{margin-top:0}
+.section-title{font-size:var(--font-size-lg);font-weight:500;margin:0 0 14px;padding-bottom:10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.prose{font-size:var(--font-size-body-md);line-height:var(--line-height-body-md);color:var(--color-text-secondary);margin:0}
+.highlights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hl-item{display:flex;align-items:flex-start;gap:8px;font-size:var(--font-size-sm);color:var(--color-text-secondary);padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)}
+.hl-item i{color:var(--color-highlight);font-size:15px;margin-top:1px;flex-shrink:0}
+.highlights-marquee{display:none;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent,#000 24px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to right,transparent,#000 24px,#000 calc(100% - 24px),transparent)}
+.marquee-track{display:flex;gap:8px;width:max-content;animation:marquee-scroll 26s linear infinite}
+.marquee-track .hl-item{flex:0 0 220px}
+@keyframes marquee-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.itinerary-item{display:flex;gap:12px;padding-bottom:16px;position:relative}
+.itinerary-item:not(:last-child)::before{content:'';position:absolute;left:15.75px;top:42px;bottom:-2px;width:0.5px;background:var(--color-border-secondary)}
+.itinerary-item p{margin:0}
+.it-dot{width:32px;height:32px;margin-top:6px;border-radius:50%;background:var(--color-background-info);border:0.5px solid var(--color-border-info);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.it-dot i{font-size:16px;color:var(--color-text-info)}
+.it-time{font-size:var(--font-size-xs);line-height:18px;color:var(--color-text-tertiary);margin-bottom:2px}
+.it-label{font-size:var(--font-size-base);line-height:24px;font-weight:500}
+.it-desc{font-size:var(--font-size-body-md);line-height:var(--line-height-body-md);color:var(--color-text-secondary);margin-top:2px}
+.includes-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.inc-item{display:flex;align-items:flex-start;gap:8px;font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-secondary)}
+.inc-item i{color:#1a9e5c;font-size:1.25em;flex-shrink:0;padding-top:3px}
+.inc-item.exc i{color:#d33a2c}
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;gap:8px}
+.info-item{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:calc(var(--font-size-micro) * 1.4 + var(--font-size-body-sm) * var(--line-height-body-sm) * 2 + 22px);box-sizing:border-box;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)}
+.info-label{font-size:var(--font-size-micro);color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em}
+.hbc .info-val.has-link{display:block;-webkit-line-clamp:unset;overflow:visible}
+.hbc .info-link{color:var(--color-text-info);text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
+.hbc .info-link:hover{text-decoration:underline}
+.info-link i{font-size:1em;display:inline-block;transform:rotate(-45deg);vertical-align:-0.1em}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.info-val{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.review-list{display:flex;flex-direction:column}
+.review-card{padding:12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:8px}
+.review-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--color-category-private-bg);display:flex;align-items:center;justify-content:center;font-size:var(--font-size-micro);font-weight:500;color:var(--color-category-private-text);flex-shrink:0}
+.review-name{font-size:var(--font-size-sm);font-weight:500}
+.review-date{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-left:auto}
+.review-text{font-size:var(--font-size-body-md);line-height:var(--line-height-body-md);color:var(--color-text-secondary);margin:0}
+.sticky-card{background:var(--color-background-primary);border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:1.25rem}
+.price-row{display:flex;align-items:baseline;gap:4px;margin-bottom:4px}
+.price-from{font-size:var(--font-size-xs);color:var(--color-text-tertiary)}
+.price-val{font-size:var(--font-size-2xl);font-weight:600}
+.price-per{font-size:var(--font-size-xs);color:var(--color-text-secondary)}
+.child-price{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-secondary);margin:0 0 2px;display:flex;align-items:center;gap:5px}
+.child-price i{font-size:1.125em;color:var(--color-text-tertiary)}
+.card-divider{border-top:0.5px solid var(--color-border-tertiary);margin:12px 0}
+.card-row{display:flex;justify-content:space-between;font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);margin-bottom:8px}
+.card-label{color:var(--color-text-secondary);display:flex;align-items:center;gap:6px}
+.card-label i{font-size:1.125em;color:var(--color-text-tertiary)}
+.card-val{font-weight:500}
+.hbc .cta-primary{width:100%;padding:12px;background:var(--color-background-brand);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500;margin-top:4px}
+.hbc .cta-primary:hover{opacity:0.88;color:var(--color-background-primary)}
+.hbc .cta-secondary{width:100%;padding:10px;background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500;margin-top:8px}
+.hbc .cta-secondary:hover{color:var(--color-text-primary);background:var(--color-background-secondary)}
+.cta-primary i,.cta-secondary i{font-size:1.15em;vertical-align:-0.18em}
+.policy-pill{display:flex;align-items:center;gap:6px;font-size:var(--font-size-xs);color:var(--color-text-success);margin-top:10px;justify-content:center}
+.hbc .show-more{font-size:var(--font-size-sm);color:var(--color-text-info);background:none;border:none;padding:12px 0 0;cursor:pointer}
+.mobile-book-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:90;background:rgba(255,255,255,0.97);border-top:0.5px solid var(--color-border-tertiary);padding:12px 16px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 16px rgba(0,0,0,0.06)}
+.mobile-book-bar{cursor:pointer;transition:transform 0.3s ease,opacity 0.3s ease}
+.mobile-book-bar.is-hidden{transform:translateY(110%);opacity:0;pointer-events:none}
+#td-book{scroll-margin-top:72px;scroll-margin-bottom:88px}
+.mbb-price{font-size:var(--font-size-base);font-weight:500}
+.mbb-per{font-size:var(--font-size-xs);color:var(--color-text-secondary)}
+.hbc .mobile-book-bar a{padding:10px 22px;background:var(--color-background-brand);color:var(--color-background-primary);border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500;text-decoration:none;white-space:nowrap}
+.mobile-only-title{display:none}
+@media (max-width:1024px){
+  .review-list{flex-direction:row;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -24px;padding:0 24px 4px;scroll-padding:0 24px;-webkit-mask-image:linear-gradient(to right,transparent,#000 20px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 20px,#000 calc(100% - 32px),transparent)}
+  .review-list::-webkit-scrollbar{display:none}
+  .review-list .review-card{flex:0 0 min(340px,46%);margin-bottom:0;scroll-snap-align:start}
+}
+@media (max-width:768px){
+  .hbc{--td-sec:28px}
+  .img-thumbs{margin-bottom:20px}
+  .review-list{margin:0 -16px;padding:0 16px 4px;scroll-padding:0 16px}
+  .review-list .review-card{flex-basis:82%}
+  .hbc{padding-bottom:72px}
+  .mobile-book-bar{display:flex}
+  .mobile-only-title{display:block;border-bottom:none;padding-bottom:0;margin:0 0 14px}
+  .layout{grid-template-columns:1fr}
+  .main-col{grid-column:1;grid-row:auto;order:1}
+  .sidebar-col{grid-column:1;grid-row:auto;order:2;position:static}
+  .reviews-col{grid-column:1;grid-row:auto;order:3}
+  .highlights{display:none}
+  .highlights-marquee{display:block}
+  .img-hero{aspect-ratio:3/2}
+  .lb-stage{padding:0 8px;gap:0}
+  .lb-stage .lb-btn{position:absolute;top:50%;transform:translateY(-50%);z-index:1}
+  .lb-stage .lb-prev{left:12px}
+  .lb-stage .lb-next{right:12px}
+  .lb-strip{justify-content:flex-start}
+  .includes-grid,.info-grid{grid-template-columns:1fr}
+}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="nav-bar">
+    <nav class="nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+      <div class="nav-links">
+        <a class="nav-link" href="Tours.dc.html">Tours</a>
+        <a class="nav-link" href="Destinations.dc.html">Destinations</a>
+        <a class="nav-link" href="About.dc.html">About</a>
+        <a class="nav-link" href="Faqs.dc.html">FAQ</a>
+      </div>
+      <a class="nav-cta" href="Tours.dc.html">Book now</a>
+      <button class="nav-hamburger" aria-label="Menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+    </nav>
+  </div>
+  <div class="wrap">
+    <div class="breadcrumb"><a href="Tours.dc.html">Tours</a> › <a href="Tours.dc.html">Coastal cruises</a> › Sunset Bay coastal cruise</div>
+    <button type="button" class="img-hero" aria-label="Open photo gallery" onClick="{{ openFirst }}">
+      <img src="{{ heroSrc }}" alt="Sunset Bay coastal cruise">
+      <div style="position: absolute; top: 10px; left: 10px; display: flex; gap: 6px">
+        <span class="tag tag-priv"><i class="ti ti-crown" aria-hidden="true"></i> Private available</span>
+        <span class="tag tag-grp"><i class="ti ti-users" aria-hidden="true"></i> Group tour</span>
+      </div>
+      <span class="img-count"><i class="ti ti-photo" aria-hidden="true"></i> View all {{ photoCount }} photos</span>
+    </button>
+    <div class="img-thumbs">
+      <sc-for list="{{ thumbs }}" as="t" hint-placeholder-count="4">
+        <button type="button" class="img-thumb" aria-label="{{ t.label }}" onClick="{{ t.open }}" style="padding: 0; border: none">
+          <img src="{{ t.src }}" alt="">
+          <sc-if value="{{ t.more }}" hint-placeholder-val="{{ false }}"><span class="img-more">+{{ t.moreCount }}</span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+    <div class="layout">
+      <div class="main-col">
+        <h1>Sunset Bay coastal cruise</h1>
+        <div class="rating-row"><span><i class="ti ti-clock" aria-hidden="true"></i> 3 hours</span><span>·</span><span><i class="ti ti-users" aria-hidden="true"></i> 500+ happy guests</span></div>
+        <div class="section"><p class="prose body-md">Sail along the dramatic Adriatic coastline as the sun dips below the horizon. This three-hour voyage takes you past sea caves, hidden coves, and the old town walls — ending with a golden-hour view that's hard to forget. Available as a shared group departure or as a fully private charter.</p></div>
+        <div class="section">
+          <div class="section-title">Itinerary</div>
+          <div class="itinerary-item"><div class="it-dot"><i class="ti ti-map-pin" aria-hidden="true"></i></div><div><p class="it-time">18:00</p><p class="it-label">Departure — Marina Pier B, Gate 3</p><p class="it-desc body-md">Meet your captain. Life jackets and safety briefing on board.</p></div></div>
+          <div class="itinerary-item"><div class="it-dot"><i class="ti ti-cave" aria-hidden="true"></i></div><div><p class="it-time">18:30</p><p class="it-label">Sea cave passage</p><p class="it-desc body-md">Enter the Blue Grotto by dinghy. Best light in the late afternoon.</p></div></div>
+          <div class="itinerary-item"><div class="it-dot"><i class="ti ti-swimming" aria-hidden="true"></i></div><div><p class="it-time">19:10</p><p class="it-label">Swimming stop — Sveti Nikola cove</p><p class="it-desc body-md">30 minutes at anchor. Snorkelling gear available on request.</p></div></div>
+          <div class="itinerary-item"><div class="it-dot"><i class="ti ti-sunset" aria-hidden="true"></i></div><div><p class="it-time">20:00</p><p class="it-label">Sunset sail past the old town walls</p><p class="it-desc body-md">Drinks served. Prime photo moment.</p></div></div>
+          <div class="itinerary-item" style="padding-bottom: 0"><div class="it-dot"><i class="ti ti-anchor" aria-hidden="true"></i></div><div><p class="it-time">21:00</p><p class="it-label">Return to Marina Pier B</p></div></div>
+        </div>
+        <div class="section">
+          <div class="section-title">What's included</div>
+          <div class="includes-grid">
+            <div class="inc-item body-sm"><i class="ti ti-circle-check" aria-hidden="true"></i> Welcome drink</div>
+            <div class="inc-item body-sm"><i class="ti ti-circle-check" aria-hidden="true"></i> Life jackets</div>
+            <div class="inc-item body-sm"><i class="ti ti-circle-check" aria-hidden="true"></i> Guided narration</div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">What's not included</div>
+          <div class="includes-grid">
+            
+            <div class="inc-item exc body-sm"><i class="ti ti-x" aria-hidden="true"></i> Cave entrance ticket</div><div class="inc-item exc body-sm"><i class="ti ti-x" aria-hidden="true"></i> Dinghy for cave entry</div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Good to know</div>
+          <div class="info-grid">
+            <div class="info-item"><span class="info-label">Additional fees</span><span class="info-val has-link body-sm">Cave ticket, paid in cash on site. <a class="info-link" href="https://example.com/blue-cave-tickets" target="_blank" rel="noopener noreferrer">Ticket prices <i class="ti ti-arrow-right" aria-hidden="true"></i><span class="sr-only"> (opens in a new tab)</span></a></span></div><div class="info-item"><span class="info-label">Language</span><span class="info-val body-sm">EN, HR</span></div><div class="info-item" hidden="" style="display: none"><span class="info-label">Minimum age</span><span class="info-val body-sm">3 years</span></div>
+            <div class="info-item" hidden="" style="display: none"><span class="info-label">Group size</span><span class="info-val body-sm">Max 12 guests</span></div>
+            
+            <div class="info-item" hidden="" style="display: none"><span class="info-label">Accessibility</span><span class="info-val body-sm">Wheelchair friendly</span></div>
+            
+            <div class="info-item"><span class="info-label">What to bring</span><span class="info-val body-sm">Swimwear, sunscreen, camera</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reviews-col">
+        <div class="section">
+          <div class="section-title">Reviews <span style="font-weight: 400; color: var(--color-text-tertiary); font-size: var(--font-size-sm)">(128)</span></div>
+          <div class="review-list">
+            <div class="review-card"><div class="review-meta"><div class="avatar">MK</div><span class="review-name">Maja K.</span><span class="stars">★★★★★</span><span class="review-date">Jun 2025</span></div><p class="review-text body-md">Absolutely magical. The sea cave was the highlight — we were the only boat there at that time of day. Captain was knowledgeable and funny. Book this.</p></div>
+            <div class="review-card"><div class="review-meta"><div class="avatar">TR</div><span class="review-name">Thomas R.</span><span class="stars">★★★★☆</span><span class="review-date">May 2025</span></div><p class="review-text body-md">Great tour. Swimming stop was a bit short for my taste but the sunset views more than made up for it. Very smooth booking process too.</p></div>
+            <div class="review-card"><div class="review-meta"><div class="avatar">LS</div><span class="review-name">Lena S.</span><span class="stars">★★★★★</span><span class="review-date">Aug 2025</span></div><p class="review-text body-md">Small boat, relaxed pace and a captain who clearly loves the coast. The cove swim was the best part of our trip.</p></div>
+          </div>
+          <button class="show-more">Show all 128 reviews ›</button>
+        </div>
+      </div>
+
+      <div class="sidebar-col" id="td-book">
+        <div class="section-title mobile-only-title">Book now</div>
+        <div class="sticky-card">
+          <div class="price-row"><span class="price-from">From</span><span class="price-val">€95</span><span class="price-per">/ adult</span></div>
+          <p class="child-price body-sm"><i class="ti ti-baby-carriage" aria-hidden="true"></i> Children from €55</p>
+          <div class="card-row body-sm"><span class="card-label"><i class="ti ti-calendar" aria-hidden="true"></i> Next available</span><span class="card-val">Today, 18:00</span></div>
+          <div class="card-divider"></div>
+          <a class="cta-primary" href="GroupBooking.dc.html">Book group tour <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+          <a class="cta-secondary" href="PrivateBooking.dc.html"><i class="ti ti-crown" aria-hidden="true"></i> Book as private charter</a>
+          <div class="policy-pill"><i class="ti ti-shield-check" style="font-size: 1.15em" aria-hidden="true"></i> Free cancellation up to 48h before</div>
+        </div>
+      </div>
+    </div>
+
+    <sc-if value="{{ lbOpen }}" hint-placeholder-val="{{ false }}">
+      <div class="lb" role="dialog" aria-modal="true" aria-label="Photo gallery">
+        <div class="lb-top"><span>{{ lbPos }} / {{ photoCount }}</span><button type="button" class="lb-btn" aria-label="Close gallery" onClick="{{ closeLb }}"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+        <div class="lb-stage">
+          <button type="button" class="lb-btn lb-prev" aria-label="Previous photo" onClick="{{ prevPhoto }}"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+          <div class="lb-frame" onClick="{{ closeLb }}"><img class="lb-img" src="{{ lbSrc }}" alt="Photo {{ lbPos }} of {{ photoCount }}" onClick="{{ stop }}"></div>
+          <button type="button" class="lb-btn lb-next" aria-label="Next photo" onClick="{{ nextPhoto }}"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+        </div>
+        <div class="lb-strip">
+          <sc-for list="{{ strip }}" as="p" hint-placeholder-count="12">
+            <button type="button" class="{{ p.cls }}" aria-label="{{ p.label }}" onClick="{{ p.pick }}"><img src="{{ p.src }}" alt=""></button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <div class="{{ barCls }}" role="button" tabindex="0" aria-label="Go to booking options" onClick="{{ goBook }}">
+      <span class="mbb-price">€95 <span class="mbb-per">/ adult</span></span>
+      <a href="#td-book" onClick="{{ goBook }}">Book now</a>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-brand"><div class="nav-logo" style="margin-bottom: 6px"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</div><p>Small-boat tours along the Dalmatian coast since 2015. Licensed, insured, and obsessed with the sea.</p></div>
+      <div class="footer-col"><h4>Tours</h4><a href="Tours.dc.html">Group tours</a><a href="PrivateBooking.dc.html">Private charters</a><a href="Tours.dc.html">Day trips</a><a href="Tours.dc.html">Sunset cruises</a></div>
+      <div class="footer-col"><h4>Info</h4><a href="About.dc.html">About us</a><a href="Destinations.dc.html">Destinations</a><a href="Faqs.dc.html">FAQs</a><a href="Contact.dc.html">Contact</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="Legal.dc.html">Terms &amp; conditions</a><a href="Legal.dc.html">Privacy policy</a><a href="Legal.dc.html">Cancellation policy</a></div>
+    </footer>
+    <div class="footer-bottom"><span>© 2025 Hello Blue Cave</span><span>Licensed maritime operator · Croatia</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2400}}'>
+const PHOTOS = ['4f05356ebee03f5016b43a559bc34c5b','cbc2b610fa31e9081789057f1607038a','07056f2593f867a3e97043cc9ea27185','cde84cb92d3381b507a1c6f1a012a9c6','5207d5d0f4d27c542bd2802443a85c29','b5535f758995bdf694c8c2468734b0c5','32dfc7c5ccd7f71a00ac9e2c4b28646f','796f7f6baf909bac630a446041e4b831','6db22cf5a8d634b0343f7323ec5796a6','f80742f991078a1db049ece637c4a2b9','85382a42d38b04ccac1ac10f45ce36bf','dadcccc0c42934ae83b1191097c704a0'].map(id => '/_blob/' + id);
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { lb: -1, bookInView: false };
+    this.onKey = e => {
+      if (this.state.lb < 0) return;
+      if (e.key === 'Escape') this.setState({ lb: -1 });
+      else if (e.key === 'ArrowRight') this.step(1);
+      else if (e.key === 'ArrowLeft') this.step(-1);
+    };
+  }
+  componentDidMount() {
+    window.addEventListener('keydown', this.onKey);
+    const el = document.getElementById('td-book');
+    if (el && 'IntersectionObserver' in window) {
+      this.io = new IntersectionObserver(entries => {
+        const v = entries.some(en => en.isIntersecting);
+        if (v !== this.state.bookInView) this.setState({ bookInView: v });
+      }, { threshold: 0.15 });
+      this.io.observe(el);
+    }
+  }
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.onKey);
+    if (this.io) this.io.disconnect();
+  }
+  step(d) { const n = PHOTOS.length; this.setState({ lb: (this.state.lb + d + n) % n }); }
+  open(i) { this.setState({ lb: i }); }
+  renderVals() {
+    const n = PHOTOS.length, lb = this.state.lb;
+    return {
+      heroSrc: PHOTOS[0],
+      barCls: 'mobile-book-bar' + (this.state.bookInView ? ' is-hidden' : ''),
+      photoCount: n,
+      openFirst: () => this.open(0),
+      thumbs: [1, 2, 3, 4].map((i, k) => ({ src: PHOTOS[i], label: k === 3 ? 'View all ' + n + ' photos' : 'Open photo ' + (i + 1), open: () => this.open(i), more: k === 3 && n > 5, moreCount: n - 5 })),
+      lbOpen: lb >= 0,
+      lbSrc: PHOTOS[Math.max(lb, 0)],
+      lbPos: lb + 1,
+      closeLb: () => this.setState({ lb: -1 }),
+      goBook: e => {
+        if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation && e.stopPropagation(); }
+        const el = document.getElementById('td-book');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      },
+      stop: e => e && e.stopPropagation && e.stopPropagation(),
+      prevPhoto: () => this.step(-1),
+      nextPhoto: () => this.step(1),
+      strip: PHOTOS.map((src, i) => ({ src: src, cls: 'lb-th' + (i === lb ? ' on' : ''), label: 'Show photo ' + (i + 1), pick: () => this.open(i) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

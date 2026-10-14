@@ -1,28 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import {
-	FAQ_CATEGORIES,
-	FAQ_ITEMS,
-	faqCountByCategory,
-	type FaqCategory,
-	type FaqItem,
-} from '../../data/faq';
+/*
+ * FAQ page island (spec §7.3): search, category filter and the grouped
+ * questions. Counts follow the search: each category shows its matches and
+ * "All" the total. One answer open per group.
+ *
+ * Without JavaScript every answer shows (a <noscript> style on the page), and
+ * the search form reloads the page, which reads ?q= once this runs.
+ */
+import { computed, nextTick, onMounted, ref } from 'vue';
+import { FAQ_CATEGORIES, FAQ_ITEMS, type FaqCategory, type FaqItem } from '../../data/faq';
 
 type CategoryFilter = FaqCategory | 'all';
-
-const props = defineProps<{
-	siteEmail: string;
-	sitePhone: string;
-	sitePhoneDisplay: string;
-}>();
-
-const CATEGORY_ICONS: Record<FaqCategory, { bg: string; color: string }> = {
-	booking: { bg: 'var(--color-background-success)', color: 'var(--color-text-success)' },
-	weather: { bg: 'var(--color-background-info)', color: 'var(--color-category-info-icon)' },
-	onboard: { bg: 'var(--color-category-private-bg)', color: 'var(--color-category-private-text)' },
-	guests: { bg: 'var(--color-category-tip-bg)', color: 'var(--color-category-tip-text)' },
-	private: { bg: 'var(--color-category-private-bg)', color: 'var(--color-category-private-text)' },
-};
 
 const NAV_LABELS: Record<FaqCategory, string> = {
 	booking: 'Booking',
@@ -33,520 +21,392 @@ const NAV_LABELS: Record<FaqCategory, string> = {
 };
 
 const activeCategory = ref<CategoryFilter>('all');
-const searchQuery = ref('');
-const openKey = ref<string | null>(null);
+const query = ref('');
+/** Open question per category. */
+const open = ref<Partial<Record<FaqCategory, string>>>({});
+const resultsHeading = ref<HTMLElement | null>(null);
 
-const filteredItems = computed(() => {
-	const q = searchQuery.value.trim().toLowerCase();
-	return FAQ_ITEMS.filter((item) => {
-		const matchesCategory = activeCategory.value === 'all' || item.category === activeCategory.value;
-		if (!matchesCategory) return false;
-		if (!q) return true;
-		return (
-			item.question.toLowerCase().includes(q) ||
-			item.answer.toLowerCase().includes(q)
-		);
-	});
+const matches = computed(() => {
+	const q = query.value.trim().toLowerCase();
+	return q ? FAQ_ITEMS.filter((item) => `${item.question} ${item.answer}`.toLowerCase().includes(q)) : FAQ_ITEMS;
 });
 
-const visibleCategories = computed(() => {
-	if (activeCategory.value !== 'all') {
-		return FAQ_CATEGORIES.filter((cat) => cat.id === activeCategory.value);
-	}
-	return FAQ_CATEGORIES.filter((cat) =>
-		filteredItems.value.some((item) => item.category === cat.id),
-	);
+const shown = computed(() =>
+	activeCategory.value === 'all' ? matches.value : matches.value.filter((item) => item.category === activeCategory.value),
+);
+
+const groups = computed(() =>
+	FAQ_CATEGORIES.map((cat) => ({ ...cat, items: shown.value.filter((item) => item.category === cat.id) })).filter(
+		(group) => group.items.length > 0,
+	),
+);
+
+function count(category: CategoryFilter): number {
+	return category === 'all' ? matches.value.length : matches.value.filter((item) => item.category === category).length;
+}
+
+const key = (item: FaqItem) => item.question;
+const answerId = (item: FaqItem) => `faq-${item.category}-${FAQ_ITEMS.indexOf(item)}`;
+
+function toggle(item: FaqItem) {
+	open.value = { ...open.value, [item.category]: open.value[item.category] === key(item) ? undefined : key(item) };
+}
+
+function showAll() {
+	query.value = '';
+	activeCategory.value = 'all';
+}
+
+async function onSubmit() {
+	await nextTick();
+	resultsHeading.value?.focus();
+}
+
+const status = computed(() =>
+	query.value.trim() ? `${shown.value.length} ${shown.value.length === 1 ? 'question matches' : 'questions match'}` : '',
+);
+
+onMounted(() => {
+	const q = new URLSearchParams(window.location.search).get('q');
+	if (q) query.value = q;
 });
-
-function itemsForCategory(category: FaqCategory): FaqItem[] {
-	return filteredItems.value.filter((item) => item.category === category);
-}
-
-function setCategory(category: CategoryFilter) {
-	activeCategory.value = category;
-}
-
-function categoryCount(category: CategoryFilter): number {
-	if (category === 'all') return filteredItems.value.length;
-	return faqCountByCategory(category);
-}
-
-function itemKey(item: FaqItem): string {
-	return `${item.category}-${item.question}`;
-}
-
-function isOpen(item: FaqItem): boolean {
-	return openKey.value === itemKey(item);
-}
-
-function toggleItem(item: FaqItem) {
-	const key = itemKey(item);
-	openKey.value = openKey.value === key ? null : key;
-}
-
-function answerId(item: FaqItem): string {
-	return `faq-${itemKey(item).replace(/[^a-z0-9-]/gi, '-')}`;
-}
 </script>
 
 <template>
-	<div class="faq-page">
-		<div class="hero">
-			<h1>Frequently asked questions</h1>
-			<p>Everything you need to know before you book. Can't find the answer? We're happy to help directly.</p>
-		</div>
-
-		<!-- Results filter as you type. Not a <form>: before this island hydrates,
-		     Enter or the button would submit natively and reload the page. -->
-		<div class="search-bar" role="search">
-			<input
-				v-model="searchQuery"
-				type="text"
-				placeholder="Search — e.g. cancel, children, weather…"
-				aria-label="Search FAQs"
-			/>
-			<button type="button">
-				<i class="ti ti-search search-icon" aria-hidden="true"></i>
+	<div class="faq">
+		<form class="faq__search" role="search" action="/faq/" method="get" @submit.prevent="onSubmit">
+			<label for="faq-search" class="sr-only">Search the FAQ</label>
+			<input id="faq-search" v-model="query" name="q" type="search" placeholder="Search, e.g. cancel, children, weather…" autocomplete="off" />
+			<button type="submit" class="faq__search-btn">
+				<i class="ti ti-search" aria-hidden="true"></i>
 				Search
 			</button>
-			<p class="sr-only" role="status">
-				<template v-if="searchQuery.trim()">
-					{{ filteredItems.length }} {{ filteredItems.length === 1 ? 'question matches' : 'questions match' }}
-				</template>
-			</p>
-		</div>
+		</form>
+		<p class="sr-only" role="status">{{ status }}</p>
 
-		<div class="faq-layout">
-			<nav class="cat-nav" aria-label="FAQ categories">
-				<button
-					type="button"
-					class="cat-link"
-					:class="{ active: activeCategory === 'all' }"
-					:aria-pressed="activeCategory === 'all'"
-					@click="setCategory('all')"
-				>
+		<div class="faq__layout">
+			<div class="faq__cats" role="group" aria-label="FAQ categories">
+				<button type="button" class="faq__cat" :aria-pressed="activeCategory === 'all'" @click="activeCategory = 'all'">
 					<i class="ti ti-list" aria-hidden="true"></i>
 					All
-					<span class="cat-count">{{ categoryCount('all') }}</span>
+					<span class="faq__count">{{ count('all') }}</span>
 				</button>
 				<button
 					v-for="cat in FAQ_CATEGORIES"
 					:key="cat.id"
 					type="button"
-					class="cat-link"
-					:class="{ active: activeCategory === cat.id }"
+					class="faq__cat"
 					:aria-pressed="activeCategory === cat.id"
-					@click="setCategory(cat.id)"
+					@click="activeCategory = cat.id"
 				>
 					<i :class="`ti ti-${cat.icon}`" aria-hidden="true"></i>
 					{{ NAV_LABELS[cat.id] }}
-					<span class="cat-count">{{ categoryCount(cat.id) }}</span>
+					<span class="faq__count">{{ count(cat.id) }}</span>
 				</button>
-			</nav>
+			</div>
 
-			<div class="faq-main">
-				<section
-					v-for="cat in visibleCategories"
-					:key="cat.id"
-					class="cat-section"
-					:data-section="cat.id"
-				>
-					<div class="cat-header">
-						<div
-							class="cat-icon"
-							:style="{
-								background: CATEGORY_ICONS[cat.id].bg,
-								color: CATEGORY_ICONS[cat.id].color,
-							}"
-						>
-							<i :class="`ti ti-${cat.icon}`" aria-hidden="true"></i>
-						</div>
-						<h2 class="cat-title">{{ cat.label }}</h2>
+			<div class="faq__main">
+				<h2 ref="resultsHeading" class="sr-only" tabindex="-1">Questions</h2>
+				<section v-for="group in groups" :key="group.id" class="faq__group" :aria-labelledby="`faq-group-${group.id}`">
+					<div class="faq__group-head">
+						<span class="faq__group-icon" :class="`faq__group-icon--${group.id}`" aria-hidden="true">
+							<i :class="`ti ti-${group.icon}`"></i>
+						</span>
+						<h2 :id="`faq-group-${group.id}`">{{ group.label }}</h2>
 					</div>
-					<div class="faq-list">
-						<div
-							v-for="item in itemsForCategory(cat.id)"
-							:key="itemKey(item)"
-							class="faq-item"
-							:class="{ open: isOpen(item) }"
-						>
-							<button
-								type="button"
-								class="faq-q faq-trigger"
-								:aria-expanded="isOpen(item)"
-								:aria-controls="answerId(item)"
-								@click="toggleItem(item)"
-							>
-								<span class="faq-q-row">
-									<span class="faq-q-text">{{ item.question }}</span>
-									<i class="ti ti-chevron-down faq-chevron" aria-hidden="true"></i>
-								</span>
-							</button>
-							<div :id="answerId(item)" class="faq-a" :hidden="!isOpen(item)">
+					<ul class="faq__list" role="list">
+						<li v-for="item in group.items" :key="key(item)" class="faq__item" :class="{ 'is-open': open[item.category] === key(item) }">
+							<h3 class="faq__q">
+								<button
+									type="button"
+									:aria-expanded="open[item.category] === key(item)"
+									:aria-controls="answerId(item)"
+									@click="toggle(item)"
+								>
+									<span>{{ item.question }}</span>
+									<i class="ti ti-chevron-down" aria-hidden="true"></i>
+								</button>
+							</h3>
+							<div :id="answerId(item)" class="faq__a" data-faq-answer :hidden="open[item.category] !== key(item)">
 								<p>
-									{{ item.answer }}<template v-if="item.link">
-										<a :href="item.link.href"> {{ item.link.label }}</a>
-									</template>
+									{{ item.answer }}
+									<a v-if="item.link" :href="item.link.href">{{ item.link.label }}</a>
 								</p>
 							</div>
-						</div>
-					</div>
+						</li>
+					</ul>
 				</section>
 
-				<div v-if="filteredItems.length === 0" class="no-results">
+				<div v-if="groups.length === 0" class="faq__empty">
 					<i class="ti ti-mood-sad" aria-hidden="true"></i>
-					No questions match your search.
+					<p>No questions match your search.</p>
+					<button type="button" class="faq__show-all" @click="showAll">Show all questions</button>
 				</div>
-			</div>
-		</div>
-
-		<div class="contact-band">
-			<div>
-				<h3>Still have a question?</h3>
-				<p>We usually reply within a couple of hours during the season.</p>
-			</div>
-			<div class="contact-band-btns">
-				<a
-					class="btn-sm btn-outline"
-					:href="`mailto:${props.siteEmail}`"
-					:aria-label="`Email us at ${props.siteEmail}`"
-				>
-					<i class="ti ti-mail" aria-hidden="true"></i>
-					Email us
-				</a>
-				<a
-					class="btn-sm btn-dark"
-					:href="`tel:${props.sitePhone}`"
-					:aria-label="`Call us at ${props.sitePhoneDisplay}`"
-				>
-					<i class="ti ti-phone" aria-hidden="true"></i>
-					Call us
-				</a>
 			</div>
 		</div>
 	</div>
 </template>
 
 <style scoped>
-.hero h1 {
-	font-size: 20px;
-	font-weight: 500;
-}
-
-.hero p {
-	font-size: 13px;
-	color: var(--color-text-secondary);
-	line-height: 1.6;
-}
-
-.search-bar {
-	display: flex;
-	gap: 8px;
-	margin-bottom: 24px;
-}
-
-.search-bar input {
-	flex: 1;
-	font-size: 13px;
-	padding: 8px 10px;
-	border: 0.5px solid var(--color-border-secondary);
-	border-radius: var(--radius-md);
-	background: var(--color-background-primary);
-	color: var(--color-text-primary);
-	font-family: inherit;
-}
-
-.search-bar button {
-	padding: 0 16px;
-	font-size: 13px;
-	cursor: pointer;
-	border-radius: var(--radius-md);
-	background: var(--color-text-primary);
-	color: var(--color-background-primary);
-	border: none;
-	font-family: inherit;
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
-
-.search-icon {
-	font-size: 13px;
-	vertical-align: -1px;
-}
-
-.faq-layout {
-	display: grid;
-	grid-template-columns: 200px 1fr;
-	gap: 24px;
-	align-items: start;
-}
-
-.cat-nav {
-	position: sticky;
-	top: calc(var(--site-header-height) + 16px);
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
-
-.cat-link {
-	font-size: 13px;
-	padding: 7px 12px;
-	min-height: var(--touch-min);
-	border-radius: var(--radius-md);
-	color: var(--color-text-secondary);
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	border: 0.5px solid transparent;
-	background: none;
-	font-family: inherit;
-	text-align: left;
-	width: 100%;
-}
-
-.cat-link i {
-	font-size: 14px;
-}
-
-.cat-link:hover {
-	background: var(--color-background-secondary);
-	color: var(--color-text-primary);
-}
-
-.cat-link.active {
-	background: var(--color-background-secondary);
-	color: var(--color-text-primary);
-	border-color: var(--color-border-tertiary);
-	font-weight: 500;
-}
-
-.cat-count {
-	margin-left: auto;
-	font-size: 11px;
-	color: var(--color-text-tertiary);
-	background: var(--color-background-primary);
-	border: 0.5px solid var(--color-border-tertiary);
-	border-radius: 10px;
-	padding: 1px 7px;
-}
-
-.cat-section {
-	margin-bottom: 28px;
-}
-
-.cat-header {
-	display: flex;
-	align-items: center;
-	gap: 9px;
-	margin-bottom: 12px;
-	padding-bottom: 10px;
-	border-bottom: 0.5px solid var(--color-border-tertiary);
-}
-
-.cat-icon {
-	width: 30px;
-	height: 30px;
-	border-radius: var(--radius-md);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 15px;
-	flex-shrink: 0;
-}
-
-.cat-title {
-	font-size: 15px;
-	font-weight: 500;
-	margin: 0;
-}
-
-.faq-list {
-	margin-bottom: 0;
-	border: 0.5px solid var(--color-border-tertiary);
-	border-radius: var(--radius-lg);
-	overflow: hidden;
-}
-
-.faq-item {
-	border-bottom: 0.5px solid var(--color-border-tertiary);
-	padding: 0;
-	cursor: default;
-	display: block;
-	background: transparent;
-}
-
-.faq-item:last-child {
-	border-bottom: none;
-}
-
-.faq-item:hover {
-	background: transparent;
-}
-
-.faq-q {
-	display: block;
-	padding: 13px 16px;
-	cursor: pointer;
-	width: 100%;
-	border: 0;
-	background: none;
-	font: inherit;
-	color: inherit;
-	text-align: left;
-}
-
-.faq-q-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 12px;
-}
-
-.faq-q:hover,
-.faq-item.open .faq-q {
-	background: var(--color-background-secondary);
-}
-
-.faq-q-text {
-	font-size: 13px;
-	font-weight: 500;
-	margin: 0;
-	line-height: 1.4;
-}
-
-.faq-chevron {
-	font-size: 15px;
-	color: var(--color-text-tertiary);
-	flex-shrink: 0;
-	transition: transform 0.15s;
-}
-
-.faq-item.open .faq-chevron {
-	transform: rotate(180deg);
-}
-
-.faq-a[hidden] {
-	display: none !important;
-}
-
-.faq-a {
-	padding: 0 16px 14px;
-	font-size: 13px;
-	color: var(--color-text-secondary);
-	line-height: 1.7;
-	margin: 0;
-}
-
-.faq-item.open .faq-a {
-	display: block;
-}
-
-.faq-item.open {
-	background: transparent;
-}
-
-.faq-a p {
-	margin: 0 0 8px;
-}
-
-.faq-a p:last-child {
-	margin: 0;
-}
-
-.faq-a a {
-	color: var(--color-text-info);
-}
-
-.no-results {
-	text-align: center;
-	padding: 2.5rem;
-	color: var(--color-text-secondary);
-	font-size: 13px;
-}
-
-.no-results .ti {
-	font-size: 28px;
-	display: block;
-	margin-bottom: 8px;
-	color: var(--color-border-secondary);
-}
-
-.contact-band {
-	background: var(--color-background-secondary);
-	border-radius: var(--radius-lg);
-	padding: 1.25rem 1.5rem;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px;
-	margin-top: 8px;
-	flex-wrap: wrap;
-}
-
-.contact-band h3 {
-	font-size: 14px;
-	font-weight: 500;
-	margin: 0 0 3px;
-}
-
-.contact-band p {
-	font-size: 12px;
-	color: var(--color-text-secondary);
-	margin: 0;
-}
-
-.contact-band-btns {
-	display: flex;
-	gap: 8px;
-	flex-wrap: wrap;
-}
-
-.btn-sm {
-	font-size: 12px;
-	padding: 7px 14px;
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-	border-radius: var(--radius-md);
-	cursor: pointer;
-	font-family: inherit;
-	font-weight: 500;
-	text-decoration: none;
-}
-
-.btn-outline {
-	background: none;
-	color: var(--color-text-primary);
-	border: 0.5px solid var(--color-border-secondary);
-}
-
-.btn-dark {
-	background: var(--color-text-primary);
-	color: var(--color-background-primary);
-	border: none;
-}
-
-@media (max-width: 768px) {
-	.faq-layout {
-		grid-template-columns: 1fr;
+@layer components {
+	.faq__search {
+		display: flex;
+		gap: var(--space-2);
+		margin-bottom: var(--space-6);
 	}
 
-	.cat-nav {
-		position: static;
+	.faq__search input {
+		flex: 1;
+		min-width: 0;
+		min-height: 44px;
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--color-border-input);
+		border-radius: var(--radius-md);
+		background: var(--color-background-primary);
+		color: var(--color-text-primary);
+		font: inherit;
 	}
-}
 
-@media (max-width: 480px) {
-	.search-bar {
+	.faq__search input:focus {
+		border-color: var(--color-border-brand);
+	}
+
+	.faq__search-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 0 var(--space-5);
+		border: 0;
+		border-radius: var(--radius-md);
+		background: var(--color-background-brand);
+		color: var(--color-text-on-image);
+		font: inherit;
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-medium);
+		cursor: pointer;
+	}
+
+	.faq__search-btn:hover {
+		opacity: 0.88;
+	}
+
+	.faq__layout {
+		display: grid;
+		grid-template-columns: 200px minmax(0, 1fr);
+		gap: var(--space-6);
+		align-items: start;
+	}
+
+	.faq__cats {
+		position: sticky;
+		top: calc(var(--site-header-height) + var(--space-4));
+		display: flex;
 		flex-direction: column;
+		gap: 4px;
 	}
 
-	.search-bar button {
+	.faq__cat {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
 		width: 100%;
+		padding: 7px var(--space-3);
+		border: 0.5px solid transparent;
+		border-radius: var(--radius-md);
+		background: none;
+		color: var(--color-text-secondary);
+		font: inherit;
+		font-size: var(--font-size-sm);
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.faq__cat:hover {
+		background: var(--color-background-secondary);
+		color: var(--color-text-primary);
+	}
+
+	.faq__cat[aria-pressed='true'] {
+		border-color: var(--color-border-tertiary);
+		background: var(--color-background-secondary);
+		color: var(--color-text-primary);
+		font-weight: var(--font-weight-medium);
+	}
+
+	.faq__count {
+		margin-left: auto;
+		padding: 1px 7px;
+		border: 0.5px solid var(--color-border-tertiary);
+		border-radius: 10px;
+		background: var(--color-background-primary);
+		font-size: var(--font-size-xs);
+		font-weight: var(--font-weight-regular);
+		color: var(--color-text-tertiary);
+	}
+
+	.faq__group {
+		margin-bottom: 28px;
+	}
+
+	.faq__group-head {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		margin-bottom: var(--space-3);
+		padding-bottom: 10px;
+		border-bottom: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.faq__group-head h2 {
+		margin: 0;
+		font-size: var(--font-size-lg);
+		font-weight: var(--font-weight-medium);
+	}
+
+	.faq__group-icon {
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
 		justify-content: center;
+		width: 30px;
+		height: 30px;
+		border-radius: var(--radius-md);
+		font-size: 15px;
+	}
+
+	.faq__group-icon--booking {
+		background: var(--color-background-success);
+		color: var(--color-text-success);
+	}
+
+	.faq__group-icon--weather {
+		background: var(--color-background-info);
+		color: var(--color-category-info-icon);
+	}
+
+	.faq__group-icon--onboard,
+	.faq__group-icon--private {
+		background: var(--color-category-private-bg);
+		color: var(--color-category-private-text);
+	}
+
+	.faq__group-icon--guests {
+		background: var(--color-category-tip-bg);
+		color: var(--color-category-tip-text);
+	}
+
+	.faq__list {
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+		border: 1px solid var(--color-border-card);
+		border-radius: var(--radius-lg);
+		list-style: none;
+	}
+
+	.faq__item + .faq__item {
+		border-top: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.faq__q {
+		margin: 0;
+	}
+
+	.faq__q button {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+		width: 100%;
+		padding: 13px 14px;
+		border: 0;
+		background: none;
+		color: var(--color-text-primary);
+		font: inherit;
+		font-size: var(--font-size-base);
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.faq__q button:hover,
+	.is-open .faq__q button {
+		background: var(--color-background-secondary);
+	}
+
+	.faq__q button:focus-visible {
+		outline-offset: -2px;
+	}
+
+	.faq__q .ti {
+		flex-shrink: 0;
+		font-size: 15px;
+		color: var(--color-text-tertiary);
+		transition: transform var(--duration-fast) ease;
+	}
+
+	.is-open .faq__q .ti {
+		transform: rotate(180deg);
+	}
+
+	.faq__a {
+		padding: 14px 14px var(--space-4);
+	}
+
+	.faq__a p {
+		margin: 0;
+		font-size: var(--font-size-body-md);
+		line-height: var(--line-height-body-md);
+		color: var(--color-text-secondary);
+	}
+
+	.faq__a a {
+		color: var(--color-text-info);
+	}
+
+	.faq__empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-3);
+		padding: 2rem;
+		color: var(--color-text-secondary);
+		text-align: center;
+	}
+
+	.faq__empty > .ti {
+		font-size: 28px;
+		color: var(--color-border-secondary);
+	}
+
+	.faq__empty p {
+		margin: 0;
+	}
+
+	.faq__show-all {
+		min-height: 24px;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--color-text-info);
+		font: inherit;
+		font-weight: var(--font-weight-medium);
+		cursor: pointer;
+	}
+
+	.faq__show-all:hover {
+		text-decoration: underline;
+	}
+
+	@media (max-width: 768px) {
+		.faq__layout {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.faq__cats {
+			position: static;
+		}
 	}
 }
 </style>

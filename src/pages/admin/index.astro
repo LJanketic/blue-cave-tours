@@ -5,7 +5,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import DepartureCard from '../../components/admin/DepartureCard.astro';
 import { formatBookingDate } from '../../lib/booking';
 import { businessDate, formatShortDate, formatTimestamp } from '../../lib/bookings/dates';
-import { STATUS_LABELS } from '../../lib/bookings/service';
+import { STATUS_LABELS, sweepPersonalData } from '../../lib/bookings/service';
 import { bookings, byCreatedDesc, enquiries } from '../../lib/bookings/store';
 import { addDays, isIsoDate, summarizeDay, weekFrom } from '../../lib/admin/schedule';
 import { overbookedDepartures } from '../../lib/admin/manifest';
@@ -25,6 +25,8 @@ const from = isIsoDate(fromParam) ? fromParam : today;
 const dayParam = params.get('day');
 const day = isIsoDate(dayParam) ? dayParam : from;
 
+// Retention (S-13): personal data past its time is removed when the dashboard loads.
+await sweepPersonalData();
 const all = await bookings().list();
 const week = weekFrom(from, all);
 const selected = week.find((d) => d.date === day) ?? summarizeDay(day, all);
@@ -351,20 +353,20 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 		justify-items: center;
 		gap: 2px;
 		padding: 8px 2px 10px;
-		border-radius: var(--radius-md);
-		border: 0.5px solid var(--color-border-tertiary);
-		color: var(--color-text-primary);
+		border-radius: var(--a-radius-md);
+		border: 0.5px solid var(--a-border-tertiary);
+		color: var(--a-text-primary);
 		text-decoration: none;
 	}
 
 	.wd:hover {
-		background: var(--color-background-secondary);
+		background: var(--a-background-secondary);
 	}
 
 	.wd-name {
 		font-size: 11px;
 		font-weight: 500;
-		color: var(--color-text-tertiary);
+		color: var(--a-text-tertiary);
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
@@ -377,50 +379,50 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 
 	.wd-guests {
 		font-size: 12px;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 	}
 
 	.wd--empty .wd-guests {
-		color: var(--color-text-tertiary);
+		color: var(--a-text-tertiary);
 	}
 
 	.wd-bar {
 		width: 70%;
 		height: 4px;
 		border-radius: 2px;
-		background: var(--color-background-secondary);
+		background: var(--a-background-secondary);
 		overflow: hidden;
 	}
 
 	.wd-bar span {
 		display: block;
 		height: 100%;
-		background: var(--color-accent-teal);
+		background: var(--a-accent-teal);
 	}
 
 	.wd-bar--over span {
-		background: var(--color-text-danger);
+		background: var(--a-text-danger);
 	}
 
 	.day-over {
-		color: var(--color-text-danger);
+		color: var(--a-text-danger);
 		font-weight: 500;
 	}
 
 	.wd--today .wd-name {
-		color: var(--color-accent-teal);
+		color: var(--a-accent-teal);
 	}
 
 	.wd--on,
 	.wd--on:hover {
-		background: var(--color-text-primary);
-		border-color: var(--color-text-primary);
-		color: var(--color-background-primary);
+		background: var(--a-text-primary);
+		border-color: var(--a-text-primary);
+		color: var(--a-background-primary);
 	}
 
 	.wd--on .wd-name,
 	.wd--on .wd-guests {
-		color: var(--color-background-primary);
+		color: var(--a-background-primary);
 	}
 
 	.wd--on .wd-bar {
@@ -434,7 +436,7 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 		width: 7px;
 		height: 7px;
 		border-radius: 50%;
-		background: var(--color-text-warning);
+		background: var(--a-text-warning);
 	}
 
 	.wd-dot--key {
@@ -469,7 +471,7 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 	.no-trips {
 		margin: 0;
 		text-align: center;
-		color: var(--color-text-secondary);
+		color: var(--a-text-secondary);
 	}
 
 	/* Latest bookings */
@@ -490,6 +492,6 @@ const latest = [...all].sort(byCreatedDesc).slice(0, 5);
 
 	.booked {
 		font-size: 12px;
-		color: var(--color-text-tertiary);
+		color: var(--a-text-tertiary);
 	}
 </style>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Payment Error — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-text-tertiary)}a:hover{color:var(--color-text-secondary)}
+.page{max-width:var(--flow-width);margin:0 auto;padding:calc(24px + 1.5rem) 24px 2rem}
+.hbc p{margin:0}
+.error-circle{width:72px;height:72px;border-radius:50%;background:var(--color-background-danger);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.error-circle i{font-size:32px;color:var(--color-text-danger)}
+.error-hero{text-align:center;padding:2rem 1rem 1.5rem}
+.error-hero h1{font-size:var(--font-size-hero);font-weight:500;margin:0 0 6px;line-height:var(--line-height-tight)}
+.error-hero p{font-size:var(--font-size-base);color:var(--color-text-secondary);line-height:var(--line-height-relaxed);max-width:380px;margin:0 auto}
+.error-note{background:var(--color-background-danger);border-radius:var(--border-radius-md);padding:10px 14px;font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-danger);margin:16px 0 24px;display:flex;gap:8px;align-items:flex-start}
+.error-note i{font-size:15px;flex-shrink:0;margin-top:2px}
+.card{background:var(--color-background-primary);border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:14px}
+.hbc .card-title{font-size:var(--font-size-lg);font-weight:500;margin:0 0 12px;display:flex;align-items:center;gap:7px}
+.card-title i{font-size:15px;color:var(--color-accent)}
+.reason-item{display:flex;align-items:center;gap:10px;font-size:var(--font-size-base);color:var(--color-text-secondary);padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:6px}
+.reason-item i{font-size:14px;color:var(--color-text-tertiary);flex-shrink:0}
+.hold-warn{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-warning);background:var(--color-background-warning-soft);border-radius:var(--border-radius-md);padding:9px 13px;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.hold-warn i{font-size:15px;flex-shrink:0}
+.help-strip{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.help-icon{width:38px;height:38px;border-radius:var(--border-radius-md);background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.help-icon i{color:var(--color-accent)}
+.help-title{font-size:var(--font-size-base);font-weight:500;margin:0 0 2px}
+.help-desc{font-size:var(--font-size-base);color:var(--color-text-secondary);line-height:var(--line-height-relaxed)}
+.hbc .help-link{font-size:var(--font-size-sm);color:var(--color-text-info);text-decoration:none}
+.hbc .btn-primary{width:100%;padding:13px;background:var(--color-background-brand);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500;margin-bottom:8px}
+.hbc .btn-primary:hover{opacity:0.88;color:var(--color-background-primary)}
+.hbc .btn-secondary{width:100%;padding:10px;background:none;color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500}
+.hbc .btn-secondary:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+@media (max-width:768px){.page{padding:calc(16px + 1.5rem) 16px 2rem}}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="page">
+    <div class="mini-nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+    </div>
+    <div class="error-hero">
+      <div class="error-circle"><i class="ti ti-x" aria-hidden="true"></i></div>
+      <h1>Payment unsuccessful</h1>
+      <p>Your booking hasn't been confirmed yet. No money has been taken from your account.</p>
+    </div>
+    <div class="error-note"><i class="ti ti-alert-circle" aria-hidden="true"></i><span>Your spots are still held for <strong>8 minutes</strong>. Try again before the hold expires or your selection may be released.</span></div>
+    <div class="card">
+      <p class="card-title"><i class="ti ti-help-circle" aria-hidden="true"></i> Common reasons this happens</p>
+      <div class="reason-item"><i class="ti ti-credit-card" aria-hidden="true"></i> Incorrect card number, expiry, or CVV</div>
+      <div class="reason-item"><i class="ti ti-building-bank" aria-hidden="true"></i> Bank declined the transaction — try contacting them</div>
+      <div class="reason-item"><i class="ti ti-wifi-off" aria-hidden="true"></i> Connection dropped mid-payment</div>
+      <div class="reason-item"><i class="ti ti-lock" aria-hidden="true"></i> 3D Secure verification timed out or was declined</div>
+    </div>
+    <div class="hold-warn"><i class="ti ti-clock" aria-hidden="true"></i> Your date and time slot are held until the timer runs out. Try again now to keep your selection.</div>
+    <div class="help-strip">
+      <div class="help-icon"><i class="ti ti-headset" aria-hidden="true"></i></div>
+      <div><p class="help-title">Need help?</p><p class="help-desc">If the problem persists, we can take your booking manually.</p><a class="help-link" href="Contact.dc.html">Contact us →</a></div>
+    </div>
+    <a class="btn-primary" href="BookingSummary.dc.html"><i class="ti ti-refresh" style="font-size: 13px; vertical-align: -2px" aria-hidden="true"></i> Try payment again</a>
+    <a class="btn-secondary" href="Tours.dc.html">Back to tours</a>
+    <div class="trust-strip">
+      <span><i class="ti ti-lock" aria-hidden="true"></i> Secure payment</span>
+      <span><i class="ti ti-headset" aria-hidden="true"></i> Need help? <a href="mailto:help@hellobluecave.com">help@hellobluecave.com</a></span>
+      <span>Licensed maritime operator · Croatia</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

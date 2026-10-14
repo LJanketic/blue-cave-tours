@@ -1,0 +1,121 @@
+---
+type Props = {
+	/** The current step: 2 date & guests, 3 review, 4 payment. Step 1 (tour type) is always done. */
+	current: 1 | 2 | 3 | 4;
+};
+
+const { current } = Astro.props;
+const STEPS = ['Tour type', 'Date & guests', 'Review', 'Payment'];
+---
+
+<!-- Spec §8.1.1. Done steps say "completed" to screen readers; the current one has aria-current. -->
+<ol class="step-bar-ui" aria-label="Booking progress">
+	{
+		STEPS.map((label, index) => {
+			const step = index + 1;
+			const state = step < current ? 'done' : step === current ? 'active' : 'next';
+			return (
+				<li class:list={['step-bar-ui__step', `is-${state}`]} aria-current={state === 'active' ? 'step' : undefined}>
+					<span class="step-bar-ui__dot" aria-hidden="true">
+						{state === 'done' ? <i class="ti ti-check" /> : step}
+					</span>
+					<span class="step-bar-ui__label">
+						{label}
+						{state === 'done' && <span class="sr-only">, completed</span>}
+					</span>
+				</li>
+			);
+		})
+	}
+</ol>
+
+<style>
+	@layer components {
+		/* board hbc.css .step-bar */
+		.step-bar-ui {
+			display: flex;
+			align-items: center;
+			margin: 0 0 28px;
+			padding: 0;
+			list-style: none;
+		}
+
+		.step-bar-ui__step {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			font-size: var(--font-size-sm);
+		}
+
+		/* The line joining each step to the next. */
+		.step-bar-ui__step:not(:last-child) {
+			flex: 1;
+		}
+
+		.step-bar-ui__step:not(:last-child)::after {
+			content: '';
+			flex: 1;
+			min-width: var(--space-2);
+			height: 0.5px;
+			margin: 0 var(--space-2);
+			background: var(--color-border-secondary);
+		}
+
+		.step-bar-ui__dot {
+			display: flex;
+			flex-shrink: 0;
+			align-items: center;
+			justify-content: center;
+			width: 22px;
+			height: 22px;
+			border-radius: 50%;
+			font-size: var(--font-size-micro);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.step-bar-ui__label {
+			white-space: nowrap;
+		}
+
+		.is-done .step-bar-ui__dot {
+			background: var(--color-background-success);
+			color: var(--color-text-success);
+		}
+
+		.is-done .step-bar-ui__label {
+			color: var(--color-text-secondary);
+		}
+
+		.is-active .step-bar-ui__dot {
+			background: var(--color-background-brand);
+			color: var(--color-text-on-image);
+		}
+
+		.is-active .step-bar-ui__label {
+			font-weight: var(--font-weight-medium);
+			color: var(--color-text-primary);
+		}
+
+		.is-next .step-bar-ui__dot {
+			border: 0.5px solid var(--color-border-secondary);
+			background: var(--color-background-secondary);
+			color: var(--color-text-tertiary);
+		}
+
+		.is-next .step-bar-ui__label {
+			color: var(--color-text-tertiary);
+		}
+
+		/* Narrow phones: only the current step keeps its visible label (§8.1.1). */
+		@media (max-width: 420px) {
+			.step-bar-ui__step:not(.is-active) .step-bar-ui__label {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				overflow: hidden;
+				clip: rect(0, 0, 0, 0);
+				white-space: nowrap;
+			}
+		}
+	}
+</style>

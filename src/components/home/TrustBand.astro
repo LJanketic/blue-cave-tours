@@ -1,0 +1,143 @@
+---
+import Marquee from '../ui/Marquee.astro';
+import type { TrustItem } from '../../data/marketing';
+
+type Props = { items: TrustItem[]; id?: string };
+
+const { items, id = 'trust' } = Astro.props;
+const shown = items.filter((item) => item.confirmed);
+---
+
+<!--
+	Spec §6.1.3. One row on wide screens; a slow marquee from 1120px down,
+	which wraps into a 2×2 grid under reduced motion. The marquee copy has no
+	links (its screen-reader list is visually hidden); the cancellation policy
+	is in the footer too.
+-->
+<section class="trust-band" id={id} aria-label="Why book with us">
+	<ul class="trust-band__row" role="list">
+		{
+			shown.map((item) => (
+				<li class="trust-band__item">
+					<i class={`ti ti-${item.icon}`} aria-hidden="true" />
+					{item.href ? (
+						<a href={item.href}>
+							<strong>{item.strong}</strong> {item.text}
+						</a>
+					) : (
+						<span>
+							<strong>{item.strong}</strong> {item.text}
+						</span>
+					)}
+				</li>
+			))
+		}
+	</ul>
+	<Marquee label="Why book with us" duration={40} class="trust-band__marquee">
+		{
+			shown.map((item) => (
+				<li class="trust-band__item">
+					<i class={`ti ti-${item.icon}`} aria-hidden="true" />
+					<span>
+						<strong>{item.strong}</strong> {item.text}
+					</span>
+				</li>
+			))
+		}
+	</Marquee>
+</section>
+
+<style>
+	@layer components {
+		.trust-band {
+			--marquee-gap: 48px;
+			--marquee-fade: 64px;
+			background: var(--color-background-primary);
+		}
+
+		.trust-band__row {
+			display: flex;
+			justify-content: space-between;
+			gap: var(--space-4);
+			max-width: 1120px;
+			margin: 0 auto;
+			padding: var(--space-5) var(--space-6);
+			list-style: none;
+		}
+
+		.trust-band__item {
+			display: flex;
+			align-items: center;
+			gap: var(--space-2);
+			font-size: var(--font-size-base);
+			color: var(--color-text-secondary);
+			white-space: nowrap;
+		}
+
+		.trust-band__item strong {
+			font-weight: var(--font-weight-semibold);
+			color: var(--color-text-primary);
+		}
+
+		.trust-band__item .ti {
+			font-size: 20px;
+			color: var(--color-accent);
+		}
+
+		.trust-band__item a {
+			color: inherit;
+			text-decoration: none;
+		}
+
+		.trust-band__item a:hover {
+			text-decoration: underline;
+			text-underline-offset: 3px;
+		}
+
+		.trust-band :global(.trust-band__marquee) {
+			display: none;
+			padding: var(--space-5) 0;
+		}
+
+		/* [DEVIATE, layout] At 16px (the board's 15px rounds to the base token)
+		   the four items need ~1030px, so the row is wider than the 960 column
+		   and the marquee starts at 1120px instead of 1024px. */
+		@media (max-width: 1120px) {
+			.trust-band__row {
+				display: none;
+			}
+
+			.trust-band :global(.trust-band__marquee) {
+				display: block;
+			}
+		}
+
+		/* Still (reduced motion, no JavaScript): a 2×2 grid instead of a moving strip. */
+		@media (max-width: 1120px) and (prefers-reduced-motion: reduce), (max-width: 1120px) and (scripting: none) {
+			.trust-band :global(.marquee__set) {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: var(--space-3) var(--space-4);
+				padding: 0 var(--page-gutter);
+			}
+
+			.trust-band :global(.trust-band__item) {
+				white-space: normal;
+			}
+		}
+
+		@media (max-width: 768px) {
+			.trust-band {
+				--marquee-gap: 40px;
+			}
+
+			.trust-band :global(.trust-band__marquee) {
+				padding: var(--space-4) 0;
+			}
+
+			.trust-band__item {
+				font-size: var(--font-size-sm);
+			}
+		}
+	}
+</style>

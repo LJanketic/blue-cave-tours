@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Group Booking — Hello Blue Cave</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hbc.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-text-tertiary)}a:hover{color:var(--color-text-secondary)}
+.page{max-width:var(--flow-width);margin:0 auto;padding:24px}
+.hbc input,.hbc select,.hbc textarea{font-size:var(--font-size-base)}
+.hbc p{margin:0}
+.tour-snap{display:flex;gap:12px;align-items:center;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:20px}
+.snap-img{width:56px;height:56px;border-radius:var(--border-radius-md);background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.snap-img i{font-size:22px;color:var(--color-border-secondary)}
+.snap-name{font-size:var(--font-size-base);font-weight:500;margin:0 0 3px}
+.snap-meta{display:flex;gap:10px;flex-wrap:wrap}
+.snap-tag{font-size:var(--font-size-xs);color:var(--color-text-secondary);display:flex;align-items:center;gap:4px}
+.card{background:var(--color-background-primary);border:1px solid var(--color-border-card);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:14px}
+.hbc .card-title{font-size:var(--font-size-lg);font-weight:500;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.card-title i{font-size:16px;color:var(--color-accent)}
+.hbc .card-sub{font-size:var(--font-size-base);color:var(--color-text-secondary);margin:0 0 14px;line-height:var(--line-height-relaxed)}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-month{font-size:var(--font-size-base);font-weight:500}
+.hbc .cal-nav{background:none;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);width:28px;height:28px;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.hbc .cal-nav:hover{background:var(--color-background-secondary)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal-dow{font-size:var(--font-size-micro);color:var(--color-text-tertiary);text-align:center;padding-bottom:4px;font-weight:500}
+.hbc .cal-day{height:36px;padding:0;border-radius:var(--border-radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:var(--font-size-sm);cursor:pointer;border:0.5px solid transparent;background:none;color:var(--color-text-primary)}
+.hbc .cal-day:hover:not(.past):not(.sel){background:var(--color-background-secondary);border-color:var(--color-border-secondary)}
+.hbc .cal-day.empty{visibility:hidden}
+.hbc .cal-day.past{cursor:default;color:var(--color-text-tertiary)}
+.hbc .cal-day.today{border-color:var(--color-border-info);color:var(--color-text-info)}
+.hbc .cal-day.sel{background:var(--color-background-brand);color:var(--color-background-primary);border-color:var(--color-border-brand)}
+.avail-dot{width:4px;height:4px;border-radius:50%;background:var(--color-accent);margin-top:1px}
+.cal-day.sel .avail-dot{background:var(--color-background-primary);opacity:0.6}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.hbc .slot{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;background:var(--color-background-primary);width:100%}
+.hbc .slot:hover{border-color:var(--color-border-primary)}
+.hbc .slot.sel{border:2px solid var(--color-border-brand);background:var(--color-background-brand-soft)}
+.slot-icon{width:36px;height:36px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.slot.sel .slot-icon{background:var(--color-background-primary)}
+.slot-time{font-size:var(--font-size-md);font-weight:500;margin:0 0 2px;display:block}
+.slot-label{font-size:var(--font-size-xs);color:var(--color-text-secondary);display:block}
+.slot-radio{width:18px;height:18px;border-radius:50%;border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:auto}
+.slot.sel .slot-radio{background:var(--color-background-brand);border-color:var(--color-border-brand)}
+.slot.sel .slot-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--color-background-primary)}
+.guests-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.guest-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)}
+.guest-label{font-size:var(--font-size-base)}
+.guest-sub-label{font-size:var(--font-size-xs);color:var(--color-text-tertiary)}
+.stepper{display:flex;align-items:center;gap:8px}
+.hbc .step-btn{width:28px;height:28px;padding:0;border-radius:50%;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:var(--font-size-base);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.step-val{font-size:var(--font-size-base);font-weight:500;min-width:20px;text-align:center}
+.cap-warn{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-warning);margin-top:8px;display:flex;align-items:center;gap:5px}
+.hold-note{font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-secondary);margin-top:10px;display:flex;align-items:center;gap:6px;background:var(--color-background-secondary);padding:8px 12px;border-radius:var(--border-radius-md)}
+.hold-note i{color:var(--color-accent);font-size:14px;flex-shrink:0}
+.details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:var(--font-size-xs);font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em}
+.field.full{grid-column:1/-1}
+.field textarea{resize:vertical;min-height:60px}
+.summary-card{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1.1rem 1.25rem;margin-bottom:16px}
+.hbc .sum-title{font-size:var(--font-size-base);font-weight:500;margin:0 0 10px}
+.sum-row{display:flex;justify-content:space-between;font-size:var(--font-size-base);margin-bottom:5px}
+.sum-label{color:var(--color-text-secondary)}.sum-val{font-weight:500}
+.sum-div{border-top:0.5px solid var(--color-border-tertiary);margin:10px 0}
+.sum-total{display:flex;justify-content:space-between;font-size:var(--font-size-md);font-weight:500}
+.hbc .sum-note{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-top:4px;text-align:right}
+.hbc .cta-btn{width:100%;padding:13px;background:var(--color-background-brand);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:var(--font-size-sm);font-weight:500}
+.hbc .cta-btn:hover{opacity:0.88;color:var(--color-background-primary)}
+.cta-btn i{font-size:14px;vertical-align:-2px}
+.hbc .back-btn{width:100%;padding:10px;background:none;color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:var(--font-size-sm);margin-top:8px}
+.hbc .back-btn:hover{color:var(--color-text-secondary)}
+.policy-note{display:flex;align-items:center;gap:6px;font-size:var(--font-size-body-sm);line-height:var(--line-height-body-sm);color:var(--color-text-success);justify-content:center;margin-top:10px}
+@media (max-width:768px){
+  .page{padding:16px}
+  .slots,.guests-grid,.details-grid{grid-template-columns:1fr}
+  .cal-grid{gap:2px}
+}
+</style>
+</helmet>
+<div class="hbc">
+  <div class="page">
+    <div class="mini-nav">
+      <a class="nav-logo" href="Main-n19w-fhxd.dc.html"><i class="ti ti-sailboat" aria-hidden="true"></i> Hello Blue Cave</a>
+    </div>
+    <div class="step-bar">
+      <div class="step done"><div class="step-dot"><i class="ti ti-check" style="font-size: 11px" aria-hidden="true"></i></div><span class="step-lbl">Tour type</span></div>
+      <div class="step-line"></div>
+      <div class="step active"><div class="step-dot">2</div><span class="step-lbl">Date &amp; guests</span></div>
+      <div class="step-line"></div>
+      <div class="step next"><div class="step-dot">3</div><span class="step-lbl">Review</span></div>
+      <div class="step-line"></div>
+      <div class="step next"><div class="step-dot">4</div><span class="step-lbl">Payment</span></div>
+    </div>
+    <div class="tour-snap">
+      <div class="snap-img"><i class="ti ti-sunset" aria-hidden="true"></i></div>
+      <div><p class="snap-name">Sunset Bay coastal cruise</p><div class="snap-meta"><span class="snap-tag"><i class="ti ti-clock" aria-hidden="true"></i> 3 hours</span><span class="snap-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> Marina Pier B</span><span class="snap-tag"><i class="ti ti-star" style="color: var(--color-text-warning)" aria-hidden="true"></i> 4.9 (128)</span></div></div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Choose a date</p>
+      <p class="card-sub">Tours run daily. Select your preferred day.</p>
+      <div class="cal-header"><button class="cal-nav" aria-label="Previous month" onClick="{{ prevMonth }}">‹</button><span class="cal-month">{{ monthLabel }}</span><button class="cal-nav" aria-label="Next month" onClick="{{ nextMonth }}">›</button></div>
+      <div class="cal-grid">
+        <sc-for list="{{ dows }}" as="dow" hint-placeholder-count="7"><div class="cal-dow">{{ dow }}</div></sc-for>
+        <sc-for list="{{ days }}" as="d" hint-placeholder-count="35">
+          <button class="{{ d.cls }}" disabled="{{ d.disabled }}" aria-label="{{ d.aria }}" onClick="{{ d.pick }}">{{ d.label }}<sc-if value="{{ d.dot }}" hint-placeholder-val="{{ true }}"><span class="avail-dot"></span></sc-if></button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ hasDate }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 18px">
+          <p style="font-size: var(--font-size-sm); font-weight: 500; color: var(--color-text-secondary); margin: 0 0 10px">Choose a departure time</p>
+          <div class="slots">
+            <button class="{{ morningCls }}" onClick="{{ pickMorning }}"><span class="slot-icon" style="color: var(--color-category-warning-icon)"><i class="ti ti-sun" aria-hidden="true"></i></span><span><span class="slot-time">09:00</span><span class="slot-label">Morning departure</span></span><span class="slot-radio"></span></button>
+            <button class="{{ sunsetCls }}" onClick="{{ pickSunset }}"><span class="slot-icon" style="color: var(--color-icon-sunset)"><i class="ti ti-sunset" aria-hidden="true"></i></span><span><span class="slot-time">18:00</span><span class="slot-label">Sunset departure</span></span><span class="slot-radio"></span></button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-users" aria-hidden="true"></i> How many guests?</p>
+      <p class="card-sub">Max 12 guests per departure. Children under 3 travel free.</p>
+      <div class="guests-grid">
+        <div class="guest-row"><div><p class="guest-label">Adults</p><p class="guest-sub-label">Age 13+ · €95</p></div><div class="stepper"><button class="step-btn" aria-label="Fewer adults" onClick="{{ adultsDown }}">−</button><span class="step-val">{{ adults }}</span><button class="step-btn" aria-label="More adults" onClick="{{ adultsUp }}">+</button></div></div>
+        <div class="guest-row"><div><p class="guest-label">Children</p><p class="guest-sub-label">Age 3–12 · €55</p></div><div class="stepper"><button class="step-btn" aria-label="Fewer children" onClick="{{ childrenDown }}">−</button><span class="step-val">{{ children }}</span><button class="step-btn" aria-label="More children" onClick="{{ childrenUp }}">+</button></div></div>
+      </div>
+      <sc-if value="{{ atCap }}" hint-placeholder-val="{{ false }}">
+        <div class="cap-warn"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Maximum 12 guests per departure reached.</div>
+      </sc-if>
+      <div class="hold-note"><i class="ti ti-lock" aria-hidden="true"></i> Your spots are held for 12 minutes once you proceed to review.</div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-user" aria-hidden="true"></i> Your details</p>
+      <p class="card-sub">We'll send your confirmation and any updates here.</p>
+      <div class="details-grid">
+        <div class="field"><label for="gb-first">First name</label><input id="gb-first" type="text" placeholder="Ivan"></div>
+        <div class="field"><label for="gb-last">Last name</label><input id="gb-last" type="text" placeholder="Kovač"></div>
+        <div class="field"><label for="gb-email">Email</label><input id="gb-email" type="email" placeholder="ivan@example.com"></div>
+        <div class="field"><label for="gb-phone">Phone</label><input id="gb-phone" type="tel" placeholder="+385 91 234 5678"></div>
+        <div class="field full"><label for="gb-req">Special requests</label><textarea id="gb-req" placeholder="Allergies, accessibility needs, anything we should know…"></textarea></div>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <p class="sum-title">Booking summary</p>
+      <div class="sum-row"><span class="sum-label">Tour</span><span class="sum-val">Sunset Bay coastal cruise</span></div>
+      <div class="sum-row"><span class="sum-label">Date</span><span class="sum-val">{{ dateLabel }}</span></div>
+      <div class="sum-row"><span class="sum-label">Departure</span><span class="sum-val">{{ slot }}</span></div>
+      <div class="sum-row"><span class="sum-label">Guests</span><span class="sum-val">{{ guestsLabel }}</span></div>
+      <div class="sum-div"></div>
+      <div class="sum-row"><span class="sum-label">{{ adultsLabel }}</span><span class="sum-val">{{ adultsTotal }}</span></div>
+      <sc-if value="{{ hasChildren }}" hint-placeholder-val="{{ false }}">
+        <div class="sum-row"><span class="sum-label">{{ childrenLabel }}</span><span class="sum-val">{{ childrenTotal }}</span></div>
+      </sc-if>
+      <div class="sum-div"></div>
+      <div class="sum-total"><span>Total</span><span>{{ total }}</span></div>
+      <p class="sum-note">Includes all taxes and fees</p>
+    </div>
+    <a class="cta-btn" href="BookingSummary.dc.html">Review booking <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    <a class="back-btn" href="TourDetail.dc.html">← Back to tour type</a>
+    <div class="policy-note"><i class="ti ti-shield-check" style="font-size: 13px" aria-hidden="true"></i> Free cancellation up to 48h before departure</div>
+    <div class="trust-strip">
+      <span><i class="ti ti-lock" aria-hidden="true"></i> Secure payment</span>
+      <span><i class="ti ti-headset" aria-hidden="true"></i> Need help? <a href="mailto:help@hellobluecave.com">help@hellobluecave.com</a></span>
+      <span>Licensed maritime operator · Croatia</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const t = new Date();
+    this.state = { adults: 2, children: 0, sel: null, slot: '09:00', y: t.getFullYear(), m: t.getMonth() };
+  }
+  changeGuest(type, delta) {
+    const a = this.state.adults, c = this.state.children;
+    if (type === 'adults') { const n = a + delta; if (n < 1 || n + c > 12) return; this.setState({ adults: n }); }
+    else { const n = c + delta; if (n < 0 || a + n > 12) return; this.setState({ children: n }); }
+  }
+  renderVals() {
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const s = this.state;
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    let startDow = new Date(s.y, s.m, 1).getDay();
+    startDow = startDow === 0 ? 6 : startDow - 1;
+    const days = [];
+    for (let i = 0; i < startDow; i++) days.push({ cls: 'cal-day empty', disabled: true, aria: '', label: '', dot: false, pick: null });
+    const dim = new Date(s.y, s.m + 1, 0).getDate();
+    for (let d = 1; d <= dim; d++) {
+      const date = new Date(s.y, s.m, d);
+      const isPast = date < todayStart;
+      const isToday = date.toDateString() === today.toDateString();
+      const isSel = s.sel && s.sel.y === s.y && s.sel.m === s.m && s.sel.d === d;
+      let cls = 'cal-day';
+      if (isPast) cls += ' past';
+      if (isToday && !isPast) cls += ' today';
+      if (isSel) cls += ' sel';
+      const y = s.y, m = s.m;
+      days.push({
+        cls: cls, disabled: isPast, label: String(d), dot: !isPast,
+        aria: d + ' ' + MONTHS[m] + ' ' + y,
+        pick: isPast ? null : () => this.setState({ sel: { y: y, m: m, d: d }, slot: '09:00' })
+      });
+    }
+    const a = s.adults, c = s.children;
+    const at = a * 95, ct = c * 55;
+    return {
+      dows: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+      days: days,
+      monthLabel: MONTHS[s.m] + ' ' + s.y,
+      prevMonth: () => this.setState(s.m === 0 ? { m: 11, y: s.y - 1 } : { m: s.m - 1 }),
+      nextMonth: () => this.setState(s.m === 11 ? { m: 0, y: s.y + 1 } : { m: s.m + 1 }),
+      hasDate: !!s.sel,
+      morningCls: 'slot' + (s.slot === '09:00' ? ' sel' : ''),
+      sunsetCls: 'slot' + (s.slot === '18:00' ? ' sel' : ''),
+      pickMorning: () => this.setState({ slot: '09:00' }),
+      pickSunset: () => this.setState({ slot: '18:00' }),
+      adults: a, children: c,
+      adultsUp: () => this.changeGuest('adults', 1),
+      adultsDown: () => this.changeGuest('adults', -1),
+      childrenUp: () => this.changeGuest('children', 1),
+      childrenDown: () => this.changeGuest('children', -1),
+      atCap: a + c >= 12,
+      dateLabel: s.sel ? s.sel.d + ' ' + SHORT[s.sel.m] + ' ' + s.sel.y : '— select a date',
+      slot: s.slot,
+      guestsLabel: a + ' adult' + (a !== 1 ? 's' : '') + (c > 0 ? ', ' + c + ' child' + (c !== 1 ? 'ren' : '') : ''),
+      adultsLabel: 'Adults (' + a + ' × €95)',
+      adultsTotal: '€' + at,
+      hasChildren: c > 0,
+      childrenLabel: 'Children (' + c + ' × €55)',
+      childrenTotal: '€' + ct,
+      total: '€' + (at + ct)
+    };
+  }
+}
+</script>
+</body>
+</html>

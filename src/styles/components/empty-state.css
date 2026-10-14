@@ -1,0 +1,22 @@
+/* EmptyState (spec §3.2; board 02 .no-results), shared by ui/EmptyState.astro and .vue. */
+@layer components {
+	.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-3);
+		padding: 2rem;
+		text-align: center;
+		font-size: var(--font-size-base);
+		color: var(--color-text-secondary);
+	}
+
+	.empty-state > .ti {
+		font-size: 28px;
+		color: var(--color-border-secondary);
+	}
+
+	.empty-state p {
+		margin: 0;
+	}
+}

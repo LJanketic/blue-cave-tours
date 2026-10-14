@@ -2,6 +2,9 @@
 
 export const CONTACT_LIMITS = {
 	name: 200,
+	firstName: 100,
+	lastName: 100,
+	bookingRef: 20,
 	email: 254,
 	message: 5000,
 	phone: 30,
@@ -16,6 +19,33 @@ export const CONTACT_MAX_FORM_AGE_MS = 86_400_000;
 /** Honeypot field name — must match the hidden input in contact/index.astro */
 export const HONEYPOT_FIELD = 'company';
 
+/** The Subject select (D-10), with the board's wording; `topic` is what's stored. */
+export const CONTACT_TOPICS = [
+	{ id: 'general', label: 'General enquiry' },
+	{ id: 'group', label: 'Group booking question' },
+	{ id: 'charter', label: 'Private charter enquiry' },
+	{ id: 'change', label: 'Cancellation or rescheduling' },
+	{ id: 'feedback', label: 'Feedback or complaint' },
+	{ id: 'press', label: 'Press / media' },
+] as const;
+
+export type ContactTopic = (typeof CONTACT_TOPICS)[number]['id'];
+
+/** Topics that ask which tour it's about. */
+export const TOPICS_WITH_TOUR: readonly ContactTopic[] = ['group', 'charter', 'change'];
+
+export function topicLabel(topic: string | undefined): string {
+	return CONTACT_TOPICS.find((t) => t.id === topic)?.label ?? 'General enquiry';
+}
+
+/** Booking references as issued (HBC- and six letters or digits, see newBookingRef). */
+const BOOKING_REF_RE = /^HBC-[A-Z0-9]{6}$/;
+
+/** "Ivan" + "Kovač" → "Ivan Kovač". The form has two fields (D-10); the record keeps one name. */
+export function joinName(first: string, last: string): string {
+	return [first, last].map((part) => part.trim()).filter(Boolean).join(' ');
+}
+
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_RE = /^[\d\s+().-]{7,30}$/;
 
@@ -24,6 +54,8 @@ export function trimField(value: unknown, max: number): string {
 }
 
 export function parseStartedAt(value: unknown): number | null {
+	// An empty field (a plain form post: no script set it) is no time, not 1970.
+	if (value === '' || value === undefined || value === null) return null;
 	const n = typeof value === 'number' ? value : Number(value);
 	if (!Number.isFinite(n)) return null;
 	return n;
@@ -35,18 +67,26 @@ export type ContactFields = {
 	message: string;
 	phone: string;
 	tourSlug: string;
+	/** '' when the form didn't send one (older clients): treated as general. */
+	topic?: string;
+	bookingRef?: string;
 	honeypot: string;
 	startedAt: number | null;
 };
 
 /** Form fields a validation error can point at (ids match contact/index.astro). */
-export type ContactFieldName = 'name' | 'email' | 'message' | 'phone' | 'tourSlug';
+export type ContactFieldName = 'name' | 'email' | 'message' | 'phone' | 'tourSlug' | 'topic' | 'bookingRef';
 
 export type ContactValidationResult =
 	| { ok: true; silent?: boolean }
 	| { ok: false; error: string; status?: number; fields?: ContactFieldName[] };
 
-export function validateContactSubmission(fields: ContactFields): ContactValidationResult {
+/**
+ * `startedAtOptional`: a plain form post (no JavaScript) has no start time,
+ * since only the page script sets it. The contact form fails open then (§3.5):
+ * the honeypot and the rate limit still apply.
+ */
+export function validateContactSubmission(fields: ContactFields, { startedAtOptional = false } = {}): ContactValidationResult {
 	if (fields.honeypot) {
 		return { ok: true, silent: true };
 	}
@@ -72,8 +112,17 @@ export function validateContactSubmission(fields: ContactFields): ContactValidat
 	if (fields.phone && !PHONE_RE.test(fields.phone)) {
 		return { ok: false, error: 'Enter a valid phone number', status: 400, fields: ['phone'] };
 	}
+	if (fields.topic && !CONTACT_TOPICS.some((t) => t.id === fields.topic)) {
+		return { ok: false, error: 'Choose a subject from the list', status: 400, fields: ['topic'] };
+	}
+	if (fields.bookingRef && !BOOKING_REF_RE.test(fields.bookingRef.toUpperCase())) {
+		return { ok: false, error: 'Booking references look like HBC-7K3QXM', status: 400, fields: ['bookingRef'] };
+	}
 
 	const now = Date.now();
+	if (fields.startedAt === null && startedAtOptional) {
+		return { ok: true };
+	}
 	if (fields.startedAt === null) {
 		return { ok: false, error: 'Invalid submission', status: 400 };
 	}

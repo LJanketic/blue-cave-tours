@@ -1,225 +1,143 @@
 ---
 export const prerender = true;
 
-import { pageTitle, SITE_EMAIL, SITE_NAME } from '../../config/site';
-import SiteLayout from '../../layouts/SiteLayout.astro';
+/**
+ * Privacy policy. Facts that need no legal judgement are fixed here (PR 6,
+ * spec §7.2): the real processors, what's stored on your device, how to
+ * complain. Legal bases, transfers, retention and the controller's identity
+ * go through the lawyer (PR 11, D-18); the controller shows once IMPRINT is set.
+ */
+import LegalLayout from '../../layouts/LegalLayout.astro';
+import Notice from '../../components/ui/Notice.astro';
+import { IMPRINT } from '../../config/legal';
+import { SITE_EMAIL, SITE_NAME } from '../../config/site';
+
+const SECTIONS = [
+	{ id: 'collect', title: 'What we collect' },
+	{ id: 'use', title: 'How we use it' },
+	{ id: 'sharing', title: 'Who processes it' },
+	{ id: 'device', title: 'Your device' },
+	{ id: 'rights', title: 'Your rights' },
+	{ id: 'contact', title: 'Contact and complaints' },
+];
+
+const SUMMARY = [
+	'We collect only what we need to run your booking or answer your message',
+	'We never sell your data',
+	'Payment details go directly to Teya or PayPal: we never see them',
+	'No tracking or analytics cookies',
+	'You can ask us to see, correct or delete your data at any time',
+];
+
+// LAWYER (PR 11): confirm each processor's entity and the transfer mechanism
+// (EU-US Data Privacy Framework or standard contractual clauses) for the US ones.
+const PROCESSORS = [
+	{ name: 'Teya', role: 'Card payments', data: 'Name, email, payment details', where: 'To be confirmed' },
+	{ name: 'PayPal', role: 'PayPal payments', data: 'Name, email, payment details', where: 'Luxembourg (EU)' },
+	{ name: 'Netlify', role: 'Website hosting and booking storage', data: 'Booking and contact form details', where: 'United States' },
+	{ name: 'Resend', role: 'Sending booking and contact emails', data: 'Name, email, phone, booking details', where: 'United States' },
+	{ name: 'Cloudflare Turnstile', role: 'Spam check on the contact form, when switched on', data: 'Technical data from your browser', where: 'United States' },
+];
 ---
 
-<SiteLayout title={pageTitle('Privacy Policy')} description={`How ${SITE_NAME} handles personal data for bookings and enquiries.`}>
-	<main id="main" class="page-shell page-shell--narrow">
-		<div class="page">
-			<nav class="legal-tab-bar" aria-label="Legal documents">
-				<a href="/legal/terms/" class="legal-tab">Terms &amp; conditions</a>
-				<a href="/legal/privacy/" class="legal-tab legal-tab--active" aria-current="page">Privacy policy</a>
-				<a href="/legal/cancellation/" class="legal-tab">Cancellation policy</a>
-			</nav>
+<LegalLayout
+	doc="privacy"
+	title="Privacy policy"
+	description={`How ${SITE_NAME} handles personal data for bookings and enquiries.`}
+	summary={SUMMARY}
+	sections={SECTIONS}
+>
+	{
+		IMPRINT && (
+			<p class="privacy-controller">
+				Data controller: {IMPRINT.legalName}, {IMPRINT.address}, OIB {IMPRINT.oib}.
+			</p>
+		)
+	}
 
-			<div class="legal-layout">
-				<nav class="legal-nav" aria-label="Privacy policy sections">
-					<a href="#collect" class="side-link active">What we collect</a>
-					<a href="#use" class="side-link">How we use it</a>
-					<a href="#sharing" class="side-link">Third parties</a>
-					<a href="#cookies" class="side-link">Cookies</a>
-					<a href="#rights" class="side-link">Your rights</a>
-					<a href="#contact" class="side-link">Contact</a>
-				</nav>
+	<section id="collect">
+		<h2><i class="ti ti-database" aria-hidden="true"></i> 1. What we collect</h2>
+		<p>
+			When you book or contact us, we collect your name, email address, phone number, booking details, and what you
+			write to us. We don't collect payment card details: Teya or PayPal handle those directly.
+		</p>
+	</section>
 
-				<div>
-					<div class="legal-hero">
-						<h1>Privacy policy</h1>
-						<p class="legal-meta">Last updated: 1 June 2025 · GDPR compliant</p>
-					</div>
+	<section id="use">
+		<h2><i class="ti ti-settings" aria-hidden="true"></i> 2. How we use it</h2>
+		<p>
+			We use it only to run and manage your booking, send confirmations and pre-departure information, tell you
+			about weather changes, and answer your messages.
+		</p>
+		<Notice tone="info"><p>We don't use your data for marketing without your explicit consent.</p></Notice>
+	</section>
 
-					<div class="summary-box">
-						<p>The short version</p>
-						<div class="sum-item">
-							<i class="ti ti-circle-check" aria-hidden="true"></i>
-							We collect only what we need to run your booking
-						</div>
-						<div class="sum-item">
-							<i class="ti ti-circle-check" aria-hidden="true"></i>
-							We never sell your data to third parties
-						</div>
-						<div class="sum-item">
-							<i class="ti ti-circle-check" aria-hidden="true"></i>
-							Payment details go directly to Teya or PayPal — we never see them
-						</div>
-						<div class="sum-item">
-							<i class="ti ti-circle-check" aria-hidden="true"></i>
-							You can request deletion of your data at any time
-						</div>
-						<div class="sum-item">
-							<i class="ti ti-circle-check" aria-hidden="true"></i>
-							We use essential cookies only — no ad tracking
-						</div>
-					</div>
-
-					<section id="collect" class="legal-section">
-						<h2><i class="ti ti-database" aria-hidden="true"></i> 1. What we collect</h2>
-						<p>
-							When you make a booking or contact us, we may collect: name, email address, phone number,
-							booking details, and correspondence sent via the contact form or email. We do not collect
-							payment card details — handled directly by Teya or PayPal.
-						</p>
-					</section>
-
-					<section id="use" class="legal-section">
-						<h2><i class="ti ti-settings" aria-hidden="true"></i> 2. How we use it</h2>
-						<p>
-							We use the information solely to process and manage your booking, send confirmations and
-							pre-departure information, contact you about weather changes, and respond to enquiries.
-						</p>
-						<div class="highlight-box">
-							<p>We do not use your data for marketing without your explicit consent.</p>
-						</div>
-					</section>
-
-					<section id="sharing" class="legal-section">
-						<h2><i class="ti ti-share" aria-hidden="true"></i> 3. Third-party services</h2>
-						<div class="table-wrap">
-							<table class="legal-table">
-								<thead>
-									<tr>
-										<th>Service</th>
-										<th>Purpose</th>
-										<th>Data shared</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td>Teya</td>
-										<td>Card payment processing</td>
-										<td>Name, email, payment data</td>
-									</tr>
-									<tr>
-										<td>PayPal</td>
-										<td>PayPal payment processing</td>
-										<td>Name, email, payment data</td>
-									</tr>
-									<tr>
-										<td>Google Analytics</td>
-										<td>Anonymous site usage</td>
-										<td>Anonymised, no personal data</td>
-									</tr>
-									<tr>
-										<td>Email provider</td>
-										<td>Confirmation emails</td>
-										<td>Name, email, phone, booking details</td>
-									</tr>
-									<tr>
-										<td>Netlify</td>
-										<td>Website hosting and booking storage</td>
-										<td>Booking and contact form details</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</section>
-
-					<section id="cookies" class="legal-section">
-						<h2><i class="ti ti-cookie" aria-hidden="true"></i> 4. Cookies</h2>
-						<p>
-							We use essential cookies only — those required for the site and booking flow to function. No
-							advertising or tracking cookies.
-						</p>
-						<div class="table-wrap">
-							<table class="legal-table">
-								<thead>
-									<tr>
-										<th>Cookie</th>
-										<th>Purpose</th>
-										<th>Duration</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td>session_id</td>
-										<td>Maintains your booking session</td>
-										<td>Session</td>
-									</tr>
-									<tr>
-										<td>csrf_token</td>
-										<td>Security — prevents form tampering</td>
-										<td>Session</td>
-									</tr>
-									<tr>
-										<td>cookie_consent</td>
-										<td>Stores your cookie preference</td>
-										<td>1 year</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</section>
-
-					<section id="rights" class="legal-section">
-						<h2><i class="ti ti-user-check" aria-hidden="true"></i> 5. Your rights</h2>
-						<p>
-							Under GDPR you have the right to access, correct, or delete your data, and to lodge a
-							complaint with the Croatian Personal Data Protection Agency (AZOP). We retain booking data for
-							5 years to comply with Croatian financial record-keeping obligations.
-						</p>
-					</section>
-
-					<section id="contact" class="legal-section">
-						<h2><i class="ti ti-mail" aria-hidden="true"></i> 6. Contact</h2>
-						<div class="contact-note">
-							<i class="ti ti-shield-check" aria-hidden="true"></i>
-							<p>
-								For privacy requests, contact <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>. We will
-								respond within 30 days as required by GDPR.
-							</p>
-						</div>
-					</section>
-				</div>
-			</div>
+	<section id="sharing">
+		<h2><i class="ti ti-share" aria-hidden="true"></i> 3. Who processes it</h2>
+		<p>These services process data for us, only for the purpose listed:</p>
+		<div class="table-wrap">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">Service</th>
+						<th scope="col">Purpose</th>
+						<th scope="col">Data</th>
+						<th scope="col">Where</th>
+					</tr>
+				</thead>
+				<tbody>
+					{
+						PROCESSORS.map((p) => (
+							<tr>
+								<td>{p.name}</td>
+								<td>{p.role}</td>
+								<td>{p.data}</td>
+								<td>{p.where}</td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
 		</div>
-	</main>
-</SiteLayout>
+	</section>
+
+	<section id="device">
+		<h2><i class="ti ti-cookie" aria-hidden="true"></i> 4. Your device</h2>
+		<p>
+			We set no tracking or analytics cookies. We use <code>hbc_booking</code>, which is strictly necessary: it
+			keeps your booking between steps for 2 hours. Cloudflare Turnstile runs on the contact form as a security
+			check. <code>hbc_admin</code> is for staff login only.
+		</p>
+	</section>
+
+	<section id="rights">
+		<h2><i class="ti ti-user-check" aria-hidden="true"></i> 5. Your rights</h2>
+		<p>
+			You can ask to see, correct or delete your data, and you can complain to the Croatian Personal Data
+			Protection Agency (AZOP). We keep booking records for as long as Croatian accounting law requires.
+		</p>
+	</section>
+
+	<section id="contact">
+		<h2><i class="ti ti-mail" aria-hidden="true"></i> 6. Contact and complaints</h2>
+		<Notice tone="neutral" icon="shield-check">
+			<p>
+				For privacy requests or complaints, email <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>{IMPRINT && <> or write to {IMPRINT.address}</>}. We confirm receipt and reply within 15 days.
+			</p>
+		</Notice>
+	</section>
+</LegalLayout>
 
 <style>
-	.legal-tab-bar {
-		display: flex;
-		gap: 8px;
-		margin-bottom: 28px;
-	}
+	@layer pages {
+		.privacy-controller {
+			margin: 0 0 var(--space-5);
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
 
-	.legal-tab {
-		flex: 1;
-		padding: 9px;
-		border-radius: var(--radius-md);
-		border: 0.5px solid var(--color-border-secondary);
-		font-size: 13px;
-		font-weight: 500;
-		text-align: center;
-		background: var(--color-background-primary);
-		color: var(--color-text-secondary);
-		text-decoration: none;
-	}
-
-	.legal-tab:hover {
-		color: var(--color-text-primary);
-	}
-
-	.legal-tab--active {
-		background: var(--color-background-secondary);
-		color: var(--color-text-primary);
-		border-color: var(--color-border-primary);
-	}
-
-	.table-wrap {
-		overflow-x: auto;
-		margin: 10px 0;
-	}
-
-	.contact-note a {
-		color: var(--color-text-info);
-		text-decoration: none;
-	}
-
-	@media (max-width: 768px) {
-		.legal-tab-bar {
-			flex-direction: column;
+		code {
+			font-size: 0.9em;
 		}
 	}
 </style>
