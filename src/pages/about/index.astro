@@ -2,6 +2,7 @@
 export const prerender = true;
 
 import { pageTitle } from '../../config/site';
+import { charterUrl } from '../../config/routes';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { ABOUT } from '../../data/about';
 ---
@@ -117,7 +118,7 @@ import { ABOUT } from '../../data/about';
 				<p>Tours depart daily from Split. Book early in peak season — popular routes fill quickly.</p>
 				<div class="cta-band-btns">
 					<a class="btn-primary" href="/tours/">Browse all tours</a>
-					<a class="btn-secondary" href="/contact/?tour=create-perfect-day-private">Plan a private charter</a>
+					<a class="btn-secondary" href={charterUrl()}>Plan a private charter</a>
 				</div>
 			</section>
 		</div>

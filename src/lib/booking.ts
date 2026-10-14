@@ -1,5 +1,4 @@
 import type { TourDetail } from '../types/tour';
-import { parseAdultPrice } from './price';
 
 /** Guests per departure, enforced both client-side (GroupBookingFlow) and here. */
 export const MAX_GUESTS = 12;
@@ -14,17 +13,14 @@ export function isGroupTour(tour: Pick<TourDetail, 'types'>): boolean {
  * per-person price. Private-only charters and tours priced "on request" (e.g.
  * hvar-red-rocks-pakleni until its price is confirmed) go to the contact form.
  */
-export function supportsInstantBook(tour: Pick<TourDetail, 'types' | 'fromPrice'>): boolean {
-	return isGroupTour(tour) && parseAdultPrice(tour.fromPrice) !== null;
+export function supportsInstantBook(tour: Pick<TourDetail, 'types' | 'adultPrice'>): boolean {
+	return isGroupTour(tour) && tour.adultPrice !== null;
 }
 
-/**
- * Price unit next to "From …": per person for group departures, per boat for
- * private-only charters, and none when the price isn't a number ("On request").
- */
-export function tourPriceUnit(tour: Pick<TourDetail, 'types' | 'fromPrice'>): string {
-	if (parseAdultPrice(tour.fromPrice) === null) return '';
-	return isGroupTour(tour) ? '/ person' : '/ boat';
+/** Price unit next to "From …", and none when the tour is priced on request. */
+export function tourPriceUnit(tour: Pick<TourDetail, 'adultPrice' | 'priceUnit'>): string {
+	if (tour.adultPrice === null) return '';
+	return tour.priceUnit === 'person' ? '/ person' : '/ boat';
 }
 
 export function contactHrefForTour(tour: Pick<TourDetail, 'slug'>): string {

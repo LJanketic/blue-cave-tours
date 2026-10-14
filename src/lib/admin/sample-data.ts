@@ -132,8 +132,8 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 		const leadDays = Math.min(offset + 1 + (guestIndex % 5) * 3, 21);
 		const createdAt = new Date(Math.min(now.getTime(), now.getTime() + (offset - leadDays) * 86_400_000) - guestIndex * 3_600_000).toISOString();
 		const paid = paymentStatus !== 'unpaid';
-		const slot = tour.departure.match(/(\d{2}:\d{2}) departure/i)?.[1] ?? '';
-		const total = computeBookingTotal(tour.fromPrice, tour.priceNotes, adults, children) ?? 0;
+		const slot = tour.departures[0]?.time ?? '';
+		const total = computeBookingTotal(tour, adults, children) ?? 0;
 		const booking: Booking = {
 			id: newId(),
 			ref: newBookingRef(),

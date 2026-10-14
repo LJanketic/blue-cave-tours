@@ -8,16 +8,21 @@ import {
 	startOfDay,
 	toIsoDate,
 } from '../../lib/booking';
-import { computeBookingTotal, parseAdultPrice, parseChildPrice } from '../../lib/price';
+import { computeBookingTotal, formatFromPrice } from '../../lib/price';
+import type { AgeBands, Departure } from '../../types/tour';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 
 type Props = {
 	tourSlug: string;
 	tourTitle: string;
 	duration: string;
-	departure: string;
-	fromPrice: string;
+	/** Fixed daily departures; empty when the time isn't fixed yet (no slot to pick). */
+	departures: Departure[];
+	adultPrice: number | null;
+	childPrice: number | null;
+	/** Seasonal price copy shown under the total. */
 	priceNotes: string;
+	ageBands: AgeBands;
 	maxGuests?: number;
 	/** YYYY-MM-DD the page was rendered on, so hydration starts from the same calendar as the HTML. */
 	renderedOn: string;
@@ -30,22 +35,12 @@ const props = withDefaults(defineProps<Props>(), {
 const MAX_GUESTS = props.maxGuests;
 
 /**
- * The tour's one real departure time, parsed only from the "HH:MM check-in ·
- * HH:MM departure" style copy used by tours with a genuinely fixed daily time.
- * Deliberately does NOT match approximate ranges ("Approx. 08:00–09:00
- * departure") or flexible copy ("Flexible — typically 09:30...") — those
- * aren't a single confirmed slot, so we fall back to an informational note
+ * The tour's fixed departure times. Tours whose time isn't fixed (approximate
+ * or flexible copy) have none, and the flow shows an informational note
  * instead of presenting a made-up time as fixed.
  */
-const departureTime = computed(() => {
-	const match = props.departure.match(/\d{2}:\d{2}\s+check-in.*?(\d{2}:\d{2})\s+departure/i);
-	return match ? match[1] : null;
-});
-
 const SLOTS = computed(() =>
-	departureTime.value
-		? ([{ time: departureTime.value, label: 'Departure', icon: 'ti-sun', color: '#EF9F27' }] as const)
-		: ([] as const),
+	props.departures.map((departure) => ({ time: departure.time, label: departure.label ?? 'Departure', icon: 'ti-sun', color: '#EF9F27' })),
 );
 
 // This page is prerendered, so the HTML's calendar is from the build date. The
@@ -59,7 +54,7 @@ const viewMonth = ref(today.value.getMonth());
 // The full YYYY-MM-DD, not just a day number: browsing to another month must
 // not silently move the selection to the same day in that month.
 const selectedDate = ref<string | null>(null);
-const selectedSlot = ref(departureTime.value ?? '');
+const selectedSlot = ref(props.departures[0]?.time ?? '');
 const adults = ref(2);
 const children = ref(0);
 const firstName = ref('');
@@ -123,12 +118,13 @@ const guestSummary = computed(() => {
 	return parts.join(', ');
 });
 
-const adultUnitPrice = computed(() => parseAdultPrice(props.fromPrice));
-const childUnitPrice = computed(() => parseChildPrice(props.priceNotes));
+const adultUnitPrice = computed(() => props.adultPrice);
+const childUnitPrice = computed(() => props.childPrice);
+const fromPrice = computed(() => formatFromPrice(props.adultPrice, 'person'));
 const childFromPrice = computed(() => (childUnitPrice.value !== null ? `€${childUnitPrice.value}` : null));
 
 const adultsTotalDisplay = computed(() => {
-	if (adultUnitPrice.value === null) return `from ${props.fromPrice}`;
+	if (adultUnitPrice.value === null) return `from ${fromPrice.value}`;
 	return `€${adults.value * adultUnitPrice.value}`;
 });
 
@@ -137,20 +133,20 @@ const childrenTotalDisplay = computed(() => {
 	return `€${children.value * childUnitPrice.value}`;
 });
 
-const adultPriceLabel = computed(() => `Age 18+ · ${props.fromPrice}`);
+const adultPriceLabel = computed(() => `${props.ageBands.adult} · ${fromPrice.value}`);
 const childPriceLabel = computed(() =>
-	childFromPrice.value ? `Age 0–17 · ${childFromPrice.value}` : 'Age 0–17',
+	childFromPrice.value ? `${props.ageBands.child} · ${childFromPrice.value}` : props.ageBands.child,
 );
-const adultsLineLabel = computed(() => `Adults (${adults.value} × ${props.fromPrice})`);
+const adultsLineLabel = computed(() => `Adults (${adults.value} × ${fromPrice.value})`);
 const childrenLineLabel = computed(() =>
 	childFromPrice.value
 		? `Children (${children.value} × ${childFromPrice.value})`
 		: `Children (${children.value})`,
 );
 
-const bookingTotal = computed(() => computeBookingTotal(props.fromPrice, props.priceNotes, adults.value, children.value));
+const bookingTotal = computed(() => computeBookingTotal({ adultPrice: props.adultPrice, childPrice: props.childPrice }, adults.value, children.value));
 const bookingTotalDisplay = computed(() =>
-	bookingTotal.value !== null ? `€${bookingTotal.value}` : `from ${props.fromPrice}`,
+	bookingTotal.value !== null ? `€${bookingTotal.value}` : `from ${fromPrice.value}`,
 );
 
 const totalGuests = computed(() => adults.value + children.value);
@@ -190,7 +186,7 @@ function nextMonth() {
 function selectDay(iso: string, past: boolean) {
 	if (past) return;
 	selectedDate.value = iso;
-	selectedSlot.value = departureTime.value ?? '';
+	selectedSlot.value = props.departures[0]?.time ?? '';
 }
 
 function bump(field: 'adults' | 'children', delta: number) {

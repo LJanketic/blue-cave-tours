@@ -1,27 +1,15 @@
 import type { TourDetail } from '../types/tour';
 import { isGroupTour } from './booking';
-import { parseAdultPrice } from './price';
 
 /** Multi-select filter ids used by the tours overview. OR logic across the set. */
 export type TourFilter = 'group' | 'private' | 'short' | 'sunset';
 
-/** Parse the leading hour count from a duration string ("Approx. 8–10 hours" → 8). */
-export function parseDurationHours(duration: string): number | null {
-	const match = duration.match(/(\d+(?:\.\d+)?)/);
-	return match ? Number(match[1]) : null;
+export function isShortTour(tour: Pick<TourDetail, 'tags'>): boolean {
+	return tour.tags.includes('half-day');
 }
 
-export function isShortTour(tour: TourDetail): boolean {
-	// Real catalog half-days are ~5h; also accept literal <4h if shorter products are added later.
-	if (tour.itineraryKind === 'morning' || tour.itineraryKind === 'afternoon') return true;
-	if (/half[- ]?day/i.test(`${tour.slug} ${tour.title} ${tour.tagline}`)) return true;
-	const hours = parseDurationHours(tour.duration);
-	return hours !== null && hours < 4;
-}
-
-export function isSunsetTour(tour: TourDetail): boolean {
-	const haystack = `${tour.title} ${tour.tagline} ${tour.slug} ${tour.shortDescription}`.toLowerCase();
-	return haystack.includes('sunset');
+export function isSunsetTour(tour: Pick<TourDetail, 'tags'>): boolean {
+	return tour.tags.includes('sunset');
 }
 
 export function matchesFilter(tour: TourDetail, filter: TourFilter): boolean {
@@ -48,8 +36,8 @@ export function matchesAnyFilter(tour: TourDetail, filters: Iterable<TourFilter>
 
 /** Quote-only tours ("On request", "Price on request") always sort after priced ones. */
 function comparePrice(a: TourDetail, b: TourDetail, direction: 1 | -1): number {
-	const priceA = parseAdultPrice(a.fromPrice);
-	const priceB = parseAdultPrice(b.fromPrice);
+	const priceA = a.adultPrice;
+	const priceB = b.adultPrice;
 	if (priceA === null && priceB === null) return 0;
 	if (priceA === null) return 1;
 	if (priceB === null) return -1;
@@ -64,9 +52,7 @@ export function sortTours(tours: TourDetail[], sort: string): TourDetail[] {
 		case 'price-desc':
 			return copy.sort((a, b) => comparePrice(a, b, -1));
 		case 'duration':
-			return copy.sort(
-				(a, b) => (parseDurationHours(a.duration) ?? 0) - (parseDurationHours(b.duration) ?? 0),
-			);
+			return copy.sort((a, b) => a.durationHours - b.durationHours);
 		default:
 			return copy.sort((a, b) => Number(b.featured) - Number(a.featured));
 	}

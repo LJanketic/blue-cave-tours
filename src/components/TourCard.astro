@@ -2,6 +2,8 @@
 import type { TourDetail } from '../types/tour';
 import { contactHrefForTour, groupBookHref, isGroupTour, supportsInstantBook, tourPriceUnit } from '../lib/booking';
 import { getTourCardPhoto } from '../lib/tours';
+import { showsBestseller } from '../lib/tour-display';
+import { tourFromPrice } from '../lib/price';
 import TourImage from './TourImage.astro';
 
 type Props = {
@@ -24,7 +26,7 @@ const priceUnit = tourPriceUnit(tour);
 		<div class="tc-img card-img">
 			<TourImage photo={cardPhoto} layout="card" />
 			<div class="img-badges">
-				{featured && <span class="tc-badge img-badge badge-bestseller">Best seller</span>}
+				{showsBestseller(tour) && <span class="tc-badge img-badge badge-bestseller">Best seller</span>}
 				{tour.badge === 'new' && <span class="tc-badge img-badge badge-new">New</span>}
 				{types.map((type) => (
 					<span class:list={['tc-badge img-badge', type === 'group' ? 'badge-group' : 'badge-private']}>
@@ -46,7 +48,7 @@ const priceUnit = tourPriceUnit(tour);
 			<div class="tc-foot card-footer">
 				<div>
 					{priceUnit && <span class="price-from">From </span>}
-					<span class="tc-price price-val">{tour.fromPrice}</span>
+					<span class="tc-price price-val">{tourFromPrice(tour)}</span>
 					{priceUnit && <span class="price-per"> {priceUnit}</span>}
 				</div>
 			</div>

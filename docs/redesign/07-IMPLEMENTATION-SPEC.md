@@ -1436,6 +1436,14 @@ Responsive behaviour: §3.1.1, row "Destination detail".
 
 **Out of scope:** seasonal pricing (payments plan D8).
 
+**As built (PR 1b, 2026-10-14):**
+- `departure`, `duration` and `priceNotes` stay as **display copy**: private tours have free-text times ("Approx. 08:00–09:00", "Flexible, typically 09:30") that `departures[]` can't hold. All logic now reads `departures`, `durationHours`, `adultPrice`/`childPrice` and `tags`; nothing parses copy any more. `adultPrice`/`childPrice` are the **peak-season** figures, as the booking total always used.
+- `caveTicketNote` → `additionalFees` (Blue Cave tour: mandatory on-site ticket; the private charter: optional). The "Cave entry" row is `caveEntryNote()` in `src/lib/tour-display.ts`, which also holds `showsBestseller()`: **"Best seller" badges are hidden** until `BESTSELLER_EVIDENCE` is set (C-24).
+- Itinerary steps keep their full text as `label` (times stay in the text for now); `time` and `icon` are new.
+- `charterUrl()` replaces the hard-coded `/contact/?tour=create-perfect-day-private` CTAs (home, destination, About, FAQ) and the tour page's private-charter links. The footer's and FAQ's links to the **landing page** `/tours/create-perfect-day-private/` stay (D-23); the footer is rebuilt in PR 2.
+- Homepage copy moved to `src/data/marketing.ts`; "From €75" and "max 12" are computed from the catalog. About's "9 yrs" is **not** yet computed from `FOUNDING_YEAR` (it would read 10): PR 6, after the owner confirms D-14.
+- Destination `mapUrl`s are Maps place searches (no invented coordinates); the owner checks them (Blue Lagoon is searched as Drvenik Veli).
+
 ### 9.2 `Destination` (`src/data/destinations.ts`): PR 1b
 
 - `highlights: { icon: string; text: string }[]` (was `string[]`)

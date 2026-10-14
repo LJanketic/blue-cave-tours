@@ -1,6 +1,9 @@
 ---
 import type { TourDetail } from '../../types/tour';
 import { contactHrefForTour, groupBookHref, isGroupTour, supportsInstantBook, tourPriceUnit } from '../../lib/booking';
+import { charterUrl } from '../../config/routes';
+import { tourFromPrice } from '../../lib/price';
+import { caveEntryNote, showsBestseller } from '../../lib/tour-display';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 import { GALLERY_HERO_SIZE, GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
 import { getDestinationsForTour, getPrimaryDestinationForTour } from '../../lib/destinations';
@@ -14,7 +17,8 @@ const { tour } = Astro.props;
 const instantBook = supportsInstantBook(tour);
 const types = tour.types;
 const isGroup = isGroupTour(tour);
-const primaryBookHref = instantBook ? groupBookHref(tour) : contactHrefForTour(tour);
+// Not instantly bookable: private tours go to the charter request, group tours on request to the contact form.
+const primaryBookHref = instantBook ? groupBookHref(tour) : isGroupTour(tour) ? contactHrefForTour(tour) : charterUrl(tour.slug);
 const showPrivateCta = instantBook && types.includes('private');
 
 const heroTags: HeroTag[] = [];
@@ -28,7 +32,7 @@ if (types.includes('private')) {
 		variant: 'private',
 	});
 }
-if (tour.featured) {
+if (showsBestseller(tour)) {
 	heroTags.push({ icon: 'star', label: 'Best seller', variant: 'tip' });
 }
 
@@ -41,7 +45,6 @@ const heroPhoto = await toGalleryView(tour.image, 'sailboat', GALLERY_HERO_SIZE)
 const thumbPhotos = await Promise.all(tour.gallery.map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)));
 
 const highlightIcons = ['sunset-2', 'swimming', 'bottle', 'binoculars', 'ship', 'accessible', 'sailboat', 'droplet'];
-const itineraryIcons = ['map-pin', 'sailboat', 'swimming', 'sunset', 'anchor', 'building-lighthouse', 'droplet'];
 
 const goodToKnow = [
 	{ label: 'Duration', value: tour.duration },
@@ -52,9 +55,7 @@ const goodToKnow = [
 	{ label: 'What to bring', value: tour.whatToBring.join(', ') },
 ];
 
-if (tour.caveTicketNote) {
-	goodToKnow.push({ label: 'Cave entry', value: tour.caveTicketNote });
-}
+goodToKnow.push({ label: 'Cave entry', value: caveEntryNote(tour) });
 
 const tourDestinations = getDestinationsForTour(tour.slug);
 const primaryDestination = getPrimaryDestinationForTour(tour);
@@ -119,11 +120,11 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 						return (
 							<div class={`itinerary-item${isLast ? ' itinerary-item--last' : ''}`}>
 								<div class="it-dot">
-									<i class={`ti ti-${itineraryIcons[index % itineraryIcons.length]}`} aria-hidden="true"></i>
+									<i class={`ti ti-${step.icon}`} aria-hidden="true"></i>
 								</div>
 								<div>
 									{timeLabel && <p class="it-time">{timeLabel}</p>}
-									<p class="it-label">{step}</p>
+									<p class="it-label">{step.label}</p>
 								</div>
 							</div>
 						);
@@ -204,7 +205,7 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 			<div class="sticky-card">
 				<div class="price-row">
 					{priceUnit && <span class="price-from">From</span>}
-					<span class="price-val">{tour.fromPrice}</span>
+					<span class="price-val">{tourFromPrice(tour)}</span>
 					{priceUnit && <span class="price-per">{priceUnit}</span>}
 				</div>
 				<p class="sticky-card__price-note">{tour.priceNotes}</p>
@@ -225,7 +226,7 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 					<i class="ti ti-arrow-right" aria-hidden="true"></i>
 				</a>
 				{showPrivateCta && (
-					<a class="cta-secondary" href={contactHrefForTour(tour)}>
+					<a class="cta-secondary" href={charterUrl(tour.slug)}>
 						<i class="ti ti-crown" aria-hidden="true"></i>
 						Enquire about a private charter
 					</a>
@@ -242,7 +243,7 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 	<div class="mobile-book-bar">
 		<div class="mbb-info">
 			<span class="mbb-price">
-				{tour.fromPrice}
+				{tourFromPrice(tour)}
 				{priceUnit && <span class="mbb-per">{priceUnit}</span>}
 			</span>
 		</div>

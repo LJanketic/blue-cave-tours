@@ -22,8 +22,24 @@ export const EMAIL_SIGN_OFF = 'The Hello Blue Cave team';
 export const SITE_DEFAULT_DESCRIPTION =
 	'Boat tours and private charters from Split — Blue Cave, islands, and the best of the Adriatic.';
 
-/** Brand teal — used for the `theme-color` meta tag and the web app manifest. */
-export const SITE_THEME_COLOR = '#1d9e75';
+/** Brand sea blue: the `theme-color` meta tag and the web app manifest. */
+export const SITE_THEME_COLOR = '#1a6fc4';
+
+/** Copy computes "years operating" from this (D-14; the design says 2015, the current site 2016). */
+export const FOUNDING_YEAR = 2016;
+
+/** Contact office hours, e.g. 'Daily 08:00–20:00'. Null until the owner confirms them (C-7); hidden until then. */
+export const OFFICE_HOURS: string | null = null;
+
+/** How fast messages get a reply, as shown on the contact page ("We reply {REPLY_TIME}"). */
+export const REPLY_TIME = 'the same day';
+
+/**
+ * What backs a "Best seller" badge (e.g. 'Most booked tour in 2025, booking
+ * records'). Null hides every best-seller badge: without evidence the claim is
+ * a misleading commercial practice (C-24, UCPD).
+ */
+export const BESTSELLER_EVIDENCE: string | null = null;
 
 /** Icon paths — shared by BaseLayout's <link> tags and the web app manifest. */
 export const FAVICON_PATH = '/favicon.svg';

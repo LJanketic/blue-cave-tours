@@ -13,6 +13,7 @@ import { getAllDestinations } from '../lib/destinations';
 import { ABOUT } from '../data/about';
 import { FAQ_ITEMS } from '../data/faq';
 import { HERO_IMAGE } from '../data/hero-image';
+import { CTA_BAND, HERO_SLIDES, HOW_IT_WORKS, TYPE_CARDS } from '../data/marketing';
 import { faqPageJsonLd, organizationJsonLd, websiteJsonLd } from '../lib/seo';
 
 const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
@@ -43,28 +44,7 @@ const heroSources = await Promise.all(
 const heroLcp = heroSources[2] ?? heroSources[0];
 const heroSrcset = heroSources.map((img, i) => `${img.src} ${HERO_WIDTHS[i]}w`).join(', ');
 
-const heroPanels: HeroPanel[] = [
-	{
-		id: 'tours',
-		icon: 'sailboat',
-		heading: 'The Adriatic from the water, the way it should be',
-		subtext:
-			'Group departures along the Dalmatian coast. Small boats, real skippers, no tourist conveyor belts.',
-		ctaLabel: 'Browse all tours',
-		ctaHref: '/tours/',
-		dotLabel: 'Show all tours',
-	},
-	{
-		id: 'charter',
-		icon: 'anchor',
-		heading: 'Your own boat, your own itinerary',
-		subtext:
-			'Private charters for two or twenty. Set the route, set the pace, skip the crowds entirely.',
-		ctaLabel: 'Plan a private charter',
-		ctaHref: '/contact/?tour=create-perfect-day-private',
-		dotLabel: 'Show private charter',
-	},
-];
+const heroPanels: HeroPanel[] = HERO_SLIDES;
 ---
 
 <SiteLayout title={HOME_PAGE_TITLE} description={SITE_DEFAULT_DESCRIPTION} solidNav={false} jsonLd={jsonLd}>
@@ -144,30 +124,15 @@ const heroPanels: HeroPanel[] = [
 						<h2 id="how-heading" class="section-title">How it works</h2>
 					</div>
 					<div class="steps">
-						<div class="step-card">
-							<div class="step-num">1</div>
-							<p class="step-title">Choose a tour</p>
-							<p class="step-desc">
-								Browse by destination, duration, or activity. Group or private, your call.
-							</p>
-						</div>
-						<div class="step-card">
-							<div class="step-num">2</div>
-							<p class="step-title">Pick your date</p>
-							<p class="step-desc">Check availability and choose a departure that suits your schedule.</p>
-						</div>
-						<div class="step-card">
-							<div class="step-num">3</div>
-							<p class="step-title">Book securely</p>
-							<p class="step-desc">Pay online via secure checkout. Instant confirmation to your inbox.</p>
-						</div>
-						<div class="step-card">
-							<div class="step-num">4</div>
-							<p class="step-title">Show up and sail</p>
-							<p class="step-desc">
-								Meet your captain at Riva stand 14. We take care of everything else.
-							</p>
-						</div>
+						{
+							HOW_IT_WORKS.map((step, index) => (
+								<div class="step-card">
+									<div class="step-num">{index + 1}</div>
+									<p class="step-title">{step.title}</p>
+									<p class="step-desc">{step.description}</p>
+								</div>
+							))
+						}
 					</div>
 				</section>
 
@@ -176,40 +141,27 @@ const heroPanels: HeroPanel[] = [
 						<h2 id="types-heading" class="section-title">Group or private?</h2>
 					</div>
 					<div class="types-grid">
-						<div class="type-card">
-							<div class="type-icon type-icon--group">
-								<i class="ti ti-users" aria-hidden="true"></i>
-							</div>
-							<p class="type-title">Group tour</p>
-							<p class="type-desc">
-								Join a small shared departure, max 12 guests. Great for solo travellers, couples, and
-								anyone who likes meeting people on the water.
-							</p>
-							<div class="type-features">
-								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> From €75 per person</span>
-								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fixed departures, daily</span>
-								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Licensed skipper on every route</span>
-							</div>
-							<a class="type-cta" href="/tours/">Browse group tours</a>
-						</div>
-						<div class="type-card featured">
-							<div class="type-icon type-icon--private">
-								<i class="ti ti-crown" aria-hidden="true"></i>
-							</div>
-							<p class="type-title">Private charter</p>
-							<p class="type-desc">
-								The whole boat is yours. Choose your route, set your pace, bring your own food and music.
-								Ideal for families, celebrations, and corporate groups.
-							</p>
-							<div class="type-features">
-								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Quoted per boat and season</span>
-								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Fully customisable route</span>
-								<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> Flexible departure time</span>
-							</div>
-							<a class="btn-primary btn-primary--compact" href="/contact/?tour=create-perfect-day-private">
-								Plan a private charter
-							</a>
-						</div>
+						{
+							TYPE_CARDS.map((card) => (
+								<div class:list={['type-card', card.kind === 'private' && 'featured']}>
+									<div class={`type-icon type-icon--${card.kind}`}>
+										<i class={`ti ti-${card.icon}`} aria-hidden="true"></i>
+									</div>
+									<p class="type-title">{card.title}</p>
+									<p class="type-desc">{card.description}</p>
+									<div class="type-features">
+										{card.features.map((feature) => (
+											<span class="type-feat"><i class="ti ti-circle-check" aria-hidden="true"></i> {feature}</span>
+										))}
+									</div>
+									{card.kind === 'private' ? (
+										<a class="btn-primary btn-primary--compact" href={card.ctaHref}>{card.ctaLabel}</a>
+									) : (
+										<a class="type-cta" href={card.ctaHref}>{card.ctaLabel}</a>
+									)}
+								</div>
+							))
+						}
 					</div>
 				</section>
 
@@ -234,14 +186,11 @@ const heroPanels: HeroPanel[] = [
 				</section>
 
 				<section class="cta-band" aria-labelledby="cta-heading">
-					<h2 id="cta-heading">Ready to get on the water?</h2>
-					<p>
-						Tours run daily from Split, 1 April to 30 November. Book early in July and August. Popular
-						routes fill 3–5 days ahead.
-					</p>
+					<h2 id="cta-heading">{CTA_BAND.heading}</h2>
+					<p>{CTA_BAND.text}</p>
 					<div class="cta-band-btns">
-						<a class="btn-primary" href="/tours/">Browse all tours</a>
-						<a class="btn-secondary" href="/contact/?tour=create-perfect-day-private">Plan a private charter</a>
+						<a class="btn-primary" href={CTA_BAND.primary.href}>{CTA_BAND.primary.label}</a>
+						<a class="btn-secondary" href={CTA_BAND.secondary.href}>{CTA_BAND.secondary.label}</a>
 					</div>
 				</section>
 			</div>

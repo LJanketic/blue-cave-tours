@@ -3,6 +3,8 @@ export const prerender = true;
 
 import { isGroupTour, tourPriceUnit } from '../../lib/booking';
 import { MEETING_POINT_MAP_URL, pageTitle } from '../../config/site';
+import { charterUrl } from '../../config/routes';
+import { tourFromPrice } from '../../lib/price';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import ImageGallery from '../../components/vue/ImageGallery.vue';
 import TourImage from '../../components/TourImage.astro';
@@ -39,7 +41,6 @@ const TAG_ICONS: Record<string, string> = {
 	'Hidden bays': 'beach',
 };
 
-const HIGHLIGHT_ICONS = ['droplet', 'building-fortress', 'leaf', 'glass-full', 'beach', 'moon-stars'];
 
 function tagIcon(tag: string): string {
 	return TAG_ICONS[tag] ?? 'star';
@@ -129,13 +130,10 @@ const jsonLd = siteUrl
 						<h2 id="highlights-heading" class="sec-title">Highlights</h2>
 						<div class="highlights">
 							{
-								destination.highlights.map((hl, index) => (
+								destination.highlights.map((hl) => (
 									<div class="hl-item">
-										<i
-											class={`ti ti-${HIGHLIGHT_ICONS[index % HIGHLIGHT_ICONS.length]}`}
-											aria-hidden="true"
-										></i>
-										{hl}
+										<i class={`ti ti-${hl.icon}`} aria-hidden="true"></i>
+										{hl.text}
 									</div>
 								))
 							}
@@ -143,18 +141,12 @@ const jsonLd = siteUrl
 						<div class="highlights-marquee" aria-hidden="true">
 							<div class="marquee-track">
 								{
-									[...destination.highlights, ...destination.highlights].map((hl, index) => {
-										const originalIndex = index % destination.highlights.length;
-										return (
-											<div class="hl-item">
-												<i
-													class={`ti ti-${HIGHLIGHT_ICONS[originalIndex % HIGHLIGHT_ICONS.length]}`}
-													aria-hidden="true"
-												></i>
-												{hl}
-											</div>
-										);
-									})
+									[...destination.highlights, ...destination.highlights].map((hl) => (
+										<div class="hl-item">
+											<i class={`ti ti-${hl.icon}`} aria-hidden="true"></i>
+											{hl.text}
+										</div>
+									))
 								}
 							</div>
 						</div>
@@ -285,7 +277,7 @@ const jsonLd = siteUrl
 										<div class="tc-foot">
 											<div>
 												{priceUnit && <span class="tc-from">From </span>}
-												<span class="tc-price">{tour.fromPrice}</span>
+												<span class="tc-price">{tourFromPrice(tour)}</span>
 												{priceUnit && <span class="tc-per"> {priceUnit}</span>}
 											</div>
 											<span class="tc-cta">View tour</span>
@@ -332,7 +324,7 @@ const jsonLd = siteUrl
 						<i class="ti ti-sailboat" aria-hidden="true"></i>
 						Browse {visitLabel} tours
 					</a>
-					<a class="cta-secondary" href="/contact/?tour=create-perfect-day-private">
+					<a class="cta-secondary" href={charterUrl()}>
 						<i class="ti ti-crown" aria-hidden="true"></i>
 						Plan a private charter
 					</a>

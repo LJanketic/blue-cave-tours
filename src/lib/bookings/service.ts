@@ -63,7 +63,7 @@ export async function createPendingBooking(
 	if (!input.firstName || !input.lastName) return { ok: false, error: 'name' };
 	if (!input.email || !EMAIL_RE.test(input.email)) return { ok: false, error: 'email' };
 
-	const total = computeBookingTotal(tour.fromPrice, tour.priceNotes, adults, children);
+	const total = computeBookingTotal(tour, adults, children);
 	if (total === null) return { ok: false, error: 'quote' };
 
 	const at = now.toISOString();

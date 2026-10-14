@@ -2,6 +2,8 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import type { TourDetail } from '../../types/tour';
 import { isGroupTour, tourPriceUnit } from '../../lib/booking';
+import { tourFromPrice } from '../../lib/price';
+import { showsBestseller } from '../../lib/tour-display';
 import {
 	matchesAnyFilter,
 	searchTours,
@@ -230,7 +232,7 @@ onMounted(() => {
 							/>
 							<i v-else class="ti ti-sailboat" aria-hidden="true"></i>
 							<div class="img-badges">
-								<span v-if="tour.featured" class="img-badge badge-bestseller">Best seller</span>
+								<span v-if="showsBestseller(tour)" class="img-badge badge-bestseller">Best seller</span>
 								<span v-if="tour.badge === 'new'" class="img-badge badge-new">New</span>
 								<span
 									v-for="type in tour.types"
@@ -258,7 +260,7 @@ onMounted(() => {
 							<div class="card-footer">
 								<div>
 									<span v-if="priceUnits.get(tour.slug)" class="price-from">From </span>
-									<span class="price-val">{{ tour.fromPrice }}</span>
+									<span class="price-val">{{ tourFromPrice(tour) }}</span>
 									<span v-if="priceUnits.get(tour.slug)" class="price-per"> {{ priceUnits.get(tour.slug) }}</span>
 								</div>
 							</div>

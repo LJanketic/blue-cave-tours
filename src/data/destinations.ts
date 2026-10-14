@@ -25,6 +25,13 @@ export type DestinationTipTag = {
 	label: string;
 };
 
+export type DestinationCategory = 'island' | 'coastal-town' | 'cave-nature' | 'swimming';
+
+/** A Google Maps search link, the same URL format as MEETING_POINT_MAP_URL; opens the Maps app on phones. */
+function mapSearchUrl(query: string): string {
+	return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
 export type Destination = {
 	slug: string;
 	name: string;
@@ -34,10 +41,17 @@ export type Destination = {
 	shortDescription: string;
 	intro: string;
 	tags: string[];
+	/** One line for the homepage bento; built from the tags until the owner writes one. */
+	tagline: string;
+	/** Destinations-page filters. */
+	categories: DestinationCategory[];
+	/** Homepage bento position; unset tiles follow in catalog order. */
+	bentoOrder?: number;
+	mapUrl: string;
 	/** Optional single "tip" pill highlighted on the detail hero image. */
 	tipTag?: DestinationTipTag;
 	attrs: DestinationAttr[];
-	highlights: string[];
+	highlights: { icon: string; text: string }[];
 	/** Month scores Jan–Dec: 0 off-season, 1 good, 2 very good, 3 peak */
 	bestTimeMonths: [number, number, number, number, number, number, number, number, number, number, number, number];
 	bestTimeNote: string;
@@ -60,6 +74,9 @@ export const destinations: Destination[] = [
 		slug: 'blue-cave',
 		name: 'Blue Cave (Biševo)',
 		region: 'Central Dalmatia · Vis archipelago',
+		tagline: 'Cave · Swimming · Must-see',
+		categories: ['cave-nature', 'swimming'],
+		mapUrl: mapSearchUrl('Blue Cave, Biševo, Croatia'),
 		icon: 'droplet',
 		shortDescription:
 			'The famous sea cave on Biševo where sunlight turns the water an unreal electric blue, the headline stop on our cave-focused routes.',
@@ -73,12 +90,12 @@ export const destinations: Destination[] = [
 			{ icon: 'cloud-storm', label: 'Weather-dependent' },
 		],
 		highlights: [
-			'Iconic blue light inside the cave chamber',
-			'Short boat transfer from Vis island',
-			'Best experienced in morning calm',
-			'Part of our flagship island-hopping days',
-			'Professional crew handles timing and logistics',
-			'Combine with Vis bays on the same tour',
+			{ icon: 'droplet', text: 'Iconic blue light inside the cave chamber' },
+			{ icon: 'building-fortress', text: 'Short boat transfer from Vis island' },
+			{ icon: 'leaf', text: 'Best experienced in morning calm' },
+			{ icon: 'glass-full', text: 'Part of our flagship island-hopping days' },
+			{ icon: 'beach', text: 'Professional crew handles timing and logistics' },
+			{ icon: 'moon-stars', text: 'Combine with Vis bays on the same tour' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote:
@@ -107,6 +124,9 @@ export const destinations: Destination[] = [
 		slug: 'vis',
 		name: 'Vis island',
 		region: 'Central Dalmatia · Outer islands',
+		tagline: 'Island · Swimming · Hidden bays',
+		categories: ['island', 'swimming'],
+		mapUrl: mapSearchUrl('Vis island, Croatia'),
 		icon: 'building-lighthouse',
 		shortDescription:
 			'Remote, unhurried Vis: gateway to the Blue Cave, home to Stiniva Bay, and one of the Adriatic’s most authentic island atmospheres.',
@@ -120,12 +140,12 @@ export const destinations: Destination[] = [
 			{ icon: 'droplet', label: 'Blue Cave gateway' },
 		],
 		highlights: [
-			'Stiniva Bay, one of Croatia’s most famous beaches',
-			'Crystal-clear water away from mainland crowds',
-			'Authentic Vis town with local restaurants',
-			'Natural stopover on cave-focused full-day tours',
-			'Excellent snorkelling in sheltered coves',
-			'Panoramic coastal cruising en route from Split',
+			{ icon: 'droplet', text: 'Stiniva Bay, one of Croatia’s most famous beaches' },
+			{ icon: 'building-fortress', text: 'Crystal-clear water away from mainland crowds' },
+			{ icon: 'leaf', text: 'Authentic Vis town with local restaurants' },
+			{ icon: 'glass-full', text: 'Natural stopover on cave-focused full-day tours' },
+			{ icon: 'beach', text: 'Excellent snorkelling in sheltered coves' },
+			{ icon: 'moon-stars', text: 'Panoramic coastal cruising en route from Split' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote:
@@ -154,6 +174,9 @@ export const destinations: Destination[] = [
 		slug: 'hvar',
 		name: 'Hvar island',
 		region: 'Central Dalmatia · Hvar archipelago',
+		tagline: 'Island · Culture · Swimming',
+		categories: ['island', 'swimming'],
+		mapUrl: mapSearchUrl('Hvar, Croatia'),
 		icon: 'sun',
 		shortDescription:
 			'Croatia’s sunniest island: lavender hills, Venetian architecture, and a harbour that buzzes from morning espresso to late evening.',
@@ -167,12 +190,12 @@ export const destinations: Destination[] = [
 			{ icon: 'anchor', label: 'Lively harbour' },
 		],
 		highlights: [
-			'Venetian-era old town and waterfront promenade',
-			'Fortica fortress with panoramic views',
-			'Sunniest island in Croatia, reliable summer weather',
-			'Gateway to the Pakleni island chain',
-			'Excellent local wine and seafood ashore',
-			'Iconic stop on our Hvar & Pakleni full-day tour',
+			{ icon: 'droplet', text: 'Venetian-era old town and waterfront promenade' },
+			{ icon: 'building-fortress', text: 'Fortica fortress with panoramic views' },
+			{ icon: 'leaf', text: 'Sunniest island in Croatia, reliable summer weather' },
+			{ icon: 'glass-full', text: 'Gateway to the Pakleni island chain' },
+			{ icon: 'beach', text: 'Excellent local wine and seafood ashore' },
+			{ icon: 'moon-stars', text: 'Iconic stop on our Hvar & Pakleni full-day tour' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote:
@@ -207,6 +230,9 @@ export const destinations: Destination[] = [
 		slug: 'pakleni',
 		name: 'Pakleni islands',
 		region: 'Central Dalmatia · Hvar archipelago',
+		tagline: 'Swimming · Snorkelling · Island chain',
+		categories: ['island', 'swimming'],
+		mapUrl: mapSearchUrl('Pakleni Islands, Croatia'),
 		icon: 'beach',
 		shortDescription:
 			'A chain of small islands off Hvar: turquoise bays, pine-shaded coves, and the best swimming near Hvar without the harbour crowds.',
@@ -220,12 +246,12 @@ export const destinations: Destination[] = [
 			{ icon: 'map-pin', label: 'Near Hvar' },
 		],
 		highlights: [
-			'Some of the clearest water in the Hvar archipelago',
-			'Multiple bays: Palmižana, Vinogradišće, and more',
-			'Perfect snorkelling in calm, shallow coves',
-			'Natural complement to Hvar town on full-day tours',
-			'Pine shade and limestone cliffs framing every bay',
-			'Less crowded than Hvar’s main harbour beaches',
+			{ icon: 'droplet', text: 'Some of the clearest water in the Hvar archipelago' },
+			{ icon: 'building-fortress', text: 'Multiple bays: Palmižana, Vinogradišće, and more' },
+			{ icon: 'leaf', text: 'Perfect snorkelling in calm, shallow coves' },
+			{ icon: 'glass-full', text: 'Natural complement to Hvar town on full-day tours' },
+			{ icon: 'beach', text: 'Pine shade and limestone cliffs framing every bay' },
+			{ icon: 'moon-stars', text: 'Less crowded than Hvar’s main harbour beaches' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote:
@@ -259,6 +285,9 @@ export const destinations: Destination[] = [
 		slug: 'blue-lagoon',
 		name: 'Blue Lagoon',
 		region: 'Central Dalmatia · Drvenik Veli area',
+		tagline: 'Swimming · Half-day · Snorkelling',
+		categories: ['swimming'],
+		mapUrl: mapSearchUrl('Blue Lagoon, Drvenik Veli, Croatia'),
 		icon: 'swimming',
 		shortDescription:
 			'Shallow turquoise lagoon near Drvenik Veli, the centrepiece of our half-day tours and a swim stop on selected full-day routes.',
@@ -272,12 +301,12 @@ export const destinations: Destination[] = [
 			{ icon: 'users', label: 'Family-friendly' },
 		],
 		highlights: [
-			'Calm, shallow water ideal for swimming and snorkelling',
-			'Morning and afternoon departure options',
-			'Short boat ride from Split, maximum time in the water',
-			'Perfect introduction to Adriatic boat touring',
-			'Featured on our Three islands sampler route',
-			'Consistently clear water in summer months',
+			{ icon: 'droplet', text: 'Calm, shallow water ideal for swimming and snorkelling' },
+			{ icon: 'building-fortress', text: 'Morning and afternoon departure options' },
+			{ icon: 'leaf', text: 'Short boat ride from Split, maximum time in the water' },
+			{ icon: 'glass-full', text: 'Perfect introduction to Adriatic boat touring' },
+			{ icon: 'beach', text: 'Featured on our Three islands sampler route' },
+			{ icon: 'moon-stars', text: 'Consistently clear water in summer months' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote:
@@ -306,6 +335,9 @@ export const destinations: Destination[] = [
 		slug: 'split',
 		name: 'Split',
 		region: 'Central Dalmatia · Departure hub',
+		tagline: 'Departure · Historic city · Riva harbour',
+		categories: ['coastal-town'],
+		mapUrl: mapSearchUrl('Split, Croatia'),
 		icon: 'anchor',
 		shortDescription:
 			'Your starting point on the Riva: Roman palace walls on one side, the Adriatic on the other, and our stand at number 14.',
@@ -319,12 +351,12 @@ export const destinations: Destination[] = [
 			{ icon: 'plane', label: 'Ferry & airport access' },
 		],
 		highlights: [
-			'Meet at Riva promenade, stand 14, waterfront location',
-			'Diocletian’s Palace, UNESCO World Heritage old town',
-			'Direct access to island routes south and east',
-			'Excellent pre- or post-tour dining on the Riva',
-			'Split airport and ferry connections for island-hopping trips',
-			'Home base for all Hello Blue Cave departures',
+			{ icon: 'droplet', text: 'Meet at Riva promenade, stand 14, waterfront location' },
+			{ icon: 'building-fortress', text: 'Diocletian’s Palace, UNESCO World Heritage old town' },
+			{ icon: 'leaf', text: 'Direct access to island routes south and east' },
+			{ icon: 'glass-full', text: 'Excellent pre- or post-tour dining on the Riva' },
+			{ icon: 'beach', text: 'Split airport and ferry connections for island-hopping trips' },
+			{ icon: 'moon-stars', text: 'Home base for all Hello Blue Cave departures' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote:
@@ -362,6 +394,9 @@ export const destinations: Destination[] = [
 		slug: 'zlatni-rat',
 		name: 'Zlatni Rat (Golden Horn)',
 		region: 'Central Dalmatia · Brač island',
+		tagline: 'Beach · Swimming · Iconic shape',
+		categories: ['swimming'],
+		mapUrl: mapSearchUrl('Zlatni Rat beach, Bol, Croatia'),
 		icon: 'beach',
 		shortDescription:
 			'The iconic Golden Horn Beach on Brač Island, known for its striking shape and crystal-clear water, the centrepiece of our Golden Horn, Brač and Hvar tour.',
@@ -375,11 +410,11 @@ export const destinations: Destination[] = [
 			{ icon: 'map-pin', label: 'Brač island' },
 		],
 		highlights: [
-			'One of the Adriatic’s most photographed beaches',
-			'Shallow, clear water good for swimming at any age',
-			'Fine white pebbles rather than sand or rock',
-			'Centrepiece stop on our Golden Horn, Brač and Hvar tour',
-			'Roughly two hours ashore before continuing to Pakleni and Hvar',
+			{ icon: 'droplet', text: 'One of the Adriatic’s most photographed beaches' },
+			{ icon: 'building-fortress', text: 'Shallow, clear water good for swimming at any age' },
+			{ icon: 'leaf', text: 'Fine white pebbles rather than sand or rock' },
+			{ icon: 'glass-full', text: 'Centrepiece stop on our Golden Horn, Brač and Hvar tour' },
+			{ icon: 'beach', text: 'Roughly two hours ashore before continuing to Pakleni and Hvar' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote:
@@ -408,6 +443,9 @@ export const destinations: Destination[] = [
 		slug: 'trogir',
 		name: 'Trogir',
 		region: 'Split-Trogir riviera · Čiovo channel',
+		tagline: 'Old town · Coastal town · Half-day',
+		categories: ['coastal-town'],
+		mapUrl: mapSearchUrl('Trogir, Croatia'),
 		icon: 'building-castle',
 		shortDescription:
 			'The historic streets of Trogir Old Town, a stroll stop on our half-day Blue Lagoon tours, occasionally swapped for Maslinica on Šolta depending on the day.',
@@ -421,11 +459,11 @@ export const destinations: Destination[] = [
 			{ icon: 'clock', label: 'Half-day stop' },
 		],
 		highlights: [
-			'UNESCO World Heritage old town on a small island',
-			'Venetian-era stone streets and waterfront promenade',
-			'Free-time stop on our Blue Lagoon morning and afternoon tours',
-			'Easy, compact town, comfortable to explore in an hour',
-			'Occasionally swapped for Maslinica on Šolta depending on the day',
+			{ icon: 'droplet', text: 'UNESCO World Heritage old town on a small island' },
+			{ icon: 'building-fortress', text: 'Venetian-era stone streets and waterfront promenade' },
+			{ icon: 'leaf', text: 'Free-time stop on our Blue Lagoon morning and afternoon tours' },
+			{ icon: 'glass-full', text: 'Easy, compact town, comfortable to explore in an hour' },
+			{ icon: 'beach', text: 'Occasionally swapped for Maslinica on Šolta depending on the day' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote:
@@ -453,6 +491,9 @@ export const destinations: Destination[] = [
 		slug: 'korcula',
 		name: 'Korčula',
 		region: 'South Dalmatia · Korčula island',
+		tagline: 'Old town · History · Lunch stop',
+		categories: ['island', 'coastal-town'],
+		mapUrl: mapSearchUrl('Korčula, Croatia'),
 		icon: 'building-castle',
 		shortDescription:
 			'The walled old town of Korčula, with time ashore for lunch, a stop on our one-way Dubrovnik tour as we continue south from Hvar.',
@@ -466,11 +507,11 @@ export const destinations: Destination[] = [
 			{ icon: 'map-pin', label: 'South Dalmatia' },
 		],
 		highlights: [
-			'Walled old town on its own small peninsula',
-			'Fan-shaped medieval street plan, easy to explore on foot',
-			'Free time and a lunch stop on our Dubrovnik one-way tour',
-			'Quieter alternative to Dubrovnik’s old town crowds',
-			'Scenic approach by sea between Hvar and Dubrovnik',
+			{ icon: 'droplet', text: 'Walled old town on its own small peninsula' },
+			{ icon: 'building-fortress', text: 'Fan-shaped medieval street plan, easy to explore on foot' },
+			{ icon: 'leaf', text: 'Free time and a lunch stop on our Dubrovnik one-way tour' },
+			{ icon: 'glass-full', text: 'Quieter alternative to Dubrovnik’s old town crowds' },
+			{ icon: 'beach', text: 'Scenic approach by sea between Hvar and Dubrovnik' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote: 'Part of a long one-way day, so timing follows the tour’s overall schedule rather than a season preference.',
@@ -497,6 +538,9 @@ export const destinations: Destination[] = [
 		slug: 'dubrovnik',
 		name: 'Dubrovnik',
 		region: 'South Dalmatia · Dubrovnik-Neretva',
+		tagline: 'City · One-way transfer · History',
+		categories: ['coastal-town'],
+		mapUrl: mapSearchUrl('Dubrovnik, Croatia'),
 		icon: 'building-castle',
 		shortDescription:
 			'The endpoint of our one-way private transfer from Split, a full day’s scenic cruise via Hvar and Korčula, arriving in Dubrovnik by early evening.',
@@ -510,11 +554,11 @@ export const destinations: Destination[] = [
 			{ icon: 'anchor', label: 'Arrival point, no return leg' },
 		],
 		highlights: [
-			'Endpoint of our one-way Split-to-Dubrovnik private charter',
-			'Full day’s scenic cruise via Hvar Old Town and Korčula',
-			'Two swim or snorkelling stops along the way',
-			'Arrival by early evening, ready to continue your trip',
-			'No return leg, a one-way transfer rather than a round trip',
+			{ icon: 'droplet', text: 'Endpoint of our one-way Split-to-Dubrovnik private charter' },
+			{ icon: 'building-fortress', text: 'Full day’s scenic cruise via Hvar Old Town and Korčula' },
+			{ icon: 'leaf', text: 'Two swim or snorkelling stops along the way' },
+			{ icon: 'glass-full', text: 'Arrival by early evening, ready to continue your trip' },
+			{ icon: 'beach', text: 'No return leg, a one-way transfer rather than a round trip' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote: 'Run as a private charter on request throughout the season. Timing is arranged directly with you.',

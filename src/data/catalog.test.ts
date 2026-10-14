@@ -14,6 +14,32 @@ describe('tour catalog', () => {
 	it('gives every tour at least one booking type', () => {
 		for (const tour of tours) expect(tour.types.length, tour.slug).toBeGreaterThan(0);
 	});
+
+	it('gives every group tour with a price a fixed departure, except those waiting for a time', () => {
+		// Group tours on sale whose time isn't fixed yet (D-16). Add a departure, then remove the slug here.
+		const timeToBeConfirmed = new Set(['blue-lagoon-afternoon']);
+		for (const tour of tours.filter((t) => t.types.includes('group') && t.adultPrice !== null)) {
+			if (timeToBeConfirmed.has(tour.slug)) expect(tour.departures, tour.slug).toEqual([]);
+			else expect(tour.departures.length, tour.slug).toBeGreaterThan(0);
+		}
+	});
+
+	it('uses HH:MM times', () => {
+		const time = /^([01]\d|2[0-3]):[0-5]\d$/;
+		for (const tour of tours) {
+			for (const d of tour.departures) {
+				expect(d.time, tour.slug).toMatch(time);
+				if (d.checkIn) expect(d.checkIn < d.time, `${tour.slug} check-in before departure`).toBe(true);
+			}
+			for (const step of tour.itinerary) if (step.time) expect(step.time, tour.slug).toMatch(time);
+		}
+	});
+
+	it('only uses icons that are in the icon font subset', () => {
+		const subset = new Set([...readFileSync('src/styles/icons.css', 'utf8').matchAll(/\.ti-([a-z0-9-]+):before/g)].map((m) => m[1]));
+		for (const tour of tours) for (const step of tour.itinerary) expect(subset.has(step.icon), `${tour.slug}: ${step.icon}`).toBe(true);
+		for (const dest of destinations) for (const hl of dest.highlights) expect(subset.has(hl.icon), `${dest.slug}: ${hl.icon}`).toBe(true);
+	});
 });
 
 describe('destinations', () => {

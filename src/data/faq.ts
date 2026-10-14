@@ -1,3 +1,4 @@
+import { charterUrl } from '../config/routes';
 import { CANCELLATION_FULL, CANCELLATION_WEATHER } from '../config/cancellation';
 
 export type FaqCategory = 'booking' | 'weather' | 'onboard' | 'guests' | 'private';
@@ -128,7 +129,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		question: 'Can I choose my own route on a private charter?',
 		answer:
 			'Yes, within fuel and time limits. Describe your ideal day when you enquire and your skipper will help plan the best possible route.',
-		link: { href: '/contact/?tour=create-perfect-day-private', label: 'Request a quote' },
+		link: { href: charterUrl(), label: 'Request a quote' },
 	},
 	{
 		category: 'private',
