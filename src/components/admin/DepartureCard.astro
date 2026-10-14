@@ -4,7 +4,7 @@
  * what they asked for, one tap to call or WhatsApp them, who hasn't paid, and
  * which booking pushed the boat over capacity.
  */
-import { guestSummaryFromCounts } from '../../lib/booking';
+import { guestSummaryFromCounts, seatCount } from '../../lib/booking';
 import { whatsappNumber, type Departure } from '../../lib/admin/manifest';
 import TourThumb from './TourThumb.astro';
 
@@ -30,7 +30,7 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 			<p class="dep-seats">
 				<span class:list={['seat-bar', { 'seat-bar--over': d.overBy > 0 }]} aria-hidden="true"><span style={`width:${fill}%`}></span></span>
 				<span class="a-tnum">{d.seatsTaken}/{d.capacity}</span>
-				{d.seatsTaken > 0 && <span class="a-muted">· {guestSummaryFromCounts(d.adults, d.children)}</span>}
+				{d.seatsTaken > 0 && <span class="a-muted">· {guestSummaryFromCounts(d.adults, d.children, d.infants)}</span>}
 			</p>
 		</div>
 	</header>
@@ -52,8 +52,9 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 									{over && <span class="a-badge a-badge--full">Overbooked +{over.seatsOver}</span>}
 								</span>
 								<span class="pax-sub">
-									<span class="a-tnum">{b.adults + b.children}</span> {b.adults + b.children === 1 ? 'guest' : 'guests'}
+									<span class="a-tnum">{seatCount(b)}</span> {seatCount(b) === 1 ? 'guest' : 'guests'}
 									{b.children > 0 && <span> ({b.children} {b.children === 1 ? 'child' : 'children'})</span>}
+									{b.infants > 0 && <span> ({b.infants} {b.infants === 1 ? 'infant' : 'infants'})</span>}
 								</span>
 								{b.customerNotes && (
 									<span class="pax-note">

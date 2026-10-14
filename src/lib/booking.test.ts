@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-	bookingReviewPath,
 	contactHrefForTour,
 	groupBookHref,
 	hasRequiredBookingDetails,
@@ -69,7 +68,6 @@ describe('booking paths', () => {
 	it('uses trailing-slash URLs so links skip the 301', () => {
 		expect(groupBookHref({ slug: 'blue-lagoon-morning' })).toBe('/book/blue-lagoon-morning/group/');
 		expect(contactHrefForTour({ slug: 'a b' })).toBe('/contact/?tour=a%20b');
-		expect(bookingReviewPath('x', { date: '2027-07-15', notes: ' ' })).toBe('/book/x/review/?date=2027-07-15');
 	});
 });
 

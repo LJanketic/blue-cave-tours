@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { formatBookingDate, guestSummaryFromCounts } from '../../../lib/booking';
+import { formatBookingDate, guestSummaryFromCounts, seatCount } from '../../../lib/booking';
 import { businessDate, formatShortDate } from '../../../lib/bookings/dates';
 import { STATUS_LABELS, takesSeats } from '../../../lib/bookings/service';
 import { bookings, type Booking, type BookingStatus } from '../../../lib/bookings/store';
@@ -68,7 +68,7 @@ const dayLabel = (iso: string) =>
 	iso === today ? `Today · ${formatShortDate(iso)}` : iso === tomorrow ? `Tomorrow · ${formatShortDate(iso)}` : formatShortDate(iso);
 /** "3 bookings · 9 guests": guests count only bookings that still take seats. */
 const daySummary = (items: Booking[]) => {
-	const guests = items.filter(takesSeats).reduce((sum, b) => sum + b.adults + b.children, 0);
+	const guests = items.filter(takesSeats).reduce((sum, b) => sum + seatCount(b), 0);
 	return `${items.length} ${items.length === 1 ? 'booking' : 'bookings'} · ${guests} ${guests === 1 ? 'guest' : 'guests'}`;
 };
 const filtered = Boolean(q || status || when !== 'week');
@@ -158,7 +158,7 @@ const rangeNote =
 										<span class="a-item-sub tour">{b.tourTitle}</span>
 									</span>
 									<span class="line">
-										<span class="a-item-sub guests">{guestSummaryFromCounts(b.adults, b.children)}</span>
+										<span class="a-item-sub guests">{guestSummaryFromCounts(b.adults, b.children, b.infants)}</span>
 										<span class="total a-tnum">€{b.total}</span>
 									</span>
 								</span>

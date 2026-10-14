@@ -1513,6 +1513,38 @@ Responsive behaviour: §3.1.1, row "Destination detail".
 | `POST /api/bookings` | Reads the cookie, re-validates, recomputes. **`termsVersion` must equal `TERMS_VERSION`**; otherwise 303 back with `?error=terms-changed`. The server stores its own constant and server time as `termsAcceptedAt`. Creates the booking (§9.4), re-seals the cookie with `bookingId`, then 303 → `/booking/pay/?id=`. **If the cookie already has a `bookingId`, it redirects to that booking's pay page** instead of creating a duplicate. **On failure it redirects to `/book/{slug}/review/?error={code}` only. The current `bookingReviewPath(slug, {...fields, error})` redirect (`api/bookings.ts:38-40`) is deleted.** |
 | Tests | No `Location` header from any booking route contains `@`, `firstName`, `email`, `phone` or `notes`. Cross-site `Origin` gets 403 on every POST (S-9). Content types other than form or JSON get 415. |
 
+**As built (PR 7a, 2026-10-14):**
+- **Cookie:** `src/lib/bookings/session.ts` holds the AES-256-GCM `hbc_booking` cookie (2 hours, HttpOnly, SameSite=Strict, Secure on https), with tests.
+  - **Key:** `BOOKING_COOKIE_SECRET`, or one derived from `ADMIN_SESSION_SECRET` / `ADMIN_PASSWORD` (`src/lib/secrets.ts`). Every deploy works without new configuration; rotating the admin secret ends drafts in progress.
+- **Endpoints:**
+  - `POST /api/bookings/draft` and `GET /api/bookings/draft` (prefill).
+  - `/api/bookings` moved to `api/bookings/index.ts`. It reads the cookie, checks `termsVersion`, sends a second submit to the same booking, and redirects only with an id or a code.
+  - The review page reads the cookie, sends anything with personal parameters back to step 2, and sets `no-store` and `no-referrer`.
+  - `bookingReviewPath` is deleted. Bodies are read by the shared `src/lib/request-body.ts`.
+- **Validation:** `validateBookingInput()` is shared by both endpoints and checks:
+  - infants count toward the 12 seats
+  - the season (D-15) and the departures (D-16)
+  - notes are at most 500 characters
+- **Stored records:** bookings gain `infants`, `lineItems`, `termsVersion`, `termsAcceptedAt` and `personalDataRemovedAt`. Enquiries gain `kind`. `normalizeBooking()` / `normalizeEnquiry()` run on every read.
+- **Infants everywhere:** `seatCount()` is used in the manifest, admin lists, CSV (Infants column), guest summaries and emails. Sample data has infants on two bookings, one on the overbooked boat (16 seats, Smith over by 4).
+- **S-11 rate limits:**
+  - Keys are an HMAC of the IP (IPv6 cut to its /64), with the UTC date in the key, and earlier days are swept.
+  - The draft (30 per 10 minutes per client, 300 overall), booking and pay endpoints fail closed.
+- **S-13 retention:** `sweepPersonalData()` runs when the admin dashboard loads, and booking pages note "Personal data removed on". Tested.
+- **Emails:**
+  - Blue colours.
+  - The confirmation has a "terms of your booking" block as text: line items, mandatory fees, `CANCELLATION_FULL`, the withdrawal exemption, complaints, the terms version, and the imprint when set.
+  - Notes never appear in an email body; the admin email says "Has notes, see admin".
+- **The success page** clears the cookie.
+- **Not yet (PR 7b):** the restyled booking screens, the infants stepper, the season-aware calendar, and the success page's privacy changes (S-3). Step 2 already posts to the draft endpoint and prefills from it.
+- **Tests:** `tests/e2e/booking.spec.ts` covers:
+  - a full booking with no personal data in any URL, and the cookie gone afterwards
+  - a double submit, changed terms, and draft errors (code only, 400 JSON, season, slot)
+  - review without the cookie
+  - cross-site 403 on four POST routes
+  - prefill, and step 2 through the browser
+- **Admin baselines** were re-taken. The only differences were text sizes from infants, the new subject line on enquiries, and one bookings-list row order that varies between runs with the random refs.
+
 ### 8.2 Private charter request (board 06) [NEW] (D-7, D-8, D-23)
 
 **Route:** `/private-charter/`.

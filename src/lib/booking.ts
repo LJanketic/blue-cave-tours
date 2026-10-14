@@ -36,6 +36,7 @@ export type GroupBookingDetails = {
 	slot: string | null;
 	adults: number | null;
 	children: number;
+	infants: number;
 	firstName: string | null;
 	lastName: string | null;
 	email: string | null;
@@ -45,21 +46,6 @@ export type GroupBookingDetails = {
 	guests: string | null;
 };
 
-export function bookingReviewPath(slug: string, params: Record<string, string>): string {
-	const query = bookingQuery(params);
-	const path = `/book/${encodeURIComponent(slug)}/review/`;
-	return query ? `${path}?${query}` : path;
-}
-
-function bookingQuery(params: Record<string, string>): string {
-	const search = new URLSearchParams();
-	for (const [key, value] of Object.entries(params)) {
-		const trimmed = value.trim();
-		if (trimmed) search.set(key, trimmed);
-	}
-	return search.toString();
-}
-
 export function hasRequiredBookingDetails(details: GroupBookingDetails): boolean {
 	const adults = details.adults ?? 0;
 	return Boolean(
@@ -68,7 +54,7 @@ export function hasRequiredBookingDetails(details: GroupBookingDetails): boolean
 			details.lastName &&
 			details.email &&
 			adults >= 1 &&
-			adults + details.children <= MAX_GUESTS,
+			seatCount({ adults, children: details.children, infants: details.infants }) <= MAX_GUESTS,
 	);
 }
 
@@ -93,12 +79,14 @@ export function parseGroupBookingParams(params: URLSearchParams): GroupBookingDe
 	const slot = slotRaw && /^\d{2}:\d{2}$/.test(slotRaw) ? slotRaw : null;
 	const adults = parseCount(params.get('adults'), MAX_GUESTS);
 	const children = parseCount(params.get('children'), MAX_GUESTS) ?? 0;
+	const infants = parseCount(params.get('infants'), MAX_GUESTS) ?? 0;
 
 	return {
 		date,
 		slot,
 		adults,
 		children,
+		infants,
 		firstName: clip(params.get('firstName'), 80),
 		lastName: clip(params.get('lastName'), 80),
 		email: clip(params.get('email'), 120),
@@ -147,10 +135,15 @@ export function meetingPointShort(meetingPoint: string): string {
 	return meetingPoint.replace(/^Meet at /i, '').split('.')[0]?.trim() || meetingPoint;
 }
 
-export function guestSummaryFromCounts(adults: number, children: number): string {
+/** "2 adults, 1 child, 1 infant" */
+export function guestSummaryFromCounts(adults: number, children: number, infants = 0): string {
 	const parts = [`${adults} adult${adults !== 1 ? 's' : ''}`];
-	if (children > 0) {
-		parts.push(`${children} child${children !== 1 ? 'ren' : ''}`);
-	}
+	if (children > 0) parts.push(`${children} child${children !== 1 ? 'ren' : ''}`);
+	if (infants > 0) parts.push(`${infants} infant${infants !== 1 ? 's' : ''}`);
 	return parts.join(', ');
+}
+
+/** Seats a booking takes: infants are free but sit on the boat too (D-9). */
+export function seatCount(guests: { adults: number; children: number; infants?: number }): number {
+	return guests.adults + guests.children + (guests.infants ?? 0);
 }

@@ -52,8 +52,17 @@ export type Booking = {
 	slot: string;
 	adults: number;
 	children: number;
+	/** Under-3s: free, but they take a seat (D-9). 0 on records from before PR 7a (normalizeBooking). */
+	infants: number;
 	/** Euros, recomputed on the server from the tour's price data. */
 	total: number;
+	/** What the total is made of, as charged (PR 7a; derived for older records). */
+	lineItems?: LineItem[];
+	/** The terms the customer accepted (TERMS_VERSION) and when, set by the server (S-4). */
+	termsVersion?: string;
+	termsAcceptedAt?: string;
+	/** Set by the retention sweep (S-13) once notes and phone were removed. */
+	personalDataRemovedAt?: string;
 	firstName: string;
 	lastName: string;
 	email: string;
@@ -65,6 +74,8 @@ export type Booking = {
 	/** Created by the admin's "Load demo data" button. */
 	sample?: boolean;
 };
+
+export type LineItem = { label: string; unit: number; qty: number; amount: number };
 
 export type EnquiryStatus = 'new' | 'replied' | 'closed';
 
@@ -83,6 +94,10 @@ export type Enquiry = {
 	bookingRef?: string;
 	/** False when the daily cap on admin notification emails was reached (S-6): stored, not emailed. */
 	notified?: boolean;
+	/** 'contact' for older records (normalizeEnquiry); 'charter' arrives with PR 8. */
+	kind?: 'contact' | 'charter';
+	/** Set by the retention sweep (S-13). */
+	personalDataRemovedAt?: string;
 	sample?: boolean;
 };
 
@@ -227,8 +242,40 @@ function collection<T extends { id: string }>(name: string): Collection<T> {
 	return blobsCollection<T>(name) ?? memoryCollection<T>(name);
 }
 
-export const bookings = () => collection<Booking>('bookings');
-export const enquiries = () => collection<Enquiry>('enquiries');
+/**
+ * Records written before a field existed read as if it had its default, so
+ * every new field is optional and additive: rolling back a deploy can still
+ * read new records, and new code can read old ones (§9.4, §15.3).
+ */
+export function normalizeBooking(booking: Booking): Booking {
+	const infants = booking.infants ?? 0;
+	return { ...booking, infants };
+}
+
+export function normalizeEnquiry(enquiry: Enquiry): Enquiry {
+	return { ...enquiry, kind: enquiry.kind ?? 'contact' };
+}
+
+function normalized<T extends { id: string }>(inner: Collection<T>, normalize: (record: T) => T): Collection<T> {
+	return {
+		async get(id) {
+			const record = await inner.get(id);
+			return record ? normalize(record) : null;
+		},
+		put: (record) => inner.put(record),
+		async update(id, mutate) {
+			const result = await inner.update(id, (record) => mutate(normalize(record)));
+			return { ...result, record: result.record ? normalize(result.record) : null };
+		},
+		async list() {
+			return (await inner.list()).map(normalize);
+		},
+		delete: (id) => inner.delete(id),
+	};
+}
+
+export const bookings = () => normalized(collection<Booking>('bookings'), normalizeBooking);
+export const enquiries = () => normalized(collection<Enquiry>('enquiries'), normalizeEnquiry);
 export const outbox = () => collection<OutboxEmail>('outbox');
 
 type Counter = { id: string; value: number };

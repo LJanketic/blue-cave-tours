@@ -23,6 +23,7 @@ const COLUMNS: [header: string, value: (b: Booking) => string | number][] = [
 	['Departure', (b) => b.slot],
 	['Adults', (b) => b.adults],
 	['Children', (b) => b.children],
+	['Infants', (b) => b.infants],
 	['Total EUR', (b) => b.total],
 	['First name', (b) => b.firstName],
 	['Last name', (b) => b.lastName],

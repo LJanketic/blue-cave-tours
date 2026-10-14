@@ -2,7 +2,8 @@ import { MAX_GUESTS, supportsInstantBook } from '../booking';
 import { businessDate } from '../bookings/dates';
 import { newBookingRef, newId } from '../bookings/ids';
 import { bookings, enquiries, nextCounterValue, outbox, resetCounter, type Booking, type Enquiry } from '../bookings/store';
-import { computeBookingTotal } from '../price';
+import { computeBookingTotal, lineItemsFor } from '../price';
+import { TERMS_VERSION } from '../../config/legal';
 import { getAllTours } from '../tours';
 
 /**
@@ -56,6 +57,12 @@ const PLAN: [number, number, number, number, number, Booking['status'], Booking[
 	...futurePlan(),
 ];
 
+/** Infants on two bookings (D-9), one of them on the overbooked boat: they take seats. Key: "dayOffset|guest index". */
+const INFANTS = new Map([
+	['0|2', 1],
+	['1|15', 1],
+]);
+
 /**
  * Days 2–20 ahead: a fixed (not random) pattern so every "Load demo data" looks
  * the same: quiet days, empty days, a couple of near-full boats, and the odd
@@ -97,12 +104,13 @@ function futurePlan(): typeof PLAN {
 	return plan;
 }
 
-const ENQUIRIES: Omit<Enquiry, 'id' | 'createdAt' | 'status'>[] = [
+const ENQUIRIES: Omit<Enquiry, 'id' | 'createdAt' | 'status' | 'notified'>[] = [
 	{
 		name: 'Hannah Weber',
 		email: 'hannah.weber@example.com',
 		phone: '+49 160 9876543',
 		tourSlug: 'create-perfect-day-private',
+		topic: 'charter',
 		message: 'Hi! We are 8 friends visiting in early June and would love a private boat for a full day: Blue Lagoon and Hvar if possible. What would that cost?',
 	},
 	{
@@ -117,6 +125,7 @@ const ENQUIRIES: Omit<Enquiry, 'id' | 'createdAt' | 'status'>[] = [
 		email: 'grace.taylor@example.com',
 		phone: '+44 7911 123456',
 		tourSlug: '',
+		topic: 'group',
 		message: 'Do you offer any discount for a school group of 20 students in May?',
 	},
 ];
@@ -133,6 +142,7 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 		const createdAt = new Date(Math.min(now.getTime(), now.getTime() + (offset - leadDays) * 86_400_000) - guestIndex * 3_600_000).toISOString();
 		const paid = paymentStatus !== 'unpaid';
 		const slot = tour.departures[0]?.time ?? '';
+		const infants = INFANTS.get(`${offset}|${guestIndex}`) ?? 0;
 		const total = computeBookingTotal(tour, adults, children) ?? 0;
 		const booking: Booking = {
 			id: newId(),
@@ -150,7 +160,11 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 			slot,
 			adults,
 			children,
+			infants,
 			total,
+			lineItems: lineItemsFor(tour, adults, children, infants) ?? [],
+			termsVersion: TERMS_VERSION,
+			termsAcceptedAt: createdAt,
 			firstName,
 			lastName,
 			email: `${firstName}.${lastName}`.toLowerCase().normalize('NFD').replace(/[^\w.]/g, '') + '@example.com',

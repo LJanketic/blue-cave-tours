@@ -9,9 +9,7 @@ import { getTourBySlug } from '../../../lib/tours';
 import {
 	contactHrefForTour,
 	formatBookingDate,
-	hasRequiredBookingDetails,
 	meetingPointShort,
-	parseGroupBookingParams,
 	supportsInstantBook,
 } from '../../../lib/booking';
 import { computeBookingTotal, tourFromPrice } from '../../../lib/price';
@@ -20,7 +18,9 @@ import {
 	CANCELLATION_FULL_SUFFIX,
 	CANCELLATION_WINDOW,
 } from '../../../config/cancellation';
-import { BOOKING_ERRORS, type BookingError } from '../../../lib/bookings/service';
+import { BOOKING_ERRORS, isBookingError } from '../../../lib/bookings/service';
+import { BOOKING_COOKIE, openDraft } from '../../../lib/bookings/session';
+import { TERMS_VERSION } from '../../../config/legal';
 
 const slug = Astro.params.slug;
 const tour = slug ? getTourBySlug(slug) : undefined;
@@ -35,18 +35,36 @@ if (!supportsInstantBook(tour)) {
 	return Astro.redirect(contactHrefForTour(tour));
 }
 
-const details = parseGroupBookingParams(Astro.url.searchParams);
-if (!hasRequiredBookingDetails(details)) {
-	return Astro.redirect(`/book/${tour.slug}/group/`);
+// The booking in progress comes from the sealed cookie, never the URL (S-2, §8.1.3).
+// No cookie, an expired one, or one for another tour: back to step 2. Old links
+// that still carry details in the query string get the same, and the details are
+// ignored.
+const PERSONAL_PARAMS = ['firstName', 'lastName', 'email', 'phone', 'notes', 'adults', 'date'];
+const draft = openDraft(Astro.cookies.get(BOOKING_COOKIE)?.value);
+if (!draft || draft.tourSlug !== tour.slug || PERSONAL_PARAMS.some((p) => Astro.url.searchParams.has(p))) {
+	return Astro.redirect(`/book/${tour.slug}/group/?error=session-expired`, 303);
 }
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 
-const errorParam = Astro.url.searchParams.get('error') ?? '';
-const bookingError = Object.hasOwn(BOOKING_ERRORS, errorParam) ? BOOKING_ERRORS[errorParam as BookingError] : null;
+const details = {
+	date: draft.date,
+	slot: draft.slot || null,
+	adults: draft.adults,
+	children: draft.children,
+	infants: draft.infants,
+	firstName: draft.firstName,
+	lastName: draft.lastName,
+	email: draft.email,
+	phone: draft.phone || null,
+	notes: draft.notes || null,
+};
 
-const editParams = new URLSearchParams(Astro.url.search);
-editParams.delete('error');
-const query = editParams.size ? `?${editParams}` : '';
-const editHref = `/book/${tour.slug}/group/${query}`;
+const errorParam = Astro.url.searchParams.get('error');
+const bookingError = isBookingError(errorParam) ? BOOKING_ERRORS[errorParam] : null;
+
+// Step 2 fills itself in from the cookie (WCAG 3.3.7), so Edit needs no query.
+const editHref = `/book/${tour.slug}/group/`;
 
 const meetingShort = meetingPointShort(tour.meetingPoint);
 
@@ -79,22 +97,8 @@ const childrenBreakdownTotal =
 // (or be hand-edited via the query string) — falls back to the passed-through
 // value only for quote-only tours, where there's no numeric price to compute.
 const computedTotal = computeBookingTotal(tour, adultsCount, childrenCount);
-const totalLine = computedTotal !== null ? `€${computedTotal}` : (details.total ?? `from ${fromPrice}`);
+const totalLine = computedTotal !== null ? `€${computedTotal}` : `from ${fromPrice}`;
 
-// Posted to /api/bookings, which validates again and recomputes the price on
-// the server: nothing here is trusted, it only saves the customer retyping.
-const bookingFields: Record<string, string> = {
-	tourId: tour.slug,
-	date: details.date ?? '',
-	slot: details.slot ?? '',
-	adults: String(adultsCount),
-	children: String(childrenCount),
-	firstName: details.firstName ?? '',
-	lastName: details.lastName ?? '',
-	email: details.email ?? '',
-	phone: details.phone ?? '',
-	notes: details.notes ?? '',
-};
 ---
 
 <SiteLayout title={pageTitle(`Review booking — ${tour.title}`)} description={`Review your booking for ${tour.title} before confirming.`} checkout robots="noindex, nofollow">
@@ -187,6 +191,14 @@ const bookingFields: Record<string, string> = {
 						</div>
 					)
 				}
+				{
+					details.infants > 0 && (
+						<div class="row">
+							<span class="label">Infants (free)</span>
+							<span class="value">{details.infants}</span>
+						</div>
+					)
+				}
 			</div>
 
 			<div class="card">
@@ -228,6 +240,14 @@ const bookingFields: Record<string, string> = {
 						</div>
 					)
 				}
+				{
+					details.infants > 0 && (
+						<div class="row">
+							<span class="label">Infants ({details.infants}, free)</span>
+							<span class="value">€0</span>
+						</div>
+					)
+				}
 				<hr class="divider" />
 				<div class="total-row">
 					<span class="total-label">Total</span>
@@ -254,7 +274,8 @@ const bookingFields: Record<string, string> = {
 				)
 			}
 			<form method="post" action="/api/bookings">
-				{Object.entries(bookingFields).map(([name, value]) => <input type="hidden" name={name} value={value} />)}
+				<!-- Only the terms version: the booking itself comes from the sealed cookie. -->
+				<input type="hidden" name="termsVersion" value={TERMS_VERSION} />
 				<button class="cta-btn" type="submit">
 					Continue to payment
 					<i class="ti ti-arrow-right" aria-hidden="true"></i>

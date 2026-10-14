@@ -52,6 +52,7 @@ function booking(overrides: Partial<Booking>): Booking {
 		slot: '09:30',
 		adults: 2,
 		children: 0,
+		infants: 0,
 		total: 150,
 		firstName: 'A',
 		lastName: 'B',
@@ -355,8 +356,10 @@ describe('demo data', () => {
 		const over = [...dates].flatMap((date) => departuresOn(date, all).filter((d) => d.seatsTaken > MAX_GUESTS).map((d) => ({ date, d })));
 		expect(over).toHaveLength(1);
 		expect(over[0].date).toBe('2027-07-02');
-		expect(over[0].d.seatsTaken).toBe(15);
-		expect(over[0].d.overbookings.map((o) => [o.booking.lastName, o.seatsOver])).toEqual([['Smith', 3]]);
+		// 11 seats, then Smith: 4 adults and an infant. Infants take seats (D-9).
+		expect(over[0].d.seatsTaken).toBe(16);
+		expect(over[0].d.infants).toBe(1);
+		expect(over[0].d.overbookings.map((o) => [o.booking.lastName, o.seatsOver])).toEqual([['Smith', 4]]);
 		// Bookings are never created after "now".
 		expect(all.every((b) => b.createdAt <= now.toISOString())).toBe(true);
 	});

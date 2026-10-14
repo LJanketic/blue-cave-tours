@@ -1,6 +1,8 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { MAX_GUESTS, parseIsoDate, supportsInstantBook } from '../booking';
-import { computeBookingTotal } from '../price';
+import { MAX_GUESTS, parseIsoDate, seatCount, supportsInstantBook } from '../booking';
+import { isInSeason, seasonLabel } from '../../config/season';
+import { TERMS_VERSION } from '../../config/legal';
+import { computeBookingTotal, lineItemsFor } from '../price';
 import { EMAIL_RE } from '../contact-validation';
 import { adminEmail, sendEmail, type EmailMessage } from '../email/send';
 import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail } from '../email/templates';
@@ -11,6 +13,7 @@ import {
 	bookings,
 	enquiries,
 	nextCounterValue,
+	outbox,
 	type Booking,
 	type BookingStatus,
 	type DemoInvoice,
@@ -24,6 +27,7 @@ export type NewBookingInput = {
 	slot: string | null;
 	adults: number | null;
 	children: number;
+	infants?: number;
 	firstName: string | null;
 	lastName: string | null;
 	email: string | null;
@@ -31,40 +35,71 @@ export type NewBookingInput = {
 	notes: string | null;
 };
 
-/** Shown to the customer on the review page when the server rejects a booking. */
+export const NOTES_MAX = 500;
+
+/** Shown to the customer when the server rejects a booking. Redirects carry only these codes. */
 export const BOOKING_ERRORS = {
 	quote: 'This tour is booked on request. Please contact us.',
-	guests: `Choose between 1 and ${MAX_GUESTS} guests, with at least one adult.`,
+	guests: `Choose up to ${MAX_GUESTS} guests in total (infants included), with at least one adult.`,
 	date: 'Choose a date for your tour.',
 	past: 'That date has already passed in Split. Please choose another date.',
+	season: `Tours run ${seasonLabel()}. Please choose a date in the season.`,
+	slot: 'Choose one of the departure times.',
 	name: 'Enter your first and last name.',
 	email: 'Enter a valid email address.',
+	notes: `Keep notes to ${NOTES_MAX} characters.`,
+	'session-expired': 'Your booking session expired, or was for another tour. Please fill in your details again.',
+	'terms-changed': 'Our terms changed while you were booking. Please review them and confirm again.',
+	busy: 'Too many attempts from your connection. Please wait a few minutes and try again.',
+	server: 'We could not save your booking. Please try again, or call us and we will book it for you.',
 } as const;
 export type BookingError = keyof typeof BOOKING_ERRORS;
+
+export function isBookingError(code: string | null | undefined): code is BookingError {
+	return Boolean(code) && Object.hasOwn(BOOKING_ERRORS, code as string);
+}
+
+/**
+ * Every rule a booking must meet, checked on the server (the browser's checks
+ * are a convenience only). Shared by the draft endpoint and /api/bookings.
+ */
+export function validateBookingInput(tour: TourDetail, input: NewBookingInput, now: Date = new Date()): BookingError | null {
+	if (!supportsInstantBook(tour)) return 'quote';
+	const adults = input.adults ?? 0;
+	if (adults < 1 || seatCount({ adults, children: input.children, infants: input.infants ?? 0 }) > MAX_GUESTS) return 'guests';
+	if (!input.date || !parseIsoDate(input.date)) return 'date';
+	if (input.date < businessDate(now)) return 'past';
+	if (!isInSeason(input.date)) return 'season';
+	// A tour with fixed departures needs one of them; one with none takes no time (D-16).
+	const slot = input.slot ?? '';
+	if (tour.departures.length === 0 ? slot !== '' : !tour.departures.some((d) => d.time === slot)) return 'slot';
+	if (!input.firstName || !input.lastName) return 'name';
+	if (!input.email || !EMAIL_RE.test(input.email)) return 'email';
+	if ((input.notes ?? '').length > NOTES_MAX) return 'notes';
+	return null;
+}
 
 export type CreateResult = { ok: true; booking: Booking } | { ok: false; error: BookingError };
 
 /**
- * Validates on the server (the browser's checks are a convenience only),
- * recomputes the price from the tour's data, and stores an unpaid booking.
- * Seats are not held: overbooking protection comes with the real database.
+ * Validates, recomputes the price from the tour's data, and stores an unpaid
+ * booking with the terms version the server knows (S-4). Seats are not held:
+ * overbooking protection comes with the real database.
  */
 export async function createPendingBooking(
 	tour: TourDetail,
 	input: NewBookingInput,
 	now: Date = new Date(),
 ): Promise<CreateResult> {
-	if (!supportsInstantBook(tour)) return { ok: false, error: 'quote' };
+	const error = validateBookingInput(tour, input, now);
+	if (error) return { ok: false, error };
 	const adults = input.adults ?? 0;
 	const children = input.children;
-	if (adults < 1 || adults + children > MAX_GUESTS) return { ok: false, error: 'guests' };
-	if (!input.date || !parseIsoDate(input.date)) return { ok: false, error: 'date' };
-	if (input.date < businessDate(now)) return { ok: false, error: 'past' };
-	if (!input.firstName || !input.lastName) return { ok: false, error: 'name' };
-	if (!input.email || !EMAIL_RE.test(input.email)) return { ok: false, error: 'email' };
+	const infants = input.infants ?? 0;
 
 	const total = computeBookingTotal(tour, adults, children);
-	if (total === null) return { ok: false, error: 'quote' };
+	const lineItems = lineItemsFor(tour, adults, children, infants);
+	if (total === null || lineItems === null) return { ok: false, error: 'quote' };
 
 	const at = now.toISOString();
 	const booking: Booking = {
@@ -79,14 +114,18 @@ export async function createPendingBooking(
 		paidAt: null,
 		tourSlug: tour.slug,
 		tourTitle: tour.title,
-		date: input.date,
+		date: input.date as string,
 		slot: input.slot ?? '',
 		adults,
 		children,
+		infants,
 		total,
-		firstName: input.firstName,
-		lastName: input.lastName,
-		email: input.email,
+		lineItems,
+		termsVersion: TERMS_VERSION,
+		termsAcceptedAt: at,
+		firstName: input.firstName as string,
+		lastName: input.lastName as string,
+		email: input.email as string,
 		phone: input.phone ?? '',
 		customerNotes: input.notes ?? '',
 		invoice: null,
@@ -287,4 +326,50 @@ export async function recordEnquiry(
 /** Seats counted against a departure: everything paid that hasn't been cancelled. */
 export function takesSeats(booking: Booking): boolean {
 	return booking.paymentStatus === 'paid' && booking.status !== 'cancelled';
+}
+
+/**
+ * Retention (S-13; figures confirmed by the lawyer in PR 11). Removes personal
+ * data that's no longer needed, and keeps what accounting needs (ref, date,
+ * amounts, invoice, name):
+ * - booking notes 30 days after the trip, phone numbers 90 days after
+ * - contact enquiries 12 months after they came in
+ * - the text of sent emails after 90 days (who, when and what kind stay)
+ * Runs when the admin dashboard loads. Returns what it changed.
+ */
+export const RETENTION_DAYS = { notes: 30, phone: 90, enquiry: 365, emailBody: 90 } as const;
+
+export async function sweepPersonalData(now: Date = new Date()): Promise<{ bookings: number; enquiries: number; emails: number }> {
+	const day = (offset: number) => businessDate(now, -offset);
+	const at = now.toISOString();
+	let changedBookings = 0;
+	for (const booking of await bookings().list()) {
+		const dropNotes = booking.customerNotes && booking.date < day(RETENTION_DAYS.notes);
+		const dropPhone = booking.phone && booking.date < day(RETENTION_DAYS.phone);
+		if (!dropNotes && !dropPhone) continue;
+		const { written } = await bookings().update(booking.id, (current) => ({
+			...current,
+			customerNotes: dropNotes ? '' : current.customerNotes,
+			phone: dropPhone ? '' : current.phone,
+			personalDataRemovedAt: at,
+		}));
+		if (written) changedBookings++;
+	}
+	let removedEnquiries = 0;
+	const enquiryCutoff = new Date(now.getTime() - RETENTION_DAYS.enquiry * 86_400_000).toISOString();
+	for (const enquiry of await enquiries().list()) {
+		if (enquiry.createdAt < enquiryCutoff) {
+			await enquiries().delete(enquiry.id);
+			removedEnquiries++;
+		}
+	}
+	let trimmedEmails = 0;
+	const emailCutoff = new Date(now.getTime() - RETENTION_DAYS.emailBody * 86_400_000).toISOString();
+	for (const email of await outbox().list()) {
+		if (email.createdAt < emailCutoff && (email.html || email.text)) {
+			await outbox().put({ ...email, html: '', text: '' });
+			trimmedEmails++;
+		}
+	}
+	return { bookings: changedBookings, enquiries: removedEnquiries, emails: trimmedEmails };
 }

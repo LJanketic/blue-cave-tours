@@ -2,8 +2,6 @@
 import { computed, onMounted, ref } from 'vue';
 import {
 	MAX_GUESTS as DEFAULT_MAX_GUESTS,
-	bookingReviewPath,
-	parseGroupBookingParams,
 	parseIsoDate,
 	startOfDay,
 	toIsoDate,
@@ -210,48 +208,80 @@ function bookingPayload(): Record<string, string> {
 		email: email.value,
 		phone: phone.value,
 		notes: notes.value,
-		total: bookingTotalDisplay.value,
-		guests: guestSummary.value,
 	};
 }
 
-function goToReview() {
-	if (!canSubmit.value || selectedDate.value === null) return;
-	window.location.href = bookingReviewPath(props.tourSlug, bookingPayload());
+/** Why the server sent the visitor back (only a code ever travels in the URL). */
+const ERROR_MESSAGES: Record<string, string> = {
+	'session-expired': 'Your booking session expired. Please check your details and continue again.',
+	busy: 'Too many attempts from your connection. Please wait a few minutes and try again.',
+};
+const submitError = ref('');
+const sending = ref(false);
+
+/**
+ * Keeps the details in the server's sealed booking cookie, then moves on to
+ * the review page. Nothing personal goes into a URL (S-2), and nothing into
+ * session or local storage (S-12).
+ */
+async function goToReview() {
+	if (!canSubmit.value || selectedDate.value === null || sending.value) return;
+	sending.value = true;
+	submitError.value = '';
+	try {
+		const res = await fetch('/api/bookings/draft', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+			body: JSON.stringify(bookingPayload()),
+		});
+		const json = (await res.json().catch(() => ({}))) as { redirect?: string; error?: string };
+		if (res.ok && json.redirect) {
+			window.location.href = json.redirect;
+			return;
+		}
+		submitError.value = json.error ?? 'We could not save your details. Please try again.';
+	} catch {
+		submitError.value = 'You seem to be offline. Please check your connection and try again.';
+	} finally {
+		sending.value = false;
+	}
 }
 
-function restoreFromQuery() {
-	if (typeof window === 'undefined') return;
-	const params = new URLSearchParams(window.location.search);
-	if (![...params.keys()].length) return;
-	const details = parseGroupBookingParams(params);
-	// A saved or back-navigated link can carry a date that has since passed;
-	// drop it so the guest picks again rather than booking a day already gone.
-	const restoredDate = details.date ? parseIsoDate(details.date) : null;
-	if (details.date && restoredDate && restoredDate >= today.value) {
-		viewYear.value = restoredDate.getFullYear();
-		viewMonth.value = restoredDate.getMonth();
-		selectedDate.value = details.date;
+/** Coming back from the review page to edit: refill from the booking cookie (WCAG 3.3.7). */
+async function restoreFromDraft() {
+	const code = new URLSearchParams(window.location.search).get('error');
+	if (code && ERROR_MESSAGES[code]) submitError.value = ERROR_MESSAGES[code];
+	try {
+		const res = await fetch('/api/bookings/draft', { headers: { Accept: 'application/json' } });
+		if (res.status !== 200) return;
+		const draft = (await res.json()) as Partial<Record<string, string | number>> & { tourSlug?: string };
+		if (draft.tourSlug !== props.tourSlug) return;
+		// A date that has passed since is dropped, so the guest picks again.
+		const restored = typeof draft.date === 'string' ? parseIsoDate(draft.date) : null;
+		if (restored && restored >= today.value) {
+			viewYear.value = restored.getFullYear();
+			viewMonth.value = restored.getMonth();
+			selectedDate.value = draft.date as string;
+		}
+		if (typeof draft.slot === 'string' && (draft.slot === '' || props.departures.some((d) => d.time === draft.slot))) selectedSlot.value = draft.slot;
+		const restoredAdults = Number(draft.adults) || adults.value;
+		const restoredChildren = Number(draft.children) || 0;
+		if (restoredAdults >= 1 && restoredAdults + restoredChildren <= MAX_GUESTS) {
+			adults.value = restoredAdults;
+			children.value = restoredChildren;
+		}
+		for (const [field, target] of [
+			['firstName', firstName],
+			['lastName', lastName],
+			['email', email],
+			['phone', phone],
+			['notes', notes],
+		] as const) {
+			if (typeof draft[field] === 'string') target.value = draft[field] as string;
+		}
+	} catch {
+		// Offline or no draft: start empty.
 	}
-	if (details.slot) selectedSlot.value = details.slot;
-	// Each field is already capped individually by parseGroupBookingParams, but
-	// a URL could still combine two individually-valid counts into a total over
-	// the per-departure limit (e.g. adults=12&children=12) — re-enforce the
-	// combined cap here the same way the on-page +/- steppers do via bump().
-	const restoredAdults = details.adults ?? adults.value;
-	const restoredChildren = details.children;
-	if (restoredAdults + restoredChildren > MAX_GUESTS) {
-		adults.value = Math.min(restoredAdults, MAX_GUESTS);
-		children.value = Math.max(0, Math.min(restoredChildren, MAX_GUESTS - adults.value));
-	} else {
-		if (details.adults) adults.value = details.adults;
-		children.value = details.children;
-	}
-	if (details.firstName) firstName.value = details.firstName;
-	if (details.lastName) lastName.value = details.lastName;
-	if (details.email) email.value = details.email;
-	if (details.phone) phone.value = details.phone;
-	if (details.notes) notes.value = details.notes;
 }
 
 function syncToday() {
@@ -262,7 +292,7 @@ function syncToday() {
 
 onMounted(() => {
 	syncToday();
-	restoreFromQuery();
+	void restoreFromDraft();
 });
 </script>
 
@@ -448,7 +478,8 @@ onMounted(() => {
 		<button
 			type="button"
 			class="cta-btn"
-			:aria-disabled="!canSubmit"
+			:aria-disabled="!canSubmit || sending"
+			:aria-busy="sending"
 			aria-describedby="cta-hint"
 			@click="goToReview"
 		>
@@ -458,6 +489,7 @@ onMounted(() => {
 		<p id="cta-hint" class="cta-hint" aria-live="polite">
 			<template v-if="missingDetails.length">To continue, add {{ missingDetails.join(', ') }}.</template>
 		</p>
+		<p v-if="submitError" class="cta-hint cta-error" role="alert">{{ submitError }}</p>
 		<a class="back-btn" :href="`/tours/${tourSlug}/`">← Back to tour type</a>
 		<p class="policy-note">
 			<i class="ti ti-shield-check" aria-hidden="true"></i>

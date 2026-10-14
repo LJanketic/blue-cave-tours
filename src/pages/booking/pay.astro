@@ -29,7 +29,7 @@ const payable = isPayable(booking);
 
 if (Astro.request.method === 'POST' && payable) {
 	const ip = Astro.request.headers.get('x-nf-client-connection-ip') ?? 'unknown';
-	if (!(await checkRateLimit(`pay:${ip}`, 20)).ok) return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
+	if (!(await checkRateLimit('pay', ip, { max: 20, failClosed: true })).ok) return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
 	const form = await Astro.request.formData();
 	const provider: PaymentProvider = form.get('provider') === 'paypal' ? 'paypal' : 'teya';
 	if (form.get('outcome') === 'decline') {
@@ -47,7 +47,7 @@ const closedReason =
 		? 'This booking was cancelled.'
 		: 'This booking can no longer be paid, because the tour date has passed.';
 
-const guests = guestSummaryFromCounts(booking.adults, booking.children);
+const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 ---
 
 <SiteLayout title={pageTitle('Payment')} description="Complete your booking payment." checkout robots="noindex, nofollow">

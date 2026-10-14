@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Netlify Blobs isn't available in tests; the limiter is covered by its own
 // behaviour in production. Here it always allows unless a test says otherwise.
 const rateLimit = vi.hoisted(() => ({ ok: true }));
-vi.mock('./rate-limit', () => ({ checkRateLimit: async () => rateLimit }));
+vi.mock('./rate-limit', () => ({ checkRateLimit: async () => rateLimit, clientIp: () => '203.0.113.1' }));
 
 const { POST } = await import('../pages/api/contact');
 

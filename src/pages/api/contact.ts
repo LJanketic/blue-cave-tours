@@ -11,43 +11,14 @@ import {
 } from '../../lib/contact-validation';
 import { getTourBySlug } from '../../lib/tours';
 import { jsonResponse } from '../../lib/json-response';
-import { checkRateLimit } from '../../lib/rate-limit';
+import { MAX_BODY_BYTES, readBodyWithLimit } from '../../lib/request-body';
+import { checkRateLimit, clientIp as getClientIp } from '../../lib/rate-limit';
 import { verifyTurnstileToken } from '../../lib/turnstile';
 import { recordEnquiry } from '../../lib/bookings/service';
 
 export const prerender = false;
 
-const MAX_BODY_BYTES = 16_384;
 const MAX_TURNSTILE_TOKEN_LEN = 2048;
-
-/**
- * Reads the body as text, stopping as soon as it passes `limit` bytes. The
- * content-length check above can't catch chunked requests that omit the
- * header, and `request.text()` would buffer the whole body before any check.
- */
-async function readBodyWithLimit(request: Request, limit: number): Promise<string | null> {
-	if (!request.body) return '';
-	const reader = request.body.getReader();
-	const chunks: Uint8Array[] = [];
-	let size = 0;
-	for (;;) {
-		const { done, value } = await reader.read();
-		if (done) break;
-		size += value.byteLength;
-		if (size > limit) {
-			await reader.cancel();
-			return null;
-		}
-		chunks.push(value);
-	}
-	const bytes = new Uint8Array(size);
-	let offset = 0;
-	for (const chunk of chunks) {
-		bytes.set(chunk, offset);
-		offset += chunk.byteLength;
-	}
-	return new TextDecoder().decode(bytes);
-}
 
 /** Where a form post without JavaScript lands (static pages; §3.5). */
 const SENT_PAGE = '/contact/sent/';
@@ -81,12 +52,9 @@ export const POST: APIRoute = async ({ request }) => {
 		return reply(asForm, 413, { error: 'Request too large', code: 'too-large' });
 	}
 
-	const clientIp =
-		request.headers.get('x-nf-client-connection-ip') ??
-		request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-		null;
-
-	const rateLimit = await checkRateLimit(`contact:${clientIp ?? 'unknown'}`);
+	const clientIp = getClientIp(request);
+	// Fails open: the honeypot, time check and Turnstile still apply (S-11).
+	const rateLimit = await checkRateLimit('contact', clientIp);
 	if (!rateLimit.ok) {
 		return reply(asForm, 429, { error: 'Too many requests, please try again later', code: 'busy' });
 	}

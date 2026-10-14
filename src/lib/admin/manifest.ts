@@ -1,4 +1,4 @@
-import { MAX_GUESTS } from '../booking';
+import { MAX_GUESTS, seatCount } from '../booking';
 import { takesSeats } from '../bookings/service';
 import type { Booking } from '../bookings/store';
 
@@ -11,6 +11,7 @@ export type Departure = {
 	seatsTaken: number;
 	adults: number;
 	children: number;
+	infants: number;
 	/** Paid and not cancelled, by surname. */
 	passengers: Booking[];
 	/** Started but never paid; shown so the boss can chase them. */
@@ -51,7 +52,7 @@ function findOverbookings(passengers: Booking[], capacity: number): Overbooking[
 	let taken = 0;
 	for (const booking of [...passengers].sort(seatOrder)) {
 		const seatsBefore = taken;
-		taken += booking.adults + booking.children;
+		taken += seatCount(booking);
 		if (taken > capacity) {
 			result.push({ booking, seatsOver: taken - Math.max(seatsBefore, capacity), seatsBefore, seatsAfter: taken, capacity });
 		}
@@ -76,6 +77,7 @@ export function departuresOn(date: string, all: Booking[]): Departure[] {
 				seatsTaken: 0,
 				adults: 0,
 				children: 0,
+				infants: 0,
 				passengers: [],
 				unpaid: [],
 				overBy: 0,
@@ -85,9 +87,10 @@ export function departuresOn(date: string, all: Booking[]): Departure[] {
 		}
 		if (takesSeats(booking)) {
 			departure.passengers.push(booking);
-			departure.seatsTaken += booking.adults + booking.children;
+			departure.seatsTaken += seatCount(booking);
 			departure.adults += booking.adults;
 			departure.children += booking.children;
+			departure.infants += booking.infants;
 		} else if (booking.paymentStatus !== 'paid' && booking.status === 'pending_payment') {
 			departure.unpaid.push(booking);
 		}

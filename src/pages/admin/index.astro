@@ -5,7 +5,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import DepartureCard from '../../components/admin/DepartureCard.astro';
 import { formatBookingDate } from '../../lib/booking';
 import { businessDate, formatShortDate, formatTimestamp } from '../../lib/bookings/dates';
-import { STATUS_LABELS } from '../../lib/bookings/service';
+import { STATUS_LABELS, sweepPersonalData } from '../../lib/bookings/service';
 import { bookings, byCreatedDesc, enquiries } from '../../lib/bookings/store';
 import { addDays, isIsoDate, summarizeDay, weekFrom } from '../../lib/admin/schedule';
 import { overbookedDepartures } from '../../lib/admin/manifest';
@@ -25,6 +25,8 @@ const from = isIsoDate(fromParam) ? fromParam : today;
 const dayParam = params.get('day');
 const day = isIsoDate(dayParam) ? dayParam : from;
 
+// Retention (S-13): personal data past its time is removed when the dashboard loads.
+await sweepPersonalData();
 const all = await bookings().list();
 const week = weekFrom(from, all);
 const selected = week.find((d) => d.date === day) ?? summarizeDay(day, all);

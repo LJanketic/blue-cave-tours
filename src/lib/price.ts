@@ -22,3 +22,15 @@ export function computeBookingTotal(tour: Priced, adults: number, children: numb
 	if (tour.adultPrice === null) return null;
 	return tour.adultPrice * adults + (tour.childPrice !== null ? tour.childPrice * children : 0);
 }
+
+/** The booking total's parts, as charged (§9.4): adults, children, and free infants. */
+export function lineItemsFor(tour: Priced, adults: number, children: number, infants: number): { label: string; unit: number; qty: number; amount: number }[] | null {
+	if (tour.adultPrice === null) return null;
+	const items = [{ label: 'Adults', unit: tour.adultPrice, qty: adults, amount: tour.adultPrice * adults }];
+	if (children > 0) {
+		const unit = tour.childPrice ?? 0;
+		items.push({ label: 'Children', unit, qty: children, amount: unit * children });
+	}
+	if (infants > 0) items.push({ label: 'Infants (free)', unit: 0, qty: infants, amount: 0 });
+	return items;
+}

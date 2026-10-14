@@ -14,7 +14,7 @@ let error = '';
 
 if (Astro.request.method === 'POST' && configured) {
 	const ip = Astro.request.headers.get('x-nf-client-connection-ip') ?? 'unknown';
-	const limit = await checkRateLimit(`admin-login:${ip}`);
+	const limit = await checkRateLimit('admin-login', ip);
 	const form = await Astro.request.formData();
 	const password = String(form.get('password') ?? '');
 	if (!limit.ok) {

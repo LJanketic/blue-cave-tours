@@ -5,6 +5,8 @@ import { topicLabel } from '../contact-validation';
 import { getTourBySlug } from '../tours';
 import type { EmailMessage } from './send';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
+import { CANCELLATION_FULL, CANCELLATION_WEATHER } from '../../config/cancellation';
+import { IMPRINT, TERMS_VERSION } from '../../config/legal';
 
 export function escapeHtml(value: string): string {
 	return value
@@ -18,8 +20,10 @@ export function escapeHtml(value: string): string {
 /** A label and value; with a link, the value itself is the link (e.g. the meeting point opens Google Maps). */
 type Row = [label: string, value: string, link?: { href: string; hint: string }];
 
-// Darker than the brand teal so link text passes 4.5:1 on white.
-const LINK_COLOR = '#0f6e56';
+// Brand blue-900 for links (9.8:1 on white); the brand blue for the name line.
+// Emails can't use CSS variables, so these mirror tokens/design.css (§9.4).
+const LINK_COLOR = '#0c447c';
+const BRAND_COLOR = '#1a6fc4';
 
 function rowValueHtml(value: string, link?: Row[2]): string {
 	if (!link) return escapeHtml(value);
@@ -63,7 +67,7 @@ function layout(heading: string, intro: string, body: string, options: { title?:
 <body style="margin:0;padding:0;background:#f5f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f4;padding:24px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;padding:28px">
-<tr><td style="font-size:13px;font-weight:600;color:#1d9e75;letter-spacing:.04em;text-transform:uppercase;padding-bottom:12px">${escapeHtml(SITE_NAME)}</td></tr>
+<tr><td style="font-size:13px;font-weight:600;color:${BRAND_COLOR};letter-spacing:.04em;text-transform:uppercase;padding-bottom:12px">${escapeHtml(SITE_NAME)}</td></tr>
 ${heading ? `<tr><td style="font-size:22px;font-weight:600;color:#111;padding-bottom:8px">${escapeHtml(heading)}</td></tr>\n` : ''}<tr><td style="font-size:15px;line-height:1.5;color:#333;padding-bottom:20px">${intro}</td></tr>
 ${body}
 <tr><td style="font-size:12px;line-height:1.5;color:#767676;padding-top:24px;border-top:1px solid #e5e5e3">${footer}</td></tr>
@@ -84,7 +88,7 @@ function bookingRows(booking: Booking): Row[] {
 		['Booking ref', booking.ref],
 		['Tour', booking.tourTitle],
 		['Date', formatBookingDate(booking.date)],
-		['Guests', guestSummaryFromCounts(booking.adults, booking.children)],
+		['Guests', guestSummaryFromCounts(booking.adults, booking.children, booking.infants)],
 	];
 	if (booking.slot) rows.splice(3, 0, ['Departure', booking.slot]);
 	return rows;
@@ -123,6 +127,29 @@ function detailsTable(rows: Row[]): string {
 }
 
 /**
+ * What the confirmation must state as text, not just link to: a link is not a
+ * durable medium (CJEU C-49/11). §9.4; the lawyer verifies the wording (PR 11).
+ */
+function bookingTermsLines(booking: Booking): { rows: Row[]; paragraphs: string[] } {
+	const tour = getTourBySlug(booking.tourSlug);
+	const rows: Row[] = (booking.lineItems ?? []).map((item) => [
+		item.qty > 1 || item.unit > 0 ? `${item.label} (${item.qty} × €${item.unit})` : item.label,
+		`€${item.amount}`,
+	]);
+	rows.push(['Total', `€${booking.total}${PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : ''}`]);
+	const fees = (tour?.additionalFees ?? []).filter((fee) => fee.mandatory);
+	for (const fee of fees) rows.push(['Not included', fee.amountLabel ? `${fee.shortText} (${fee.amountLabel})` : fee.shortText]);
+	const paragraphs = [
+		CANCELLATION_FULL,
+		'This is a leisure service on a fixed date, so the 14-day right of withdrawal for distance contracts does not apply. The cancellation policy above does.',
+		`Questions or complaints: email ${SITE_EMAIL}. We confirm receipt and reply within 15 days.`,
+		`Booked under our terms of ${booking.termsVersion ?? TERMS_VERSION}.`,
+	];
+	if (IMPRINT) paragraphs.push(`${IMPRINT.legalName}, ${IMPRINT.address}, OIB ${IMPRINT.oib}.`);
+	return { rows, paragraphs };
+}
+
+/**
  * The website address customers see: the configured site (PUBLIC_SITE_URL) when
  * there is one, otherwise the address this request came in on. Admin links keep
  * using the request's address, because each deploy keeps its own bookings.
@@ -144,11 +171,12 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 	const mapUrl = riva ? MEETING_POINT_MAP_URL : meetingPointMapUrl(tour.meetingPoint);
 	const date = formatBookingDate(booking.date);
 	const departure = booking.slot || 'To be confirmed';
-	const guests = guestSummaryFromCounts(booking.adults, booking.children);
+	const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 	const total = `€${booking.total} — ${PAYMENT_STATUS_TEXT[booking.paymentStatus]}`;
 	const website = siteOrigin.replace(/^https?:\/\//, '');
 	const groupNote = "As you'll be joining a group, please be on time at the meeting point so we don't keep your fellow travelers waiting.";
-	const weatherNote = "In case of bad weather we may reschedule or refund — we'll contact you directly.";
+	const weatherNote = CANCELLATION_WEATHER;
+	const terms = bookingTermsLines(booking);
 
 	const tripRows: Row[] = [
 		['Booking ref', booking.ref],
@@ -173,7 +201,9 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 			paragraph(escapeHtml(groupNote)) +
 			detailsTable(partyRows) +
 			paragraph(escapeHtml(weatherNote)) +
-			paragraph('<strong>See you aboard!</strong>'),
+			paragraph('<strong>See you aboard!</strong>') +
+			section('The terms of your booking', terms.rows) +
+			terms.paragraphs.map((line) => paragraph(escapeHtml(line))).join(''),
 		{ title: subject, footer: signature },
 	);
 	const text = [
@@ -198,6 +228,10 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 		'',
 		'See you aboard!',
 		'',
+		'THE TERMS OF YOUR BOOKING',
+		rowsText(terms.rows),
+		'',
+		...terms.paragraphs.flatMap((line) => [line, '']),
 		`${EMAIL_SIGN_OFF} · ${SITE_NAME} · Split, Croatia`,
 		`${website} · ${SITE_PHONE_DISPLAY} · ${SITE_EMAIL}`,
 	].join('\n');
@@ -218,12 +252,13 @@ export function adminBookingEmail(booking: Booking, to: string, adminUrl: string
 		['Name', `${booking.firstName} ${booking.lastName}`],
 		['Email', booking.email],
 		['Phone', booking.phone || '—'],
-		['Special requests', booking.customerNotes || 'None'],
+		// Notes can hold health details (GDPR Art. 9): they stay in the admin, never in an email (S-5).
+		['Notes', booking.customerNotes ? 'Has notes, see admin' : 'None'],
 	];
-	const subject = `New booking ${booking.ref}: ${booking.tourTitle}, ${formatBookingDate(booking.date)}, ${guestSummaryFromCounts(booking.adults, booking.children)}`;
+	const subject = `New booking ${booking.ref}: ${booking.tourTitle}, ${formatBookingDate(booking.date)}, ${guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}`;
 	const html = layout(
 		'New booking',
-		`A customer booked and paid on the website${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}. <a href="${escapeHtml(adminUrl)}" style="color:#1d9e75">Open it in the admin</a>.`,
+		`A customer booked and paid on the website${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}. <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">Open it in the admin</a>.`,
 		section('Booking', bookingRows(booking)) + section('Customer', customerRows) + section('Payment', paymentRows(booking, 'admin')),
 	);
 	const text = [
@@ -254,7 +289,7 @@ export function adminEnquiryEmail(enquiry: Enquiry, to: string, adminUrl: string
 	const subject = `New enquiry from ${enquiry.name}: ${tourTitle}`;
 	const html = layout(
 		'New enquiry',
-		`Someone sent a message through the contact form. Reply to this email to answer them, or <a href="${escapeHtml(adminUrl)}" style="color:#1d9e75">open the enquiries in the admin</a>.`,
+		`Someone sent a message through the contact form. Reply to this email to answer them, or <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">open the enquiries in the admin</a>.`,
 		section('From', rows) +
 			paragraph(`<strong>Message</strong><br>${escapeHtml(enquiry.message).replace(/\n/g, '<br>')}`),
 	);
