@@ -97,11 +97,14 @@ const items = await Astro.slots.render('default');
 			font-size: 14px;
 			transform: translateY(-50%);
 			cursor: pointer;
+			opacity: 0;
+			pointer-events: none;
 		}
 
-		/* Room for the pause button. */
-		.marquee__viewport {
-			margin-right: 36px;
+		/* The board has no visible control: Pause (WCAG 2.2.2) shows only on keyboard focus. */
+		.marquee__toggle:focus-visible {
+			opacity: 1;
+			pointer-events: auto;
 		}
 
 		/*
@@ -111,7 +114,6 @@ const items = await Astro.slots.render('default');
 		 */
 		@media (prefers-reduced-motion: reduce), (scripting: none) {
 			.marquee__viewport {
-				margin-right: 0;
 				-webkit-mask-image: none;
 				mask-image: none;
 			}

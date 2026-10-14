@@ -70,14 +70,9 @@ const popularTours = await Promise.all(
 	),
 );
 
-// The bento: destinations with a bento slot, in order (§6.1.7). The board's
-// six-tile layout (2×2, wide, single, single, wide, wide) leaves a hole with
-// five, so until a sixth destination has a real photo (C-18) it's the big
-// tile plus four singles: two full rows.
-const BENTO_SIZES: readonly ('a' | 'wide' | 'single')[] =
-	getAllDestinations().filter((d) => d.bentoOrder !== undefined).length >= 6
-		? ['a', 'wide', 'single', 'single', 'wide', 'wide']
-		: ['a', 'single', 'single', 'single', 'single'];
+// The bento (§6.1.7, board 01 v4): 2×2, wide, single, single, wide, wide.
+// Zlatni Rat has no real photo yet (C-18), so its tile is the gradient fallback.
+const BENTO_SIZES = ['a', 'wide', 'single', 'single', 'wide', 'wide'] as const;
 const bento = getAllDestinations()
 	.filter((d) => d.bentoOrder !== undefined)
 	.sort((a, b) => (a.bentoOrder ?? 0) - (b.bentoOrder ?? 0))

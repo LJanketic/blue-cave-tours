@@ -16,6 +16,9 @@ type Props = {
 };
 
 const { slug, name, tagline, tourCount, image, icon, size = 'single', eager = false } = Astro.props;
+
+// The board's progressive blur: eight stacked bands, each a stronger blur masked to its own slice.
+const BLUR_STEPS = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4];
 ---
 
 <!-- Spec §6.1.7. The whole tile is the link; the photo is decorative (the name is in the text). -->
@@ -37,7 +40,7 @@ const { slug, name, tagline, tourCount, image, icon, size = 'single', eager = fa
 				<i class={`ti ti-${icon} dest-tile__icon`} aria-hidden="true" />
 			)
 		}
-		<span class="dest-tile__blur" aria-hidden="true"></span>
+		<span class="dest-tile__blur" aria-hidden="true">{BLUR_STEPS.map(() => <span />)}</span>
 		<span class="dest-tile__count">
 			<i class="ti ti-sailboat" aria-hidden="true"></i>
 			{tourCount} {tourCount === 1 ? 'tour' : 'tours'}
@@ -111,17 +114,74 @@ const { slug, name, tagline, tourCount, image, icon, size = 'single', eager = fa
 			background: var(--color-overlay-tile);
 		}
 
-		/* …and one masked blur band instead of its eight stacked filters ([DEVIATE, performance]). */
+		/* …and the board's progressive blur over the bottom 42%. */
 		.dest-tile__blur {
 			position: absolute;
 			inset: auto 0 0;
 			z-index: -1;
 			height: 42%;
+			pointer-events: none;
+		}
+
+		.dest-tile__blur > span {
+			position: absolute;
+			inset: 0;
+		}
+
+		.dest-tile__blur > span:nth-child(1) {
+			backdrop-filter: blur(0.25px);
+			-webkit-backdrop-filter: blur(0.25px);
+			-webkit-mask-image: linear-gradient(180deg, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+			mask-image: linear-gradient(180deg, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+		}
+
+		.dest-tile__blur > span:nth-child(2) {
+			backdrop-filter: blur(0.5px);
+			-webkit-backdrop-filter: blur(0.5px);
+			-webkit-mask-image: linear-gradient(180deg, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+			mask-image: linear-gradient(180deg, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+		}
+
+		.dest-tile__blur > span:nth-child(3) {
+			backdrop-filter: blur(0.75px);
+			-webkit-backdrop-filter: blur(0.75px);
+			-webkit-mask-image: linear-gradient(180deg, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+			mask-image: linear-gradient(180deg, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+		}
+
+		.dest-tile__blur > span:nth-child(4) {
+			backdrop-filter: blur(1px);
+			-webkit-backdrop-filter: blur(1px);
+			-webkit-mask-image: linear-gradient(180deg, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
+			mask-image: linear-gradient(180deg, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
+		}
+
+		.dest-tile__blur > span:nth-child(5) {
+			backdrop-filter: blur(1.5px);
+			-webkit-backdrop-filter: blur(1.5px);
+			-webkit-mask-image: linear-gradient(180deg, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
+			mask-image: linear-gradient(180deg, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
+		}
+
+		.dest-tile__blur > span:nth-child(6) {
+			backdrop-filter: blur(2px);
+			-webkit-backdrop-filter: blur(2px);
+			-webkit-mask-image: linear-gradient(180deg, transparent 62.5%, black 75%, black 87.5%, transparent 100%);
+			mask-image: linear-gradient(180deg, transparent 62.5%, black 75%, black 87.5%, transparent 100%);
+		}
+
+		.dest-tile__blur > span:nth-child(7) {
+			backdrop-filter: blur(3px);
+			-webkit-backdrop-filter: blur(3px);
+			-webkit-mask-image: linear-gradient(180deg, transparent 75%, black 87.5%);
+			mask-image: linear-gradient(180deg, transparent 75%, black 87.5%);
+		}
+
+		.dest-tile__blur > span:nth-child(8) {
 			backdrop-filter: blur(4px);
 			-webkit-backdrop-filter: blur(4px);
-			-webkit-mask-image: linear-gradient(180deg, transparent, black);
-			mask-image: linear-gradient(180deg, transparent, black);
-			pointer-events: none;
+			-webkit-mask-image: linear-gradient(180deg, transparent 87.5%, black 100%);
+			mask-image: linear-gradient(180deg, transparent 87.5%, black 100%);
 		}
 
 		.dest-tile__count {

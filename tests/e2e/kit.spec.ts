@@ -107,7 +107,11 @@ test('marquee: pause button stops and restarts the strip', async ({ page }) => {
 	const marquee = page.locator('[data-marquee]');
 	const toggle = marquee.getByRole('button', { name: /Pause highlights/ });
 	await expect(marquee).toHaveClass(/is-running/);
-	await toggle.click();
+	// As on the board, the button is invisible until it has keyboard focus.
+	await expect(toggle).toHaveCSS('opacity', '0');
+	await toggle.focus();
+	await expect(toggle).toHaveCSS('opacity', '1');
+	await page.keyboard.press('Enter');
 	await expect(marquee).toHaveClass(/is-paused/);
 	await expect(marquee.getByRole('button', { name: /Play highlights/ })).toHaveAttribute('aria-pressed', 'true');
 	// Screen readers get the list once; the moving copy is hidden.

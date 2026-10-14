@@ -123,7 +123,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		slug: 'vis',
-		bentoOrder: 5,
+		bentoOrder: 6,
 		name: 'Vis island',
 		region: 'Central Dalmatia · Outer islands',
 		tagline: 'Island · Swimming · Hidden bays',
@@ -397,6 +397,7 @@ export const destinations: Destination[] = [
 	},
 	{
 		slug: 'zlatni-rat',
+		bentoOrder: 5,
 		name: 'Zlatni Rat (Golden Horn)',
 		region: 'Central Dalmatia · Brač island',
 		tagline: 'Beach · Swimming · Iconic shape',
