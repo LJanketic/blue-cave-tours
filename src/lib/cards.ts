@@ -38,8 +38,8 @@ export type TourCardDTO = {
 	/** Only the tags a filter uses (half-day, sunset). */
 	tags: TourDetail['tags'];
 	destinationSlugs: string[];
-	/** "+ Blue Cave ticket, paid on site": mandatory on-site fees must show next to the price. */
-	mandatoryFeeLabel?: string;
+	/** "+ Blue Cave ticket, paid on site" (mandatory) or an optional fee's line; see feeLabel. */
+	feeLabel?: string;
 	/** The tagline, lower-cased, searched with the title for ?q= links. */
 	searchText: string;
 	photo: CardPhoto | null;
@@ -54,9 +54,17 @@ export function tourCardBadge(tour: Pick<TourDetail, 'badge' | 'types'>, evidenc
 	return null;
 }
 
-export function mandatoryFeeLabel(tour: Pick<TourDetail, 'additionalFees'>): string | undefined {
-	const fees = tour.additionalFees.filter((fee) => fee.mandatory);
-	return fees.length ? `+ ${fees.map((fee) => fee.shortText).join(', ')}` : undefined;
+/**
+ * The fee line next to a price. Mandatory on-site fees come first, with a "+"
+ * (consumer law, C-23); optional ones follow as plain text, without the "+",
+ * since their shortText says they're optional ("Blue Cave entry optional,
+ * ticket paid on site"). Most guests add them, so they stay visible.
+ */
+export function feeLabel(tour: Pick<TourDetail, 'additionalFees'>): string | undefined {
+	const mandatory = tour.additionalFees.filter((fee) => fee.mandatory).map((fee) => fee.shortText);
+	const optional = tour.additionalFees.filter((fee) => !fee.mandatory).map((fee) => fee.shortText);
+	const parts = [mandatory.length ? `+ ${mandatory.join(', ')}` : '', optional.join(', ')].filter(Boolean);
+	return parts.length ? parts.join(' · ') : undefined;
 }
 
 /**
@@ -65,7 +73,7 @@ export function mandatoryFeeLabel(tour: Pick<TourDetail, 'additionalFees'>): str
  */
 export function toTourCardDTO(tour: TourDetail, destinationSlugs: string[], photo: CardPhoto | null): TourCardDTO {
 	const badge = tourCardBadge(tour);
-	const fee = mandatoryFeeLabel(tour);
+	const fee = feeLabel(tour);
 	return {
 		slug: tour.slug,
 		title: tour.title,
@@ -78,7 +86,7 @@ export function toTourCardDTO(tour: TourDetail, destinationSlugs: string[], phot
 		types: tour.types,
 		tags: tour.tags.filter((tag) => FILTER_TAGS.has(tag)),
 		destinationSlugs,
-		...(fee ? { mandatoryFeeLabel: fee } : {}),
+		...(fee ? { feeLabel: fee } : {}),
 		searchText: tour.tagline.toLowerCase(),
 		photo,
 	};

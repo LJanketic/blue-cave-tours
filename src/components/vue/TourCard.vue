@@ -65,7 +65,7 @@ const priceLabel = computed(() => (props.tour ? formatFromPrice(props.tour.adult
 					<span class="sr-only">Duration: </span>{{ tour.durationShort }}
 				</span>
 			</div>
-			<span v-if="tour.mandatoryFeeLabel" class="tour-card-ui__fee">{{ tour.mandatoryFeeLabel }}</span>
+			<span v-if="tour.feeLabel" class="tour-card-ui__fee">{{ tour.feeLabel }}</span>
 			<span class="tour-card-ui__cta">View tour</span>
 		</div>
 	</a>
@@ -180,7 +180,7 @@ const priceLabel = computed(() => (props.tour ? formatFromPrice(props.tour.adult
 		font-size: 16px;
 	}
 
-	/* Consumer law: a mandatory on-site fee shows next to the price (§6.2.2). */
+	/* Consumer law: a mandatory on-site fee shows next to the price (§6.2.2); optional ones too, as most guests add them. */
 	.tour-card-ui__fee {
 		margin-top: 4px;
 		font-size: var(--font-size-xs);

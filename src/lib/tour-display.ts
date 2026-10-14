@@ -1,4 +1,4 @@
-import { BESTSELLER_EVIDENCE } from '../config/site';
+import { BESTSELLER_EVIDENCE, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL, ZENTA_MEETING_POINT_MAP_URL } from '../config/site';
 import type { TourDetail } from '../types/tour';
 
 /*
@@ -20,16 +20,15 @@ export type Cta = { label: string; href: string };
 
 /** The landing page for private charters (D-23): its primary action is the charter request. */
 const CHARTER_LANDING = 'create-perfect-day-private';
-/** One-way transfers aren't charters to plan: they're enquired about. */
-const NO_CHARTER_CTA = new Set(['dubrovnik-one-way']);
 
 /**
  * The tour page's booking actions (spec §6.3.4):
  * - instant-book tours: "Book group tour"
  * - the charter landing page: "Plan your charter"
  * - everything quoted on request: "Enquire about this tour"
- * plus "Book as private charter" wherever a private charter is offered and
- * isn't already the main action.
+ * plus "Book as private charter" on group tours that also run privately. A
+ * private-only tour's enquiry already is the charter request, so it gets no
+ * second button to the same form.
  */
 export function tourCtas(
 	tour: Pick<TourDetail, 'slug' | 'types' | 'adultPrice'>,
@@ -41,6 +40,27 @@ export function tourCtas(
 		: tour.slug === CHARTER_LANDING
 			? { label: 'Plan your charter', href: links.charter(tour.slug) }
 			: { label: 'Enquire about this tour', href: links.contact(tour.slug) };
-	const offersCharter = tour.types.includes('private') && !NO_CHARTER_CTA.has(tour.slug) && tour.slug !== CHARTER_LANDING;
+	const offersCharter = instant && tour.types.includes('private');
 	return { primary, secondary: offersCharter ? { label: 'Book as private charter', href: links.charter(tour.slug) } : null };
+}
+
+/** A run of text in a fact tile; with `href` it's an external map link. */
+export type TextPart = { text: string; href?: string };
+
+/**
+ * The "Meeting point" tile. Group tours leave from the Riva; private tours
+ * may leave from the Riva or Zenta, and the exact spot is confirmed with the
+ * guest after booking.
+ * - group only: the Riva link
+ * - private only: "Riva stand 14 or Zenta", both linked, plus a note
+ * - both: the Riva link, then "Private tours: Riva stand 14 or Zenta"
+ */
+export function meetingPointLines(tour: Pick<TourDetail, 'types'>): { lines: TextPart[][]; note: string | null } {
+	const riva: TextPart = { text: MEETING_POINT_LABEL, href: MEETING_POINT_MAP_URL };
+	const zenta: TextPart = { text: 'Zenta', href: ZENTA_MEETING_POINT_MAP_URL };
+	if (!tour.types.includes('private')) return { lines: [[riva]], note: null };
+	if (!tour.types.includes('group')) {
+		return { lines: [[{ text: 'Riva stand 14', href: MEETING_POINT_MAP_URL }, { text: ' or ' }, zenta]], note: 'Exact spot confirmed after booking' };
+	}
+	return { lines: [[riva], [{ text: 'Private tours: Riva stand 14 or ' }, zenta]], note: null };
 }

@@ -137,8 +137,9 @@ function bookingTermsLines(booking: Booking): { rows: Row[]; paragraphs: string[
 		`€${item.amount}`,
 	]);
 	rows.push(['Total', `€${booking.total}${PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : ''}`]);
-	const fees = (tour?.additionalFees ?? []).filter((fee) => fee.mandatory);
-	for (const fee of fees) rows.push(['Not included', fee.amountLabel ? `${fee.shortText} (${fee.amountLabel})` : fee.shortText]);
+	for (const fee of tour?.additionalFees ?? []) {
+		rows.push([fee.mandatory ? 'Not included' : 'Extra', fee.amountLabel ? `${fee.shortText} (${fee.amountLabel})` : fee.shortText]);
+	}
 	const paragraphs = [
 		CANCELLATION_FULL,
 		'This is a leisure service on a fixed date, so the 14-day right of withdrawal for distance contracts does not apply. The cancellation policy above does.',

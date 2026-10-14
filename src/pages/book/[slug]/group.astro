@@ -16,7 +16,7 @@ import { getAllTours, getTourCardPhoto } from '../../../lib/tours';
 import { DEFAULT_AGE_BANDS } from '../../../data/tour-catalog';
 import { MAX_GUESTS, meetingPointShort, supportsInstantBook } from '../../../lib/booking';
 import { businessDate } from '../../../lib/bookings/dates';
-import { mandatoryFeeLabel } from '../../../lib/cards';
+import { feeLabel } from '../../../lib/cards';
 import type { TourDetail } from '../../../types/tour';
 
 // Quote-only tours have no instant-book price; they're routed to the contact form everywhere.
@@ -32,7 +32,7 @@ const { tour } = Astro.props;
 const renderedOn = businessDate();
 const photo = getTourCardPhoto(tour);
 const ageBands = tour.ageBands ?? DEFAULT_AGE_BANDS;
-const fee = mandatoryFeeLabel(tour);
+const fee = feeLabel(tour);
 const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (_, i) => i + min);
 ---
 
@@ -63,7 +63,7 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 				adultPrice={tour.adultPrice}
 				childPrice={tour.childPrice}
 				priceNotes={tour.priceNotes}
-				mandatoryFeeLabel={fee}
+				feeLabel={fee}
 				ageBands={ageBands}
 				renderedOn={renderedOn}
 				seasonStart={SEASON_START}

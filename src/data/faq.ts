@@ -30,7 +30,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'booking',
 		question: 'Where do we meet?',
 		answer:
-			'Split’s Riva promenade, stand 14. You’ll receive the exact meeting time and any last-minute updates after booking.',
+			'Group tours meet at Split’s Riva promenade, stand 14. Private tours leave from the Riva or from Zenta, depending on the boat. You’ll receive the exact spot, meeting time and any last-minute updates after booking.',
 	},
 	{
 		category: 'booking',
@@ -73,7 +73,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'onboard',
 		question: 'Is the Blue Cave ticket included?',
 		answer:
-			'Cave entry is often billed separately on-site and depends on sea conditions and official opening hours. We show what’s included before you confirm your booking.',
+			'No. Entering the Blue Cave is optional and the ticket is paid on site, though most guests go in. Entry depends on sea conditions and official opening hours.',
 	},
 	{
 		category: 'onboard',

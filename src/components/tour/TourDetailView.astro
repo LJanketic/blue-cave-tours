@@ -9,10 +9,10 @@ import { contactHrefForTour, groupBookHref, isGroupTour, MAX_GUESTS } from '../.
 import { charterUrl } from '../../config/routes';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 import { seasonLabel } from '../../config/season';
-import { MEETING_POINT_LABEL, MEETING_POINT_MAP_URL } from '../../config/site';
 import { tourFromPrice } from '../../lib/price';
-import { mandatoryFeeLabel } from '../../lib/cards';
-import { showsBestseller, tourCtas } from '../../lib/tour-display';
+import { feeLabel } from '../../lib/cards';
+import { meetingPointLines, showsBestseller, tourCtas } from '../../lib/tour-display';
+import { WHY_GO_PRIVATE, WHY_GO_PRIVATE_TOURS } from '../../data/private-tours';
 import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
 import { getPrimaryDestinationForTour } from '../../lib/destinations';
 import ImageGallery, { type GalleryTag } from '../vue/ImageGallery.vue';
@@ -53,11 +53,14 @@ const crumbs = [
 const price = tourFromPrice(tour);
 const hasPrice = tour.adultPrice !== null;
 const unit = tour.priceUnit === 'boat' ? '/ boat' : '/ adult';
-const feeLine = mandatoryFeeLabel(tour);
+// Mandatory fees with a "+", then optional ones (the Blue Cave ticket most guests add).
+const feeLine = feeLabel(tour);
 const mandatoryFees = tour.additionalFees.filter((fee) => fee.mandatory);
 const nextDeparture =
 	tour.departures.length > 1 ? 'Several departures daily' : (tour.departures[0]?.time ?? 'Time confirmed at booking');
 const duration = tour.duration.replace(/^Approx\.\s*/, '≈ ');
+const showWhyPrivate = WHY_GO_PRIVATE_TOURS.has(tour.slug);
+const meetingPoint = meetingPointLines(tour);
 ---
 
 <article class="tour">
@@ -82,6 +85,22 @@ const duration = tour.duration.replace(/^Approx\.\s*/, '≈ ');
 				<SectionHeader variant="plain" title={tour.itineraryLabel} id="itinerary-heading" />
 				<Timeline variant="itinerary" items={tour.itinerary} />
 			</section>
+
+			{
+				showWhyPrivate && (
+					<section class="tour__section" aria-labelledby="private-heading">
+						<SectionHeader variant="plain" title="Why go private" id="private-heading" />
+						<ul class="tour__list" role="list">
+							{WHY_GO_PRIVATE.map((item) => (
+								<li>
+									<i class="ti ti-crown tour__private" aria-hidden="true" />
+									{item}
+								</li>
+							))}
+						</ul>
+					</section>
+				)
+			}
 
 			<section class="tour__section" aria-labelledby="included-heading">
 				<SectionHeader variant="plain" title="What's included" id="included-heading" />
@@ -126,10 +145,23 @@ const duration = tour.duration.replace(/^Approx\.\s*/, '≈ ');
 					<InfoTile label="Departure">{tour.departure}</InfoTile>
 					<InfoTile label="Return">{tour.returnTime}</InfoTile>
 					<InfoTile label="Meeting point">
-						<a href={MEETING_POINT_MAP_URL} target="_blank" rel="noopener">
-							{MEETING_POINT_LABEL}<i class="ti ti-arrow-up-right" aria-hidden="true"></i>
-							<span class="sr-only"> (opens in a new tab)</span>
-						</a>
+						{
+							meetingPoint.lines.map((line) => (
+								<span class="tour__line">
+									{line.map((part) =>
+										part.href ? (
+											<a href={part.href} target="_blank" rel="noopener">
+												{part.text}<i class="ti ti-arrow-up-right" aria-hidden="true" />
+												<span class="sr-only"> (opens in a new tab)</span>
+											</a>
+										) : (
+											part.text
+										),
+									)}
+								</span>
+							))
+						}
+						{meetingPoint.note && <span class="tour__line tour__line--note">{meetingPoint.note}</span>}
 					</InfoTile>
 					<InfoTile label="Season">{seasonLabel()}</InfoTile>
 					{tour.additionalFees.length > 0 && <InfoTile label="Additional fees">{tour.additionalFees.map((fee) => fee.text).join(' ')}</InfoTile>}
@@ -286,6 +318,20 @@ const duration = tour.duration.replace(/^Approx\.\s*/, '≈ ');
 
 		.tour__no {
 			color: var(--color-icon-excluded);
+		}
+
+		.tour__private {
+			color: var(--color-category-private-icon);
+		}
+
+		/* Meeting point: one line per option, the note quieter. */
+		.tour__line {
+			display: block;
+		}
+
+		.tour__line--note {
+			font-weight: var(--font-weight-regular);
+			color: var(--color-text-secondary);
 		}
 
 		.tour__section :global(.info-tile a) {

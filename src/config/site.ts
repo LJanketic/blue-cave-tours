@@ -16,6 +16,13 @@ export const MEETING_POINT_LABEL = 'Riva promenade, stand 14, Split';
  */
 export const MEETING_POINT_MAP_URL = 'https://www.google.com/maps/search/?api=1&query=43.5072282%2C16.4391746';
 
+/**
+ * Private tours may leave from Zenta instead of the Riva; the exact spot is
+ * confirmed with the guest after booking. Same link format as MEETING_POINT_MAP_URL.
+ */
+export const ZENTA_MEETING_POINT_LABEL = 'Zenta, Split';
+export const ZENTA_MEETING_POINT_MAP_URL = 'https://www.google.com/maps/search/?api=1&query=43.501086%2C16.462353';
+
 /** Who signs the booking confirmation email. */
 export const EMAIL_SIGN_OFF = 'The Hello Blue Cave team';
 
