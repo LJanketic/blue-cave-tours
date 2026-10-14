@@ -17,8 +17,8 @@ const items = await Astro.slots.render('default');
 	A scrolling strip (spec §3.2, §11.4). Items must not contain links or
 	buttons: the copy screen readers get is visually hidden. Screen readers get the real list once;
 	the moving copy is hidden from them and from the keyboard. It only moves
-	once the script has added the pause button, and never under reduced motion,
-	where the items wrap instead.
+	once the script has started it, and never under reduced motion or without
+	JavaScript, where the items wrap instead.
 -->
 <div class:list={['marquee', className]} data-marquee style={`--marquee-duration: ${duration}s`}>
 	<button type="button" class="marquee__toggle" aria-pressed="false" hidden>
@@ -99,27 +99,35 @@ const items = await Astro.slots.render('default');
 			cursor: pointer;
 		}
 
-		/* Not running (no JS or reduced motion): one set, wrapped. */
-		.marquee:not(.is-running) .marquee__viewport {
-			-webkit-mask-image: none;
-			mask-image: none;
+		/* Room for the pause button. */
+		.marquee__viewport {
+			margin-right: 36px;
 		}
 
-		.marquee:not(.is-running) .marquee__track {
-			width: auto;
-		}
+		/*
+		 * Still (reduced motion, or no JavaScript): one set, wrapped. Chosen by
+		 * media queries, not by the script, so the strip has its final layout
+		 * from the first paint and nothing shifts when the script starts it.
+		 */
+		@media (prefers-reduced-motion: reduce), (scripting: none) {
+			.marquee__viewport {
+				margin-right: 0;
+				-webkit-mask-image: none;
+				mask-image: none;
+			}
 
-		.marquee:not(.is-running) .marquee__set {
-			flex-wrap: wrap;
-			padding-right: 0;
-		}
+			.marquee__track {
+				width: auto;
+			}
 
-		.marquee:not(.is-running) .marquee__copy {
-			display: none;
-		}
+			.marquee__set {
+				flex-wrap: wrap;
+				padding-right: 0;
+			}
 
-		.marquee.is-running .marquee__viewport {
-			margin-right: 36px; /* room for the pause button */
+			.marquee__copy {
+				display: none;
+			}
 		}
 	}
 </style>

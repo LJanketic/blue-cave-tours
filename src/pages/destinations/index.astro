@@ -1,129 +1,93 @@
 ---
 export const prerender = true;
 
-import { MEETING_POINT_MAP_URL, pageTitle } from '../../config/site';
+import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import PhotoHero from '../../components/ui/PhotoHero.astro';
+import Button from '../../components/ui/Button.astro';
+import DestinationFilters from '../../components/vue/DestinationFilters.vue';
 import DestinationsCatalog from '../../components/vue/DestinationsCatalog.vue';
-import { getAllDestinations, getDestinationPhoto } from '../../lib/destinations';
-import { GALLERY_CARD_SIZE, toGalleryView } from '../../data/tour-photos';
+import { getAllDestinations, getDestinationPhoto, getToursForDestination } from '../../lib/destinations';
+import { toDestinationCardDTO } from '../../lib/cards';
+import { GALLERY_CARD_SIZE, toCardPhoto } from '../../data/tour-photos';
+import { firstPhotoForDestination } from '../../data/destination-photos';
 
-const destinations = getAllDestinations();
-const cardPhotos = Object.fromEntries(
-	await Promise.all(
-		destinations.map(
-			async (dest) => [dest.slug, await toGalleryView(getDestinationPhoto(dest), 'sailboat', GALLERY_CARD_SIZE)] as const,
-		),
+const cards = await Promise.all(
+	getAllDestinations().map(async (d) =>
+		toDestinationCardDTO(d, getToursForDestination(d.slug).length, await toCardPhoto(getDestinationPhoto(d), GALLERY_CARD_SIZE)),
 	),
 );
-const mapUrl = MEETING_POINT_MAP_URL;
+
+// The design's hero photo isn't cleared for use (C-17): the site's own aerial
+// of the Pakleni islands, with contrast measured behind the text.
+const heroPhoto = firstPhotoForDestination('pakleni', 3);
+if (!heroPhoto?.src) throw new Error('Destinations hero photo missing');
 ---
 
 <SiteLayout
 	title={pageTitle('Islands and caves we visit from Split')}
 	description="Islands, caves, and swim stops on our Split boat tours: Blue Cave, Vis, Hvar, Pakleni, Blue Lagoon, and more."
+	solidNav={false}
+	fontPreload
+	footerGap="56px"
 >
-	<main id="main" class="page-shell destinations-page">
-		<div class="page">
-			<div class="dest-header">
-				<h1 class="dest-title">Destinations</h1>
-				<p class="dest-desc">
-					From Split’s Riva to the outer islands, our tours cover the central
-					Dalmatian coast.
-				</p>
-			</div>
+	<main id="main">
+		<PhotoHero
+			image={heroPhoto.src}
+			imagePosition="center 60%"
+			eyebrow="Islands · Caves · Old towns"
+			title="Destinations"
+			lead="From Split's Riva to the outer islands, here's where our boats take you."
+		>
+			<DestinationFilters client:load />
+		</PhotoHero>
 
-			<a
-				class="map-strip"
-				href={mapUrl}
-				target="_blank"
-				rel="noopener noreferrer"
-				aria-label="View full map (Google Maps, opens in a new tab)"
-			>
-				<div class="map-dots">
-					{
-						destinations.map((dest) => (
-							<span class="map-point">
-								<span class="map-dot" />
-								<span class="map-label">{dest.name}</span>
-							</span>
-						))
-					}
-				</div>
-				<span class="map-cta">
-					<i class="ti ti-map-2" aria-hidden="true"></i>
-					View full map ↗
-				</span>
-			</a>
+		<div class="destinations">
+			<DestinationsCatalog client:visible destinations={cards} />
 
-			<DestinationsCatalog client:visible destinations={destinations} cardPhotos={cardPhotos} />
-
-			<div class="also-strip">
+			<aside class="destinations__also" aria-label="Browse tours instead">
 				<div>
-					<p class="t1">Not sure where to go?</p>
-					<p class="t2">Browse all tours and filter by activity, duration, or price instead.</p>
+					<p class="destinations__also-title">Not sure where to go?</p>
+					<p class="destinations__also-text">Browse all tours and filter by type or duration instead.</p>
 				</div>
-				<a class="also-btn" href="/tours/">Browse tours ↗</a>
-			</div>
+				<Button href="/tours/" variant="secondary" size="sm" iconEnd="arrow-right">Browse tours</Button>
+			</aside>
 		</div>
 	</main>
 </SiteLayout>
 
 <style>
-	.destinations-page .page {
-		padding: 1.5rem 0 2rem;
-	}
-
-	.dest-header {
-		margin: 8px 0 24px;
-	}
-
-	.dest-title {
-		font-size: 28px;
-		font-weight: 500;
-		margin: 0 0 8px;
-	}
-
-	.dest-desc {
-		font-size: 14px;
-		color: var(--color-text-secondary);
-		line-height: 1.6;
-		max-width: 520px;
-		margin: 0;
-	}
-
-	.destinations-page .map-strip {
-		margin-bottom: 24px;
-	}
-
-	@media (max-width: 768px) {
-		.destinations-page .map-strip {
-			height: 100px;
+	@layer pages {
+		.destinations {
+			max-width: var(--content-max);
+			margin: 0 auto;
+			padding: 0 var(--page-gutter);
 		}
-	}
 
-	.destinations-page .map-cta .ti {
-		font-size: 15px;
-	}
+		/* board 04 .also-strip */
+		.destinations__also {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: var(--space-3);
+			margin-top: var(--space-2);
+			padding: 1rem 1.25rem;
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+		}
 
-	.destinations-page .also-strip {
-		margin-top: 8px;
-	}
+		.destinations__also-title {
+			margin: 0 0 2px;
+			font-size: var(--font-size-base);
+			font-weight: var(--font-weight-medium);
+		}
 
-	.destinations-page .also-btn {
-		font-size: 13px;
-		padding: 7px 14px;
-		border-radius: var(--radius-md);
-		border: 0.5px solid var(--color-border-secondary);
-		background: var(--color-background-primary);
-		font-weight: 500;
-		text-decoration: none;
-		color: inherit;
-		display: inline-flex;
-		align-items: center;
-		white-space: nowrap;
-	}
-
-	.destinations-page .also-btn:hover {
-		border-color: var(--color-border-primary);
+		.destinations__also-text {
+			margin: 0;
+			font-size: var(--font-size-base);
+			line-height: var(--line-height-relaxed);
+			color: var(--color-text-secondary);
+		}
 	}
 </style>

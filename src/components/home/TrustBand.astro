@@ -110,16 +110,18 @@ const shown = items.filter((item) => item.confirmed);
 			.trust-band :global(.trust-band__marquee) {
 				display: block;
 			}
+		}
 
-			/* Reduced motion: a 2×2 grid instead of a moving strip. */
-			.trust-band :global(.marquee:not(.is-running) .marquee__set) {
+		/* Still (reduced motion, no JavaScript): a 2×2 grid instead of a moving strip. */
+		@media (max-width: 1120px) and (prefers-reduced-motion: reduce), (max-width: 1120px) and (scripting: none) {
+			.trust-band :global(.marquee__set) {
 				display: grid;
 				grid-template-columns: repeat(2, minmax(0, 1fr));
 				gap: var(--space-3) var(--space-4);
 				padding: 0 var(--page-gutter);
 			}
 
-			.trust-band :global(.marquee:not(.is-running) .trust-band__item) {
+			.trust-band :global(.trust-band__item) {
 				white-space: normal;
 			}
 		}

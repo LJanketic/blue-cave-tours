@@ -1,0 +1,94 @@
+---
+import Marquee from '../ui/Marquee.astro';
+
+type Props = { items: { icon: string; text: string }[] };
+
+const { items } = Astro.props;
+---
+
+<!--
+	Spec §6.5: a 2-column grid of grey tiles; on phones the board's 26s marquee,
+	built accessibly (real list for screen readers, pause button, still under
+	reduced motion).
+-->
+<ul class="highlights__grid" role="list">
+	{
+		items.map((item) => (
+			<li class="highlights__item">
+				<i class={`ti ti-${item.icon}`} aria-hidden="true" />
+				{item.text}
+			</li>
+		))
+	}
+</ul>
+<Marquee label="Highlights" duration={26} class="highlights__marquee">
+	{
+		items.map((item) => (
+			<li class="highlights__item highlights__item--strip">
+				<i class={`ti ti-${item.icon}`} aria-hidden="true" />
+				{item.text}
+			</li>
+		))
+	}
+</Marquee>
+
+<style>
+	@layer components {
+		.highlights__grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: var(--space-2);
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.highlights__item {
+			display: flex;
+			align-items: flex-start;
+			gap: var(--space-2);
+			padding: 9px 11px;
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.highlights__item .ti {
+			flex-shrink: 0;
+			margin-top: 1px;
+			font-size: 1.2em;
+			color: var(--color-highlight);
+		}
+
+		.highlights__item--strip {
+			width: 220px; /* board 10 */
+		}
+
+		:global(.highlights__marquee) {
+			display: none;
+		}
+
+		@media (max-width: 768px) {
+			.highlights__grid {
+				display: none;
+			}
+
+			:global(.highlights__marquee) {
+				display: block;
+			}
+		}
+
+		/* Still (reduced motion, no JavaScript): one column instead of a moving strip. */
+		@media (max-width: 768px) and (prefers-reduced-motion: reduce), (max-width: 768px) and (scripting: none) {
+			:global(.highlights__marquee .marquee__set) {
+				flex-direction: column;
+			}
+
+			.highlights__item--strip {
+				width: auto;
+			}
+		}
+	}
+</style>

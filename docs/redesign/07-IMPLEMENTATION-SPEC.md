@@ -1184,6 +1184,22 @@ Responsive behaviour: §3.1.1, row "Destination detail".
 
 **SEO:** [KEEP] TouristDestination + BreadcrumbList.
 
+**As built (PR 5, 2026-10-14):**
+- **Overview:** the same pattern as Tours.
+  - `DestinationFilters.vue` holds the hero chips and `DestinationsCatalog.vue` the label, grid and empty state. They share `src/lib/destinations-catalog-state.ts`, and both render "All" until mounted.
+  - The section label is the `aria-live` count.
+  - The map dot strip and "Not to miss" are gone.
+  - Hero photo: `pakleni/04` (C-17); the contrast test now covers `/destinations/`.
+- **Detail:** rewritten with `components/destination/DestinationHighlights.astro` and `DestinationGlance.astro`.
+  - **Fixed:** the map link used the meeting point's URL on every destination. It now uses each `mapUrl` (tested).
+  - `bestSeasonLabel()` (tested) replaces the hard-coded season.
+  - The tours section uses `TourCard`, so no duplicate card markup is left in the repo. `#tours` "(n)" equals the cards rendered (tested on all 10 pages).
+  - The Split hub says "Tours from Split".
+- **Marquee:** its still layout (reduced motion, no JavaScript) now comes from media queries (`prefers-reduced-motion`, `scripting: none`), not the script. The strip has its final layout from the first paint, so nothing shifts when it starts.
+- **CLS fix:** `<main>` with `margin: 0 auto` is a flex item of `.site-shell` and shrank to its content until the gallery laid out. That gave CLS 0.119; `width: 100%` brings it to 0.
+- **Lighthouse** (mobile, median of 3): `/destinations/` 98–99 / 100 / 100 / 100, LCP 2.3s, CLS 0.011 (the display font swap). `/destinations/hvar/` 99 / 100 / 100 / 100, LCP 2.0s, CLS 0.
+- **Dead legacy CSS:** 96 rules removed; computed styles elsewhere unchanged.
+
 ---
 
 ## 7. Content pages
