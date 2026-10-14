@@ -58,3 +58,4 @@ test-results/
 playwright-report/
 tests/visual/admin.spec.ts-snapshots/
 screenshots/
+tests/visual/public-styles.spec.ts-snapshots/

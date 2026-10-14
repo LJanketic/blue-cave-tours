@@ -195,7 +195,7 @@ watch(selectedIndex, () => {
 
 .image-gallery__hero-icon {
 	font-size: 48px;
-	color: rgb(255 255 255 / 85%);
+	color: var(--color-border-secondary);
 }
 
 .image-gallery__tags {

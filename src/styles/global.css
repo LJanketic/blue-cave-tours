@@ -9,17 +9,19 @@
  * later same-specificity rule priority regardless of which file it's in —
  * importing it earlier would let the non-responsive modules win instead.
  */
-@import './tokens/redesign.css';
-@import './modules/_base.css';
-@import './modules/_home.css';
-@import './modules/_catalog.css';
-@import './modules/_tour-detail.css';
-@import './modules/_destination-detail.css';
-@import './modules/_booking.css';
-@import './modules/_legal-about.css';
-@import './modules/_responsive.css';
+@import './tokens/redesign.css' layer(tokens);
+@import './modules/_base.css' layer(legacy);
+@import './modules/_home.css' layer(legacy);
+@import './modules/_catalog.css' layer(legacy);
+@import './modules/_tour-detail.css' layer(legacy);
+@import './modules/_destination-detail.css' layer(legacy);
+@import './modules/_booking.css' layer(legacy);
+@import './modules/_legal-about.css' layer(legacy);
+@import './modules/_responsive.css' layer(legacy);
 
-:focus-visible {
-	outline: 2px solid var(--color-accent-teal);
-	outline-offset: 2px;
+@layer legacy {
+	:focus-visible {
+		outline: 2px solid var(--color-accent-teal);
+		outline-offset: 2px;
+	}
 }
