@@ -1,0 +1,68 @@
+---
+type Props = {
+	/** In order; the last item is the current page (no href). */
+	items: { label: string; href?: string }[];
+};
+
+const { items } = Astro.props;
+---
+
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+	<ol role="list">
+		{
+			items.map((item, index) =>
+				index === items.length - 1 ? (
+					<li aria-current="page">{item.label}</li>
+				) : (
+					<li>
+						<a href={item.href}>{item.label}</a>
+						<i class="ti ti-chevron-right" aria-hidden="true" />
+					</li>
+				),
+			)
+		}
+	</ol>
+</nav>
+
+<style>
+	@layer components {
+		/* board 03 .breadcrumb */
+		.breadcrumb-nav {
+			margin-bottom: var(--space-4);
+			font-size: var(--font-size-sm);
+			color: var(--color-text-tertiary);
+		}
+
+		.breadcrumb-nav ol {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 2px 6px;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.breadcrumb-nav li {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.breadcrumb-nav a {
+			display: inline-flex;
+			align-items: center;
+			min-height: 24px;
+			color: var(--color-text-info);
+			text-decoration: none;
+		}
+
+		.breadcrumb-nav a:hover {
+			text-decoration: underline;
+		}
+
+		.breadcrumb-nav .ti {
+			font-size: 12px;
+		}
+	}
+</style>

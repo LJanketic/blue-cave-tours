@@ -1,0 +1,18 @@
+---
+import '../../styles/components/pill-link.css';
+
+type Props = {
+	href: string;
+	/** Transparent until hovered. */
+	ghost?: boolean;
+	icon?: string;
+	class?: string;
+};
+
+const { href, ghost = false, icon = 'arrow-right', class: className } = Astro.props;
+---
+
+<a href={href} class:list={['pill-link', ghost && 'pill-link--ghost', className]}>
+	<slot />
+	<i class={`ti ti-${icon}`} aria-hidden="true"></i>
+</a>

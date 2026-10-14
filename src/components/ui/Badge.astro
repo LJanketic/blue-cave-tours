@@ -1,0 +1,18 @@
+---
+import '../../styles/components/badge.css';
+
+type Props = {
+	tone?: 'brand' | 'private' | 'premium' | 'tip' | 'neutral';
+	shape?: 'card' | 'tag';
+	/** Tabler icon before the label. */
+	icon?: string;
+	class?: string;
+};
+
+const { tone = 'brand', shape = 'tag', icon, class: className } = Astro.props;
+---
+
+<span class:list={['badge', `badge--${shape}`, `badge--${tone}`, className]}>
+	{icon && <i class={`ti ti-${icon}`} aria-hidden="true" />}
+	<slot />
+</span>

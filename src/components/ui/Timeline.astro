@@ -1,0 +1,185 @@
+---
+type ItineraryItem = { time?: string; label: string; description?: string; icon: string };
+type HistoryItem = { year: string; title: string; description: string };
+
+type Props =
+	| { variant: 'itinerary'; items: ItineraryItem[] }
+	| { variant: 'history'; items: HistoryItem[] };
+
+const props = Astro.props;
+
+// Older catalog labels still start with their time ("07:20 Departure…"); the
+// time has its own line, so don't print it twice.
+function stopLabel(item: ItineraryItem): string {
+	return item.time && item.label.startsWith(`${item.time} `) ? item.label.slice(item.time.length + 1) : item.label;
+}
+---
+
+{
+	props.variant === 'itinerary' ? (
+		<ol class="timeline-ui timeline-ui--itinerary" role="list">
+			{props.items.map((item) => (
+				<li class="timeline-ui__stop">
+					<span class="timeline-ui__dot" aria-hidden="true">
+						<i class={`ti ti-${item.icon}`} />
+					</span>
+					<div>
+						{item.time && <p class="timeline-ui__time">{item.time}</p>}
+						<p class="timeline-ui__label">{stopLabel(item)}</p>
+						{item.description && <p class="timeline-ui__desc">{item.description}</p>}
+					</div>
+				</li>
+			))}
+		</ol>
+	) : (
+		<ol class="timeline-ui timeline-ui--history" role="list">
+			{props.items.map((item, index) => (
+				<li class="timeline-ui__event">
+					<span
+						class:list={['timeline-ui__ring', (index === 0 || index === props.items.length - 1) && 'timeline-ui__ring--active']}
+						aria-hidden="true"
+					/>
+					<p class="timeline-ui__year">{item.year}</p>
+					<h3 class="timeline-ui__title">{item.title}</h3>
+					<p class="timeline-ui__desc">{item.description}</p>
+				</li>
+			))}
+		</ol>
+	)
+}
+
+<style>
+	@layer components {
+		.timeline-ui {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.timeline-ui p {
+			margin: 0;
+		}
+
+		/* Itinerary (spec §6.3.3, board 03 .itinerary-item). */
+		.timeline-ui__stop {
+			position: relative;
+			display: flex;
+			gap: var(--space-3);
+			padding-bottom: var(--space-4);
+		}
+
+		.timeline-ui__stop:not(:last-child)::before {
+			content: '';
+			position: absolute;
+			top: 42px;
+			bottom: -2px;
+			left: 15.75px; /* board 03: centred under the 32px dot */
+			width: 0.5px;
+			background: var(--color-border-secondary);
+		}
+
+		.timeline-ui__dot {
+			display: flex;
+			flex-shrink: 0;
+			align-items: center;
+			justify-content: center;
+			width: 32px;
+			height: 32px;
+			margin-top: 6px;
+			border: 0.5px solid var(--color-border-info);
+			border-radius: 50%;
+			background: var(--color-background-info);
+			color: var(--color-text-info);
+			font-size: 16px;
+		}
+
+		.timeline-ui__time {
+			margin-bottom: 2px;
+			font-size: var(--font-size-xs);
+			line-height: 18px;
+			color: var(--color-text-tertiary);
+		}
+
+		.timeline-ui__label {
+			font-size: var(--font-size-base);
+			line-height: 24px;
+			font-weight: var(--font-weight-medium);
+		}
+
+		.timeline-ui--itinerary .timeline-ui__desc {
+			margin-top: 2px;
+		}
+
+		.timeline-ui__desc {
+			font-size: var(--font-size-body-md);
+			line-height: var(--line-height-body-md);
+			color: var(--color-text-secondary);
+		}
+
+		/* History (spec §7.4, board 13 .timeline). */
+		.timeline-ui--history {
+			position: relative;
+			padding-left: var(--space-6);
+		}
+
+		.timeline-ui--history::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 7.75px; /* centred on the 16px rings (the board puts it at their left edge) */
+			width: 0.5px;
+			background: var(--color-border-secondary);
+		}
+
+		.timeline-ui__event {
+			position: relative;
+			padding-bottom: var(--space-5);
+		}
+
+		.timeline-ui__event:last-child {
+			padding-bottom: 0;
+		}
+
+		.timeline-ui__ring {
+			position: absolute;
+			top: 3px;
+			left: calc(-1 * var(--space-6));
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 16px;
+			height: 16px;
+			border: 2px solid var(--color-border-secondary);
+			border-radius: 50%;
+			background: var(--color-background-primary);
+		}
+
+		.timeline-ui__ring--active {
+			border-color: var(--color-accent);
+		}
+
+		.timeline-ui__ring--active::after {
+			content: '';
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--color-accent);
+		}
+
+		.timeline-ui__year {
+			margin-bottom: 2px;
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-medium);
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			color: var(--color-accent);
+		}
+
+		.timeline-ui__title {
+			margin: 0 0 3px;
+			font-size: var(--font-size-base);
+			font-weight: var(--font-weight-medium);
+		}
+	}
+</style>

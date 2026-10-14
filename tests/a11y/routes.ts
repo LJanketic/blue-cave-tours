@@ -12,6 +12,8 @@ export const STATIC_ROUTES = [
 	'/legal/privacy/',
 	'/legal/cancellation/',
 	'/not-a-page/',
+	// The component kit (dev server and deploy previews only): new components must be clean.
+	'/dev/kit/',
 ];
 
 async function linksUnder(page: Page, overview: string, prefix: string): Promise<string[]> {

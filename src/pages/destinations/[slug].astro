@@ -6,7 +6,7 @@ import { MEETING_POINT_MAP_URL, pageTitle } from '../../config/site';
 import { charterUrl } from '../../config/routes';
 import { tourFromPrice } from '../../lib/price';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import ImageGallery from '../../components/vue/ImageGallery.vue';
+import ImageGallery, { type GalleryTag } from '../../components/vue/ImageGallery.vue';
 import TourImage from '../../components/TourImage.astro';
 import {
 	bestTimeBarStyle,
@@ -18,7 +18,7 @@ import {
 } from '../../lib/destinations';
 import { getTourCardPhoto } from '../../lib/tours';
 import { breadcrumbJsonLd, destinationJsonLd, socialImageFor } from '../../lib/seo';
-import { GALLERY_HERO_SIZE, GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
+import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
 
 export function getStaticPaths() {
 	return getAllDestinations().map((destination) => ({
@@ -53,17 +53,17 @@ function nearbyTourCount(slug: string): number {
 const { destination } = Astro.props;
 const tours = getToursForDestination(destination.slug);
 const destinationPhoto = getDestinationPhoto(destination);
-const heroPhoto = await toGalleryView(destinationPhoto, 'sailboat', GALLERY_HERO_SIZE);
+// The gallery opens on the first real photo; places without photos get the placeholder.
+const galleryRefs = getDestinationGallery(destination);
 const galleryPhotos = await Promise.all(
-	getDestinationGallery(destination).map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)),
+	(galleryRefs.some((photo) => photo.src) ? galleryRefs : [destinationPhoto]).map((photo) =>
+		toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE),
+	),
 );
 
-type HeroTag = { icon: string; label: string; variant: 'feat' | 'group' | 'private' | 'tip' };
-const heroTags: HeroTag[] = [
-	...destination.tags.map((tag): HeroTag => ({ icon: tagIcon(tag), label: tag, variant: 'feat' })),
-	...(destination.tipTag
-		? [{ icon: destination.tipTag.icon, label: destination.tipTag.label, variant: 'tip' } as HeroTag]
-		: []),
+const heroTags: GalleryTag[] = [
+	...destination.tags.map((tag): GalleryTag => ({ icon: tagIcon(tag), label: tag, tone: 'brand' })),
+	...(destination.tipTag ? [{ icon: destination.tipTag.icon, label: destination.tipTag.label, tone: 'tip' as const }] : []),
 ];
 
 const mapUrl = MEETING_POINT_MAP_URL;
@@ -114,12 +114,7 @@ const jsonLd = siteUrl
 				<span aria-current="page">{destination.name}</span>
 			</nav>
 
-			<ImageGallery
-				client:visible
-				hero={heroPhoto}
-				gallery={galleryPhotos}
-				tags={heroTags}
-			/>
+			<ImageGallery client:visible photos={galleryPhotos} tags={heroTags} />
 
 			<div class="layout">
 				<div>
@@ -593,23 +588,6 @@ const jsonLd = siteUrl
 	.dest-detail-page .cta-secondary {
 		padding: 9px;
 		min-height: unset;
-	}
-
-	.dest-detail-page :global(.img-hero) {
-		height: 240px;
-	}
-
-	.dest-detail-page :global(.image-gallery__hero-icon) {
-		font-size: 56px;
-	}
-
-	.dest-detail-page :global(.img-thumb) {
-		height: 58px;
-	}
-
-	.dest-detail-page :global(.image-gallery__counter) {
-		top: auto;
-		bottom: 10px;
 	}
 
 	.dest-detail-page .tc-thumb :global(.placeholder-image) {

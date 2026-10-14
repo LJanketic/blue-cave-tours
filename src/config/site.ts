@@ -31,6 +31,15 @@ export const FOUNDING_YEAR = 2016;
 /** Contact office hours, e.g. 'Daily 08:00–20:00'. Null until the owner confirms them (C-7); hidden until then. */
 export const OFFICE_HOURS: string | null = null;
 
+/**
+ * "Licensed maritime operator · Croatia" in the footer and the checkout trust
+ * strip. False until the owner confirms the licence (C-7): hidden until then.
+ */
+export const LICENCE_CONFIRMED = false;
+
+/** The footer's one-line blurb (C-20). */
+export const SITE_BLURB = 'Speedboat tours and private charters from Split.';
+
 /** How fast messages get a reply, as shown on the contact page ("We reply {REPLY_TIME}"). */
 export const REPLY_TIME = 'the same day';
 

@@ -1,49 +1,163 @@
 ---
-import { SITE_EMAIL, SITE_NAME, SITE_PHONE, SITE_PHONE_DISPLAY } from '../config/site';
+import { IMPRINT } from '../config/legal';
+import { charterUrl } from '../config/routes';
+import { LICENCE_CONFIRMED, SITE_BLURB, SITE_NAME } from '../config/site';
+
+// Spec §5.2 and decision D-19 (no "Sunset cruises": there's no such product).
+const COLUMNS = [
+	{
+		heading: 'Tours',
+		links: [
+			{ href: '/tours/?type=group', label: 'Group tours' },
+			{ href: charterUrl(), label: 'Private charters' },
+			{ href: '/tours/', label: 'Day trips' },
+		],
+	},
+	{
+		heading: 'Info',
+		links: [
+			{ href: '/about/', label: 'About us' },
+			{ href: '/destinations/', label: 'Destinations' },
+			{ href: '/faq/', label: 'FAQs' },
+			{ href: '/contact/', label: 'Contact' },
+		],
+	},
+	{
+		heading: 'Legal',
+		links: [
+			{ href: '/legal/terms/', label: 'Terms & conditions' },
+			{ href: '/legal/privacy/', label: 'Privacy policy' },
+			{ href: '/legal/cancellation/', label: 'Cancellation policy' },
+		],
+	},
+];
 ---
 
-<footer class="footer-shell">
-<div class="footer">
-	<div class="footer-brand">
-		<div class="nav-logo">
-			<i class="ti ti-sailboat" aria-hidden="true"></i>
-			{SITE_NAME}
+<footer class="site-footer">
+	<div class="site-footer__grid">
+		<div class="site-footer__brand">
+			<a class="site-footer__logo" href="/">
+				<i class="ti ti-sailboat" aria-hidden="true"></i>
+				{SITE_NAME}
+			</a>
+			<p>{SITE_BLURB}</p>
 		</div>
-		<p>
-			Speedboat tours and private charters from Split. Licensed crew, small groups, and the best of the Adriatic
-			islands.
-		</p>
-		<p class="footer-contact">
-			<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>
-			{' · '}
-			<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>
-			<br />
-			Riva promenade, stand 14, Split
-		</p>
+		{
+			COLUMNS.map((column) => (
+				<div class="site-footer__col">
+					<h2>{column.heading}</h2>
+					<ul role="list">
+						{column.links.map((link) => (
+							<li>
+								<a href={link.href}>{link.label}</a>
+							</li>
+						))}
+					</ul>
+				</div>
+			))
+		}
 	</div>
-	<div class="footer-col">
-		<h2>Tours</h2>
-		<a href="/tours/">All tours</a>
-		<a href="/tours/create-perfect-day-private/">Private charter</a>
-		<a href="/tours/blue-cave-hvar-5-islands/">Blue Cave &amp; islands</a>
-		<a href="/tours/blue-lagoon-morning/">Blue Lagoon</a>
+	<div class="site-footer__bottom">
+		<span>&copy; {new Date().getFullYear()} {SITE_NAME}</span>
+		{IMPRINT && <span>{IMPRINT.legalName} · {IMPRINT.address} · OIB {IMPRINT.oib}</span>}
+		{LICENCE_CONFIRMED && <span>Licensed maritime operator · Croatia</span>}
 	</div>
-	<div class="footer-col">
-		<h2>Explore</h2>
-		<a href="/destinations/">Destinations</a>
-		<a href="/about/">About us</a>
-		<a href="/faq/">FAQs</a>
-		<a href="/contact/">Contact</a>
-	</div>
-	<div class="footer-col">
-		<h2>Legal</h2>
-		<a href="/legal/terms/">Terms &amp; conditions</a>
-		<a href="/legal/privacy/">Privacy policy</a>
-		<a href="/legal/cancellation/">Cancellation policy</a>
-	</div>
-</div>
-<div class="footer-bottom">
-	<span>&copy; {new Date().getFullYear()} {SITE_NAME}</span>
-	<span>Licensed maritime operator · Croatia</span>
-</div>
 </footer>
+
+<style>
+	@layer components {
+		/* Spec §5.2 (board hbc.css .footer). Pages set --footer-gap for the space above it. */
+		.site-footer {
+			width: 100%;
+			max-width: var(--content-max);
+			margin: var(--footer-gap, 0) auto 0;
+			padding: 0 var(--page-gutter) var(--space-6);
+		}
+
+		.site-footer__grid {
+			display: grid;
+			grid-template-columns: 2fr 1fr 1fr 1fr;
+			gap: var(--space-4);
+			padding-top: var(--space-5);
+			border-top: 0.5px solid var(--color-border-tertiary);
+		}
+
+		.site-footer__logo {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			margin-bottom: 6px;
+			font-size: var(--font-size-md);
+			font-weight: var(--font-weight-medium);
+			color: var(--color-text-primary);
+			text-decoration: none;
+		}
+
+		.site-footer__logo .ti {
+			font-size: var(--font-size-lg);
+			color: var(--color-brand);
+		}
+
+		.site-footer__brand p {
+			max-width: 240px;
+			margin: 0;
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-secondary);
+		}
+
+		/* h2 for a correct outline; styled as the board's small uppercase label. */
+		.site-footer__col h2 {
+			margin: 0 0 10px;
+			font-size: var(--font-size-micro);
+			font-weight: var(--font-weight-medium);
+			text-transform: uppercase;
+			letter-spacing: var(--letter-spacing-label);
+			color: var(--color-text-tertiary);
+		}
+
+		.site-footer__col ul {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.site-footer__col a {
+			display: inline-block;
+			margin-bottom: var(--space-2);
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-secondary);
+			text-decoration: none;
+		}
+
+		.site-footer__col a:hover {
+			color: var(--color-text-primary);
+		}
+
+		.site-footer__bottom {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: space-between;
+			gap: var(--space-2);
+			margin-top: var(--space-4);
+			padding-top: 14px;
+			border-top: 0.5px solid var(--color-border-tertiary);
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-tertiary);
+		}
+
+		@media (max-width: 768px) {
+			.site-footer__grid {
+				grid-template-columns: 1fr 1fr;
+			}
+		}
+
+		@media (max-width: 480px) {
+			.site-footer__grid {
+				grid-template-columns: 1fr;
+			}
+		}
+	}
+</style>

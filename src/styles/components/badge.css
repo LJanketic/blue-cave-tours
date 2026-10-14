@@ -1,0 +1,70 @@
+/*
+ * Badge (spec §3.2), shared by ui/Badge.astro and ui/Badge.vue.
+ * Shapes: `card` (the tour-card image badge, board .tc-badge) and `tag`
+ * (the round gallery and review tags, board .tag).
+ * Tones: brand · private · premium (gold) · tip · neutral (white).
+ */
+@layer components {
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 10px;
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-normal);
+		white-space: nowrap;
+	}
+
+	.badge--card {
+		border-radius: var(--radius-sm);
+		font-size: var(--font-size-xs);
+		box-shadow: var(--shadow-badge);
+	}
+
+	.badge--card .ti {
+		font-size: 1.2em;
+	}
+
+	.badge--tag {
+		border-radius: var(--radius-2xl);
+		font-size: var(--font-size-micro);
+	}
+
+	.badge--tag .ti {
+		font-size: 11px; /* board 03 .tag i */
+	}
+
+	.badge--brand {
+		background: var(--color-background-brand-soft);
+		color: var(--color-text-brand);
+	}
+
+	.badge--private {
+		background: var(--color-category-private-bg);
+		color: var(--color-category-private-text);
+	}
+
+	.badge--private .ti {
+		color: var(--color-category-private-icon);
+	}
+
+	.badge--premium {
+		background: var(--color-premium-gradient);
+		color: var(--color-premium-on-solid);
+		font-weight: var(--font-weight-semibold);
+	}
+
+	.badge--tip {
+		background: var(--color-category-tip-bg);
+		color: var(--color-category-tip-text);
+	}
+
+	.badge--tip .ti {
+		color: var(--color-category-warning-icon);
+	}
+
+	.badge--neutral {
+		background: var(--color-background-primary);
+		color: var(--color-text-primary);
+	}
+}

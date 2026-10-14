@@ -1,0 +1,47 @@
+/* PillLink (spec §3.2; board 01 .slider-all, board 04 .dest-cta). Used by ui/PillLink.astro and DestinationCard.vue. */
+@layer components {
+	.pill-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 36px;
+		padding: 0 14px 0 16px;
+		border: 0.5px solid var(--color-border-secondary);
+		border-radius: var(--radius-pill);
+		background: var(--color-background-primary);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-medium);
+		text-decoration: none;
+		white-space: nowrap;
+		transition:
+			background-color var(--duration-fast) ease,
+			border-color var(--duration-fast) ease;
+	}
+
+	.pill-link .ti {
+		font-size: 16px;
+		transition: transform var(--duration-fast) ease;
+	}
+
+	.pill-link:hover,
+	.pill-link.is-hovered {
+		background: var(--color-background-secondary);
+		color: var(--color-text-primary);
+	}
+
+	.pill-link:hover .ti,
+	.pill-link.is-hovered .ti {
+		transform: translateX(2px);
+	}
+
+	.pill-link--ghost {
+		border-color: transparent;
+		background: transparent;
+	}
+
+	.pill-link--ghost:hover {
+		border-color: var(--color-border-secondary);
+		background: var(--color-background-primary);
+	}
+}

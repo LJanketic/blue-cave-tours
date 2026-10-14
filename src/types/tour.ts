@@ -11,8 +11,11 @@ export type ItineraryStep = { time?: string; label: string; description?: string
 /** Filter tags (spec §9.1); they replace guessing from titles and durations. */
 export type TourTag = 'sunset' | 'swim' | 'snorkel' | 'cave' | 'half-day' | 'family';
 
-/** A fee paid on top of the tour price, e.g. a cave ticket bought on-site (C-23). */
-export type AdditionalFee = { text: string; amountLabel?: string; mandatory: boolean; url?: string };
+/**
+ * A fee paid on top of the tour price, e.g. a cave ticket bought on-site (C-23).
+ * `shortText` is the card and price-box line ("Blue Cave ticket, paid on site").
+ */
+export type AdditionalFee = { text: string; shortText: string; amountLabel?: string; mandatory: boolean; url?: string };
 
 export type AgeBands = { adult: string; child: string; infantMaxAge: number };
 

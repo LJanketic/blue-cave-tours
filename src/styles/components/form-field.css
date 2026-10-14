@@ -1,0 +1,63 @@
+/* FormField (spec §3.2, §11.8; board 05 .field), shared by ui/FormField.astro and .vue. */
+@layer components {
+	.form-field-ui {
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+	}
+
+	.form-field-ui__label {
+		font-size: var(--font-size-xs);
+		font-weight: var(--font-weight-medium);
+		text-transform: uppercase;
+		letter-spacing: var(--letter-spacing-label);
+		color: var(--color-text-tertiary);
+	}
+
+	.form-field-ui__required {
+		margin-left: 2px;
+		color: var(--color-text-danger);
+	}
+
+	.form-field-ui__control {
+		width: 100%;
+		min-height: 40px;
+		padding: var(--space-2) 10px;
+		border: 1px solid var(--color-border-input);
+		border-radius: var(--radius-md);
+		background: var(--color-background-primary);
+		color: var(--color-text-primary);
+		font: inherit;
+		font-size: var(--font-size-base);
+	}
+
+	textarea.form-field-ui__control {
+		min-height: 80px;
+		resize: vertical;
+	}
+
+	/* The focus ring comes from base.css; the border changes too (§4.5). */
+	.form-field-ui__control:focus {
+		border-color: var(--color-border-brand);
+	}
+
+	.form-field-ui__control[aria-invalid='true'] {
+		border-color: var(--color-text-danger);
+	}
+
+	.form-field-ui__hint {
+		margin: 0;
+		font-size: var(--font-size-xs);
+		line-height: var(--line-height-normal);
+		color: var(--color-text-tertiary);
+	}
+
+	.form-field-ui__error {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--color-text-danger);
+	}
+}

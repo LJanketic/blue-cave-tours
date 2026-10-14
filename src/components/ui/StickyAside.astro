@@ -1,0 +1,31 @@
+---
+type Props = { id?: string; class?: string; 'aria-labelledby'?: string };
+
+const { id, class: className, ...rest } = Astro.props;
+---
+
+<aside id={id} class:list={['sticky-aside', className]} {...rest}>
+	<slot />
+</aside>
+
+<style>
+	@layer components {
+		/* Spec §3.2 (board 03 .sticky-card + .sidebar-col). */
+		.sticky-aside {
+			position: sticky;
+			top: calc(var(--site-header-height) + var(--space-4));
+			align-self: start;
+			padding: 1.25rem;
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
+			background: var(--color-background-primary);
+		}
+
+		/* Phones: the aside follows the main column (§6.3.5); short viewports: never pinned (§11.14). */
+		@media (max-width: 768px), (max-height: 480px) {
+			.sticky-aside {
+				position: static;
+			}
+		}
+	}
+</style>

@@ -1,0 +1,134 @@
+/*
+ * Button (spec §3.2), shared by ui/Button.astro and ui/Button.vue.
+ * Variants: primary · secondary · on-image (orange, photos only) ·
+ * on-image-ghost (glass, photos only) · tile (grey, blue on hover).
+ * Sizes: sm · base (the board's default .btn-primary) · md · lg.
+ */
+@layer components {
+	.button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		padding: 10px 22px;
+		border: 0.5px solid transparent;
+		border-radius: var(--radius-md);
+		font: inherit;
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
+		text-align: center;
+		text-decoration: none;
+		cursor: pointer;
+		transition:
+			background-color var(--duration-fast) ease,
+			border-color var(--duration-fast) ease,
+			color var(--duration-fast) ease,
+			opacity var(--duration-fast) ease;
+	}
+
+	.button .ti {
+		font-size: 1.15em;
+	}
+
+	.button__end-icon {
+		transition: transform var(--duration-fast) ease;
+	}
+
+	.button:hover .button__end-icon {
+		transform: translateX(3px);
+	}
+
+	/* Sizes */
+	.button--sm {
+		padding: 6px 14px;
+	}
+
+	.button--md,
+	.button--lg {
+		padding: 0 20px;
+		font-size: var(--font-size-base);
+		font-weight: var(--font-weight-semibold);
+	}
+
+	.button--md {
+		min-height: 40px; /* board 01 CTA band */
+		border-radius: var(--radius-btn-sm);
+	}
+
+	.button--lg {
+		min-height: 46px; /* board 01 hero CTA */
+		border-radius: var(--radius-btn);
+	}
+
+	.button--block {
+		display: flex;
+		width: 100%;
+	}
+
+	/* Variants */
+	.button--primary {
+		background: var(--color-background-brand);
+		color: var(--color-text-on-image);
+	}
+
+	.button--primary:hover {
+		opacity: 0.88;
+	}
+
+	.button--secondary {
+		background: var(--color-background-primary);
+		border-color: var(--color-border-secondary);
+		color: var(--color-text-primary);
+	}
+
+	.button--secondary:hover {
+		background: var(--color-background-secondary);
+	}
+
+	.button--on-image {
+		background: var(--color-cta-on-image);
+		color: var(--color-text-on-image);
+		box-shadow: var(--shadow-cta);
+	}
+
+	.button--on-image:hover {
+		background: var(--color-cta-on-image-dark);
+	}
+
+	.button--on-image-ghost {
+		background: var(--color-glass-ghost);
+		border: 1px solid var(--color-border-on-image);
+		color: var(--color-text-on-image);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+	}
+
+	.button--on-image-ghost:hover {
+		background: var(--color-glass-light);
+		border-color: var(--color-text-on-image);
+	}
+
+	.button--tile {
+		background: var(--color-background-secondary);
+		border-color: var(--color-border-tertiary);
+		color: var(--color-text-primary);
+	}
+
+	.button--tile:hover,
+	.button--tile:focus-visible {
+		background: var(--color-background-highlight);
+		border-color: var(--color-border-highlight);
+		color: var(--color-text-on-image);
+	}
+
+	/* Gated, not disabled: it stays focusable and explains itself (§11.8). */
+	.button[aria-disabled='true'] {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.button[aria-disabled='true']:hover {
+		opacity: 0.5;
+	}
+}

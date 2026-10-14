@@ -1,0 +1,87 @@
+---
+type Props = {
+	tone?: 'info' | 'warn' | 'danger' | 'neutral';
+	/** Tabler icon; each tone has a default. Pass `false` for none. */
+	icon?: string | false;
+	/** Announce it: role="alert" for errors shown after an action. */
+	alert?: boolean;
+	class?: string;
+};
+
+const DEFAULT_ICONS = { info: 'info-circle', warn: 'alert-triangle', danger: 'alert-circle', neutral: 'lock' } as const;
+
+const { tone = 'info', icon, alert = false, class: className } = Astro.props;
+const iconName = icon === false ? null : (icon ?? DEFAULT_ICONS[tone]);
+---
+
+<div class:list={['notice', `notice--${tone}`, className]} role={alert ? 'alert' : undefined}>
+	{iconName && <i class={`ti ti-${iconName}`} aria-hidden="true" />}
+	<div class="notice__body"><slot /></div>
+</div>
+
+<style>
+	@layer components {
+		/* Spec §3.2. Replaces .warn-box, .highlight-box, .hold-warn and the error notes. */
+		.notice {
+			display: flex;
+			align-items: flex-start;
+			gap: var(--space-2);
+			padding: 10px 14px;
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+		}
+
+		.notice > .ti {
+			flex-shrink: 0;
+			margin-top: 1px;
+			font-size: 1.15em;
+		}
+
+		.notice__body > :global(:first-child) {
+			margin-top: 0;
+		}
+
+		.notice__body > :global(:last-child) {
+			margin-bottom: 0;
+		}
+
+		.notice--info {
+			border-left: 3px solid var(--color-border-highlight);
+			border-radius: 0 var(--radius-md) var(--radius-md) 0;
+			background: var(--color-background-highlight-soft);
+			color: var(--color-text-primary);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.notice--info > .ti {
+			color: var(--color-text-brand);
+		}
+
+		.notice--warn {
+			border-left: 3px solid var(--color-border-warning);
+			border-radius: 0 var(--radius-md) var(--radius-md) 0;
+			background: var(--color-background-warning-soft);
+			color: var(--color-category-tip-text);
+		}
+
+		.notice--warn > .ti {
+			color: var(--color-category-warning-icon);
+		}
+
+		.notice--danger {
+			border-radius: var(--radius-md);
+			background: var(--color-background-danger);
+			color: var(--color-text-danger);
+		}
+
+		.notice--neutral {
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+			color: var(--color-text-secondary);
+		}
+
+		.notice--neutral > .ti {
+			color: var(--color-text-tertiary);
+		}
+	}
+</style>

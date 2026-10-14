@@ -96,7 +96,7 @@ export const tours: TourDetail[] = [
 		adultPrice: 169,
 		childPrice: 139,
 		priceUnit: 'person',
-		additionalFees: [{ text: CAVE_NOTE, mandatory: true }],
+		additionalFees: [{ text: CAVE_NOTE, shortText: 'Blue Cave ticket, paid on site', mandatory: true }],
 		disclaimers: DISCLAIMERS,
 		gallery: galleryFromDestinations('blue-cave', 'pakleni', 'hvar', 'vis'),
 		image: PHOTO.blueCave,
@@ -357,7 +357,13 @@ export const tours: TourDetail[] = [
 		adultPrice: null,
 		childPrice: null,
 		priceUnit: 'boat',
-		additionalFees: [{ text: 'Blue Cave entry is billed separately on-site if you add it to your route.', mandatory: false }],
+		additionalFees: [
+			{
+				text: 'Blue Cave entry is billed separately on-site if you add it to your route.',
+				shortText: 'Blue Cave ticket, paid on site if added',
+				mandatory: false,
+			},
+		],
 		disclaimers: DISCLAIMERS,
 		gallery: galleryFromDestinations('hvar', 'blue-lagoon', 'pakleni'),
 		image: PHOTO.boatDeck,

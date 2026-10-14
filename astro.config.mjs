@@ -4,6 +4,7 @@ import sitemap from '@astrojs/sitemap';
 import vue from '@astrojs/vue';
 import { defineConfig } from 'astro/config';
 import { NOINDEX_PATH_PREFIXES } from './src/config/noindex.ts';
+import { devKitIntegration } from './src/dev/integration.ts';
 
 const site = process.env.PUBLIC_SITE_URL;
 
@@ -96,6 +97,7 @@ export default defineConfig({
 	integrations: [
 		requireSiteUrlOnBuild,
 		loadDotenvInDev,
+		devKitIntegration,
 		vue(),
 		...(site
 			? [

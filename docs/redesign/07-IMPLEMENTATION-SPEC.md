@@ -266,6 +266,20 @@ Use these names. If one is renamed in its PR, update this table.
 | `ChoiceCards` | `vue/booking/ChoiceCards.vue` | 7b | slots, routes, pay methods | **Native** `<input type=radio>` inside `<label>` cards within `fieldset`/`legend`. Selected: 2px brand border + blue-100 fill. |
 | `CharterRequest` | `vue/CharterRequest.vue` | 8 | charter page island | §8.2 |
 
+**As built (PR 2, 2026-10-14):**
+- **Class names** end in `-ui` or use a new block name (`.button`, `.badge`, `.pill-link`, `.section-head`, `.tour-card-ui`, `.timeline-ui`, `.step-bar-ui`, `.summary-card-ui`, `.form-field-ui`, `.breadcrumb-nav`, `.site-header`, `.site-footer`…). The legacy modules still style `.timeline`, `.tour-card`, `.step-bar`, `.cta-band` and others, and their unset properties would leak into a component with the same name.
+- **Twins share one stylesheet:** the `.astro` and `.vue` versions of Button, Badge, EmptyState, SummaryCard and FormField import the same `src/styles/components/*.css` (wrapped in `@layer components`), so they can't drift. PillLink's stylesheet is also used by `DestinationCard.vue`.
+- **Button** has a fourth size, `base` (the default): the board's plain `.btn-primary`, padding `10px 22px`, radius 8, 14px/500.
+- **Additions:**
+  - `ui/InfoTileGrid.astro`: the `<dl>` wrapper for `InfoTile`s.
+  - `ui/ChipGroup.vue`: its own file, next to `ui/Chip.vue`.
+  - `src/lib/cards.ts`: the card DTOs and the badge rule.
+  - `toCardPhoto()` in `tour-photos.ts`.
+  - `AdditionalFee.shortText`: the card and price-box fee line.
+- **ImageGallery** takes `photos[]` (the hero is the first real one) and `tags[]` with Badge tones. Its callers on the tour and destination pages already use it, which fixes the placeholder hero on tour pages. The thumbnail strip goes up to the 1600px originals (`GALLERY_PHOTO_SIZE`).
+- **History timeline:** the line is centred on the rings. The board draws it at the rings' left edge.
+- **Base layer additions:** `[hidden]` always hides (it beats any component `display`). The skip link and the `.site-shell` sticky footer moved here from the legacy `_base.css`.
+
 ### 3.3 Fonts
 
 - **Body and UI:** the system stack, `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif`. **[DEVIATE, technical]** `Roboto, Arial` are added before `sans-serif` so Android and Linux render the same as today; the board's stack falls back to the platform default. Nothing to load.
@@ -606,6 +620,21 @@ footer.footer   inside .wrap 960 · grid 2fr 1fr 1fr 1fr · gap 16 · 0.5px top 
 - **Favicon set** (§13).
 
 ---
+
+**As built (PR 2, 2026-10-14):**
+- **Header, footer, MiniNav and TrustStrip are live on every page.** Their legacy rules are deleted from `_base.css`, `_booking.css` and `_responsive.css`.
+- **Pages keep their current `solidNav` values for now.** Only home has the overlay header until Tours (PR 4) and Destinations (PR 5) get their photo heroes.
+- **The header keeps its script hooks** (`#site-header`, `#menu-toggle`, `#menu-close`, `#primary-nav`).
+  - The solid state is `.nav-solid`.
+  - `.on-photo` is set only while the overlay bar sits on the photo. The script removes it once the bar is solid or the menu is open, which also switches the white focus ring off.
+- **`--site-header-height` is 62px**, as measured in Chromium and WebKit.
+- **Footer:**
+  - The phone, email and address block is gone (as designed).
+  - "Licensed maritime operator · Croatia" waits for `LICENCE_CONFIRMED` in `site.ts` (C-7).
+  - The blurb is `SITE_BLURB`.
+  - The space above it comes from each page's `--footer-gap`, which defaults to 0 until that page is rebuilt.
+- **MiniNav** always has Exit, defaulting to `/tours/`.
+- **TrustStrip** says "Demo checkout: no money is taken" while `PAYMENTS_ARE_DEMO` is true. It lists the phone, then the email, and shows the licence line only with `LICENCE_CONFIRMED`.
 
 ## 6. Browse pages
 
@@ -1667,6 +1696,18 @@ injectRoute({ pattern: '/dev/kit', entrypoint: './src/dev/kit.astro', prerender:
 ```
 
 It's injected only when `command === 'dev'` or `process.env.CONTEXT === 'deploy-preview'`. The page is `noindex`. A test asserts that `dist/dev/` doesn't exist after `CONTEXT=production pnpm build`.
+
+**As built (PR 2):**
+- **The route:** `src/dev/integration.ts` registers it, and its unit test covers the dev / deploy-preview rule. A production build was checked: it has no `dist/dev/`.
+- **Noindex:** `/dev/` is in `NOINDEX_PATH_PREFIXES`.
+- **Tests:**
+  - `tests/e2e/kit.spec.ts` covers, in Chromium, WebKit and Firefox:
+    - the lightbox: keyboard, Escape, focus return, and the no-JS link
+    - the menu: focus trap, inert page, Escape
+    - the marquee: pause, and reduced motion
+    - chips, the mobile bar, and the overlay header
+    - axe in the open states
+  - The axe route list includes `/dev/kit/`.
 
 ### 14.4 Definition of done (every PR)
 

@@ -1,0 +1,144 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+
+type Props = {
+	/** `photo`: the homepage band (display heading on a photo). `plain`: grey band (About, FAQ). */
+	variant?: 'photo' | 'plain';
+	heading: string;
+	text?: string;
+	/** Photo variant only. Decorative: the band's words carry the meaning. */
+	image?: ImageMetadata;
+	/** CSS object-position for the photo. */
+	imagePosition?: string;
+	id?: string;
+};
+
+const { variant = 'plain', heading, text, image, imagePosition = 'center 73%', id = 'cta-heading' } = Astro.props;
+const photo = variant === 'photo';
+---
+
+<section class:list={['cta-band-ui', photo ? 'cta-band--photo' : 'cta-band--plain']} aria-labelledby={id}>
+	{
+		photo && image && (
+			<Picture
+				src={image}
+				alt=""
+				formats={['webp']}
+				fallbackFormat="webp"
+				widths={[640, 960, 1280]}
+				sizes="(max-width: 1008px) 100vw, 960px"
+				quality={70}
+				class="cta-band__img"
+				style={`object-position: ${imagePosition}`}
+				pictureAttributes={{ class: 'cta-band__picture' }}
+			/>
+		)
+	}
+	<h2 id={id} class:list={['cta-band__heading', photo && 'display']}>{heading}</h2>
+	{text && <p class="cta-band__text">{text}</p>}
+	<div class="cta-band__actions">
+		<slot />
+	</div>
+</section>
+
+<style>
+	@layer components {
+		.cta-band-ui {
+			text-align: center;
+		}
+
+		.cta-band__heading {
+			margin: 0;
+		}
+
+		.cta-band__text {
+			margin: 0 auto;
+			font-size: var(--font-size-base);
+			line-height: var(--line-height-relaxed);
+		}
+
+		.cta-band__actions {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 10px;
+		}
+
+		/* Photo (spec §6.1.11, board 01 .cta-band). */
+		.cta-band--photo {
+			position: relative;
+			isolation: isolate;
+			overflow: hidden;
+			padding: 2rem;
+			border-radius: var(--radius-2xl);
+			background: var(--color-background-hero);
+			color: var(--color-text-on-image);
+		}
+
+		.cta-band--photo::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			z-index: -1;
+			background: var(--color-overlay-band);
+		}
+
+		.cta-band__picture,
+		.cta-band__img {
+			position: absolute;
+			inset: 0;
+			z-index: -2;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.cta-band--photo .cta-band__heading {
+			margin-bottom: 10px;
+			font-size: var(--font-size-display-md);
+			line-height: var(--line-height-display-band);
+			letter-spacing: var(--letter-spacing-display-section);
+			text-shadow: var(--text-shadow-title);
+		}
+
+		.cta-band--photo .cta-band__text {
+			max-width: 420px;
+			margin-bottom: 18px;
+			color: var(--color-text-on-image-muted);
+		}
+
+		/* Plain (spec §3.2, board 13 .cta-band). */
+		.cta-band--plain {
+			padding: 1.5rem;
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+		}
+
+		.cta-band--plain .cta-band__heading {
+			margin-bottom: 6px;
+			font-size: var(--font-size-xl);
+			font-weight: var(--font-weight-medium);
+			line-height: var(--line-height-tight);
+		}
+
+		.cta-band--plain .cta-band__text {
+			margin-bottom: var(--space-4);
+			color: var(--color-text-secondary);
+		}
+
+		@media (max-width: 768px) {
+			.cta-band--photo {
+				padding: 2rem 20px;
+				border-radius: var(--radius-xl);
+			}
+
+			.cta-band--photo .cta-band__actions {
+				flex-direction: column;
+				align-items: stretch;
+				max-width: 320px;
+				margin-inline: auto;
+			}
+		}
+	}
+</style>

@@ -1,0 +1,137 @@
+---
+type Props = {
+	/** The id of the block the bar leads to ('book' on tours, 'tours' on destinations). */
+	target: string;
+	/** The link's text, e.g. "Book now". */
+	label: string;
+};
+
+const { target, label } = Astro.props;
+---
+
+<!--
+	Phones only (spec §6.3.6). One link, no nested controls. It hides while its
+	target is on screen, and leaves the tab order when hidden.
+-->
+<div class="mobile-action-bar" data-mobile-bar={target}>
+	<div class="mobile-action-bar__info"><slot /></div>
+	<a class="mobile-action-bar__link" href={`#${target}`}>{label}</a>
+</div>
+
+<style>
+	@layer components {
+		.mobile-action-bar {
+			display: none;
+		}
+
+		@media (max-width: 768px) {
+			.mobile-action-bar {
+				position: fixed;
+				inset: auto 0 0;
+				z-index: var(--z-mobile-bar);
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: var(--space-3);
+				padding: var(--space-3) var(--space-4);
+				border-top: 0.5px solid var(--color-border-tertiary);
+				background: var(--color-surface-bar-solid);
+				box-shadow: var(--shadow-bar);
+				transition:
+					transform var(--duration-base) ease,
+					opacity var(--duration-base) ease,
+					visibility 0s linear 0s;
+			}
+
+			.mobile-action-bar.is-hidden {
+				transform: translateY(110%);
+				opacity: 0;
+				visibility: hidden;
+				transition:
+					transform var(--duration-base) ease,
+					opacity var(--duration-base) ease,
+					visibility 0s linear var(--duration-base);
+			}
+
+			/* Room for the bar: the page can scroll past it, and focus never lands under it (§11.15). */
+			:global(body) {
+				padding-bottom: var(--mobile-bar-height);
+			}
+
+			:global(html) {
+				scroll-padding-bottom: calc(var(--mobile-bar-height) + var(--space-2));
+			}
+		}
+
+		/* Short viewports: no bar at all (§11.14). */
+		@media (max-width: 768px) and (max-height: 480px) {
+			.mobile-action-bar {
+				display: none;
+			}
+
+			:global(body) {
+				padding-bottom: 0;
+			}
+		}
+
+		.mobile-action-bar__info {
+			min-width: 0;
+			font-size: var(--font-size-xs);
+			color: var(--color-text-secondary);
+		}
+
+		/* The price: <strong>€169</strong> / adult */
+		.mobile-action-bar__info :global(strong) {
+			font-size: var(--font-size-base);
+			font-weight: var(--font-weight-medium);
+			color: var(--color-text-primary);
+		}
+
+		.mobile-action-bar__info :global(p) {
+			margin: 0;
+		}
+
+		.mobile-action-bar__link {
+			display: inline-flex;
+			flex-shrink: 0;
+			align-items: center;
+			min-height: var(--touch-min);
+			padding: 0 22px;
+			border-radius: var(--radius-md);
+			background: var(--color-background-brand);
+			color: var(--color-text-on-image);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-medium);
+			text-decoration: none;
+			white-space: nowrap;
+		}
+
+		.mobile-action-bar__link:hover {
+			opacity: 0.88;
+		}
+	}
+</style>
+
+<script>
+	for (const bar of document.querySelectorAll<HTMLElement>('[data-mobile-bar]')) {
+		const target = document.getElementById(bar.dataset.mobileBar ?? '');
+		const link = bar.querySelector<HTMLAnchorElement>('a');
+		if (!target || !link) continue;
+
+		// Hidden while at least 15% of the target is on screen (§6.3.6).
+		new IntersectionObserver(([entry]) => bar.classList.toggle('is-hidden', entry.isIntersecting), {
+			threshold: 0.15,
+		}).observe(target);
+
+		// Scroll smoothly unless motion is reduced; the hash still updates.
+		link.addEventListener('click', (event) => {
+			event.preventDefault();
+			const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+			history.replaceState(null, '', `#${target.id}`);
+			// Move focus too, so keyboard and screen reader users land there.
+			if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+			target.focus({ preventScroll: true });
+		});
+	}
+</script>

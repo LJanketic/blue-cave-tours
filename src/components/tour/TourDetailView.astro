@@ -5,13 +5,12 @@ import { charterUrl } from '../../config/routes';
 import { tourFromPrice } from '../../lib/price';
 import { caveEntryNote, showsBestseller } from '../../lib/tour-display';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
-import { GALLERY_HERO_SIZE, GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
+import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
 import { getDestinationsForTour, getPrimaryDestinationForTour } from '../../lib/destinations';
-import ImageGallery from '../vue/ImageGallery.vue';
+import ImageGallery, { type GalleryTag } from '../vue/ImageGallery.vue';
 
 type Props = { tour: TourDetail };
 
-type HeroTag = { icon: string; label: string; variant?: 'feat' | 'group' | 'private' | 'tip' };
 
 const { tour } = Astro.props;
 const instantBook = supportsInstantBook(tour);
@@ -21,19 +20,16 @@ const isGroup = isGroupTour(tour);
 const primaryBookHref = instantBook ? groupBookHref(tour) : isGroupTour(tour) ? contactHrefForTour(tour) : charterUrl(tour.slug);
 const showPrivateCta = instantBook && types.includes('private');
 
-const heroTags: HeroTag[] = [];
-if (isGroup) {
-	heroTags.push({ icon: 'users', label: 'Group tour', variant: 'group' });
-}
+// Order as on board 03: private first, then group.
+const heroTags: GalleryTag[] = [];
 if (types.includes('private')) {
-	heroTags.push({
-		icon: 'crown',
-		label: instantBook ? 'Private available' : 'Private charter',
-		variant: 'private',
-	});
+	heroTags.push({ icon: 'crown', label: instantBook ? 'Private available' : 'Private charter', tone: 'private' });
+}
+if (isGroup) {
+	heroTags.push({ icon: 'users', label: 'Group tour', tone: 'brand' });
 }
 if (showsBestseller(tour)) {
-	heroTags.push({ icon: 'star', label: 'Best seller', variant: 'tip' });
+	heroTags.push({ icon: 'star', label: 'Best seller', tone: 'tip' });
 }
 
 const durationDisplay = tour.duration.replace(/Approx\.\s*/, '≈');
@@ -41,8 +37,10 @@ const groupLabel = isGroup ? 'Small group' : 'Private charter';
 const groupIcon = isGroup ? 'users' : 'crown';
 const priceUnit = tourPriceUnit(tour);
 
-const heroPhoto = await toGalleryView(tour.image, 'sailboat', GALLERY_HERO_SIZE);
-const thumbPhotos = await Promise.all(tour.gallery.map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)));
+// The gallery's hero is its first real photo: tour.image is only a placeholder (§3.4).
+const galleryPhotos = await Promise.all(
+	[tour.image, ...tour.gallery].map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)),
+);
 
 const highlightIcons = ['sunset-2', 'swimming', 'bottle', 'binoculars', 'ship', 'accessible', 'sailboat', 'droplet'];
 
@@ -76,7 +74,7 @@ const primaryDestination = getPrimaryDestinationForTour(tour);
 		<span aria-current="page">{tour.title}</span>
 	</nav>
 
-	<ImageGallery client:visible hero={heroPhoto} gallery={thumbPhotos} tags={heroTags} />
+	<ImageGallery client:visible photos={galleryPhotos} tags={heroTags} />
 
 	<div class="layout">
 		<div>

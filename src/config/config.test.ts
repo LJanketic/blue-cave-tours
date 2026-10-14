@@ -37,7 +37,7 @@ describe('tour display rules', () => {
 	});
 
 	it('states the cave fee, or that the route skips the cave', () => {
-		expect(caveEntryNote({ additionalFees: [{ text: 'Ticket on-site', mandatory: true }] })).toBe('Ticket on-site');
+		expect(caveEntryNote({ additionalFees: [{ text: 'Ticket on-site', shortText: 'Ticket, paid on site', mandatory: true }] })).toBe('Ticket on-site');
 		expect(caveEntryNote({ additionalFees: [] })).toBe('This route does not visit the Blue Cave.');
 	});
 });

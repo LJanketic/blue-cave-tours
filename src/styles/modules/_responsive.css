@@ -23,16 +23,6 @@
 		padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
 	}
 
-	.nav-logo {
-		min-width: 0;
-		font-size: 14px;
-	}
-
-	.nav-cta {
-		padding: 6px 10px;
-		font-size: 12px;
-	}
-
 	.step-bar {
 		overflow-x: auto;
 		-webkit-overflow-scrolling: touch;
@@ -125,10 +115,6 @@
 
 	.types-grid {
 		grid-template-columns: 1fr;
-	}
-
-	.footer {
-		grid-template-columns: 1fr 1fr;
 	}
 
 	/* minmax(0, …), not a bare 1fr: 1fr has an auto minimum, so any max-content
@@ -287,10 +273,6 @@
 		padding-inline: var(--page-gutter);
 	}
 
-	.nav-cta {
-		padding: 6px 8px;
-	}
-
 	.step-lbl {
 		display: none;
 	}
@@ -329,17 +311,7 @@
 		display: none;
 	}
 
-	.footer-bottom {
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 4px;
-	}
-
 	.steps {
-		grid-template-columns: 1fr;
-	}
-
-	.footer {
 		grid-template-columns: 1fr;
 	}
 

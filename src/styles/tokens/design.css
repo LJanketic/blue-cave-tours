@@ -183,6 +183,19 @@
 	--color-glass-dark: rgba(8, 28, 48, 0.42);
 	--color-glass-dark-hover: rgba(8, 28, 48, 0.62);
 	--color-glass-light: rgba(255, 255, 255, 0.18);
+	/* White surfaces over content and photos (header, mobile bar, pills, chips) */
+	--color-surface-bar: rgba(255, 255, 255, 0.92); /* solid header */
+	--color-surface-bar-solid: rgba(255, 255, 255, 0.97); /* overlay header once scrolled; mobile bar */
+	--color-surface-pill: rgba(255, 255, 255, 0.95); /* photo count pill */
+	--color-surface-chip-active: rgba(255, 255, 255, 0.96); /* pressed glass chip */
+	--color-text-on-image-muted: rgba(255, 255, 255, 0.88); /* nav links and leads on photos */
+	--color-text-on-image-eyebrow: rgba(255, 255, 255, 0.85);
+	--color-border-on-image: rgba(255, 255, 255, 0.75); /* outline button on photos */
+	--color-border-glass: rgba(255, 255, 255, 0.26); /* glass chip outline */
+	--color-glass-ghost: rgba(255, 255, 255, 0.08); /* ghost button on photos */
+	--color-glass-control: rgba(255, 255, 255, 0.12); /* lightbox buttons */
+	--color-glass-control-hover: rgba(255, 255, 255, 0.24);
+	--color-overlay-thumb: rgba(10, 42, 64, 0.55); /* "+N" photos thumbnail */
 	--color-overlay-hero:
 		linear-gradient(90deg, rgba(6, 24, 40, 0.62) 0%, rgba(6, 24, 40, 0.28) 45%, rgba(6, 24, 40, 0) 75%),
 		linear-gradient(0deg, rgba(6, 24, 40, 0.55) 0%, rgba(6, 24, 40, 0) 45%);
@@ -277,7 +290,7 @@
 	--flow-width: 628px; /* booking and charter column */
 	--legal-width: 680px; /* the whole legal wrap, TOC included */
 	--aside-width: 322px;
-	--site-header-height: 3.5rem; /* measured and set in PR 2 */
+	--site-header-height: 62px; /* the solid header bar as measured (PR 2): 61.5px with its hairline */
 	--mobile-bar-height: 72px;
 	--touch-min: 2.75rem; /* only where §11.12 asks for it */
 
