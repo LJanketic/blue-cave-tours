@@ -9,6 +9,7 @@
 .ti-arrows-sort:before{content:"\eb5a"}
 .ti-baby-carriage:before{content:"\f05d"}
 .ti-beach:before{content:"\ef3d"}
+.ti-brand-paypal:before{content:"\ec22"}
 .ti-brand-whatsapp:before{content:"\ec74"}
 .ti-building:before{content:"\ea4f"}
 .ti-building-bank:before{content:"\ebe2"}
@@ -29,6 +30,7 @@
 .ti-cloud-storm:before{content:"\ea74"}
 .ti-compass-off:before{content:"\f0d5"}
 .ti-cookie:before{content:"\fdb1"}
+.ti-copy:before{content:"\ea7a"}
 .ti-credit-card:before{content:"\ea84"}
 .ti-crown:before{content:"\ed12"}
 .ti-database:before{content:"\ea88"}
@@ -37,6 +39,7 @@
 .ti-glass-full:before{content:"\eab7"}
 .ti-headset:before{content:"\eb90"}
 .ti-help-circle:before{content:"\f91d"}
+.ti-hourglass:before{content:"\ef93"}
 .ti-info-circle:before{content:"\eac5"}
 .ti-leaf:before{content:"\ed4f"}
 .ti-list:before{content:"\eb6b"}
@@ -49,6 +52,7 @@
 .ti-mask:before{content:"\eeb0"}
 .ti-menu-2:before{content:"\ec42"}
 .ti-message:before{content:"\eaef"}
+.ti-minus:before{content:"\eaf2"}
 .ti-mood-sad:before{content:"\eaf6"}
 .ti-moon-stars:before{content:"\ece7"}
 .ti-mountain:before{content:"\ef97"}
@@ -57,6 +61,8 @@
 .ti-plane:before{content:"\eb6f"}
 .ti-player-pause:before{content:"\ed45"}
 .ti-player-play:before{content:"\ed46"}
+.ti-plus:before{content:"\eb0b"}
+.ti-receipt:before{content:"\edfd"}
 .ti-refresh:before{content:"\eb13"}
 .ti-sailboat:before{content:"\ec83"}
 .ti-scale:before{content:"\ebc2"}

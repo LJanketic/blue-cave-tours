@@ -1,244 +1,131 @@
 <script setup lang="ts">
+/*
+ * Group booking step 2 (spec §8.1.2): date, departure, guests and contact
+ * details, with a live summary. "Review booking" keeps everything in the
+ * server's sealed booking cookie (/api/bookings/draft) and moves on; nothing
+ * goes into a URL or into browser storage (S-2, S-12). Coming back to edit
+ * refills the form from that cookie (WCAG 3.3.7).
+ *
+ * Without JavaScript the page shows a plain form instead (group.astro).
+ */
 import { computed, onMounted, ref } from 'vue';
-import {
-	MAX_GUESTS as DEFAULT_MAX_GUESTS,
-	parseIsoDate,
-	startOfDay,
-	toIsoDate,
-} from '../../lib/booking';
-import { computeBookingTotal, formatFromPrice } from '../../lib/price';
+import { MAX_GUESTS, guestSummaryFromCounts, parseIsoDate } from '../../lib/booking';
+import { computeBookingTotal } from '../../lib/price';
 import type { AgeBands, Departure } from '../../types/tour';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
+import BookingCalendar from './booking/BookingCalendar.vue';
+import GuestSteppers from './booking/GuestSteppers.vue';
+import ChoiceCards from './booking/ChoiceCards.vue';
+import FormField from '../ui/FormField.vue';
+import SummaryCard from '../booking/SummaryCard.vue';
+import Button from '../ui/Button.vue';
 
-type Props = {
+const props = defineProps<{
 	tourSlug: string;
 	tourTitle: string;
-	duration: string;
-	/** Fixed daily departures; empty when the time isn't fixed yet (no slot to pick). */
+	/** Fixed daily departures; empty when the time isn't fixed yet. */
 	departures: Departure[];
 	adultPrice: number | null;
 	childPrice: number | null;
-	/** Seasonal price copy shown under the total. */
+	/** Seasonal price copy, shown under the total (season pricing must be disclosed). */
 	priceNotes: string;
+	/** "+ Blue Cave ticket, paid on site", or none. */
+	mandatoryFeeLabel?: string;
 	ageBands: AgeBands;
-	maxGuests?: number;
-	/** YYYY-MM-DD the page was rendered on, so hydration starts from the same calendar as the HTML. */
+	/** YYYY-MM-DD the page was built on (Split time), so hydration matches the HTML. */
 	renderedOn: string;
-};
+	seasonStart: string;
+	seasonEnd: string;
+	seasonLabel: string;
+}>();
 
-const props = withDefaults(defineProps<Props>(), {
-	maxGuests: DEFAULT_MAX_GUESTS,
-});
+const NOTES_MAX = 500;
 
-const MAX_GUESTS = props.maxGuests;
-
-/**
- * The tour's fixed departure times. Tours whose time isn't fixed (approximate
- * or flexible copy) have none, and the flow shows an informational note
- * instead of presenting a made-up time as fixed.
- */
-const SLOTS = computed(() =>
-	props.departures.map((departure) => ({ time: departure.time, label: departure.label ?? 'Departure', icon: 'ti-sun', color: '#EF9F27' })),
-);
-
-// This page is prerendered, so the HTML's calendar is from the build date. The
-// first client render must use that same date: Vue doesn't repair class
-// mismatches during hydration, so starting from the visitor's date would leave
-// the build-time "today" and past-day styling in place. onMounted then moves
-// to the visitor's real date as a normal reactive update.
-const today = ref(parseIsoDate(props.renderedOn) ?? startOfDay(new Date()));
-const viewYear = ref(today.value.getFullYear());
-const viewMonth = ref(today.value.getMonth());
-// The full YYYY-MM-DD, not just a day number: browsing to another month must
-// not silently move the selection to the same day in that month.
-const selectedDate = ref<string | null>(null);
-const selectedSlot = ref(props.departures[0]?.time ?? '');
+const date = ref<string | null>(null);
+const slot = ref(props.departures[0]?.time ?? '');
 const adults = ref(2);
 const children = ref(0);
+const infants = ref(0);
 const firstName = ref('');
 const lastName = ref('');
 const email = ref('');
 const phone = ref('');
 const notes = ref('');
+const calendar = ref<InstanceType<typeof BookingCalendar> | null>(null);
 
-const monthLabel = computed(() =>
-	new Date(viewYear.value, viewMonth.value, 1).toLocaleDateString('en-GB', {
-		month: 'long',
-		year: 'numeric',
-	}),
+const dateLabel = computed(() => {
+	const d = date.value ? parseIsoDate(date.value) : null;
+	return d ? d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'Not chosen yet';
+});
+
+const total = computed(() => computeBookingTotal({ adultPrice: props.adultPrice, childPrice: props.childPrice }, adults.value, children.value));
+
+const summaryRows = computed(() => {
+	const rows = [
+		{ label: 'Tour', value: props.tourTitle },
+		{ label: 'Date', value: dateLabel.value },
+		{ label: 'Departure', value: slot.value || 'Confirmed at booking' },
+		{ label: 'Guests', value: guestSummaryFromCounts(adults.value, children.value, infants.value) },
+	];
+	if (props.adultPrice !== null) rows.push({ label: 'Adults', value: `${adults.value} × €${props.adultPrice}` });
+	if (children.value > 0 && props.childPrice !== null) rows.push({ label: 'Children', value: `${children.value} × €${props.childPrice}` });
+	if (infants.value > 0) rows.push({ label: 'Infants', value: `${infants.value} × free` });
+	return rows;
+});
+
+const slotOptions = computed(() =>
+	props.departures.map((d) => ({ value: d.time, label: d.time, sub: d.checkIn ? `Check-in ${d.checkIn}` : d.label, icon: 'clock' })),
 );
 
-const calendarCells = computed(() => {
-	const first = new Date(viewYear.value, viewMonth.value, 1);
-	const startPad = (first.getDay() + 6) % 7;
-	const daysInMonth = new Date(viewYear.value, viewMonth.value + 1, 0).getDate();
-	const cells: Array<{
-		key: string;
-		day: number | null;
-		iso: string | null;
-		label: string;
-		past: boolean;
-		today: boolean;
-	}> = [];
-
-	for (let i = 0; i < startPad; i++) {
-		cells.push({ key: `empty-${i}`, day: null, iso: null, label: '', past: false, today: false });
-	}
-
-	const todayTime = today.value.getTime();
-	for (let d = 1; d <= daysInMonth; d++) {
-		const date = new Date(viewYear.value, viewMonth.value, d);
-		cells.push({
-			key: `day-${d}`,
-			day: d,
-			iso: toIsoDate(date),
-			// Screen readers otherwise hear a bare "15" with no month.
-			label: date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-			past: date.getTime() < todayTime,
-			today: date.getTime() === todayTime,
-		});
-	}
-
-	return cells;
+/** What still blocks "Review booking", said next to the button. */
+const missing = computed(() => {
+	const out: string[] = [];
+	if (!date.value) out.push('a date');
+	if (!firstName.value.trim()) out.push('your first name');
+	if (!lastName.value.trim()) out.push('your last name');
+	if (!email.value.trim()) out.push('your email');
+	else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.value.trim())) out.push('a valid email');
+	return out;
 });
+const canSubmit = computed(() => missing.value.length === 0);
 
-const selectedDateLabel = computed(() => {
-	const date = selectedDate.value ? parseIsoDate(selectedDate.value) : null;
-	if (!date) return '— select a date';
-	return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-});
-
-const guestSummary = computed(() => {
-	const parts = [`${adults.value} adult${adults.value !== 1 ? 's' : ''}`];
-	if (children.value > 0) {
-		parts.push(`${children.value} child${children.value !== 1 ? 'ren' : ''}`);
-	}
-	return parts.join(', ');
-});
-
-const adultUnitPrice = computed(() => props.adultPrice);
-const childUnitPrice = computed(() => props.childPrice);
-const fromPrice = computed(() => formatFromPrice(props.adultPrice, 'person'));
-const childFromPrice = computed(() => (childUnitPrice.value !== null ? `€${childUnitPrice.value}` : null));
-
-const adultsTotalDisplay = computed(() => {
-	if (adultUnitPrice.value === null) return `from ${fromPrice.value}`;
-	return `€${adults.value * adultUnitPrice.value}`;
-});
-
-const childrenTotalDisplay = computed(() => {
-	if (childUnitPrice.value === null) return 'see price notes';
-	return `€${children.value * childUnitPrice.value}`;
-});
-
-const adultPriceLabel = computed(() => `${props.ageBands.adult} · ${fromPrice.value}`);
-const childPriceLabel = computed(() =>
-	childFromPrice.value ? `${props.ageBands.child} · ${childFromPrice.value}` : props.ageBands.child,
-);
-const adultsLineLabel = computed(() => `Adults (${adults.value} × ${fromPrice.value})`);
-const childrenLineLabel = computed(() =>
-	childFromPrice.value
-		? `Children (${children.value} × ${childFromPrice.value})`
-		: `Children (${children.value})`,
-);
-
-const bookingTotal = computed(() => computeBookingTotal({ adultPrice: props.adultPrice, childPrice: props.childPrice }, adults.value, children.value));
-const bookingTotalDisplay = computed(() =>
-	bookingTotal.value !== null ? `€${bookingTotal.value}` : `from ${fromPrice.value}`,
-);
-
-const totalGuests = computed(() => adults.value + children.value);
-const atCapacity = computed(() => totalGuests.value >= MAX_GUESTS);
-
-/** What still blocks "Review booking", shown next to the disabled button. */
-const missingDetails = computed(() => {
-	const missing: string[] = [];
-	if (selectedDate.value === null) missing.push('a date');
-	if (!firstName.value.trim()) missing.push('your first name');
-	if (!lastName.value.trim()) missing.push('your last name');
-	if (!email.value.trim()) missing.push('your email');
-	else if (!email.value.includes('@')) missing.push('a valid email');
-	return missing;
-});
-
-const canSubmit = computed(() => missingDetails.value.length === 0);
-
-function prevMonth() {
-	if (viewMonth.value === 0) {
-		viewMonth.value = 11;
-		viewYear.value -= 1;
-	} else {
-		viewMonth.value -= 1;
-	}
-}
-
-function nextMonth() {
-	if (viewMonth.value === 11) {
-		viewMonth.value = 0;
-		viewYear.value += 1;
-	} else {
-		viewMonth.value += 1;
-	}
-}
-
-function selectDay(iso: string, past: boolean) {
-	if (past) return;
-	selectedDate.value = iso;
-	selectedSlot.value = props.departures[0]?.time ?? '';
-}
-
-function bump(field: 'adults' | 'children', delta: number) {
-	const next = { adults: adults.value, children: children.value };
-	next[field] = Math.max(field === 'adults' ? 1 : 0, next[field] + delta);
-	if (next.adults + next.children > MAX_GUESTS) return;
-	adults.value = next.adults;
-	children.value = next.children;
-}
-
-function bookingPayload(): Record<string, string> {
-	if (selectedDate.value === null) return {};
-	return {
-		tourId: props.tourSlug,
-		date: selectedDate.value,
-		slot: selectedSlot.value,
-		adults: String(adults.value),
-		children: String(children.value),
-		firstName: firstName.value,
-		lastName: lastName.value,
-		email: email.value,
-		phone: phone.value,
-		notes: notes.value,
-	};
-}
-
-/** Why the server sent the visitor back (only a code ever travels in the URL). */
 const ERROR_MESSAGES: Record<string, string> = {
 	'session-expired': 'Your booking session expired. Please check your details and continue again.',
 	busy: 'Too many attempts from your connection. Please wait a few minutes and try again.',
 };
+const fieldErrors = ref<Record<string, string>>({});
 const submitError = ref('');
 const sending = ref(false);
 
-/**
- * Keeps the details in the server's sealed booking cookie, then moves on to
- * the review page. Nothing personal goes into a URL (S-2), and nothing into
- * session or local storage (S-12).
- */
-async function goToReview() {
-	if (!canSubmit.value || selectedDate.value === null || sending.value) return;
+async function review() {
+	if (!canSubmit.value || !date.value || sending.value) return;
 	sending.value = true;
 	submitError.value = '';
+	fieldErrors.value = {};
 	try {
 		const res = await fetch('/api/bookings/draft', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-			body: JSON.stringify(bookingPayload()),
+			body: JSON.stringify({
+				tourId: props.tourSlug,
+				date: date.value,
+				slot: slot.value,
+				adults: adults.value,
+				children: children.value,
+				infants: infants.value,
+				firstName: firstName.value,
+				lastName: lastName.value,
+				email: email.value,
+				phone: phone.value,
+				notes: notes.value,
+			}),
 		});
-		const json = (await res.json().catch(() => ({}))) as { redirect?: string; error?: string };
+		const json = (await res.json().catch(() => ({}))) as { redirect?: string; error?: string; errors?: Record<string, string> };
 		if (res.ok && json.redirect) {
 			window.location.href = json.redirect;
 			return;
 		}
+		fieldErrors.value = json.errors ?? {};
 		submitError.value = json.error ?? 'We could not save your details. Please try again.';
 	} catch {
 		submitError.value = 'You seem to be offline. Please check your connection and try again.';
@@ -247,717 +134,234 @@ async function goToReview() {
 	}
 }
 
-/** Coming back from the review page to edit: refill from the booking cookie (WCAG 3.3.7). */
-async function restoreFromDraft() {
+/** Coming back from the review page: refill from the booking cookie. */
+async function restore() {
 	const code = new URLSearchParams(window.location.search).get('error');
 	if (code && ERROR_MESSAGES[code]) submitError.value = ERROR_MESSAGES[code];
 	try {
 		const res = await fetch('/api/bookings/draft', { headers: { Accept: 'application/json' } });
 		if (res.status !== 200) return;
-		const draft = (await res.json()) as Partial<Record<string, string | number>> & { tourSlug?: string };
-		if (draft.tourSlug !== props.tourSlug) return;
-		// A date that has passed since is dropped, so the guest picks again.
-		const restored = typeof draft.date === 'string' ? parseIsoDate(draft.date) : null;
-		if (restored && restored >= today.value) {
-			viewYear.value = restored.getFullYear();
-			viewMonth.value = restored.getMonth();
-			selectedDate.value = draft.date as string;
+		const d = (await res.json()) as Record<string, string | number> & { tourSlug?: string };
+		if (d.tourSlug !== props.tourSlug) return;
+		const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zagreb' }).format(new Date());
+		if (typeof d.date === 'string' && d.date >= today) {
+			date.value = d.date;
+			calendar.value?.showSelected();
 		}
-		if (typeof draft.slot === 'string' && (draft.slot === '' || props.departures.some((d) => d.time === draft.slot))) selectedSlot.value = draft.slot;
-		const restoredAdults = Number(draft.adults) || adults.value;
-		const restoredChildren = Number(draft.children) || 0;
-		if (restoredAdults >= 1 && restoredAdults + restoredChildren <= MAX_GUESTS) {
-			adults.value = restoredAdults;
-			children.value = restoredChildren;
+		if (typeof d.slot === 'string' && (props.departures.length === 0 || props.departures.some((x) => x.time === d.slot))) slot.value = d.slot;
+		const a = Number(d.adults);
+		const c = Number(d.children) || 0;
+		const i = Number(d.infants) || 0;
+		if (a >= 1 && a + c + i <= MAX_GUESTS) {
+			adults.value = a;
+			children.value = c;
+			infants.value = i;
 		}
-		for (const [field, target] of [
-			['firstName', firstName],
-			['lastName', lastName],
-			['email', email],
-			['phone', phone],
-			['notes', notes],
-		] as const) {
-			if (typeof draft[field] === 'string') target.value = draft[field] as string;
+		for (const [key, target] of [['firstName', firstName], ['lastName', lastName], ['email', email], ['phone', phone], ['notes', notes]] as const) {
+			if (typeof d[key] === 'string') target.value = d[key] as string;
 		}
 	} catch {
-		// Offline or no draft: start empty.
+		// No draft, or offline: start empty.
 	}
 }
 
-function syncToday() {
-	today.value = startOfDay(new Date());
-	viewYear.value = today.value.getFullYear();
-	viewMonth.value = today.value.getMonth();
-}
-
 onMounted(() => {
-	syncToday();
-	void restoreFromDraft();
+	void restore();
 });
 </script>
 
 <template>
-	<div class="group-booking">
-		<div class="card">
-			<h2 class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Choose a date</h2>
-			<p class="card-sub">Tours run daily. Select your preferred day.</p>
-			<div class="cal-header">
-				<button type="button" class="cal-nav" aria-label="Previous month" @click="prevMonth">‹</button>
-				<span id="cal-month" class="cal-month" aria-live="polite">{{ monthLabel }}</span>
-				<button type="button" class="cal-nav" aria-label="Next month" @click="nextMonth">›</button>
-			</div>
-			<div class="cal-grid" role="group" aria-labelledby="cal-month">
-				<span
-					v-for="dow in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']"
-					:key="dow"
-					class="cal-dow"
-					aria-hidden="true"
-					>{{ dow }}</span
-				>
-				<button
-					v-for="cell in calendarCells"
-					:key="cell.key"
-					type="button"
-					class="cal-day"
-					:class="{
-						empty: cell.day === null,
-						past: cell.past,
-						today: cell.today,
-						sel: cell.iso !== null && selectedDate === cell.iso,
-					}"
-					:disabled="cell.day === null || cell.past"
-					:aria-hidden="cell.day === null ? 'true' : undefined"
-					:aria-label="cell.label ? `${cell.label}${cell.today ? ', today' : ''}` : undefined"
-					:aria-pressed="cell.iso !== null && !cell.past ? selectedDate === cell.iso : undefined"
-					:aria-current="cell.today ? 'date' : undefined"
-					@click="cell.iso !== null && selectDay(cell.iso, cell.past)"
-				>
-					<span v-if="cell.day !== null">{{ cell.day }}</span>
-					<span v-if="cell.day !== null && !cell.past" class="avail-dot" aria-hidden="true"></span>
-				</button>
-			</div>
-			<div v-if="selectedDate !== null && SLOTS.length" class="slot-section">
-				<p class="slot-heading">Departure time</p>
-				<div class="slots">
-					<button
-						v-for="slot in SLOTS"
-						:key="slot.time"
-						type="button"
-						class="slot"
-						:class="{ sel: selectedSlot === slot.time }"
-						@click="selectedSlot = slot.time"
-					>
-						<div class="slot-icon" :style="{ color: slot.color }">
-							<i :class="['ti', slot.icon]" aria-hidden="true"></i>
-						</div>
-						<div>
-							<p class="slot-time">{{ slot.time }}</p>
-							<p class="slot-label">{{ slot.label }}</p>
-						</div>
-						<div class="slot-radio" aria-hidden="true"></div>
-					</button>
-				</div>
-			</div>
-			<div v-else-if="selectedDate !== null" class="slot-section">
-				<p class="slot-heading">Departure time</p>
-				<p class="card-sub">Exact departure time confirmed at booking.</p>
-			</div>
-		</div>
+	<form class="flow" method="post" action="/api/bookings/draft" novalidate @submit.prevent="review">
+		<section class="flow__card" aria-labelledby="date-heading">
+			<h2 id="date-heading" class="flow__title"><i class="ti ti-calendar" aria-hidden="true"></i> Choose a date</h2>
+			<p class="flow__sub">Tours run daily in the season. Pick your day.</p>
+			<BookingCalendar ref="calendar" v-model="date" :rendered-on="renderedOn" :season-start="seasonStart" :season-end="seasonEnd" :season-label="seasonLabel" />
+			<p v-if="fieldErrors.date" class="flow__error" role="alert">{{ fieldErrors.date }}</p>
 
-		<div class="card">
-			<h2 class="card-title"><i class="ti ti-users" aria-hidden="true"></i> How many guests?</h2>
-			<p class="card-sub">Max {{ MAX_GUESTS }} guests per departure.</p>
-			<div class="guests-grid">
-				<div class="guest-row">
-					<div>
-						<p class="guest-label">Adults</p>
-						<p class="guest-sub-label">{{ adultPriceLabel }}</p>
-					</div>
-					<div class="stepper">
-						<button type="button" class="step-btn" aria-label="Fewer adults" :aria-disabled="adults <= 1" @click="bump('adults', -1)">
-							−
-						</button>
-						<span class="step-val">{{ adults }}</span>
-						<button type="button" class="step-btn" aria-label="More adults" :aria-disabled="atCapacity" @click="bump('adults', 1)">
-							+
-						</button>
-					</div>
-				</div>
-				<div class="guest-row">
-					<div>
-						<p class="guest-label">Children</p>
-						<p class="guest-sub-label">{{ childPriceLabel }}</p>
-					</div>
-					<div class="stepper">
-						<button type="button" class="step-btn" aria-label="Fewer children" :aria-disabled="children <= 0" @click="bump('children', -1)">
-							−
-						</button>
-						<span class="step-val">{{ children }}</span>
-						<button type="button" class="step-btn" aria-label="More children" :aria-disabled="atCapacity" @click="bump('children', 1)">
-							+
-						</button>
-					</div>
-				</div>
-			</div>
-			<div role="status">
-				<span class="sr-only">{{ guestSummary }}</span>
-				<p v-if="atCapacity" class="cap-warn">
-					<i class="ti ti-alert-triangle" aria-hidden="true"></i>
-					Maximum {{ MAX_GUESTS }} guests per departure reached.
+			<div class="flow__departure">
+				<p v-if="departures.length === 0" class="flow__line"><i class="ti ti-clock" aria-hidden="true"></i> Departure time confirmed at booking</p>
+				<p v-else-if="departures.length === 1" class="flow__line">
+					<i class="ti ti-clock" aria-hidden="true"></i>
+					<span v-if="departures[0].checkIn">Check-in {{ departures[0].checkIn }} · departure {{ departures[0].time }}</span>
+					<span v-else>Departure {{ departures[0].time }}</span>
 				</p>
+				<ChoiceCards v-else v-model="slot" name="slot" legend="Departure time" :options="slotOptions" />
 			</div>
-		</div>
+		</section>
 
-		<div class="card">
-			<h2 class="card-title"><i class="ti ti-user" aria-hidden="true"></i> Your details</h2>
-			<p class="card-sub">We'll send your confirmation and any updates here. Fields marked * are required.</p>
-			<div class="details-grid">
-				<div class="field">
-					<label for="book-first">First name <span aria-hidden="true">*</span></label>
-					<input id="book-first" v-model="firstName" type="text" autocomplete="given-name" placeholder="Ivan" required />
-				</div>
-				<div class="field">
-					<label for="book-last">Last name <span aria-hidden="true">*</span></label>
-					<input id="book-last" v-model="lastName" type="text" autocomplete="family-name" placeholder="Kovač" required />
-				</div>
-				<div class="field">
-					<label for="book-email">Email <span aria-hidden="true">*</span></label>
-					<input id="book-email" v-model="email" type="email" autocomplete="email" placeholder="ivan@example.com" required />
-				</div>
-				<div class="field">
-					<label for="book-phone">Phone</label>
-					<input id="book-phone" v-model="phone" type="tel" autocomplete="tel" placeholder="+385 91 234 5678" />
-				</div>
-				<div class="field full">
-					<label for="book-notes">Special requests</label>
-					<textarea
-						id="book-notes"
-						v-model="notes"
-						rows="3"
-						placeholder="Allergies, accessibility needs, anything we should know…"
-					></textarea>
-				</div>
-			</div>
-		</div>
+		<section class="flow__card" aria-labelledby="guests-heading">
+			<h2 id="guests-heading" class="flow__title"><i class="ti ti-users" aria-hidden="true"></i> How many guests?</h2>
+			<p class="flow__sub">Up to {{ MAX_GUESTS }} guests per departure, infants included.</p>
+			<GuestSteppers
+				v-model:adults="adults"
+				v-model:children="children"
+				v-model:infants="infants"
+				:age-bands="ageBands"
+				:adult-price="adultPrice"
+				:child-price="childPrice"
+				:max="MAX_GUESTS"
+			/>
+			<p v-if="fieldErrors.adults" class="flow__error" role="alert">{{ fieldErrors.adults }}</p>
+			<p class="flow__lock"><i class="ti ti-lock" aria-hidden="true"></i> We confirm your seats as soon as you pay.</p>
+		</section>
 
-		<div class="summary-card">
-			<p class="sum-title">Booking summary</p>
-			<div class="sum-row">
-				<span class="sum-label">Tour</span>
-				<span class="sum-val">{{ tourTitle }}</span>
+		<section class="flow__card" aria-labelledby="details-heading">
+			<h2 id="details-heading" class="flow__title"><i class="ti ti-user" aria-hidden="true"></i> Your details</h2>
+			<p class="flow__sub">We'll send your confirmation and any updates here. Fields marked * are required.</p>
+			<div class="flow__fields">
+				<FormField id="book-first" v-model="firstName" label="First name" name="firstName" autocomplete="given-name" required :error="fieldErrors.firstName" />
+				<FormField id="book-last" v-model="lastName" label="Last name" name="lastName" autocomplete="family-name" required />
+				<FormField id="book-email" v-model="email" label="Email" name="email" type="email" autocomplete="email" required :error="fieldErrors.email" />
+				<FormField id="book-phone" v-model="phone" label="Phone, so the skipper can reach you on the day" name="phone" type="tel" autocomplete="tel" />
+				<FormField
+					id="book-notes"
+					v-model="notes"
+					class="flow__full"
+					label="Anything the crew should know? (optional)"
+					name="notes"
+					as="textarea"
+					:maxlength="NOTES_MAX"
+					hint="For example, a child seat or a late arrival. Please tell us about health matters (allergies, mobility) by phone or in person, not here."
+					:error="fieldErrors.notes"
+				/>
 			</div>
-			<div class="sum-row">
-				<span class="sum-label">Date</span>
-				<span class="sum-val">{{ selectedDateLabel }}</span>
-			</div>
-			<div class="sum-row">
-				<span class="sum-label">Departure</span>
-				<span class="sum-val">{{ selectedDate !== null ? selectedSlot || 'Confirmed at booking' : '—' }}</span>
-			</div>
-			<div class="sum-row">
-				<span class="sum-label">Guests</span>
-				<span class="sum-val">{{ guestSummary }}</span>
-			</div>
-			<hr class="sum-div" />
-			<div class="sum-row">
-				<span class="sum-label">{{ adultsLineLabel }}</span>
-				<span class="sum-val">{{ adultsTotalDisplay }}</span>
-			</div>
-			<div v-if="children > 0" class="sum-row">
-				<span class="sum-label">{{ childrenLineLabel }}</span>
-				<span class="sum-val">{{ childrenTotalDisplay }}</span>
-			</div>
-			<hr class="sum-div" />
-			<div class="sum-total">
-				<span>Total</span>
-				<span>{{ bookingTotalDisplay }}</span>
-			</div>
-			<p class="sum-note">{{ priceNotes }}</p>
-		</div>
+		</section>
 
-		<button
-			type="button"
-			class="cta-btn"
-			:aria-disabled="!canSubmit || sending"
-			:aria-busy="sending"
-			aria-describedby="cta-hint"
-			@click="goToReview"
-		>
-			Review booking
-			<i class="ti ti-arrow-right" aria-hidden="true"></i>
-		</button>
-		<p id="cta-hint" class="cta-hint" aria-live="polite">
-			<template v-if="missingDetails.length">To continue, add {{ missingDetails.join(', ') }}.</template>
-		</p>
-		<p v-if="submitError" class="cta-hint cta-error" role="alert">{{ submitError }}</p>
-		<a class="back-btn" :href="`/tours/${tourSlug}/`">← Back to tour type</a>
-		<p class="policy-note">
-			<i class="ti ti-shield-check" aria-hidden="true"></i>
-			{{ CANCELLATION_SHORT }}
-		</p>
-	</div>
+		<SummaryCard title="Your booking" :rows="summaryRows" :total="{ label: 'Total', value: total !== null ? `€${total}` : 'Price on request' }">
+			<p v-if="mandatoryFeeLabel" class="flow__fee">{{ mandatoryFeeLabel }}</p>
+			<p class="flow__notes">{{ priceNotes }}</p>
+		</SummaryCard>
+
+		<div class="flow__actions">
+			<Button type="submit" size="lg" block icon-end="arrow-right" :aria-disabled="!canSubmit || sending ? 'true' : undefined" :aria-busy="sending" aria-describedby="flow-hint">
+				Review booking
+			</Button>
+			<p id="flow-hint" class="flow__hint" aria-live="polite">
+				<template v-if="missing.length">To continue, add {{ missing.join(', ') }}.</template>
+			</p>
+			<p v-if="submitError" class="flow__error" role="alert">{{ submitError }}</p>
+			<Button :href="`/tours/${tourSlug}/`" variant="secondary" block>← Back to tour</Button>
+			<p class="flow__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {{ CANCELLATION_SHORT }}</p>
+		</div>
+	</form>
 </template>
 
 <style scoped>
-.group-booking :deep(input),
-.group-booking :deep(select),
-.group-booking :deep(textarea) {
-	font-family: var(--font-ui);
-	padding: 8px 10px;
-	border: 0.5px solid var(--color-border-secondary);
-	border-radius: var(--radius-md);
-	background: var(--color-background-primary);
-	color: var(--color-text-primary);
-	width: 100%;
-}
-
-.group-booking :deep(textarea) {
-	resize: vertical;
-	min-height: 60px;
-}
-
-.card {
-	background: var(--color-background-primary);
-	border: 0.5px solid var(--color-border-tertiary);
-	border-radius: var(--radius-lg);
-	padding: 1.25rem;
-	margin-bottom: 14px;
-}
-
-.card-title {
-	font-size: 14px;
-	font-weight: 500;
-	margin: 0 0 4px;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.card-title .ti {
-	font-size: 16px;
-	color: var(--color-accent);
-}
-
-.card-sub {
-	font-size: 12px;
-	color: var(--color-text-secondary);
-	margin: 0 0 14px;
-}
-
-.cal-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 12px;
-}
-
-.cal-month {
-	font-size: 14px;
-	font-weight: 500;
-}
-
-.cal-nav {
-	background: none;
-	border: 0.5px solid var(--color-border-secondary);
-	border-radius: var(--radius-md);
-	width: 28px;
-	height: 28px;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-family: var(--font-ui);
-}
-
-.cal-nav:hover {
-	background: var(--color-background-secondary);
-}
-
-.cal-grid {
-	display: grid;
-	grid-template-columns: repeat(7, 1fr);
-	gap: 4px;
-}
-
-.cal-dow {
-	font-size: 11px;
-	color: var(--color-text-tertiary);
-	text-align: center;
-	padding-bottom: 4px;
-	font-weight: 500;
-}
-
-.cal-day {
-	height: 36px;
-	border-radius: var(--radius-md);
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	font-size: 13px;
-	cursor: pointer;
-	border: 0.5px solid transparent;
-	background: none;
-	font-family: var(--font-ui);
-	color: inherit;
-	padding: 0;
-}
-
-.cal-day:hover:not(.empty, .past, :disabled) {
-	background: var(--color-background-secondary);
-	border-color: var(--color-border-secondary);
-}
-
-.cal-day.empty,
-.cal-day.past {
-	cursor: default;
-	color: var(--color-text-tertiary);
-}
-
-.cal-day.today {
-	border-color: var(--color-border-info);
-	color: var(--color-text-info);
-}
-
-.cal-day.sel {
-	background: var(--color-text-primary);
-	color: var(--color-background-primary);
-	border-color: var(--color-text-primary);
-}
-
-.guests-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 10px;
-}
-
-.guest-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 10px 12px;
-	background: var(--color-background-secondary);
-	border-radius: var(--radius-md);
-}
-
-.guest-label {
-	font-size: 13px;
-	margin: 0;
-}
-
-.guest-sub-label {
-	font-size: 11px;
-	color: var(--color-text-tertiary);
-	margin: 0;
-}
-
-.stepper {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.step-btn {
-	width: 28px;
-	height: 28px;
-	border-radius: 50%;
-	border: 0.5px solid var(--color-border-secondary);
-	background: var(--color-background-primary);
-	font-size: 16px;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-family: var(--font-ui);
-	line-height: 1;
-}
-
-.step-val {
-	font-size: 14px;
-	font-weight: 500;
-	min-width: 20px;
-	text-align: center;
-}
-
-.field {
-	display: flex;
-	flex-direction: column;
-	gap: 5px;
-}
-
-.field label {
-	font-size: 11px;
-	font-weight: 500;
-	color: var(--color-text-tertiary);
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
-}
-
-.field.full {
-	grid-column: 1 / -1;
-}
-
-.summary-card {
-	background: var(--color-background-secondary);
-	border-radius: var(--radius-lg);
-	padding: 1.1rem 1.25rem;
-	margin-bottom: 16px;
-}
-
-.avail-dot {
-	width: 4px;
-	height: 4px;
-	border-radius: 50%;
-	background: var(--color-accent);
-	margin-top: 1px;
-}
-
-.cal-day.sel .avail-dot {
-	background: var(--color-background-primary);
-	opacity: 0.6;
-}
-
-.cal-day.past .avail-dot {
-	display: none;
-}
-
-.slot-section {
-	margin-top: 18px;
-}
-
-.slot-heading {
-	font-size: 12px;
-	font-weight: 500;
-	color: var(--color-text-secondary);
-	margin: 0 0 10px;
-}
-
-.slots {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 10px;
-}
-
-.slot {
-	border: 0.5px solid var(--color-border-secondary);
-	border-radius: var(--radius-md);
-	padding: 14px 16px;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	transition: border-color 0.12s;
-	background: var(--color-background-primary);
-	font-family: var(--font-ui);
-	text-align: left;
-	width: 100%;
-}
-
-.slot:hover {
-	border-color: var(--color-border-primary);
-}
-
-.slot.sel {
-	border: 2px solid var(--color-text-primary);
-	background: var(--color-background-secondary);
-}
-
-.slot-icon {
-	width: 36px;
-	height: 36px;
-	border-radius: var(--radius-md);
-	background: var(--color-background-secondary);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 17px;
-	flex-shrink: 0;
-}
-
-.slot.sel .slot-icon {
-	background: var(--color-background-primary);
-}
-
-.slot-time {
-	font-size: 15px;
-	font-weight: 500;
-	margin: 0 0 2px;
-}
-
-.slot-label {
-	font-size: 11px;
-	color: var(--color-text-secondary);
-	margin: 0;
-}
-
-.slot-radio {
-	width: 18px;
-	height: 18px;
-	border-radius: 50%;
-	border: 0.5px solid var(--color-border-secondary);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-	margin-left: auto;
-}
-
-.slot.sel .slot-radio {
-	background: var(--color-text-primary);
-	border-color: var(--color-text-primary);
-}
-
-.slot.sel .slot-radio::after {
-	content: '';
-	width: 7px;
-	height: 7px;
-	border-radius: 50%;
-	background: var(--color-background-primary);
-}
-
-.cap-warn {
-	font-size: 11px;
-	color: var(--color-text-warning);
-	margin-top: 8px;
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
-
-.details-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 10px;
-}
-
-.sum-title {
-	font-size: 13px;
-	font-weight: 500;
-	margin: 0 0 10px;
-}
-
-.sum-row {
-	display: flex;
-	justify-content: space-between;
-	font-size: 12px;
-	margin-bottom: 5px;
-}
-
-.sum-label {
-	color: var(--color-text-secondary);
-}
-
-.sum-val {
-	font-weight: 500;
-}
-
-.sum-div {
-	border: none;
-	border-top: 0.5px solid var(--color-border-tertiary);
-	margin: 10px 0;
-}
-
-.sum-total {
-	display: flex;
-	justify-content: space-between;
-	font-size: 15px;
-	font-weight: 500;
-}
-
-.sum-note {
-	font-size: 11px;
-	color: var(--color-text-tertiary);
-	margin-top: 4px;
-	text-align: right;
-}
-
-.cta-btn {
-	width: 100%;
-	padding: 13px;
-	background: var(--color-text-primary);
-	color: var(--color-background-primary);
-	border: none;
-	border-radius: var(--radius-md);
-	font-size: 14px;
-	font-weight: 500;
-	cursor: pointer;
-	font-family: var(--font-ui);
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 6px;
-}
-
-.cta-btn:hover:not([aria-disabled='true']) {
-	opacity: 0.88;
-}
-
-/* aria-disabled so keyboard users can still reach the button and hear the
-   hint explaining what's missing; goToReview() ignores clicks until then. */
-.cta-btn[aria-disabled='true'] {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.cta-hint {
-	font-size: 12px;
-	color: var(--color-text-secondary);
-	text-align: center;
-	margin: 8px 0 0;
-}
-
-.cta-hint:empty {
-	display: none;
-}
-
-/* aria-disabled, not disabled: a native disabled button drops keyboard focus
-   to <body> the moment you reach the limit. bump() enforces the limits. */
-.step-btn[aria-disabled='true'] {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
-
-.back-btn {
-	display: block;
-	width: 100%;
-	padding: 10px;
-	background: none;
-	color: var(--color-text-secondary);
-	border: 0.5px solid var(--color-border-secondary);
-	border-radius: var(--radius-md);
-	font-size: 13px;
-	cursor: pointer;
-	font-family: var(--font-ui);
-	margin-top: 8px;
-	text-align: center;
-	text-decoration: none;
-}
-
-.back-btn:hover {
-	background: var(--color-background-secondary);
-}
-
-@media (max-width: 768px) {
-	.slots,
-	.details-grid,
-	.guests-grid {
-		grid-template-columns: 1fr;
+@layer components {
+	/* §8.1.1 cards */
+	.flow__card {
+		margin-bottom: 14px;
+		padding: 1.25rem;
+		border: 1px solid var(--color-border-card);
+		border-radius: var(--radius-lg);
 	}
 
-	.group-booking :deep(input),
-	.group-booking :deep(select),
-	.group-booking :deep(textarea) {
+	.flow__title {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin: 0 0 4px;
+		font-size: var(--font-size-lg);
+		font-weight: var(--font-weight-medium);
+	}
+
+	.flow__title .ti {
 		font-size: 16px;
+		color: var(--color-accent);
 	}
 
-	.cal-grid {
-		gap: 2px;
+	.flow__sub {
+		margin: 0 0 14px;
+		font-size: var(--font-size-body-md);
+		line-height: var(--line-height-body-md);
+		color: var(--color-text-secondary);
 	}
-}
 
-@media (max-width: 480px) {
-	.cal-grid {
-		font-size: 11px;
+	.flow__departure {
+		margin-top: var(--space-4);
+		padding-top: var(--space-4);
+		border-top: 0.5px solid var(--color-border-tertiary);
+	}
+
+	.flow__line {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin: 0;
+		font-size: var(--font-size-base);
+	}
+
+	.flow__line .ti {
+		color: var(--color-text-tertiary);
+	}
+
+	.flow__lock {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin: var(--space-3) 0 0;
+		padding: 10px var(--space-3);
+		border-radius: var(--radius-md);
+		background: var(--color-background-secondary);
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.flow__fields {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-4);
+	}
+
+	.flow :deep(.flow__full) {
+		grid-column: 1 / -1;
+	}
+
+	.flow__fee,
+	.flow__notes {
+		margin: 6px 0 0;
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		text-align: right;
+	}
+
+	.flow__fee {
+		color: var(--color-text-secondary);
+	}
+
+	.flow__actions {
+		display: grid;
+		gap: var(--space-2);
+		margin-top: var(--space-4);
+	}
+
+	.flow__hint {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.flow__hint:empty {
+		display: none;
+	}
+
+	.flow__error {
+		margin: var(--space-2) 0 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-danger);
+	}
+
+	.flow__policy {
+		margin: var(--space-1) 0 0;
+		font-size: var(--font-size-sm);
+		text-align: center;
+		color: var(--color-text-success);
+	}
+
+	@media (max-width: 768px) {
+		.flow__fields {
+			grid-template-columns: 1fr;
+		}
 	}
 }
 </style>

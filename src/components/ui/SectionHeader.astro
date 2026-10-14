@@ -82,8 +82,9 @@ const hasActions = Astro.slots.has('actions');
 			margin-top: -4px;
 		}
 
-		/* Narrow phones: the intro gets the full width, the actions go under it. */
-		@media (max-width: 480px) {
+		/* As on the board, the actions stay beside the intro; only below 360px,
+		   where the title and pill no longer fit side by side, they go under it. */
+		@media (max-width: 359px) {
 			.section-head--sub.section-head--actions {
 				flex-direction: column;
 				gap: var(--space-3);

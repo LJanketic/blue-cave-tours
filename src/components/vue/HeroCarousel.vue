@@ -174,7 +174,7 @@ onBeforeUnmount(() => {
 			/>
 		</div>
 
-		<!-- Controls first in the DOM, so Pause is the first thing a keyboard reaches (§11.3). -->
+		<!-- Controls first in the DOM, so Pause is the first thing a keyboard reaches (§11.3); it shows only on keyboard focus. -->
 		<div
 			v-if="count > 1"
 			class="home-hero__controls"
@@ -376,9 +376,7 @@ onBeforeUnmount(() => {
 		left: 50%;
 		z-index: 2;
 		display: flex;
-		flex-direction: row-reverse; /* Pause comes first in the DOM, but sits to the right of the dots */
 		align-items: center;
-		gap: var(--space-3);
 		transform: translateX(-50%);
 	}
 
@@ -479,10 +477,26 @@ onBeforeUnmount(() => {
 		background: var(--color-glass-dark-hover);
 	}
 
+	/*
+	 * As on the board, the dots alone are centred and a click on the active dot
+	 * pauses. Pause stays first in the DOM for keyboard users (WCAG 2.2.2) but
+	 * only shows while it has keyboard focus, to the right of the dots.
+	 */
 	.home-hero__pause {
+		position: absolute;
+		top: 50%;
+		left: calc(100% + var(--space-3));
 		width: 32px;
 		height: 32px;
 		font-size: 16px;
+		opacity: 0;
+		pointer-events: none;
+		transform: translateY(-50%);
+	}
+
+	.home-hero__pause:focus-visible {
+		opacity: 1;
+		pointer-events: auto;
 	}
 
 	/* 20px from the edges; shown on hover and whenever a control has keyboard focus. */

@@ -1536,13 +1536,32 @@ Responsive behaviour: §3.1.1, row "Destination detail".
   - The confirmation has a "terms of your booking" block as text: line items, mandatory fees, `CANCELLATION_FULL`, the withdrawal exemption, complaints, the terms version, and the imprint when set.
   - Notes never appear in an email body; the admin email says "Has notes, see admin".
 - **The success page** clears the cookie.
-- **Not yet (PR 7b):** the restyled booking screens, the infants stepper, the season-aware calendar, and the success page's privacy changes (S-3). Step 2 already posts to the draft endpoint and prefills from it.
+- **Done in PR 7b:** the restyled booking screens, the infants stepper, the season-aware calendar, and the success page's privacy changes (S-3).
 - **Tests:** `tests/e2e/booking.spec.ts` covers:
   - a full booking with no personal data in any URL, and the cookie gone afterwards
   - a double submit, changed terms, and draft errors (code only, 400 JSON, season, slot)
   - review without the cookie
   - cross-site 403 on four POST routes
   - prefill, and step 2 through the browser
+
+**As built (PR 7b, 2026-10-14):**
+
+- **Shell:** `components/booking/BookingShell.astro` wraps every booking screen: MiniNav, StepBar (none on success and error), a `lead` slot for the status icon, the h1, the content, then TrustStrip.
+- **Step 2:** `GroupBookingFlow.vue` is rebuilt from `vue/booking/BookingCalendar.vue`, `GuestSteppers.vue` and `ChoiceCards.vue`.
+  - The calendar is Monday-first. Past and out-of-season days are `aria-disabled`, with a visible legend. It opens on the first month that has a bookable day.
+  - The infants stepper is included.
+  - "Review booking" stays focusable and says what is missing next to it.
+  - Without JavaScript, a plain form with native inputs (`@media (scripting: none)`) posts to the same draft endpoint.
+- **Review, pay:** restyled cards with Edit links. On the pay page, the payment methods are native radios and the button reads "Pay €{total}".
+- **Success (S-3):** no name, phone or notes. The email is masked and only said to be sent when it was. The page has:
+  - a Copy button for the reference
+  - "Where to meet us" (arrive by check-in, or departure − 15 minutes)
+  - "What happens next" with `CANCELLATION_WEATHER`
+  - print styles
+- **Error:** the danger Notice is an alert ("We don't hold seats until you pay…"), with common reasons and phone help. The "We couldn't save your booking" variant is kept.
+- **Legacy CSS:** 61 dead rules removed from `_booking.css`, `_responsive.css`, `_catalog.css`, `_destination-detail.css` and `_base.css`. The computed styles of every public page are unchanged.
+- **Known, out of scope:** the total uses the tour's single adult and child price, while `priceNotes` shows lower low-season prices (seasonal pricing is payments plan D8).
+- **Tests:** the success page has no personal data. There are tests for step 2 without JavaScript, and for a decline followed by "Try payment again".
 - **Admin baselines** were re-taken. The only differences were text sizes from infants, the new subject line on enquiries, and one bookings-list row order that varies between runs with the random refs.
 
 ### 8.2 Private charter request (board 06) [NEW] (D-7, D-8, D-23)

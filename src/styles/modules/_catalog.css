@@ -19,28 +19,6 @@
 	border: 2px solid var(--color-border-info);
 }
 
-.badge-group {
-	background: var(--badge-group-bg);
-	color: var(--badge-group-text);
-}
-
-.tc-name,
-.card-title,
-h3.tc-name,
-h3.card-title,
-h3.card-name,
-h3.dest-name {
-	font-size: 13px;
-	font-weight: 500;
-	margin: 0 0 4px;
-	line-height: 1.3;
-}
-
-.card-title {
-	font-size: 14px;
-	margin-bottom: 5px;
-}
-
 .tc-meta,
 .card-meta {
 	font-size: 11px;

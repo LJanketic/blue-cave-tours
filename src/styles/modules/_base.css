@@ -263,15 +263,6 @@ a.btn-secondary:hover {
 	color: var(--color-text-primary);
 }
 
-.policy-box {
-	background: var(--color-background-secondary);
-	border-radius: var(--radius-md);
-	padding: 10px 14px;
-	font-size: 12px;
-	color: var(--color-text-secondary);
-	line-height: 1.6;
-}
-
 .lock-note {
 	display: flex;
 	align-items: center;
