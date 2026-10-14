@@ -1,44 +1,35 @@
 ---
 export const prerender = false;
 
+/**
+ * Group booking, step 3: review (spec §8.1.3). Everything shown comes from
+ * the sealed booking cookie; the price is recomputed here and again on the
+ * server when the booking is made. "Continue to payment" posts only the
+ * terms version the customer saw.
+ */
+import { Image } from 'astro:assets';
 import { pageTitle } from '../../../config/site';
+import { TERMS_VERSION } from '../../../config/legal';
+import { CANCELLATION_FULL, CANCELLATION_SHORT } from '../../../config/cancellation';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
-import MiniNav from '../../../components/MiniNav.astro';
-import TrustStrip from '../../../components/TrustStrip.astro';
-import { getTourBySlug } from '../../../lib/tours';
-import {
-	contactHrefForTour,
-	formatBookingDate,
-	meetingPointShort,
-	supportsInstantBook,
-} from '../../../lib/booking';
-import { computeBookingTotal, tourFromPrice } from '../../../lib/price';
-import {
-	CANCELLATION_FULL_PREFIX,
-	CANCELLATION_FULL_SUFFIX,
-	CANCELLATION_WINDOW,
-} from '../../../config/cancellation';
+import BookingShell from '../../../components/booking/BookingShell.astro';
+import Badge from '../../../components/ui/Badge.astro';
+import Notice from '../../../components/ui/Notice.astro';
+import Button from '../../../components/ui/Button.astro';
+import { getTourBySlug, getTourCardPhoto } from '../../../lib/tours';
+import { contactHrefForTour, formatBookingDate, guestSummaryFromCounts, meetingPointShort, supportsInstantBook } from '../../../lib/booking';
+import { computeBookingTotal, lineItemsFor } from '../../../lib/price';
 import { BOOKING_ERRORS, isBookingError } from '../../../lib/bookings/service';
 import { BOOKING_COOKIE, openDraft } from '../../../lib/bookings/session';
-import { TERMS_VERSION } from '../../../config/legal';
 
 const slug = Astro.params.slug;
 const tour = slug ? getTourBySlug(slug) : undefined;
+if (!tour) return Astro.redirect('/404');
+// Quote-only tours have no instant-book review: they're routed to the contact form.
+if (!supportsInstantBook(tour)) return Astro.redirect(contactHrefForTour(tour));
 
-if (!tour) {
-	return Astro.redirect('/404');
-}
-
-// Quote-only tours have no instant-book review step — they're always routed
-// to the contact form, so a direct URL here shouldn't render a fake review.
-if (!supportsInstantBook(tour)) {
-	return Astro.redirect(contactHrefForTour(tour));
-}
-
-// The booking in progress comes from the sealed cookie, never the URL (S-2, §8.1.3).
-// No cookie, an expired one, or one for another tour: back to step 2. Old links
-// that still carry details in the query string get the same, and the details are
-// ignored.
+// From the sealed cookie, never the URL (S-2). No cookie, an expired one, or one for
+// another tour: back to step 2. Old links with details in the query get the same.
 const PERSONAL_PARAMS = ['firstName', 'lastName', 'email', 'phone', 'notes', 'adults', 'date'];
 const draft = openDraft(Astro.cookies.get(BOOKING_COOKIE)?.value);
 if (!draft || draft.tourSlug !== tour.slug || PERSONAL_PARAMS.some((p) => Astro.url.searchParams.has(p))) {
@@ -47,486 +38,265 @@ if (!draft || draft.tourSlug !== tour.slug || PERSONAL_PARAMS.some((p) => Astro.
 Astro.response.headers.set('Cache-Control', 'no-store');
 Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 
-const details = {
-	date: draft.date,
-	slot: draft.slot || null,
-	adults: draft.adults,
-	children: draft.children,
-	infants: draft.infants,
-	firstName: draft.firstName,
-	lastName: draft.lastName,
-	email: draft.email,
-	phone: draft.phone || null,
-	notes: draft.notes || null,
-};
-
 const errorParam = Astro.url.searchParams.get('error');
 const bookingError = isBookingError(errorParam) ? BOOKING_ERRORS[errorParam] : null;
-
-// Step 2 fills itself in from the cookie (WCAG 3.3.7), so Edit needs no query.
+// Step 2 refills itself from the cookie (WCAG 3.3.7).
 const editHref = `/book/${tour.slug}/group/`;
 
-const meetingShort = meetingPointShort(tour.meetingPoint);
-
-const guestName = [details.firstName, details.lastName].filter(Boolean).join(' ');
-const dateLine = details.date ? formatBookingDate(details.date) : null;
-const adultsCount = details.adults ?? 0;
-const childrenCount = details.children;
-
-const fromPrice = tourFromPrice(tour);
-const adultUnitPrice = tour.adultPrice;
-const childUnitPrice = tour.childPrice;
-const childFromPrice = childUnitPrice !== null ? `€${childUnitPrice}` : null;
-
-const adultsGuestLine = adultUnitPrice !== null ? `${adultsCount} × ${fromPrice}` : `${adultsCount} adults`;
-const childrenGuestLine = childFromPrice
-	? `${childrenCount} × ${childFromPrice}`
-	: `${childrenCount} ${childrenCount === 1 ? 'child' : 'children'}`;
-const adultsBreakdownLabel = adultUnitPrice !== null
-	? `Adults (${adultsCount} × ${fromPrice})`
-	: `Adults (${adultsCount})`;
-const childrenBreakdownLabel = childFromPrice
-	? `Children (${childrenCount} × ${childFromPrice})`
-	: `Children (${childrenCount})`;
-const adultsBreakdownTotal =
-	adultUnitPrice !== null ? `€${adultUnitPrice * adultsCount}` : `from ${fromPrice}`;
-const childrenBreakdownTotal =
-	childUnitPrice !== null ? `€${childUnitPrice * childrenCount}` : (childFromPrice ?? '—');
-// Recomputed from the tour's own price data rather than trusting `details.total`
-// from the URL, so the total can't disagree with the breakdown rows above it
-// (or be hand-edited via the query string) — falls back to the passed-through
-// value only for quote-only tours, where there's no numeric price to compute.
-const computedTotal = computeBookingTotal(tour, adultsCount, childrenCount);
-const totalLine = computedTotal !== null ? `€${computedTotal}` : `from ${fromPrice}`;
-
+const total = computeBookingTotal(tour, draft.adults, draft.children);
+const items = lineItemsFor(tour, draft.adults, draft.children, draft.infants) ?? [];
+const fees = tour.additionalFees.filter((fee) => fee.mandatory);
+const photo = getTourCardPhoto(tour);
 ---
 
-<SiteLayout title={pageTitle(`Review booking — ${tour.title}`)} description={`Review your booking for ${tour.title} before confirming.`} checkout robots="noindex, nofollow">
-	<main id="main" class="page-shell page-shell--narrow">
-		<div class="page review-page">
-			<MiniNav exitHref={`/tours/${tour.slug}/`} exitLabel="Exit" />
-			<h1 class="sr-only">Review your booking</h1>
-			<div class="step-bar" role="group" aria-label="Booking progress">
-				<div class="step done">
-					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
-					<span class="step-lbl">Tour type</span>
-				</div>
-				<div class="step-line"></div>
-				<div class="step done">
-					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
-					<span class="step-lbl">Date &amp; guests</span>
-				</div>
-				<div class="step-line"></div>
-				<div class="step active" aria-current="step">
-					<div class="step-dot">3</div>
-					<span class="step-lbl">Review</span>
-				</div>
-				<div class="step-line"></div>
-				<div class="step next">
-					<div class="step-dot">4</div>
-					<span class="step-lbl">Payment</span>
-				</div>
-			</div>
+<SiteLayout title={pageTitle(`Review booking: ${tour.title}`)} description={`Review your booking for ${tour.title}.`} checkout robots="noindex, nofollow">
+	<BookingShell step={3} exitHref={`/tours/${tour.slug}/`} heading="Review your booking">
+		{bookingError && <Notice tone="danger" alert class="review__alert">{bookingError}</Notice>}
 
-			<div class="card">
-				<div class="section-title">
-					Tour details
-					<a class="edit-btn" href={editHref}>
-						Edit <i class="ti ti-edit" aria-hidden="true"></i>
-					</a>
-				</div>
-				<div class="tour-detail-row">
-					<div class="tour-thumb" aria-hidden="true">
-						<i class="ti ti-sailboat"></i>
-					</div>
-					<div class="tour-detail-body">
-						<p class="tour-name">{tour.title}</p>
-						<div class="badge-row">
-							<span class="badge-group">Group tour</span>
-						</div>
-						<div class="row">
-							<span class="label">
-								<i class="ti ti-calendar" aria-hidden="true"></i>Date
-							</span>
-							<span class="value">{dateLine}</span>
-						</div>
-						<div class="row">
-							<span class="label">
-								<i class="ti ti-clock" aria-hidden="true"></i>Departure
-							</span>
-							<span class="value">{details.slot ?? tour.departure}</span>
-						</div>
-						<div class="row">
-							<span class="label">
-								<i class="ti ti-clock" aria-hidden="true"></i>Duration
-							</span>
-							<span class="value">{tour.duration}</span>
-						</div>
-						<div class="row">
-							<span class="label">
-								<i class="ti ti-map-pin" aria-hidden="true"></i>Meeting point
-							</span>
-							<span class="value">{meetingShort}</span>
-						</div>
-					</div>
-				</div>
+		<section class="review__card" aria-labelledby="trip-heading">
+			<div class="review__head">
+				<h2 id="trip-heading"><i class="ti ti-sailboat" aria-hidden="true"></i> Tour details</h2>
+				<a href={editHref} aria-label="Edit tour details">Edit</a>
 			</div>
-
-			<div class="card">
-				<div class="section-title">
-					Guests
-					<a class="edit-btn" href={editHref}>
-						Edit <i class="ti ti-edit" aria-hidden="true"></i>
-					</a>
-				</div>
-				<div class="row">
-					<span class="label">Adults</span>
-					<span class="value">{adultsGuestLine}</span>
-				</div>
+			<div class="review__trip">
 				{
-					childrenCount > 0 && (
-						<div class="row">
-							<span class="label">Children (0–17)</span>
-							<span class="value">{childrenGuestLine}</span>
-						</div>
+					photo.src ? (
+						<Image src={photo.src} alt="" widths={[128, 192]} sizes="64px" quality={70} format="webp" class="review__thumb" />
+					) : (
+						<span class="review__thumb review__thumb--empty" aria-hidden="true">
+							<i class="ti ti-sailboat" />
+						</span>
 					)
 				}
+				<div>
+					<p class="review__tour">{tour.title}</p>
+					<Badge tone="brand" icon="users">Group tour</Badge>
+				</div>
+			</div>
+			<dl class="review__rows">
+				<div><dt><i class="ti ti-calendar" aria-hidden="true"></i> Date</dt><dd>{formatBookingDate(draft.date)}</dd></div>
+				<div><dt><i class="ti ti-clock" aria-hidden="true"></i> Departure</dt><dd>{draft.slot || 'Confirmed at booking'}</dd></div>
+				<div><dt><i class="ti ti-hourglass" aria-hidden="true"></i> Duration</dt><dd>{tour.duration}</dd></div>
+				<div><dt><i class="ti ti-map-pin" aria-hidden="true"></i> Meeting point</dt><dd>{meetingPointShort(tour.meetingPoint)}</dd></div>
+			</dl>
+		</section>
+
+		<section class="review__card" aria-labelledby="guests-heading">
+			<div class="review__head">
+				<h2 id="guests-heading"><i class="ti ti-users" aria-hidden="true"></i> Guests</h2>
+				<a href={editHref} aria-label="Edit guests">Edit</a>
+			</div>
+			<p class="review__line">{guestSummaryFromCounts(draft.adults, draft.children, draft.infants)}</p>
+		</section>
+
+		<section class="review__card" aria-labelledby="details-heading">
+			<div class="review__head">
+				<h2 id="details-heading"><i class="ti ti-user" aria-hidden="true"></i> Guest details</h2>
+				<a href={editHref} aria-label="Edit guest details">Edit</a>
+			</div>
+			<dl class="review__rows">
+				<div><dt>Name</dt><dd>{draft.firstName} {draft.lastName}</dd></div>
+				<div><dt>Email</dt><dd>{draft.email}</dd></div>
+				<div><dt>Phone</dt><dd>{draft.phone || 'Not given'}</dd></div>
+				<div><dt>Notes</dt><dd class="review__wrap">{draft.notes || 'None'}</dd></div>
+			</dl>
+		</section>
+
+		<section class="review__card" aria-labelledby="price-heading">
+			<div class="review__head">
+				<h2 id="price-heading"><i class="ti ti-receipt" aria-hidden="true"></i> Price</h2>
+			</div>
+			<dl class="review__rows">
 				{
-					details.infants > 0 && (
-						<div class="row">
-							<span class="label">Infants (free)</span>
-							<span class="value">{details.infants}</span>
+					items.map((item) => (
+						<div>
+							<dt>{item.amount === 0 && item.unit === 0 ? item.label : `${item.label} (${item.qty} × €${item.unit})`}</dt>
+							<dd>€{item.amount}</dd>
 						</div>
-					)
+					))
 				}
-			</div>
+			</dl>
+			<p class="review__total"><span>Total</span><span>{total !== null ? `€${total}` : 'On request'}</span></p>
+			{fees.map((fee) => <p class="review__fee">+ {fee.shortText}{fee.amountLabel && ` (${fee.amountLabel})`}</p>)}
+			<p class="review__fee">{tour.priceNotes}</p>
+		</section>
 
-			<div class="card">
-				<div class="section-title">
-					Guest details
-					<a class="edit-btn" href={editHref}>
-						Edit <i class="ti ti-edit" aria-hidden="true"></i>
-					</a>
-				</div>
-				<div class="row">
-					<span class="label">Name</span>
-					<span class="value">{guestName}</span>
-				</div>
-				<div class="row">
-					<span class="label">Email</span>
-					<span class="value">{details.email}</span>
-				</div>
-				<div class="row">
-					<span class="label">Phone</span>
-					<span class="value">{details.phone ?? '—'}</span>
-				</div>
-				<div class="row">
-					<span class="label">Special requests</span>
-					<span class="value value--wrap">{details.notes ?? 'None'}</span>
-				</div>
+		<section class="review__card" aria-labelledby="policy-heading">
+			<div class="review__head">
+				<h2 id="policy-heading"><i class="ti ti-shield-check review__ok" aria-hidden="true"></i> Cancellation policy</h2>
 			</div>
+			<p class="review__policy">{CANCELLATION_FULL}</p>
+		</section>
 
-			<div class="card">
-				<div class="section-title">Price breakdown</div>
-				<div class="row">
-					<span class="label">{adultsBreakdownLabel}</span>
-					<span class="value">{adultsBreakdownTotal}</span>
-				</div>
-				{
-					childrenCount > 0 && (
-						<div class="row">
-							<span class="label">{childrenBreakdownLabel}</span>
-							<span class="value">{childrenBreakdownTotal}</span>
-						</div>
-					)
-				}
-				{
-					details.infants > 0 && (
-						<div class="row">
-							<span class="label">Infants ({details.infants}, free)</span>
-							<span class="value">€0</span>
-						</div>
-					)
-				}
-				<hr class="divider" />
-				<div class="total-row">
-					<span class="total-label">Total</span>
-					<span class="total-amount">{totalLine}</span>
-				</div>
-				<p class="fees-note">{tour.priceNotes}</p>
-			</div>
-
-			<div class="card card--policy">
-				<div class="section-title section-title--policy">
-					<i class="ti ti-shield-check" aria-hidden="true"></i>Cancellation policy
-				</div>
-				<div class="policy-box">
-					{CANCELLATION_FULL_PREFIX}<strong>{CANCELLATION_WINDOW}</strong>{CANCELLATION_FULL_SUFFIX}
-				</div>
-			</div>
-
-			{
-				bookingError && (
-					<p class="booking-error" role="alert">
-						<i class="ti ti-alert-triangle" aria-hidden="true"></i> {bookingError}{' '}
-						<a href={editHref}>Edit your booking</a>
-					</p>
-				)
-			}
-			<form method="post" action="/api/bookings">
-				<!-- Only the terms version: the booking itself comes from the sealed cookie. -->
-				<input type="hidden" name="termsVersion" value={TERMS_VERSION} />
-				<button class="cta-btn" type="submit">
-					Continue to payment
-					<i class="ti ti-arrow-right" aria-hidden="true"></i>
-				</button>
-			</form>
-			<p class="lock-note">
-				<i class="ti ti-lock" aria-hidden="true"></i>
-				Pay by card (through Teya) or with PayPal
+		<form method="post" action="/api/bookings" class="review__form">
+			<!-- Only the terms version: the booking itself comes from the sealed cookie. -->
+			<input type="hidden" name="termsVersion" value={TERMS_VERSION} />
+			<!-- Pre-contract information (§8.1.3); the lawyer confirms the wording (PR 11). -->
+			<p class="review__legal">
+				This booking is for a leisure service on a fixed date, so the 14-day right of withdrawal for online purchases
+				does not apply. You can still cancel under our <a href="/legal/cancellation/">cancellation policy</a>:
+				{CANCELLATION_SHORT.toLowerCase()}. By continuing you agree to our <a href="/legal/terms/">Terms</a>. How we use
+				your data: <a href="/legal/privacy/">Privacy policy</a>.
 			</p>
-
-			<TrustStrip />
-		</div>
-	</main>
+			<Button type="submit" size="lg" block iconEnd="arrow-right">Continue to payment</Button>
+		</form>
+	</BookingShell>
 </SiteLayout>
 
 <style>
-	.review-page {
-		max-width: 480px;
-		margin: 0 auto;
-		padding: 1.5rem 0 2rem;
-		font-size: 14px;
-	}
-
-	.card {
-		background: var(--color-background-primary);
-		border: 0.5px solid var(--color-border-tertiary);
-		border-radius: var(--radius-lg);
-		padding: 1.25rem;
-		margin-bottom: 12px;
-	}
-
-	.card--policy {
-		margin-bottom: 16px;
-	}
-
-	.section-title {
-		font-size: 13px;
-		font-weight: 500;
-		margin: 0 0 12px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.section-title--policy {
-		margin-bottom: 8px;
-	}
-
-	.section-title--policy .ti {
-		font-size: 15px;
-		vertical-align: -2px;
-		margin-right: 6px;
-		color: var(--color-text-success);
-	}
-
-	.edit-btn {
-		font-size: 12px;
-		color: var(--color-text-info);
-		background: none;
-		border: none;
-		padding: 0;
-		cursor: pointer;
-		font-family: var(--font-ui);
-		text-decoration: none;
-		display: inline-flex;
-		align-items: center;
-		gap: 2px;
-	}
-
-	.edit-btn .ti {
-		font-size: 12px;
-		vertical-align: -1px;
-	}
-
-	.tour-detail-row {
-		display: flex;
-		gap: 14px;
-		align-items: flex-start;
-	}
-
-	.tour-thumb {
-		width: 64px;
-		height: 64px;
-		border-radius: var(--radius-md);
-		background: var(--color-background-secondary);
-		border: 0.5px solid var(--color-border-tertiary);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-
-	.tour-thumb .ti {
-		font-size: 24px;
-		color: var(--color-text-secondary);
-	}
-
-	.tour-detail-body {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.tour-name {
-		font-size: 14px;
-		font-weight: 500;
-		margin: 0 0 6px;
-	}
-
-	.badge-row {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin-bottom: 8px;
-	}
-
-	.badge-group {
-		background: var(--color-background-success);
-		color: var(--color-text-success);
-		font-size: 11px;
-		font-weight: 500;
-		padding: 3px 10px;
-		border-radius: 20px;
-	}
-
-	.row {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 8px;
-		margin-top: 4px;
-	}
-
-	.row:first-of-type {
-		margin-top: 0;
-	}
-
-	.label {
-		font-size: 13px;
-		color: var(--color-text-secondary);
-	}
-
-	.label .ti {
-		font-size: 13px;
-		vertical-align: -2px;
-		margin-right: 4px;
-	}
-
-	.value {
-		font-size: 13px;
-		font-weight: 500;
-		text-align: right;
-	}
-
-	.value--wrap {
-		max-width: 60%;
-		word-break: break-word;
-	}
-
-	.divider {
-		border: none;
-		border-top: 0.5px solid var(--color-border-tertiary);
-		margin: 12px 0;
-	}
-
-	.total-row {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-	}
-
-	.total-label {
-		font-size: 15px;
-		font-weight: 500;
-	}
-
-	.total-amount {
-		font-size: 20px;
-		font-weight: 500;
-	}
-
-	.fees-note {
-		font-size: 12px;
-		color: var(--color-text-tertiary);
-		margin: 6px 0 0;
-		text-align: right;
-	}
-
-	.policy-box strong {
-		color: var(--color-text-primary);
-	}
-
-	.cta-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		width: 100%;
-		padding: 13px;
-		background: var(--color-text-primary);
-		color: var(--color-background-primary);
-		border: none;
-		border-radius: var(--radius-md);
-		font-size: 14px;
-		font-weight: 500;
-		cursor: pointer;
-		font-family: var(--font-ui);
-		text-decoration: none;
-	}
-
-	.booking-error {
-		display: flex;
-		gap: 8px;
-		align-items: flex-start;
-		background: var(--color-background-danger);
-		color: var(--color-text-danger);
-		border-radius: var(--radius-md);
-		padding: 10px 12px;
-		font-size: 13px;
-		margin: 0 0 12px;
-	}
-
-	.booking-error a {
-		color: inherit;
-		font-weight: 500;
-	}
-
-	.cta-btn:hover {
-		opacity: 0.88;
-	}
-
-	.cta-btn .ti {
-		font-size: 14px;
-		vertical-align: -2px;
-	}
-
-	@media (max-width: 480px) {
-		.review-page .row {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 2px;
+	@layer pages {
+		:global(.review__alert) {
+			margin-bottom: var(--space-3);
 		}
 
-		.review-page .value {
-			text-align: left;
-			max-width: 100%;
-			word-break: break-word;
+		.review__card {
+			margin-bottom: var(--space-3);
+			padding: 1.25rem;
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
 		}
 
-		.review-page .section-title {
-			flex-wrap: wrap;
-			gap: 4px;
+		.review__head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: var(--space-3);
+		}
+
+		.review__head h2 {
+			display: flex;
+			align-items: center;
+			gap: var(--space-2);
+			margin: 0;
+			font-size: var(--font-size-lg);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.review__head .ti {
+			font-size: 16px;
+			color: var(--color-accent);
+		}
+
+		.review__head .review__ok {
+			color: var(--color-text-success);
+		}
+
+		.review__head a {
+			display: inline-flex;
+			align-items: center;
+			min-height: 24px;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-info);
+		}
+
+		.review__trip {
+			display: flex;
+			align-items: center;
+			gap: var(--space-3);
+			margin-bottom: var(--space-3);
+		}
+
+		.review__thumb {
+			flex-shrink: 0;
+			width: 64px;
+			height: 64px;
+			border-radius: var(--radius-md);
+			object-fit: cover;
+		}
+
+		.review__thumb--empty {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: var(--color-background-secondary);
+			color: var(--color-border-secondary);
+			font-size: 24px;
+		}
+
+		.review__tour {
+			margin: 0 0 4px;
+			font-weight: var(--font-weight-medium);
+		}
+
+		.review__rows {
+			margin: 0;
+		}
+
+		.review__rows div {
+			display: flex;
+			justify-content: space-between;
+			gap: var(--space-4);
+			padding: 5px 0;
+			font-size: var(--font-size-base);
+		}
+
+		.review__rows dt {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			flex-shrink: 0;
+			color: var(--color-text-secondary);
+		}
+
+		.review__rows dt .ti {
+			font-size: 13px;
+			color: var(--color-text-tertiary);
+		}
+
+		.review__rows dd {
+			margin: 0;
+			font-weight: var(--font-weight-medium);
+			text-align: right;
+			overflow-wrap: anywhere;
+		}
+
+		.review__wrap {
+			white-space: pre-line;
+		}
+
+		.review__line {
+			margin: 0;
+		}
+
+		.review__total {
+			display: flex;
+			justify-content: space-between;
+			margin: var(--space-3) 0 0;
+			padding-top: var(--space-3);
+			border-top: 0.5px solid var(--color-border-tertiary);
+			font-size: var(--font-size-xl);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.review__fee {
+			margin: 6px 0 0;
+			font-size: var(--font-size-xs);
+			color: var(--color-text-secondary);
+		}
+
+		.review__policy {
+			margin: 0;
+			padding: var(--space-3);
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.review__form {
+			margin-top: var(--space-4);
+		}
+
+		.review__legal {
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-sm);
+			line-height: var(--line-height-normal);
+			color: var(--color-text-secondary);
+		}
+
+		.review__legal a {
+			color: var(--color-text-info);
 		}
 	}
 </style>

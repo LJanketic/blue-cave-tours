@@ -4,8 +4,13 @@ export const prerender = false;
 import { randomBytes } from 'node:crypto';
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import MiniNav from '../../components/MiniNav.astro';
-import TrustStrip from '../../components/TrustStrip.astro';
+import BookingShell from '../../components/booking/BookingShell.astro';
+import SummaryCard from '../../components/booking/SummaryCard.astro';
+import Notice from '../../components/ui/Notice.astro';
+import Button from '../../components/ui/Button.astro';
+import { PAYMENTS_ARE_DEMO } from '../../config/payments';
+import { getTourBySlug } from '../../lib/tours';
+import { mandatoryFeeLabel } from '../../lib/cards';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
 import { finalizePaidBooking, isPayable, recordFailedPayment } from '../../lib/bookings/service';
@@ -48,79 +53,80 @@ const closedReason =
 		: 'This booking can no longer be paid, because the tour date has passed.';
 
 const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
+const tour = getTourBySlug(booking.tourSlug);
+const fee = tour ? mandatoryFeeLabel(tour) : undefined;
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
 <SiteLayout title={pageTitle('Payment')} description="Complete your booking payment." checkout robots="noindex, nofollow">
-	<main id="main" class="status-page-narrow pay-page">
-		<MiniNav exitHref={`/tours/${booking.tourSlug}/`} exitLabel="Exit" />
-		<h1>Payment</h1>
+	<BookingShell step={4} exitHref={`/tours/${booking.tourSlug}/`} heading="Payment" headingVisible>
+		{
+			PAYMENTS_ARE_DEMO && (
+				<Notice tone="info" icon="info-circle" class="pay__demo">
+					<strong>Demo checkout.</strong> No real payment is taken. When real payments are switched on, you'll pay here
+					on Teya's payment page or with PayPal.
+				</Notice>
+			)
+		}
 
-		<p class="demo-banner" role="note">
-			<i class="ti ti-info-circle" aria-hidden="true"></i>
-			<span><strong>Demo checkout.</strong> No real payment is taken. When real payments are switched on, you'll pay here on Teya's payment page or with PayPal.</span>
-		</p>
-
-		<div class="pay-card">
-			<div class="pay-row"><span>Tour</span><strong>{booking.tourTitle}</strong></div>
-			<div class="pay-row"><span>Date</span><strong>{formatBookingDate(booking.date)}{booking.slot && `, ${booking.slot}`}</strong></div>
-			<div class="pay-row"><span>Guests</span><strong>{guests}</strong></div>
-			<div class="pay-row"><span>Booking ref</span><strong>{booking.ref}</strong></div>
-			<hr />
-			<div class="pay-row pay-total"><span>Total</span><strong>€{booking.total}</strong></div>
-		</div>
+		<SummaryCard
+			title="Your booking"
+			rows={[
+				{ label: 'Tour', value: booking.tourTitle },
+				{ label: 'Date', value: `${formatBookingDate(booking.date)}${booking.slot ? `, ${booking.slot}` : ''}` },
+				{ label: 'Guests', value: guests },
+				{ label: 'Booking ref', value: booking.ref },
+			]}
+			total={{ label: 'Total', value: `€${booking.total}` }}
+			note={fee}
+		/>
 
 		{
 			!payable ? (
-				<div class="closed-note" role="status">
+				<div class="pay__closed" role="status">
 					<p>{closedReason}</p>
 					<p>
 						Questions? <a href="/contact/">Contact us</a> and quote <strong>{booking.ref}</strong>.
 					</p>
-					<a class="pay-btn" href="/tours/">Browse tours</a>
+					<Button href="/tours/">Browse tours</Button>
 				</div>
 			) : (
-				<>
-		{
-			booking.paymentStatus === 'failed' && (
-				<p class="retry-note" role="alert">
-					<i class="ti ti-alert-triangle" aria-hidden="true"></i> Your last payment attempt was declined. You can try again.
-				</p>
+				<form method="post" class="pay__form">
+					{booking.paymentStatus === 'failed' && (
+						<Notice tone="warn" alert>
+							Your last payment attempt was declined. Nothing was charged. You can try again.
+						</Notice>
+					)}
+					<fieldset class="pay__methods">
+						<legend>Pay with</legend>
+						<label class="pay__method">
+							<input type="radio" name="provider" value="teya" checked />
+							<span class="pay__icon" aria-hidden="true"><i class="ti ti-credit-card" /></span>
+							<span><strong>Card</strong><small>Visa, Mastercard and more, through Teya</small></span>
+						</label>
+						<label class="pay__method">
+							<input type="radio" name="provider" value="paypal" />
+							<span class="pay__icon" aria-hidden="true"><i class="ti ti-brand-paypal" /></span>
+							<span><strong>PayPal</strong><small>Pay with your PayPal account</small></span>
+						</label>
+					</fieldset>
+					{fee && <p class="pay__small">{fee}.</p>}
+					<p class="pay__small">
+						A leisure service on a fixed date: the 14-day right of withdrawal doesn't apply; our
+						<a href="/legal/cancellation/">cancellation policy</a> does.
+					</p>
+					<Button type="submit" name="outcome" value="success" size="lg" block icon="lock">Pay €{booking.total}</Button>
+					<button class="pay__decline" type="submit" name="outcome" value="decline">Demo: simulate a declined payment</button>
+				</form>
 			)
 		}
-
-		<form method="post">
-			<fieldset class="methods">
-				<legend>Pay with</legend>
-				<label class="method">
-					<input type="radio" name="provider" value="teya" checked />
-					<i class="ti ti-credit-card" aria-hidden="true"></i>
-					<span><strong>Card</strong><small>Visa, Mastercard and more, through Teya</small></span>
-				</label>
-				<label class="method">
-					<input type="radio" name="provider" value="paypal" />
-					<i class="ti ti-cash" aria-hidden="true"></i>
-					<span><strong>PayPal</strong><small>Pay with your PayPal account</small></span>
-				</label>
-			</fieldset>
-
-			<button class="pay-btn" type="submit" name="outcome" value="success">
-				<i class="ti ti-lock" aria-hidden="true"></i> Pay €{booking.total}
-			</button>
-			<button class="decline-btn" type="submit" name="outcome" value="decline">
-				Demo: simulate a declined payment
-			</button>
-		</form>
-				</>
-			)
-		}
-
-		<TrustStrip />
-	</main>
+	</BookingShell>
 </SiteLayout>
 
 <script>
 	// One payment per click: a double-click would otherwise post twice.
-	document.querySelector('form[method="post"]')?.addEventListener('submit', (event) => {
+	document.querySelector('form.pay__form')?.addEventListener('submit', (event) => {
 		const form = event.currentTarget as HTMLFormElement;
 		const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
 		// Keep the clicked button's value: disabled buttons aren't submitted.
@@ -136,177 +142,112 @@ const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.
 </script>
 
 <style>
-	.pay-page h1 {
-		font-size: 22px;
-		font-weight: 500;
-		margin: 1rem 0;
-	}
+	@layer pages {
+		:global(.pay__demo) {
+			margin-bottom: var(--space-4);
+		}
 
-	.demo-banner,
-	.retry-note {
-		display: flex;
-		gap: 8px;
-		align-items: flex-start;
-		font-size: 13px;
-		line-height: 1.5;
-		padding: 10px 12px;
-		border-radius: var(--radius-md);
-		margin: 0 0 16px;
-	}
+		.pay__form {
+			display: grid;
+			gap: var(--space-3);
+			margin-top: var(--space-4);
+		}
 
-	/* Body text in the primary colour: the info blue on its own tint is just under 4.5:1. */
-	.demo-banner {
-		background: var(--color-background-info);
-		color: var(--color-text-primary);
-	}
+		.pay__methods {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 10px;
+			margin: 0;
+			padding: 0;
+			border: 0;
+		}
 
-	.demo-banner .ti {
-		color: var(--color-text-info);
-	}
+		.pay__methods legend {
+			margin-bottom: var(--space-2);
+			font-weight: var(--font-weight-medium);
+		}
 
-	.retry-note {
-		background: var(--color-background-warning);
-		color: var(--color-text-warning);
-	}
+		.pay__method {
+			display: flex;
+			align-items: center;
+			gap: var(--space-3);
+			padding: 14px var(--space-4);
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
+			cursor: pointer;
+		}
 
-	.demo-banner .ti,
-	.retry-note .ti {
-		font-size: 16px;
-		margin-top: 1px;
-	}
+		.pay__method:hover {
+			border-color: var(--color-border-primary);
+		}
 
-	.pay-card {
-		background: var(--color-background-primary);
-		border: 0.5px solid var(--color-border-tertiary);
-		border-radius: var(--radius-lg);
-		padding: 1.25rem;
-		margin-bottom: 16px;
-		font-size: 13px;
-	}
+		.pay__method input {
+			width: 18px;
+			height: 18px;
+			margin: 0;
+			accent-color: var(--color-brand);
+		}
 
-	.pay-row {
-		display: flex;
-		justify-content: space-between;
-		gap: 12px;
-		margin-bottom: 8px;
-	}
+		.pay__icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 36px;
+			height: 36px;
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+			color: var(--color-text-brand);
+			font-size: 18px;
+		}
 
-	.pay-row span {
-		color: var(--color-text-secondary);
-	}
+		.pay__method strong,
+		.pay__method small {
+			display: block;
+		}
 
-	.pay-row strong {
-		font-weight: 500;
-		text-align: right;
-	}
+		.pay__method small {
+			font-size: var(--font-size-xs);
+			color: var(--color-text-secondary);
+		}
 
-	.pay-card hr {
-		border: none;
-		border-top: 0.5px solid var(--color-border-tertiary);
-		margin: 12px 0;
-	}
+		.pay__small {
+			margin: 0;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
 
-	.pay-total {
-		margin-bottom: 0;
-		align-items: baseline;
-	}
+		.pay__small a {
+			color: var(--color-text-info);
+		}
 
-	.pay-total strong {
-		font-size: 20px;
-	}
+		.pay__decline {
+			justify-self: center;
+			min-height: 24px;
+			padding: 0;
+			border: 0;
+			background: none;
+			color: var(--color-text-secondary);
+			font: inherit;
+			font-size: var(--font-size-sm);
+			text-decoration: underline;
+			cursor: pointer;
+		}
 
-	.methods {
-		border: none;
-		padding: 0;
-		margin: 0 0 16px;
-		display: grid;
-		gap: 8px;
-	}
+		.pay__closed {
+			display: grid;
+			gap: var(--space-2);
+			justify-items: start;
+			margin-top: var(--space-4);
+		}
 
-	.methods legend {
-		font-size: 13px;
-		font-weight: 500;
-		margin-bottom: 8px;
-	}
+		.pay__closed p {
+			margin: 0;
+		}
 
-	.method {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 12px 14px;
-		border: 0.5px solid var(--color-border-secondary);
-		border-radius: var(--radius-md);
-		cursor: pointer;
-		min-height: var(--touch-min);
-	}
-
-	.method:has(input:checked) {
-		border-color: var(--color-text-primary);
-		box-shadow: inset 0 0 0 1px var(--color-text-primary);
-	}
-
-	.method .ti {
-		font-size: 20px;
-		color: var(--color-text-secondary);
-	}
-
-	.method span {
-		display: grid;
-		font-size: 13px;
-	}
-
-	.method small {
-		color: var(--color-text-tertiary);
-		font-size: 12px;
-	}
-
-	.pay-btn,
-	.decline-btn {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		border-radius: var(--radius-md);
-		font-family: var(--font-ui);
-		cursor: pointer;
-		min-height: var(--touch-min);
-	}
-
-	.pay-btn {
-		padding: 13px;
-		background: var(--color-text-primary);
-		color: var(--color-background-primary);
-		border: none;
-		font-size: 14px;
-		font-weight: 500;
-	}
-
-	.pay-btn:hover {
-		opacity: 0.88;
-	}
-
-	.closed-note {
-		font-size: 14px;
-		margin-bottom: 16px;
-	}
-
-	.closed-note a.pay-btn {
-		text-decoration: none;
-	}
-
-	.pay-btn:disabled,
-	.decline-btn:disabled {
-		opacity: 0.6;
-		cursor: wait;
-	}
-
-	.decline-btn {
-		margin-top: 8px;
-		padding: 10px;
-		background: none;
-		border: 0.5px dashed var(--color-border-secondary);
-		color: var(--color-text-secondary);
-		font-size: 12px;
+		@media (max-width: 768px) {
+			.pay__methods {
+				grid-template-columns: 1fr;
+			}
+		}
 	}
 </style>

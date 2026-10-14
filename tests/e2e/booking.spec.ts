@@ -57,8 +57,12 @@ test('a full booking: details stay out of every URL, and the cookie goes at the 
 	await expect(page.locator('main')).toContainText('Infants');
 	await page.getByRole('button', { name: /Continue to payment/ }).click();
 	await expect(page).toHaveURL(/\/booking\/pay\/\?id=[0-9a-f-]{36}$/);
-	await page.getByRole('button', { name: /Pay/ }).first().click();
+	await page.getByRole('button', { name: /^Pay €/ }).click();
 	await expect(page).toHaveURL(/\/booking\/success\/\?id=[0-9a-f-]{36}$/);
+	// S-3: the confirmation page shows no name, phone or notes, and a masked email.
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText("You're booked!");
+	const text = await page.locator('main').innerText();
+	expect(text).not.toMatch(/\bTest\b|\bGuest\b|guest@example\.com|\+385 91 000|Late arrival/);
 
 	for (const url of urls) expect(new URL(url).search, url).not.toMatch(PERSONAL);
 	expect((await context.cookies()).find((c) => c.name === 'hbc_booking')).toBeUndefined();
@@ -141,11 +145,44 @@ test('step 2 in the browser: pick a day, fill in, review', async ({ page }) => {
 	if (md > '11-25' || md < '04-01') {
 		for (let i = 0; i < 6; i++) await page.getByRole('button', { name: 'Next month' }).click();
 	}
-	await page.locator('.cal-day:not([disabled])').last().click();
+	await page.locator('.cal__day:not([aria-disabled])').last().click();
+	const slot = page.getByRole('radio', { name: new RegExp(SLOT) });
+	if (await slot.count()) await slot.check();
 	await page.locator('#book-first').fill('Test');
 	await page.locator('#book-last').fill('Guest');
 	await page.locator('#book-email').fill('guest@example.com');
 	await page.getByRole('button', { name: /Review booking/ }).click();
 	await expect(page).toHaveURL(new RegExp(`/book/${TOUR}/review/$`));
 	await expect(page.locator('main')).toContainText('guest@example.com');
+});
+
+test('step 2 without JavaScript: the plain form posts to the draft endpoint', async ({ browser }) => {
+	const context = await browser.newContext({ javaScriptEnabled: false, extraHTTPHeaders: ip() });
+	const page = await context.newPage();
+	await page.goto(`/book/${TOUR}/group/`);
+	const form = page.locator('form.no-js');
+	await expect(form).toBeVisible();
+	await form.locator('input[name="date"]').fill(seasonDate());
+	const slot = form.locator('select[name="slot"]');
+	if (await slot.count()) await slot.selectOption(SLOT);
+	await form.locator('input[name="firstName"]').fill('Test');
+	await form.locator('input[name="lastName"]').fill('Guest');
+	await form.locator('input[name="email"]').fill('guest@example.com');
+	await form.getByRole('button', { name: /Review booking/ }).click();
+	await expect(page).toHaveURL(new RegExp(`/book/${TOUR}/review/$`));
+	await expect(page.locator('main')).toContainText('guest@example.com');
+	await context.close();
+});
+
+test('a declined payment: nothing charged, try again goes back to payment', async ({ page }) => {
+	await page.setExtraHTTPHeaders(ip());
+	await startDraft(page.request);
+	await page.goto(`/book/${TOUR}/review/`);
+	await page.getByRole('button', { name: /Continue to payment/ }).click();
+	await page.getByRole('button', { name: /simulate a declined payment/ }).click();
+	await expect(page).toHaveURL(/\/booking\/error\/\?id=/);
+	await expect(page.getByRole('alert')).toContainText("We don't hold seats until you pay");
+	await page.getByRole('link', { name: 'Try payment again' }).click();
+	await expect(page).toHaveURL(/\/booking\/pay\/\?id=/);
+	await expect(page.getByRole('alert')).toContainText('declined');
 });

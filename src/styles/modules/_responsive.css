@@ -9,20 +9,6 @@
 		padding-inline: var(--page-gutter);
 	}
 
-	.page-shell--narrow:has(.group-booking-page),
-	.page-shell--narrow:has(.private-booking-page),
-	.page-shell--narrow:has(.review-page) {
-		padding-top: 0;
-		padding-bottom: 2rem;
-	}
-
-	.group-booking-page,
-	.private-booking-page,
-	.review-page {
-		padding-top: 1rem;
-		padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
-	}
-
 	.step-bar {
 		overflow-x: auto;
 		-webkit-overflow-scrolling: touch;
@@ -37,16 +23,6 @@
 
 	.step {
 		flex-shrink: 0;
-	}
-
-	.step-line {
-		flex: 0 0 16px;
-		min-width: 16px;
-		margin: 0 4px;
-	}
-
-	.step-lbl {
-		white-space: nowrap;
 	}
 
 	.sticky-card {
@@ -130,19 +106,6 @@
 		padding-inline: var(--page-gutter);
 	}
 
-	.step-lbl {
-		display: none;
-	}
-
-	.step.active .step-lbl {
-		display: inline;
-	}
-
-	.step-line {
-		flex: 1;
-		min-width: 8px;
-	}
-
 	.trust-bar {
 		grid-template-columns: 1fr 1fr;
 		margin-top: 28px;
@@ -150,10 +113,5 @@
 
 	.steps {
 		grid-template-columns: 1fr;
-	}
-
-	.cal-grid {
-		gap: 2px;
-		font-size: 11px;
 	}
 }

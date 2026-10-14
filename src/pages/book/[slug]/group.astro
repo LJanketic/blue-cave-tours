@@ -1,158 +1,197 @@
 ---
 export const prerender = true;
 
+/**
+ * Group booking, step 2 (spec §8.1.2). With JavaScript: the GroupBookingFlow
+ * island. Without it: a plain form with native inputs that posts to the same
+ * endpoint (§3.5); the page shows whichever applies.
+ */
+import { Image } from 'astro:assets';
 import { pageTitle } from '../../../config/site';
+import { SEASON_END, SEASON_START, seasonLabel } from '../../../config/season';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
-import MiniNav from '../../../components/MiniNav.astro';
-import TrustStrip from '../../../components/TrustStrip.astro';
+import BookingShell from '../../../components/booking/BookingShell.astro';
 import GroupBookingFlow from '../../../components/vue/GroupBookingFlow.vue';
-import { getAllTours } from '../../../lib/tours';
+import { getAllTours, getTourCardPhoto } from '../../../lib/tours';
 import { DEFAULT_AGE_BANDS } from '../../../data/tour-catalog';
-import { meetingPointShort, supportsInstantBook, toIsoDate } from '../../../lib/booking';
+import { MAX_GUESTS, meetingPointShort, supportsInstantBook } from '../../../lib/booking';
+import { businessDate } from '../../../lib/bookings/dates';
+import { mandatoryFeeLabel } from '../../../lib/cards';
 import type { TourDetail } from '../../../types/tour';
 
-// Quote-only tours have no instant-book price to charge — they're routed to
-// the contact form everywhere in the UI, so this flow shouldn't exist for
-// them at all (a direct URL would otherwise reach an untrusted-total fallback).
+// Quote-only tours have no instant-book price; they're routed to the contact form everywhere.
 export function getStaticPaths() {
 	return getAllTours()
 		.filter((tour) => supportsInstantBook(tour))
-		.map((tour) => ({
-			params: { slug: tour.slug },
-			props: { tour },
-		}));
+		.map((tour) => ({ params: { slug: tour.slug }, props: { tour } }));
 }
 
 type Props = { tour: TourDetail };
 const { tour } = Astro.props;
-const renderedOn = toIsoDate(new Date());
-
-const meetingShort = meetingPointShort(tour.meetingPoint);
+// Split's date, so the calendar's "today" matches the server's (§8.1.2).
+const renderedOn = businessDate();
+const photo = getTourCardPhoto(tour);
+const ageBands = tour.ageBands ?? DEFAULT_AGE_BANDS;
+const fee = mandatoryFeeLabel(tour);
+const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (_, i) => i + min);
 ---
 
-<SiteLayout title={pageTitle(`Book — ${tour.title}`)} description={`Book ${tour.title} — choose date, guests, and contact details.`} checkout robots="noindex, nofollow">
-	<main id="main" class="page-shell page-shell--narrow">
-		<div class="page group-booking-page">
-			<MiniNav exitHref={`/tours/${tour.slug}/`} exitLabel="Exit" />
-			<h1 class="sr-only">Book {tour.title}</h1>
-			<div class="step-bar" role="group" aria-label="Booking progress">
-				<div class="step done">
-					<div class="step-dot"><i class="ti ti-check" aria-hidden="true"></i></div>
-					<span class="step-lbl">Tour type</span>
-				</div>
-				<div class="step-line"></div>
-				<div class="step active" aria-current="step">
-					<div class="step-dot">2</div>
-					<span class="step-lbl">Date &amp; guests</span>
-				</div>
-				<div class="step-line"></div>
-				<div class="step next">
-					<div class="step-dot">3</div>
-					<span class="step-lbl">Review</span>
-				</div>
-				<div class="step-line"></div>
-				<div class="step next">
-					<div class="step-dot">4</div>
-					<span class="step-lbl">Payment</span>
-				</div>
+<SiteLayout title={pageTitle(`Book: ${tour.title}`)} description={`Book ${tour.title}: choose a date, guests and contact details.`} checkout robots="noindex, nofollow">
+	<BookingShell step={2} exitHref={`/tours/${tour.slug}/`} heading={`Book ${tour.title}`}>
+		<div class="snap">
+			{
+				photo.src ? (
+					<Image src={photo.src} alt="" widths={[112, 168]} sizes="56px" quality={70} format="webp" class="snap__img" />
+				) : (
+					<span class="snap__img snap__img--empty" aria-hidden="true">
+						<i class="ti ti-sailboat" />
+					</span>
+				)
+			}
+			<div>
+				<p class="snap__name">{tour.title}</p>
+				<p class="snap__meta">{tour.duration} · {meetingPointShort(tour.meetingPoint)}</p>
 			</div>
+		</div>
 
-			<div class="tour-snap">
-				<div class="snap-img" aria-hidden="true">
-					<i class="ti ti-sunset"></i>
-				</div>
-				<div>
-					<p class="snap-name">{tour.title}</p>
-					<div class="snap-meta">
-						<span class="snap-tag">
-							<i class="ti ti-clock" aria-hidden="true"></i>
-							{tour.duration}
-						</span>
-						<span class="snap-tag snap-tag--location" title={tour.meetingPoint}>
-							<i class="ti ti-map-pin" aria-hidden="true"></i>
-							{meetingShort}
-						</span>
-					</div>
-				</div>
-			</div>
-
+		<div class="with-js">
 			<GroupBookingFlow
 				client:load
 				tourSlug={tour.slug}
 				tourTitle={tour.title}
-				duration={tour.duration}
 				departures={tour.departures}
 				adultPrice={tour.adultPrice}
 				childPrice={tour.childPrice}
 				priceNotes={tour.priceNotes}
-				ageBands={tour.ageBands ?? DEFAULT_AGE_BANDS}
+				mandatoryFeeLabel={fee}
+				ageBands={ageBands}
 				renderedOn={renderedOn}
+				seasonStart={SEASON_START}
+				seasonEnd={SEASON_END}
+				seasonLabel={seasonLabel()}
 			/>
-
-			<TrustStrip />
 		</div>
-	</main>
+
+		<!-- Without JavaScript: native controls, the same endpoint, a plain form post. -->
+		<form class="no-js" method="post" action="/api/bookings/draft">
+			<input type="hidden" name="tourId" value={tour.slug} />
+			<p class="no-js__note">Fields marked * are required. Tours run {seasonLabel()}.</p>
+			<label>Date *<input type="date" name="date" required min={renderedOn} /></label>
+			{
+				tour.departures.length > 1 ? (
+					<label>
+						Departure time
+						<select name="slot">
+							{tour.departures.map((d) => (
+								<option value={d.time}>{d.time}</option>
+							))}
+						</select>
+					</label>
+				) : (
+					<input type="hidden" name="slot" value={tour.departures[0]?.time ?? ''} />
+				)
+			}
+			<label>Adults ({ageBands.adult}) *<select name="adults">{counts(MAX_GUESTS, 1).map((n) => <option selected={n === 2}>{n}</option>)}</select></label>
+			<label>Children ({ageBands.child})<select name="children">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
+			<label>Infants (under {ageBands.infantMaxAge + 1}, free)<select name="infants">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
+			<p class="no-js__note">Up to {MAX_GUESTS} guests in total, infants included.</p>
+			<label>First name *<input name="firstName" required autocomplete="given-name" /></label>
+			<label>Last name *<input name="lastName" required autocomplete="family-name" /></label>
+			<label>Email *<input name="email" type="email" required autocomplete="email" /></label>
+			<label>Phone<input name="phone" type="tel" autocomplete="tel" /></label>
+			<label>Anything the crew should know? (optional)<textarea name="notes" maxlength="500"></textarea></label>
+			<button type="submit">Review booking</button>
+		</form>
+	</BookingShell>
 </SiteLayout>
 
 <style>
-	.group-booking-page {
-		max-width: 560px;
-		margin: 0 auto;
-		padding: 1.5rem 0 2rem;
-		font-size: 14px;
-	}
+	@layer pages {
+		.snap {
+			display: flex;
+			align-items: center;
+			gap: var(--space-3);
+			margin-bottom: var(--space-5);
+			padding: var(--space-3) 14px;
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+		}
 
-	.group-booking-page .snap-img .ti {
-		font-size: 22px;
-		color: var(--color-border-secondary);
-	}
+		.snap__img {
+			flex-shrink: 0;
+			width: 56px;
+			height: 56px;
+			border-radius: var(--radius-md);
+			object-fit: cover;
+		}
 
-	.group-booking-page .snap-meta {
-		display: flex;
-		gap: 10px;
-		flex-wrap: wrap;
-	}
+		.snap__img--empty {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: var(--color-background-primary);
+			color: var(--color-border-secondary);
+			font-size: 24px;
+		}
 
-	.group-booking-page .tour-snap {
-		display: flex;
-		gap: 12px;
-		align-items: center;
-		background: var(--color-background-secondary);
-		border-radius: var(--radius-lg);
-		padding: 12px 14px;
-		margin-bottom: 20px;
-	}
+		.snap__name {
+			margin: 0;
+			font-weight: var(--font-weight-medium);
+		}
 
-	.group-booking-page .snap-img {
-		width: 56px;
-		height: 56px;
-		border-radius: var(--radius-md);
-		background: var(--color-background-primary);
-		border: 0.5px solid var(--color-border-tertiary);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
+		.snap__meta {
+			margin: 0;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
 
-	.group-booking-page .snap-name {
-		font-size: 14px;
-		font-weight: 500;
-		margin: 0 0 3px;
-	}
+		/* One or the other: the island with JavaScript, the plain form without. */
+		.no-js {
+			display: none;
+		}
 
-	.group-booking-page .snap-tag {
-		font-size: 12px;
-		color: var(--color-text-secondary);
-		display: flex;
-		align-items: center;
-		gap: 4px;
-	}
+		@media (scripting: none) {
+			.with-js {
+				display: none;
+			}
 
-	.group-booking-page .snap-tag--location {
-		max-width: 180px;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+			.no-js {
+				display: grid;
+				gap: var(--space-3);
+			}
+		}
+
+		.no-js label {
+			display: grid;
+			gap: 4px;
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.no-js input,
+		.no-js select,
+		.no-js textarea {
+			min-height: 40px;
+			padding: var(--space-2) 10px;
+			border: 1px solid var(--color-border-input);
+			border-radius: var(--radius-md);
+			font: inherit;
+		}
+
+		.no-js button {
+			min-height: 46px;
+			border: 0;
+			border-radius: var(--radius-btn);
+			background: var(--color-background-brand);
+			color: var(--color-text-on-image);
+			font: inherit;
+			font-weight: var(--font-weight-semibold);
+		}
+
+		.no-js__note {
+			margin: 0;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
 	}
 </style>

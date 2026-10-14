@@ -1,386 +1,292 @@
 ---
 export const prerender = false;
 
-import { MEETING_POINT_MAP_URL, pageTitle, SITE_NAME } from '../../config/site';
+/**
+ * Booking confirmed (spec §8.1.5, board 08). Shows only what the customer
+ * needs on a page anyone with the link could see: no name, phone or notes,
+ * and a masked email (S-3). Clears the booking cookie (S-12).
+ */
+import { MEETING_POINT_LABEL, MEETING_POINT_MAP_URL, pageTitle, SITE_NAME } from '../../config/site';
+import { CANCELLATION_WEATHER } from '../../config/cancellation';
+import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import MiniNav from '../../components/MiniNav.astro';
-import TrustStrip from '../../components/TrustStrip.astro';
+import BookingShell from '../../components/booking/BookingShell.astro';
+import SummaryCard from '../../components/booking/SummaryCard.astro';
+import Notice from '../../components/ui/Notice.astro';
+import Button from '../../components/ui/Button.astro';
 import { getTourBySlug } from '../../lib/tours';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
 import { bookings } from '../../lib/bookings/store';
 import { BOOKING_COOKIE } from '../../lib/bookings/session';
-import { CANCELLATION_WEATHER } from '../../config/cancellation';
-import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 
-// Everything shown here comes from the stored booking, looked up by its id.
-// Only a paid, active booking gets a confirmation page. Anything else goes to the
-// payment page, which offers payment or explains why the booking is closed.
+// Only a paid, active booking gets this page; anything else goes to the payment page.
 const id = Astro.url.searchParams.get('id');
 const booking = isRecordId(id) ? await bookings().get(id) : null;
 if (!booking) return Astro.redirect('/tours/', 303);
-if (booking.paymentStatus !== 'paid' || booking.status === 'cancelled') {
-	return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
-}
+if (booking.paymentStatus !== 'paid' || booking.status === 'cancelled') return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
 
-// The booking is done: the browser no longer needs its booking cookie (S-12).
 Astro.cookies.delete(BOOKING_COOKIE, { path: '/' });
 Astro.response.headers.set('Cache-Control', 'no-store');
 Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 
-const bookedTour = getTourBySlug(booking.tourSlug);
-const details = {
-	email: booking.email,
-	phone: booking.phone || null,
-	notes: booking.customerNotes || null,
-};
-const guestName = `${booking.firstName} ${booking.lastName}`;
-const guestLine = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
-const dateLine = formatBookingDate(booking.date);
-const departureLine = booking.slot || bookedTour?.departure || null;
-const bookingRef = booking.ref;
-const totalLine = `€${booking.total}`;
-const paidWith = booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card';
-// Say "sent" only if this booking's confirmation really went out. Read from the booking itself:
-// this page is public, so it must not search the whole email outbox on every view.
-const emailSent = booking.confirmationEmail?.delivery === 'sent';
+/** "i***@example.com" */
+function maskEmail(email: string): string {
+	const [user, domain] = email.split('@');
+	return domain ? `${user.slice(0, 1)}***@${domain}` : '***';
+}
 
-const mapUrl = MEETING_POINT_MAP_URL;
-const meetingLocation = 'Riva promenade, stand 14, Split';
-const bringList =
-	bookedTour?.whatToBring.slice(0, 3).join(', ') ?? 'Sunscreen, swimwear, towel';
+const tour = getTourBySlug(booking.tourSlug);
+const departure = tour?.departures.find((d) => d.time === booking.slot);
+// Check-in when the tour has one, otherwise 15 minutes before departure.
+const arriveBy = departure?.checkIn
+	? departure.checkIn
+	: booking.slot
+		? (() => {
+				const [h, m] = booking.slot.split(':').map(Number);
+				const t = h * 60 + m - 15;
+				return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+			})()
+		: '15 minutes before departure';
+const emailSent = booking.confirmationEmail?.delivery === 'sent';
+const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, sunscreen';
 ---
 
-<SiteLayout
-	title={pageTitle('Booking confirmed')}
-	description={`Your booking with ${SITE_NAME} has been received.`}
-	checkout
-	robots="noindex, nofollow"
->
-	<main id="main" class="status-page-narrow payment-success-page">
-		<MiniNav />
-		<div class="success-hero">
-			<div class="check-circle" aria-hidden="true">
-				<i class="ti ti-check"></i>
-			</div>
-			<h1>You're booked!</h1>
+<SiteLayout title={pageTitle('Booking confirmed')} description={`Your booking with ${SITE_NAME} is confirmed.`} checkout robots="noindex, nofollow">
+	<BookingShell exitHref="/tours/" heading="You're booked!" headingVisible>
+		<span slot="lead" class="done__icon" aria-hidden="true"><i class="ti ti-check"></i></span>
+		<div class="done__hero">
 			<p>
-				{
-					emailSent ? (
-						<>
-							Confirmation sent to <strong>{details.email}</strong>. Check your inbox, and your spam folder
-							just in case.
-						</>
-					) : (
-						<>Demo: your confirmation email is saved in the admin, not sent to {details.email}.</>
-					)
-				}
+				{emailSent ? <>Confirmation sent to <strong>{maskEmail(booking.email)}</strong>. Check your spam folder if it isn't there in a few minutes.</> : <>Your confirmation email is saved in our system{PAYMENTS_ARE_DEMO ? ' (demo: not sent)' : ''}.</>}
 			</p>
 		</div>
+		{PAYMENTS_ARE_DEMO && <Notice tone="info" icon="info-circle">Demo booking. No payment was taken.</Notice>}
 
-		{
-			PAYMENTS_ARE_DEMO && (
-				<p class="demo-note" role="note">
-					<i class="ti ti-info-circle" aria-hidden="true"></i> Demo booking. No payment was taken.
-				</p>
-			)
-		}
-
-		<div class="conf-ref">
-			<span class="conf-ref-label">Booking ref:</span>
-			<strong class="conf-ref-value">{bookingRef}</strong>
+		<div class="done__ref">
+			<span>Booking ref <strong id="booking-ref">{booking.ref}</strong></span>
+			<button type="button" class="done__copy" data-copy="booking-ref" hidden>
+				<i class="ti ti-copy" aria-hidden="true"></i> Copy
+			</button>
+			<span class="sr-only" role="status" data-copy-status></span>
 		</div>
 
-		<div class="flow-card booking-card">
-			<p class="card-title">
-				<i class="ti ti-sailboat" aria-hidden="true"></i> Your booking
-			</p>
-			<div class="b-row">
-				<span class="b-label">Tour</span>
-				<span class="b-val">{booking.tourTitle}</span>
-			</div>
-			<div class="b-row">
-				<span class="b-label">Date</span>
-				<span class="b-val">{dateLine}</span>
-			</div>
-			<div class="b-row">
-				<span class="b-label">Departure</span>
-				<span class="b-val">{departureLine ?? '—'}</span>
-			</div>
-			<div class="b-row">
-				<span class="b-label">Guests</span>
-				<span class="b-val">{guestLine}</span>
-			</div>
-			<div class="b-row">
-				<span class="b-label">Name</span>
-				<span class="b-val">{guestName}</span>
-			</div>
-			<div class="b-row">
-				<span class="b-label">Email</span>
-				<span class="b-val">{details.email}</span>
-			</div>
-			{details.phone && (
-				<div class="b-row">
-					<span class="b-label">Phone</span>
-					<span class="b-val">{details.phone}</span>
-				</div>
-			)}
-			{details.notes && (
-				<div class="b-row">
-					<span class="b-label">Special requests</span>
-					<span class="b-val">{details.notes}</span>
-				</div>
-			)}
-			<hr class="b-div" />
-			<div class="b-row">
-				<span class="b-label">Total</span>
-				<span class="b-val">{totalLine}</span>
-			</div>
-			<div class="b-row">
-				<span class="b-label">Paid with</span>
-				<span class="b-val">{paidWith}</span>
-			</div>
-			{booking.invoice && (
-				<div class="b-row">
-					<span class="b-label">Invoice (račun)</span>
-					<span class="b-val">
-								{booking.invoice.number}
-								{PAYMENTS_ARE_DEMO && ' (demo, not a valid receipt)'}
-							</span>
-				</div>
-			)}
-		</div>
+		<SummaryCard
+			title="Your booking"
+			rows={[
+				{ label: 'Tour', value: booking.tourTitle },
+				{ label: 'Date', value: formatBookingDate(booking.date) },
+				{ label: 'Departure', value: booking.slot || 'Confirmed by email' },
+				{ label: 'Guests', value: guestSummaryFromCounts(booking.adults, booking.children, booking.infants) },
+				{ label: 'Paid with', value: booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card' },
+				...(booking.invoice ? [{ label: 'Invoice (račun)', value: `${booking.invoice.number}${PAYMENTS_ARE_DEMO ? ' (demo)' : ''}` }] : []),
+			]}
+			total={{ label: 'Total paid', value: `€${booking.total}` }}
+		/>
 
-		<div class="meetup-card">
-			<p class="card-title card-title--meetup">
-				<i class="ti ti-map-pin" aria-hidden="true"></i> Where to meet us
-			</p>
-			<div class="meetup-grid">
-				<div class="meetup-item">
-					<span class="meetup-label">Location</span>
-					<span class="meetup-val">{meetingLocation}</span>
-				</div>
-				<div class="meetup-item">
-					<span class="meetup-label">Arrive by</span>
-					<span class="meetup-val">15 minutes before departure</span>
-				</div>
-				<div class="meetup-item">
-					<span class="meetup-label">What to bring</span>
-					<span class="meetup-val">{bringList}</span>
-				</div>
-				<div class="meetup-item">
-					<span class="meetup-label">Captain</span>
-					<span class="meetup-val">Our crew will meet you on the Riva</span>
-				</div>
-			</div>
-			<a class="map-stub" href={mapUrl} target="_blank" rel="noopener noreferrer">
-				<i class="ti ti-map-2" aria-hidden="true"></i>
-				View meeting point on map
+		<section class="done__card" aria-labelledby="meet-heading">
+			<h2 id="meet-heading"><i class="ti ti-map-pin" aria-hidden="true"></i> Where to meet us</h2>
+			<dl class="done__meet">
+				<div><dt>Location</dt><dd>{MEETING_POINT_LABEL}</dd></div>
+				<div><dt>Arrive by</dt><dd>{arriveBy}</dd></div>
+				<div><dt>What to bring</dt><dd>{bring}</dd></div>
+				<div><dt>On the day</dt><dd>Our crew will meet you at the stand</dd></div>
+			</dl>
+			<a class="done__map" href={MEETING_POINT_MAP_URL} target="_blank" rel="noopener">
+				<i class="ti ti-map-2" aria-hidden="true"></i> Open the meeting point on the map<span class="sr-only"> (opens in a new tab)</span>
 			</a>
+		</section>
+
+		<section class="done__card" aria-labelledby="next-heading">
+			<h2 id="next-heading"><i class="ti ti-list-check" aria-hidden="true"></i> What happens next</h2>
+			<ol class="done__next" role="list">
+				<li><i class="ti ti-mail" aria-hidden="true"></i><span><strong>Check your email.</strong> Your booking details, meeting point and what to bring.</span></li>
+				<li><i class="ti ti-cloud-storm" aria-hidden="true"></i><span><strong>Weather.</strong> {CANCELLATION_WEATHER}</span></li>
+				<li><i class="ti ti-anchor" aria-hidden="true"></i><span><strong>Show up and sail.</strong> Be at the stand by {arriveBy}.</span></li>
+			</ol>
+		</section>
+
+		<div class="done__actions">
+			<Button href="/tours/" variant="secondary">Browse more tours</Button>
 		</div>
-
-		<div class="flow-card">
-			<p class="card-title">
-				<i class="ti ti-list-check" aria-hidden="true"></i> What happens next
-			</p>
-			<div class="next-item">
-				<div class="next-icon" aria-hidden="true">
-					<i class="ti ti-mail"></i>
-				</div>
-				<div>
-					<p class="next-title">Check your email</p>
-					<p class="next-desc">
-						{emailSent
-							? `We emailed your booking details, meeting point and what to bring to ${details.email}.`
-							: 'Your booking details, meeting point and what to bring are in the confirmation email.'}
-					</p>
-				</div>
-			</div>
-			<div class="next-item">
-				<div class="next-icon" aria-hidden="true">
-					<i class="ti ti-cloud-storm"></i>
-				</div>
-				<div>
-					<p class="next-title">Weather update</p>
-					<p class="next-desc">{CANCELLATION_WEATHER}</p>
-				</div>
-			</div>
-			<div class="next-item">
-				<div class="next-icon" aria-hidden="true">
-					<i class="ti ti-anchor"></i>
-				</div>
-				<div>
-					<p class="next-title">Show up and enjoy</p>
-					<p class="next-desc">
-						Arrive at Riva stand 14 on time. Your crew will be waiting — no need to print anything.
-					</p>
-				</div>
-			</div>
-		</div>
-
-		<a class="btn-browse" href="/tours/">
-			<i class="ti ti-sailboat" aria-hidden="true"></i>
-			Browse more tours
-		</a>
-
-		<TrustStrip />
-	</main>
+	</BookingShell>
 </SiteLayout>
 
+<script>
+	// "Copy" for the booking reference; without clipboard access it selects the text instead.
+	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
+		const target = document.getElementById(button.dataset.copy ?? '');
+		const status = button.parentElement?.querySelector<HTMLElement>('[data-copy-status]');
+		if (!target) continue;
+		button.hidden = false;
+		button.addEventListener('click', async () => {
+			try {
+				await navigator.clipboard.writeText(target.textContent ?? '');
+				if (status) status.textContent = 'Copied';
+				setTimeout(() => status && (status.textContent = ''), 1500);
+			} catch {
+				const range = document.createRange();
+				range.selectNodeContents(target);
+				window.getSelection()?.removeAllRanges();
+				window.getSelection()?.addRange(range);
+			}
+		});
+	}
+</script>
 
 <style>
-	.payment-success-page {
-		max-width: 520px;
-		margin-inline: auto;
-		padding: 1.5rem 1.25rem 2rem;
-		font-size: 14px;
-	}
+	@layer pages {
+		.done__hero {
+			margin-bottom: var(--space-4);
+			text-align: center;
+		}
 
-	.payment-success-page .card-title {
-		font-size: 13px;
-		font-weight: 500;
-		margin: 0 0 12px;
-		display: flex;
-		align-items: center;
-		gap: 7px;
-	}
+		.done__icon {
+			display: flex;
+			margin-inline: auto;
+			align-items: center;
+			justify-content: center;
+			width: 72px;
+			height: 72px;
+			margin-bottom: var(--space-3);
+			border-radius: 50%;
+			background: var(--color-background-brand-soft);
+			color: var(--color-text-brand);
+			font-size: 34px;
+		}
 
-	.payment-success-page .card-title .ti {
-		font-size: 15px;
-		color: var(--color-accent);
-	}
+		.done__hero p {
+			margin: 0;
+			color: var(--color-text-secondary);
+		}
 
-	.payment-success-page .card-title--meetup {
-		margin-bottom: 10px;
-	}
+		:global(.booking-shell h1) {
+			text-align: center;
+		}
 
-	.payment-success-page .demo-note {
-		display: flex;
-		gap: 8px;
-		align-items: center;
-		justify-content: center;
-		font-size: 13px;
-		padding: 8px 12px;
-		margin: 16px 0 0;
-		border-radius: var(--radius-md);
-		background: var(--color-background-info);
-		/* Primary text: the info blue on its own tint is just under 4.5:1. */
-		color: var(--color-text-primary);
-	}
+		.done__ref {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: var(--space-3);
+			margin: var(--space-4) 0;
+			padding: var(--space-3) var(--space-4);
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+		}
 
-	.payment-success-page .demo-note .ti {
-		color: var(--color-text-info);
-	}
+		.done__copy {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			min-height: 28px;
+			padding: 0 10px;
+			border: 0.5px solid var(--color-border-secondary);
+			border-radius: var(--radius-md);
+			background: var(--color-background-primary);
+			color: var(--color-text-primary);
+			font: inherit;
+			font-size: var(--font-size-sm);
+			cursor: pointer;
+		}
 
-	.payment-success-page .conf-ref {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 8px;
-		background: var(--color-background-secondary);
-		border-radius: var(--radius-md);
-		padding: 10px 16px;
-		margin: 16px 0 24px;
-		font-size: 13px;
-		text-align: center;
-		flex-wrap: wrap;
-	}
+		.done__card {
+			margin-top: var(--space-3);
+			padding: 1.25rem;
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
+		}
 
-	.payment-success-page .conf-ref-label {
-		font-size: 12px;
-		color: var(--color-text-secondary);
-	}
+		.done__card h2 {
+			display: flex;
+			align-items: center;
+			gap: var(--space-2);
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-lg);
+			font-weight: var(--font-weight-medium);
+		}
 
-	.payment-success-page .conf-ref-value {
-		font-size: 15px;
-		font-weight: 500;
-		letter-spacing: 0.08em;
-	}
+		.done__card h2 .ti {
+			font-size: 16px;
+			color: var(--color-accent);
+		}
 
-	.payment-success-page .b-row {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 12px;
-		font-size: 13px;
-		margin-bottom: 8px;
-	}
+		.done__meet {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: var(--space-2);
+			margin: 0 0 var(--space-3);
+		}
 
-	.payment-success-page .b-label {
-		color: var(--color-text-secondary);
-	}
+		.done__meet div {
+			padding: 10px var(--space-3);
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+		}
 
-	.payment-success-page .b-val {
-		font-weight: 500;
-		text-align: right;
-	}
+		.done__meet dt {
+			font-size: var(--font-size-micro);
+			text-transform: uppercase;
+			letter-spacing: var(--letter-spacing-label);
+			color: var(--color-text-tertiary);
+		}
 
-	.payment-success-page .b-div {
-		border: none;
-		border-top: 0.5px solid var(--color-border-tertiary);
-		margin: 4px 0;
-	}
+		.done__meet dd {
+			margin: 0;
+			font-size: var(--font-size-body-sm);
+			font-weight: var(--font-weight-medium);
+		}
 
-	.payment-success-page .booking-card {
-		margin-bottom: 14px;
-	}
+		.done__map {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			color: var(--color-text-info);
+		}
 
-	.payment-success-page .map-stub {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 80px;
-		background: var(--color-background-primary);
-		border: 0.5px solid var(--color-border-tertiary);
-		border-radius: var(--radius-md);
-		margin-top: 10px;
-		margin-bottom: 0;
-		gap: 7px;
-		font-size: 13px;
-		color: var(--color-text-secondary);
-		text-decoration: none;
-		cursor: pointer;
-	}
+		.done__next {
+			display: grid;
+			gap: var(--space-3);
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
 
-	.payment-success-page .map-stub .ti {
-		font-size: 18px;
-		color: var(--color-accent);
-	}
+		.done__next li {
+			display: flex;
+			gap: var(--space-3);
+			color: var(--color-text-secondary);
+		}
 
-	.payment-success-page .next-icon .ti {
-		font-size: 15px;
-	}
+		.done__next .ti {
+			flex-shrink: 0;
+			margin-top: 3px;
+			color: var(--color-accent);
+		}
 
-	.payment-success-page .btn-browse {
-		width: 100%;
-		padding: 10px;
-		background: none;
-		color: var(--color-text-primary);
-		border: 0.5px solid var(--color-border-secondary);
-		border-radius: var(--radius-md);
-		font-size: 13px;
-		font-weight: 500;
-		cursor: pointer;
-		font-family: var(--font-ui);
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		text-decoration: none;
-		min-height: var(--touch-min);
-	}
+		.done__next strong {
+			color: var(--color-text-primary);
+			font-weight: var(--font-weight-medium);
+		}
 
-	.payment-success-page .btn-browse:hover {
-		background: var(--color-background-secondary);
-	}
+		.done__actions {
+			margin-top: var(--space-5);
+			text-align: center;
+		}
 
-	.payment-success-page .btn-browse .ti {
-		font-size: 13px;
-	}
+		@media (max-width: 768px) {
+			.done__meet {
+				grid-template-columns: 1fr;
+			}
+		}
 
-	@media (max-width: 768px) {
-		.payment-success-page .meetup-grid {
-			grid-template-columns: 1fr;
+		/* Printing the confirmation: just the booking. */
+		@media print {
+			:global(.mini-nav),
+			:global(.trust-strip),
+			.done__copy,
+			.done__actions {
+				display: none;
+			}
 		}
 	}
 </style>

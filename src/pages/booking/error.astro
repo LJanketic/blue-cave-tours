@@ -1,10 +1,11 @@
 ---
 export const prerender = false;
 
-import { pageTitle, SITE_NAME } from '../../config/site';
+import { pageTitle, SITE_NAME, SITE_PHONE, SITE_PHONE_DISPLAY } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import MiniNav from '../../components/MiniNav.astro';
-import TrustStrip from '../../components/TrustStrip.astro';
+import BookingShell from '../../components/booking/BookingShell.astro';
+import Notice from '../../components/ui/Notice.astro';
+import Button from '../../components/ui/Button.astro';
 import { getTourBySlug } from '../../lib/tours';
 import { isRecordId } from '../../lib/bookings/ids';
 import { bookings } from '../../lib/bookings/store';
@@ -25,202 +26,177 @@ const retryHref = booking
 	: bookedTour
 		? `/book/${bookedTour.slug}/group/`
 		: '/tours/';
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+
+const REASONS = [
+	{ icon: 'credit-card', text: 'Incorrect card number, expiry date or security code' },
+	{ icon: 'building-bank', text: 'Your bank declined the payment: they can tell you why' },
+	{ icon: 'wifi-off', text: 'The connection dropped during payment' },
+	{ icon: 'lock', text: 'The 3D Secure check timed out or was declined' },
+];
 ---
 
 <SiteLayout
-	title={pageTitle('Payment unsuccessful')}
+	title={pageTitle(booking ? 'Payment unsuccessful' : "We couldn't save your booking")}
 	description={`There was a problem completing your payment with ${SITE_NAME}.`}
 	checkout
 	robots="noindex, nofollow"
 >
-	<main id="main" class="status-page-narrow payment-error-page">
-		<MiniNav />
-		<div class="error-hero">
-			<div class="error-circle" aria-hidden="true">
-				<i class="ti ti-x"></i>
-			</div>
-			<h1>{booking ? 'Payment unsuccessful' : "We couldn't save your booking"}</h1>
-			<p>
-				{
-					booking
-						? "Your booking hasn't been confirmed yet. No money has been taken from your account."
-						: 'Nothing was charged. Please start your booking again.'
-				}
-			</p>
+	<BookingShell exitHref="/tours/" heading={booking ? 'Payment unsuccessful' : "We couldn't save your booking"} headingVisible>
+		<span slot="lead" class="fail__icon" aria-hidden="true"><i class="ti ti-x"></i></span>
+		<div class="fail__hero">
+			<p>{booking ? "You haven't been charged." : 'Nothing was charged. Please start your booking again.'}</p>
 		</div>
 
-		<div class="error-note" role="alert">
-			<i class="ti ti-alert-circle" aria-hidden="true"></i>
-			<span>
-				{
-					booking
-						? 'Your booking details are saved. Try again, or pay with a different card or PayPal.'
-						: 'Something went wrong saving your booking. Please try again.'
-				}
-			</span>
-		</div>
+		<Notice tone="danger" alert>
+			{
+				booking
+					? "We don't hold seats until you pay. You can try again now, or call us and we'll book it for you."
+					: 'Something went wrong saving your booking. Please try again, or call us and we\'ll book it for you.'
+			}
+		</Notice>
 
-		<div class="flow-card">
-			<p class="card-title">
-				<i class="ti ti-help-circle" aria-hidden="true"></i> Common reasons this happens
-			</p>
-			<div class="reason-item">
-				<i class="ti ti-credit-card" aria-hidden="true"></i>
-				Incorrect card number, expiry, or CVV
-			</div>
-			<div class="reason-item">
-				<i class="ti ti-building-bank" aria-hidden="true"></i>
-				Bank declined the transaction — try contacting them
-			</div>
-			<div class="reason-item">
-				<i class="ti ti-wifi-off" aria-hidden="true"></i>
-				Connection dropped mid-payment
-			</div>
-			<div class="reason-item">
-				<i class="ti ti-lock" aria-hidden="true"></i>
-				3D Secure verification timed out or was declined
-			</div>
-		</div>
+		{
+			booking && (
+				<section class="fail__card" aria-labelledby="reasons-heading">
+					<h2 id="reasons-heading">
+						<i class="ti ti-help-circle" aria-hidden="true" /> Common reasons
+					</h2>
+					<ul role="list">
+						{REASONS.map((r) => (
+							<li>
+								<i class={`ti ti-${r.icon}`} aria-hidden="true" />
+								{r.text}
+							</li>
+						))}
+					</ul>
+				</section>
+			)
+		}
 
-		<div class="hold-warn">
-			<i class="ti ti-clock" aria-hidden="true"></i>
-			We don't hold seats until you pay. Try again soon so your tour doesn't fill up.
-		</div>
-
-		<div class="help-strip">
-			<div class="help-icon" aria-hidden="true">
-				<i class="ti ti-headset"></i>
-			</div>
+		<div class="fail__help">
+			<span class="fail__help-icon" aria-hidden="true"><i class="ti ti-headset"></i></span>
 			<div>
-				<p class="help-title">Need help?</p>
-				<p class="help-desc">If the problem persists, we can take your booking manually.</p>
-				<a class="help-link" href="/contact/">Contact us →</a>
+				<p><strong>Need help?</strong> If it keeps failing, we can take your booking by phone.</p>
+				<p><a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a> · <a href="/contact/">Contact us</a></p>
 			</div>
 		</div>
 
-		<a class="btn-retry" href={retryHref}>
-			<i class="ti ti-refresh" aria-hidden="true"></i>
-			{booking ? 'Try payment again' : 'Start booking again'}
-		</a>
-		<a class="btn-back" href="/tours/">Back to tours</a>
-
-		<TrustStrip />
-	</main>
+		<div class="fail__actions">
+			<Button href={retryHref} size="lg" block icon="refresh">{booking ? 'Try payment again' : 'Start booking again'}</Button>
+			<Button href="/tours/" variant="secondary" block>Back to tours</Button>
+		</div>
+	</BookingShell>
 </SiteLayout>
 
 <style>
-	.payment-error-page {
-		max-width: 520px;
-		margin-inline: auto;
-		padding: 1.5rem 1.25rem 2rem;
-		font-size: 14px;
-	}
+	@layer pages {
+		.fail__hero {
+			margin-bottom: var(--space-4);
+			text-align: center;
+		}
 
-	.payment-error-page .error-hero p {
-		max-width: 380px;
-		margin-inline: auto;
-	}
+		:global(.booking-shell h1) {
+			text-align: center;
+		}
 
-	.payment-error-page .error-note i {
-		font-size: 15px;
-		flex-shrink: 0;
-		margin-top: 1px;
-	}
+		.fail__icon {
+			display: flex;
+			margin-inline: auto;
+			align-items: center;
+			justify-content: center;
+			width: 72px;
+			height: 72px;
+			margin-bottom: var(--space-3);
+			border-radius: 50%;
+			background: var(--color-background-danger);
+			color: var(--color-text-danger);
+			font-size: 34px;
+		}
 
-	.payment-error-page .card-title {
-		font-size: 13px;
-		font-weight: 500;
-		margin: 0 0 12px;
-		display: flex;
-		align-items: center;
-		gap: 7px;
-	}
+		.fail__hero p {
+			margin: 0;
+			color: var(--color-text-secondary);
+		}
 
-	.payment-error-page .card-title .ti {
-		font-size: 15px;
-		color: var(--color-accent);
-	}
+		.fail__card {
+			margin-top: var(--space-4);
+			padding: 1.25rem;
+			border: 1px solid var(--color-border-card);
+			border-radius: var(--radius-lg);
+		}
 
-	.payment-error-page .reason-item i {
-		font-size: 14px;
-		color: var(--color-text-tertiary);
-		flex-shrink: 0;
-	}
+		.fail__card h2 {
+			display: flex;
+			align-items: center;
+			gap: var(--space-2);
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-lg);
+			font-weight: var(--font-weight-medium);
+		}
 
-	.payment-error-page .hold-warn i {
-		font-size: 15px;
-		flex-shrink: 0;
-	}
+		.fail__card h2 .ti {
+			font-size: 16px;
+			color: var(--color-accent);
+		}
 
-	.payment-error-page .help-title {
-		font-size: 13px;
-		font-weight: 500;
-		margin: 0 0 2px;
-	}
+		.fail__card ul {
+			display: grid;
+			gap: 10px;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
 
-	.payment-error-page .help-desc {
-		font-size: 12px;
-		color: var(--color-text-secondary);
-		margin: 0;
-		line-height: 1.5;
-	}
+		.fail__card li {
+			display: flex;
+			gap: var(--space-3);
+			color: var(--color-text-secondary);
+		}
 
-	.payment-error-page .help-link {
-		font-size: 12px;
-		color: var(--color-text-info);
-		text-decoration: none;
-		display: inline-block;
-		margin-top: 4px;
-		cursor: pointer;
-	}
+		.fail__card li .ti {
+			flex-shrink: 0;
+			margin-top: 3px;
+			color: var(--color-text-tertiary);
+		}
 
-	.payment-error-page .help-link:hover {
-		text-decoration: underline;
-	}
+		.fail__help {
+			display: flex;
+			gap: var(--space-3);
+			margin-top: var(--space-4);
+			padding: var(--space-4);
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+		}
 
-	.payment-error-page .btn-retry {
-		width: 100%;
-		padding: 13px;
-		background: var(--color-text-primary);
-		color: var(--color-background-primary);
-		border: none;
-		border-radius: var(--radius-md);
-		font-size: 14px;
-		font-weight: 500;
-		cursor: pointer;
-		font-family: var(--font-ui);
-		margin-bottom: 8px;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		text-decoration: none;
-		min-height: var(--touch-min);
-	}
+		.fail__help p {
+			margin: 0;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
 
-	.payment-error-page .btn-retry .ti {
-		font-size: 13px;
-	}
+		.fail__help a {
+			color: var(--color-text-info);
+		}
 
-	.payment-error-page .btn-back {
-		width: 100%;
-		padding: 10px;
-		background: none;
-		color: var(--color-text-primary);
-		border: 0.5px solid var(--color-border-secondary);
-		border-radius: var(--radius-md);
-		font-size: 13px;
-		font-weight: 500;
-		cursor: pointer;
-		font-family: var(--font-ui);
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		text-decoration: none;
-		min-height: var(--touch-min);
-	}
+		.fail__help-icon {
+			display: flex;
+			flex-shrink: 0;
+			align-items: center;
+			justify-content: center;
+			width: 36px;
+			height: 36px;
+			border-radius: 50%;
+			background: var(--color-background-primary);
+			color: var(--color-text-brand);
+			font-size: 18px;
+		}
 
-	.payment-error-page .btn-back:hover {
-		background: var(--color-background-secondary);
+		.fail__actions {
+			display: grid;
+			gap: var(--space-2);
+			margin-top: var(--space-5);
+		}
 	}
 </style>

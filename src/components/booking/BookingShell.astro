@@ -1,0 +1,54 @@
+---
+/**
+ * The checkout page frame (spec §8.1.1): booking header with Exit, the step
+ * bar, the page column and the help strip as the last block of <main>, so
+ * help is in the same place on every step (WCAG 3.2.6).
+ */
+import MiniNav from '../MiniNav.astro';
+import TrustStrip from '../TrustStrip.astro';
+import StepBar from './StepBar.astro';
+
+type Props = {
+	/** The step bar's current step; none on the success and error pages. */
+	step?: 2 | 3 | 4;
+	exitHref?: string;
+	/** sr-only page heading (cards carry the visible h2s). */
+	heading: string;
+	headingVisible?: boolean;
+};
+
+const { step, exitHref, heading, headingVisible = false } = Astro.props;
+---
+
+<main id="main" class="booking-shell">
+	<MiniNav exitHref={exitHref} />
+	{step && <StepBar current={step} />}
+	<slot name="lead" />
+	<h1 class:list={['booking-shell__title', !headingVisible && 'sr-only']}>{heading}</h1>
+	<slot />
+	<TrustStrip />
+</main>
+
+<style>
+	@layer pages {
+		.booking-shell {
+			width: 100%;
+			max-width: var(--flow-width);
+			margin: 0 auto;
+			padding: calc(24px + 1.5rem) var(--space-6) var(--space-8);
+		}
+
+		.booking-shell__title {
+			margin: 0 0 var(--space-4);
+			font-size: var(--font-size-hero);
+			font-weight: var(--font-weight-medium);
+			line-height: var(--line-height-tight);
+		}
+
+		@media (max-width: 768px) {
+			.booking-shell {
+				padding: var(--space-6) var(--space-4) var(--space-7);
+			}
+		}
+	}
+</style>
