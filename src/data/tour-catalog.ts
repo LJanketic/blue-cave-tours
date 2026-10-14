@@ -83,7 +83,7 @@ export const tours: TourDetail[] = [
 		itinerary: [
 			{ time: '07:20', label: '07:20 Departure from Split toward Vis & Biševo area, home to the magical Blue Cave (subject to conditions and optional ticket).', icon: 'map-pin' },
 			{ label: 'Swim stop at Budikovac Blue Lagoon (approx. 30–45 minutes).', icon: 'sailboat' },
-			{ label: 'Stiniva Cove on Vis, with scenic coastal cruising along the way.', icon: 'swimming' },
+			{ label: 'Stiniva Cove on Vis (approx. 5–10 minutes), with scenic coastal cruising along the way.', icon: 'swimming' },
 			{
 				label: 'Free time ashore in Hvar Town (approx. 2–3 hours) and a swim stop at the Pakleni Islands, including Carpe Diem beach (approx. 45–115 minutes).',
 				description:
