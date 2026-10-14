@@ -17,6 +17,7 @@ import Badge from '../../../components/ui/Badge.astro';
 import Notice from '../../../components/ui/Notice.astro';
 import Button from '../../../components/ui/Button.astro';
 import { getTourBySlug, getTourCardPhoto } from '../../../lib/tours';
+import { feeLabel } from '../../../lib/cards';
 import { contactHrefForTour, formatBookingDate, guestSummaryFromCounts, meetingPointShort, supportsInstantBook } from '../../../lib/booking';
 import { computeBookingTotal, lineItemsFor } from '../../../lib/price';
 import { BOOKING_ERRORS, isBookingError } from '../../../lib/bookings/service';
@@ -45,7 +46,7 @@ const editHref = `/book/${tour.slug}/group/`;
 
 const total = computeBookingTotal(tour, draft.adults, draft.children);
 const items = lineItemsFor(tour, draft.adults, draft.children, draft.infants) ?? [];
-const fees = tour.additionalFees.filter((fee) => fee.mandatory);
+const fee = feeLabel(tour);
 const photo = getTourCardPhoto(tour);
 ---
 
@@ -117,7 +118,7 @@ const photo = getTourCardPhoto(tour);
 				}
 			</dl>
 			<p class="review__total"><span>Total</span><span>{total !== null ? `€${total}` : 'On request'}</span></p>
-			{fees.map((fee) => <p class="review__fee">+ {fee.shortText}{fee.amountLabel && ` (${fee.amountLabel})`}</p>)}
+			{fee && <p class="review__fee">{fee}</p>}
 			<p class="review__fee">{tour.priceNotes}</p>
 		</section>
 

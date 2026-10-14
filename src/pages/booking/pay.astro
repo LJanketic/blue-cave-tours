@@ -10,7 +10,7 @@ import Notice from '../../components/ui/Notice.astro';
 import Button from '../../components/ui/Button.astro';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 import { getTourBySlug } from '../../lib/tours';
-import { mandatoryFeeLabel } from '../../lib/cards';
+import { feeLabel } from '../../lib/cards';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
 import { finalizePaidBooking, isPayable, recordFailedPayment } from '../../lib/bookings/service';
@@ -54,7 +54,7 @@ const closedReason =
 
 const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 const tour = getTourBySlug(booking.tourSlug);
-const fee = tour ? mandatoryFeeLabel(tour) : undefined;
+const fee = tour ? feeLabel(tour) : undefined;
 Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 Astro.response.headers.set('Cache-Control', 'no-store');
 ---

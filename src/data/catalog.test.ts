@@ -17,7 +17,7 @@ describe('tour catalog', () => {
 
 	it('gives every group tour with a price a fixed departure, except those waiting for a time', () => {
 		// Group tours on sale whose time isn't fixed yet (D-16). Add a departure, then remove the slug here.
-		const timeToBeConfirmed = new Set(['blue-lagoon-afternoon']);
+		const timeToBeConfirmed = new Set<string>();
 		for (const tour of tours.filter((t) => t.types.includes('group') && t.adultPrice !== null)) {
 			if (timeToBeConfirmed.has(tour.slug)) expect(tour.departures, tour.slug).toEqual([]);
 			else expect(tour.departures.length, tour.slug).toBeGreaterThan(0);

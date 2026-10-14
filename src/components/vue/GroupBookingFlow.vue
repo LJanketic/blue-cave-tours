@@ -29,8 +29,8 @@ const props = defineProps<{
 	childPrice: number | null;
 	/** Seasonal price copy, shown under the total (season pricing must be disclosed). */
 	priceNotes: string;
-	/** "+ Blue Cave ticket, paid on site", or none. */
-	mandatoryFeeLabel?: string;
+	/** "+ Blue Cave ticket, paid on site", an optional fee's line, or none (feeLabel). */
+	feeLabel?: string;
 	ageBands: AgeBands;
 	/** YYYY-MM-DD the page was built on (Split time), so hydration matches the HTML. */
 	renderedOn: string;
@@ -228,7 +228,7 @@ onMounted(() => {
 		</section>
 
 		<SummaryCard title="Your booking" :rows="summaryRows" :total="{ label: 'Total', value: total !== null ? `€${total}` : 'Price on request' }">
-			<p v-if="mandatoryFeeLabel" class="flow__fee">{{ mandatoryFeeLabel }}</p>
+			<p v-if="feeLabel" class="flow__fee">{{ feeLabel }}</p>
 			<p class="flow__notes">{{ priceNotes }}</p>
 		</SummaryCard>
 

@@ -72,7 +72,7 @@ describe('booking emails (§9.4, S-5)', () => {
 		const { text } = bookingConfirmationEmail(structuredClone(paid) as never, 'https://example.org');
 		expect(text).toContain('2 adults, 1 child, 1 infant');
 		expect(text).toContain('Adults (2 × €169): €338');
-		expect(text).toContain('Blue Cave ticket, paid on site');
+		expect(text).toContain('Extra: Blue Cave entry optional, ticket paid on site');
 		expect(text).toContain('Free cancellation up to 48 hours');
 		expect(text).toContain('right of withdrawal');
 		expect(text).toContain('reply within 15 days');

@@ -6,6 +6,10 @@ import { PHOTO } from './tour-photos';
 const MEETING_POINT =
 	'Meet at Split’s Riva promenade, stand number 14. After booking you’ll receive the exact location, map link, and what time to arrive.';
 
+/** Private tours leave from the Riva or Zenta depending on the boat. */
+const MEETING_POINT_PRIVATE =
+	'Meet at Split’s Riva promenade, stand number 14, or at Zenta, depending on the boat. We confirm the exact spot with you after booking.';
+
 const WEATHER_COPY =
 	'We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate the changes.';
 
@@ -23,7 +27,7 @@ const BRING_DEFAULT = [
 ];
 
 const INCLUDED_DEFAULT = [
-	'Fuel and boat expenses',
+	'Fuel and crew expenses',
 	'Snorkelling equipment',
 	'Bottled water on board',
 	'Safety equipment and insurance',
@@ -38,11 +42,10 @@ const NOT_INCLUDED_DEFAULT = [
 const DISCLAIMERS = [
 	'Routes, order of stops, and swim breaks may vary with weather, harbour traffic, and site regulations.',
 	'National park and cave entry fees may be charged separately on-site where applicable.',
-	'Speedboat transportation, English-speaking crew, and VAT/taxes were marked as under review by the operator at time of writing. Confirm exact inclusions when you book.',
 ];
 
 const CAVE_NOTE =
-	'Entrance to the Blue Cave may require a separate ticket payable on-site; availability depends on sea conditions and official cave opening hours.';
+	'Entering the Blue Cave is optional and the ticket is paid on site. Most guests go in; entry depends on sea conditions and official cave opening hours.';
 
 const PRICE_BLUE_CAVE =
 	'Low season (1 Apr–15 Jun, 1 Sep–30 Nov): €149 per adult, €129 per child (0–17). Peak season (15 Jun–30 Sep): €169 per adult, €139 per child (0–17). Final price confirmed at booking.';
@@ -68,21 +71,27 @@ export const tours: TourDetail[] = [
 		shortDescription:
 			'Our flagship day: the Blue Cave on Biševo, a swim at Budikovac Blue Lagoon, Stiniva Cove on Vis, and free time in Hvar Town and the Pakleni Islands.',
 		availability: 'Every day from 1 April to 30 November',
-		scheduleLabel: 'Full day: 07:20 – 18:00',
+		scheduleLabel: 'Full day: 07:20 – approx. 17:30–18:00',
 		departure: '07:10 check-in · 07:20 departure',
 		departures: [{ time: '07:20', checkIn: '07:10' }],
 		duration: 'Approx. 10 hours',
 		durationShort: '10 h',
 		durationHours: 10,
-		returnTime: '18:00',
+		returnTime: 'Approx. 17:30–18:00',
 		itineraryKind: 'full',
 		itineraryLabel: 'Full-day itinerary',
 		itinerary: [
 			{ time: '07:20', label: '07:20 Departure from Split toward Vis & Biševo area, home to the magical Blue Cave (subject to conditions and optional ticket).', icon: 'map-pin' },
 			{ label: 'Swim stop at Budikovac Blue Lagoon (approx. 30–45 minutes).', icon: 'sailboat' },
-			{ label: 'Stiniva Cove on Vis, with scenic coastal cruising along the way.', icon: 'swimming' },
-			{ label: 'Free time ashore in Hvar Town and the Pakleni Islands where the schedule allows (possible alternates: Komiža, or Milna for a drink).', icon: 'sunset' },
-			{ time: '18:00', label: '18:00 Return along the Split channel with panoramic views.', icon: 'anchor' },
+			{ label: 'Stiniva Cove on Vis (approx. 5–10 minutes), with scenic coastal cruising along the way.', icon: 'swimming' },
+			{
+				label: 'Free time ashore in Hvar Town (approx. 2–3 hours) and a swim stop at the Pakleni Islands, including Carpe Diem beach (approx. 45–115 minutes).',
+				description:
+					'In pre-season, when it’s too early for swimming, the route visits Komiža on Vis (approx. 1–1.5 hours) instead of the Pakleni Islands and adds a stop in Milna (approx. 45 minutes) for a drink.',
+				icon: 'sunset',
+			},
+			// No `time`: the return is a window, and itinerary times are a single HH:MM.
+			{ label: '17:30–18:00 Return along the Split channel with panoramic views.', icon: 'anchor' },
 		],
 		overviewHighlights:
 			'This full-day speedboat tour takes you to the magical Blue Cave on Biševo Island, where sunlight creates a glowing blue light beneath the cliffs. From there you swim at Budikovac Blue Lagoon and Stiniva Cove on Vis, then explore the streets of Hvar Town and the turquoise bays of the Pakleni Islands. There’s plenty of time to dive into crystal-clear water, snorkel around hidden coves, or stretch out on a picturesque beach before cruising back to Split as the sun dips over the islands.',
@@ -96,7 +105,7 @@ export const tours: TourDetail[] = [
 		adultPrice: 169,
 		childPrice: 139,
 		priceUnit: 'person',
-		additionalFees: [{ text: CAVE_NOTE, shortText: 'Blue Cave ticket, paid on site', mandatory: true }],
+		additionalFees: [{ text: CAVE_NOTE, shortText: 'Blue Cave entry optional, ticket paid on site', mandatory: false }],
 		disclaimers: DISCLAIMERS,
 		gallery: galleryFromDestinations('blue-cave', 'pakleni', 'hvar', 'vis'),
 		image: PHOTO.blueCave,
@@ -124,9 +133,9 @@ export const tours: TourDetail[] = [
 		itineraryLabel: 'Full-day itinerary',
 		itinerary: [
 			{ time: '08:30', label: '08:30 Departure from Split toward Brač Island.', icon: 'map-pin' },
-			{ label: 'Golden Horn Beach on Brač (approx. 2 hours).', icon: 'sailboat' },
-			{ label: 'Swim stops and coastal cruising toward the Pakleni Islands (30–60 minutes).', icon: 'swimming' },
-			{ label: 'Free time ashore in Hvar Town, with time for lunch.', icon: 'sunset' },
+			{ label: 'Golden Horn Beach in Bol (approx. 2 hours).', icon: 'sailboat' },
+			{ label: 'Swim stops and coastal cruising toward the Pakleni Islands, Carpe Diem beach and Ždrilo (approx. 30–60 minutes).', icon: 'swimming' },
+			{ label: 'Free time ashore in Hvar Town (approx. 2 hours), with time for lunch. Private tours stop for lunch in Milna instead.', icon: 'sunset' },
 			{ time: '18:00', label: '18:00 Return along the Split channel with panoramic views.', icon: 'anchor' },
 		],
 		overviewHighlights:
@@ -146,7 +155,7 @@ export const tours: TourDetail[] = [
 		gallery: galleryFromDestinations('zlatni-rat', 'pakleni', 'hvar'),
 		image: PHOTO.goldenHorn,
 		featured: false,
-		types: ['group'],
+		types: ['group', 'private'],
 		tags: ['swim', 'snorkel'],
 		badge: null,
 	},
@@ -154,42 +163,45 @@ export const tours: TourDetail[] = [
 		slug: 'hvar-red-rocks-pakleni',
 		primaryDestinationSlug: 'hvar',
 		title: 'Hvar, Red Rocks & Pakleni islands',
-		tagline: 'Full-day · Hvar & Pakleni',
-		shortDescription: 'A day exploring Hvar Town, the Red Rocks coastline, and the turquoise bays of the Pakleni islands.',
-		availability: 'Every day from 1 April to 30 November',
-		scheduleLabel: 'Full day: approx. 8–9 hours',
-		departure: 'Departure time confirmed at booking',
-		departures: [] /* time confirmed at booking */,
-		duration: 'Approx. 8–9 hours',
-		durationShort: '8–9 h',
-		durationHours: 8,
-		returnTime: 'Approx. 16:00',
+		tagline: 'Private · Hvar, Red Rocks & Pakleni',
+		shortDescription:
+			'A private day via Milna on Brač to the Red Rocks on Hvar’s south coast, historic Hvar Town, and lunch and a swim in the Pakleni Islands.',
+		availability: 'On request',
+		scheduleLabel: 'Full day: flexible, typically 09:30 – 18:00',
+		departure: 'Flexible, typically 09:30',
+		departures: [] /* private: flexible, agreed per booking */,
+		duration: 'Approx. 8.5 hours',
+		durationShort: '8.5 h',
+		durationHours: 8.5,
+		returnTime: '18:00',
 		itineraryKind: 'full',
 		itineraryLabel: 'Full-day itinerary',
 		itinerary: [
-			{ label: 'Departure from Split, exact time confirmed at booking.', icon: 'map-pin' },
-			{ label: 'Time in Hvar Town, along the Red Rocks coastline, and around the Pakleni Islands.', icon: 'sailboat' },
-			{ label: 'Return to Split by approximately 16:00.', icon: 'swimming' },
+			{ label: 'Flexible departure (typically 09:30) from Split toward Brač Island and Milna Village.', icon: 'map-pin' },
+			{ label: 'Swim stops along Hvar’s scenic south coast and at the striking Red Rocks, with coastal cruising along the way.', icon: 'sailboat' },
+			{ label: 'Free time ashore in Hvar Town and the Pakleni Islands, with lunch on the Pakleni Islands or in Milna on Hvar, where the schedule allows.', icon: 'sunset' },
+			{ label: 'A final swim stop at the Pakleni Islands or a hidden bay on the way back.', icon: 'swimming' },
+			{ time: '18:00', label: '18:00 Return to Split.', icon: 'anchor' },
 		],
 		overviewHighlights:
-			'A full-day route exploring Hvar Town, the Red Rocks coastline, and the turquoise bays of the Pakleni Islands. Full stop-by-stop itinerary details are confirmed closer to your booking date.',
-		meetingPoint: MEETING_POINT,
+			'This private full-day speedboat tour takes you to Milna Village on Brač Island, then along Hvar’s scenic south coast to swim at the striking Red Rocks, before exploring historic Hvar Town. The day finishes with lunch and a final swim in the turquoise bays of the Pakleni Islands. Along the way there’s time to jump straight off the boat for a swim, explore beneath the surface with a snorkel, or stretch out on a hidden beach – the choice is entirely yours.',
+		meetingPoint: MEETING_POINT_PRIVATE,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
 		whatToBring: BRING_DEFAULT,
 		included: INCLUDED_DEFAULT,
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: 'Pricing confirmed at booking. Contact us for current rates.',
+		priceNotes: PRICE_PRIVATE,
 		adultPrice: null,
 		childPrice: null,
-		priceUnit: 'person',
+		priceUnit: 'boat',
 		additionalFees: [],
 		disclaimers: DISCLAIMERS,
 		gallery: galleryFromDestinations('hvar', 'pakleni'),
 		image: PHOTO.hvar,
 		featured: false,
-		types: ['group'],
-		tags: ['swim'],
+		types: ['private'],
+		tags: ['swim', 'snorkel'],
 		badge: null,
 	},
 	{
@@ -203,9 +215,9 @@ export const tours: TourDetail[] = [
 		scheduleLabel: 'Half day: 09:30 – 14:00',
 		departure: '09:20 check-in · 09:30 departure',
 		departures: [{ time: '09:30', checkIn: '09:20' }],
-		duration: 'Approx. 5 hours',
-		durationShort: '5 h',
-		durationHours: 5,
+		duration: 'Approx. 4.5 hours',
+		durationShort: '4.5 h',
+		durationHours: 4.5,
 		returnTime: '14:00',
 		itineraryKind: 'morning',
 		itineraryLabel: 'Morning itinerary',
@@ -241,25 +253,26 @@ export const tours: TourDetail[] = [
 		primaryDestinationSlug: 'blue-lagoon',
 		title: 'Blue Lagoon Afternoon Tour',
 		tagline: 'Half day · Blue Lagoon & Trogir',
-		shortDescription: 'The same Blue Lagoon half-day route as our morning tour, run as a later afternoon departure.',
+		shortDescription:
+			'An afternoon half-day to Duga Bay on Čiovo and the turquoise Blue Lagoon, with a stroll through Trogir Old Town as the day winds down.',
 		availability: 'Every day from 1 April to 30 November',
-		scheduleLabel: 'Half day: afternoon departure (exact time confirmed at booking)',
-		departure: 'Afternoon departure, exact time confirmed at booking',
-		departures: [] /* D-16: afternoon time not confirmed yet */,
-		duration: 'Approx. 5 hours',
-		durationShort: '5 h',
-		durationHours: 5,
-		returnTime: 'Early evening',
+		scheduleLabel: 'Half day: 14:30 – 19:00',
+		departure: '14:20 check-in · 14:30 departure',
+		departures: [{ time: '14:30', checkIn: '14:20' }],
+		duration: 'Approx. 4.5 hours',
+		durationShort: '4.5 h',
+		durationHours: 4.5,
+		returnTime: '19:00',
 		itineraryKind: 'afternoon',
 		itineraryLabel: 'Afternoon itinerary',
 		itinerary: [
-			{ label: 'Afternoon departure from Split toward Čiovo Island and Duga Bay, exact time confirmed at booking.', icon: 'map-pin' },
+			{ time: '14:30', label: '14:30 Departure from Split toward Čiovo Island and Duga Bay or Borko.', icon: 'map-pin' },
 			{ label: 'Swim stop at the turquoise Blue Lagoon, with scenic coastal cruising along the way.', icon: 'sailboat' },
-			{ label: 'Free time ashore in Trogir Old Town or Maslinica (Šolta Island) where the schedule allows.', icon: 'swimming' },
-			{ label: 'Return to Split in the early evening.', icon: 'sunset' },
+			{ label: 'Free time ashore in Trogir Old Town where the schedule allows.', icon: 'swimming' },
+			{ time: '19:00', label: '19:00 Return to Split.', icon: 'sunset' },
 		],
 		overviewHighlights:
-			'The same Duga Bay, Blue Lagoon, and Trogir Old Town route as our morning tour, run as a later afternoon departure. Exact timing confirmed at booking.',
+			'This half-day afternoon speedboat tour takes you to Duga Bay on Čiovo Island, then on to swim in the turquoise waters of the Blue Lagoon, before strolling through the historic streets of Trogir Old Town. Along the way there’s time to cool off with a swim, try some snorkelling, or simply unwind on the beach as the day winds down, before heading back to Split.',
 		meetingPoint: MEETING_POINT,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
@@ -282,13 +295,13 @@ export const tours: TourDetail[] = [
 	{
 		slug: 'dubrovnik-one-way',
 		primaryDestinationSlug: 'dubrovnik',
-		title: 'Dubrovnik One Way Tour',
+		title: 'Split – Dubrovnik One Way',
 		tagline: 'Private · one-way to Dubrovnik',
 		shortDescription: 'A one-way private transfer from Split to Dubrovnik, calling at Hvar Old Town and Korčula along the way.',
 		availability: 'On request',
-		scheduleLabel: 'One-way: approx. 08:00–09:00 – 16:00–17:00',
-		departure: 'Approx. 08:00–09:00 departure',
-		departures: [] /* private: approx. 08:00–09:00, agreed per booking */,
+		scheduleLabel: 'One-way: approx. 08:00–09:30 – 18:00–19:00',
+		departure: 'Approx. 08:00–09:30 departure',
+		departures: [] /* private: approx. 08:00–09:30, agreed per booking */,
 		duration: 'Approx. 10 hours',
 		durationShort: '10 h',
 		durationHours: 10,
@@ -296,15 +309,15 @@ export const tours: TourDetail[] = [
 		itineraryKind: 'full',
 		itineraryLabel: 'One-way itinerary',
 		itinerary: [
-			{ label: 'Approx. 08:00–09:00 Departure from Split toward Hvar Old Town.', icon: 'map-pin' },
+			{ label: 'Approx. 08:00–09:30 Departure from Split toward Hvar Old Town.', icon: 'map-pin' },
 			{ label: 'Swim stop in a secluded bay, with scenic coastal cruising toward Korčula.', icon: 'sailboat' },
 			{ label: 'Free time ashore in Korčula Old Town, with time for lunch.', icon: 'swimming' },
 			{ label: 'Second swim stop or snorkelling among the islands (optional).', icon: 'sunset' },
-			{ label: 'Approx. 16:00–17:00 Arrival in Dubrovnik (no return leg, one-way private charter).', icon: 'anchor' },
+			{ label: 'Approx. 18:00–19:00 Arrival in Dubrovnik (no return leg, one-way private charter).', icon: 'anchor' },
 		],
 		overviewHighlights:
-			'This private one-way speedboat journey takes you from Split to historic Hvar Old Town, with a stop for a swim in a secluded bay, before exploring the walled town of Korčula with time for lunch. From there it’s a second swim or scenic snorkelling among the islands as you continue toward Dubrovnik, arriving by early evening.',
-		meetingPoint: MEETING_POINT,
+			'This private one-way speedboat journey takes you from Split to historic Hvar Old Town, with a stop for a swim in a secluded bay, before exploring the walled town of Korčula with time for lunch. From there it’s a second swim or some snorkelling among the islands as you continue toward Dubrovnik, arriving by early evening.',
+		meetingPoint: MEETING_POINT_PRIVATE,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
 		whatToBring: BRING_DEFAULT,
@@ -340,14 +353,14 @@ export const tours: TourDetail[] = [
 		itineraryKind: 'flexible',
 		itineraryLabel: 'Flexible itinerary',
 		itinerary: [
-			{ label: 'Departure flexible, typically 09:30 for half-day or full-day charters, from Split’s Riva promenade (stand 14) or Zenta.', icon: 'map-pin' },
-			{ label: 'Route planning discussed with the captain before or at departure. Pick from Blue Cave, Hvar Town, Pakleni Islands, Brač, Vis, and Šolta, or let the skipper recommend based on weather and conditions.', icon: 'sailboat' },
-			{ label: 'On the water: swim, snorkel, or go ashore at each stop for as long as you like, fully flexible.', icon: 'swimming' },
+			{ label: 'Departure flexible, typically 09:30 for half-day or full-day charters.', icon: 'map-pin' },
+			{ label: 'You choose the stops, with your skipper’s recommendation based on weather and conditions: the Blue Cave, Hvar Town, the Pakleni Islands, Brač Island, Vis Island, or Šolta Island.', icon: 'sailboat' },
+			{ label: 'On the water: swim, snorkel, or go ashore at each stop for as long as you like. The itinerary can be adjusted at any time during the tour.', icon: 'swimming' },
 			{ label: 'Return flexible, 1–10 hours after departure depending on half-day or full-day.', icon: 'sunset' },
 		],
 		overviewHighlights:
-			'This fully private charter puts you and the captain in complete control of the day at sea. Choose your own route to the Blue Cave, Hvar Town, the Pakleni Islands, Brač, Vis, or Šolta, or lean on the skipper’s local knowledge to shape a route around your group’s pace and interests. The boat is reserved exclusively for you, and departure is flexible, typically 09:30 for both half-day and full-day charters. There’s no fixed schedule to follow, only time to swim, snorkel, sunbathe, or relax on deck wherever the day takes you.',
-		meetingPoint: MEETING_POINT,
+			'This fully private, custom speedboat tour takes you to the destinations of your choice – the Blue Cave, Hvar Town, the Pakleni Islands, Brač, Vis, or Šolta. Along the way there’s time to swim, snorkel, sunbathe, or just relax on deck – the day is built exactly the way you and your group want it.',
+		meetingPoint: MEETING_POINT_PRIVATE,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
 		whatToBring: BRING_DEFAULT,

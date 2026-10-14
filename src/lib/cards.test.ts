@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { tours } from '../data/tour-catalog';
-import { mandatoryFeeLabel, tourCardBadge, toTourCardDTO } from './cards';
+import { feeLabel, tourCardBadge, toTourCardDTO } from './cards';
 
 describe('tourCardBadge', () => {
 	it('shows at most one badge, by priority', () => {
@@ -16,12 +16,22 @@ describe('tourCardBadge', () => {
 	});
 });
 
-describe('mandatoryFeeLabel', () => {
-	it('lists only the fees paid on top of the price', () => {
-		expect(mandatoryFeeLabel({ additionalFees: [{ text: 'x', shortText: 'Blue Cave ticket, paid on site', mandatory: true }] })).toBe(
-			'+ Blue Cave ticket, paid on site',
+describe('feeLabel', () => {
+	const fee = (shortText: string, mandatory: boolean) => ({ text: 'x', shortText, mandatory });
+
+	it('marks mandatory fees with a "+"', () => {
+		expect(feeLabel({ additionalFees: [fee('Blue Cave ticket, paid on site', true)] })).toBe('+ Blue Cave ticket, paid on site');
+	});
+
+	it('shows optional fees as they are, without the "+"', () => {
+		expect(feeLabel({ additionalFees: [fee('Blue Cave entry optional, ticket paid on site', false)] })).toBe(
+			'Blue Cave entry optional, ticket paid on site',
 		);
-		expect(mandatoryFeeLabel({ additionalFees: [{ text: 'x', shortText: 'optional', mandatory: false }] })).toBeUndefined();
+	});
+
+	it('puts mandatory fees first, and is empty without fees', () => {
+		expect(feeLabel({ additionalFees: [fee('Optional extra', false), fee('Park ticket', true)] })).toBe('+ Park ticket · Optional extra');
+		expect(feeLabel({ additionalFees: [] })).toBeUndefined();
 	});
 });
 
@@ -33,10 +43,10 @@ describe('toTourCardDTO', () => {
 		}
 	});
 
-	it('carries the fee line wherever a mandatory fee exists', () => {
+	it('carries the fee line wherever a fee exists, mandatory or optional', () => {
 		for (const tour of tours) {
 			const dto = toTourCardDTO(tour, [], null);
-			expect(Boolean(dto.mandatoryFeeLabel), tour.slug).toBe(tour.additionalFees.some((fee) => fee.mandatory));
+			expect(Boolean(dto.feeLabel), tour.slug).toBe(tour.additionalFees.length > 0);
 		}
 	});
 });

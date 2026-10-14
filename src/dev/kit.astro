@@ -34,7 +34,7 @@ import { HERO_IMAGE } from '../data/hero-image';
 import { GALLERY_CARD_SIZE, GALLERY_PHOTO_SIZE, toCardPhoto, toGalleryView } from '../data/tour-photos';
 import { getAllDestinations, getDestinationPhoto, getDestinationsForTour, getToursForDestination } from '../lib/destinations';
 import { getAllTours, getTourCardPhoto } from '../lib/tours';
-import { toDestinationCardDTO, toTourCardDTO, mandatoryFeeLabel } from '../lib/cards';
+import { toDestinationCardDTO, toTourCardDTO, feeLabel } from '../lib/cards';
 import { CANCELLATION_SHORT } from '../config/cancellation';
 import { seasonLabel } from '../config/season';
 
@@ -57,7 +57,7 @@ const destinationCards = await Promise.all(
 );
 const galleryPhotos = await Promise.all(blueCave.gallery.map((p) => toGalleryView(p, 'sailboat', GALLERY_PHOTO_SIZE)));
 const hvar = destinations.find((d) => d.slug === 'hvar') ?? destinations[0];
-const fee = mandatoryFeeLabel(blueCave);
+const fee = feeLabel(blueCave);
 ---
 
 <SiteLayout title="Component kit" robots="noindex, nofollow" solidNav={false} footerGap="var(--section-gap)">
