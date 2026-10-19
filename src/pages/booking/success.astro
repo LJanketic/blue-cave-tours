@@ -28,7 +28,6 @@ if (booking.paymentStatus !== 'paid' || booking.status === 'cancelled') return A
 
 Astro.cookies.delete(BOOKING_COOKIE, { path: '/' });
 Astro.response.headers.set('Cache-Control', 'no-store');
-Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 
 /** "i***@example.com" */
 function maskEmail(email: string): string {
@@ -80,7 +79,7 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 				{ label: 'Paid with', value: booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card' },
 				...(booking.invoice ? [{ label: 'Invoice (račun)', value: `${booking.invoice.number}${PAYMENTS_ARE_DEMO ? ' (demo)' : ''}` }] : []),
 			]}
-			total={{ label: 'Total paid', value: `€${booking.total}` }}
+			total={{ label: 'Total paid (incl. VAT)', value: `€${booking.total}` }}
 		/>
 
 		<section class="done__card" aria-labelledby="meet-heading">

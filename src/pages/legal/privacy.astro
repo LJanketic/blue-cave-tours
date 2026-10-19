@@ -80,7 +80,7 @@ const COOKIES = [
 <LegalLayout
 	doc="privacy"
 	title="Privacy policy"
-	description={`How ${SITE_NAME} handles personal data for bookings and enquiries.`}
+	description={`How ${SITE_NAME} collects, uses and protects your personal data when you book a tour or contact us, how long we keep it, and your rights.`}
 	summary={SUMMARY}
 	sections={SECTIONS}
 >
@@ -208,7 +208,8 @@ const COOKIES = [
 		</ul>
 		<p>
 			Some details are removed sooner: notes you add to a booking {RETENTION_DAYS.notes} days after the tour,
-			your phone number {RETENTION_DAYS.phone} days after the tour, the text of emails we sent you after
+			your phone number {RETENTION_DAYS.phone} days after the tour, bookings that were never paid
+			{RETENTION_DAYS.unpaidBooking} days after the tour date, the text of emails we sent you after
 			{RETENTION_DAYS.emailBody} days, and contact form messages after one year.
 		</p>
 		<p>After the retention period expires, personal data is securely deleted or anonymized.</p>

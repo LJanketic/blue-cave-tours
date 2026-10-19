@@ -27,7 +27,6 @@ const retryHref = booking
 		? `/book/${bookedTour.slug}/group/`
 		: '/tours/';
 Astro.response.headers.set('Cache-Control', 'no-store');
-Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 
 const REASONS = [
 	{ icon: 'credit-card', text: 'Incorrect card number, expiry date or security code' },

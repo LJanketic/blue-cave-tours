@@ -14,7 +14,7 @@ import { feeLabel } from '../../lib/cards';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
 import { finalizePaidBooking, isPayable, recordFailedPayment } from '../../lib/bookings/service';
-import { checkRateLimit } from '../../lib/rate-limit';
+import { checkRateLimit, clientIp } from '../../lib/rate-limit';
 import { bookings, type PaymentProvider } from '../../lib/bookings/store';
 
 /**
@@ -33,7 +33,7 @@ if (booking.paymentStatus === 'paid' && booking.status !== 'cancelled') {
 const payable = isPayable(booking);
 
 if (Astro.request.method === 'POST' && payable) {
-	const ip = Astro.request.headers.get('x-nf-client-connection-ip') ?? 'unknown';
+	const ip = clientIp(Astro.request);
 	if (!(await checkRateLimit('pay', ip, { max: 20, failClosed: true })).ok) return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
 	const form = await Astro.request.formData();
 	const provider: PaymentProvider = form.get('provider') === 'paypal' ? 'paypal' : 'teya';
@@ -50,12 +50,11 @@ if (Astro.request.method === 'POST' && payable) {
 const closedReason =
 	booking.status === 'cancelled' || booking.paymentStatus === 'refunded'
 		? 'This booking was cancelled.'
-		: 'This booking can no longer be paid, because the tour date has passed.';
+		: 'This booking can no longer be paid, because the tour has already departed.';
 
 const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 const tour = getTourBySlug(booking.tourSlug);
 const fee = tour ? feeLabel(tour) : undefined;
-Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
@@ -78,7 +77,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 				{ label: 'Guests', value: guests },
 				{ label: 'Booking ref', value: booking.ref },
 			]}
-			total={{ label: 'Total', value: `€${booking.total}` }}
+			total={{ label: 'Total (incl. VAT)', value: `€${booking.total}` }}
 			note={fee}
 		/>
 
