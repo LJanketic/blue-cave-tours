@@ -91,7 +91,7 @@ describe('finalizePaidBooking', () => {
 			`Booking ref: ${booking.ref}`,
 			'Departure: 07:20',
 			`Meeting point: Riva promenade, stand 14, Split — ${MEETING_POINT_MAP_URL}`,
-			"As you'll be joining a group, please be on time at the meeting point so we don't keep your fellow travelers waiting.",
+			"As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.",
 			'Guests: 2 adults, 1 child',
 			`Total: €${booking.total} — Paid (demo, no money taken)`,
 			'Bring: Swimsuit and towel, Sunscreen and sunglasses, Hat or cap, Cash or card for lunch and extras, Light jacket for cooler sea breezes',

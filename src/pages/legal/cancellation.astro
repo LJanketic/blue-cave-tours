@@ -6,21 +6,32 @@ import Notice from '../../components/ui/Notice.astro';
 import { CANCELLATION_HOURS, WEATHER_NOTICE_HOURS, WEATHER_REFUND_DAYS } from '../../config/cancellation';
 import { SITE_EMAIL, SITE_NAME, SITE_PHONE_DISPLAY } from '../../config/site';
 
+// Follows sections 4, 5 and 8 of the operator's Terms & Conditions of 19.10.2026.
+
+// OPERATOR: the private charter section below (30% non-refundable deposit, staged
+// refunds of the balance) conflicts with the Terms of 19.10.2026, which say "A booking
+// is confirmed only after full payment" and mention no deposit. Private tours are
+// booked on request today (contact form, quote), with no online payment. Decide
+// whether the deposit applies, then update or remove this section and its summary line.
+
 const SECTIONS = [
 	{ id: 'overview', title: 'Overview' },
-	{ id: 'group', title: 'Group tours' },
+	{ id: 'group', title: 'Your cancellation' },
+	{ id: 'arrival', title: 'Arriving on time' },
 	{ id: 'private', title: 'Private charters' },
-	{ id: 'weather', title: 'Weather' },
+	{ id: 'weather', title: 'When we cancel' },
+	{ id: 'itinerary', title: 'Route changes' },
 	{ id: 'refunds', title: 'Refunds' },
+	{ id: 'complaints', title: 'Complaints' },
 	{ id: 'how-to', title: 'How to cancel' },
 ];
 
 const SUMMARY = [
 	`Cancel ${CANCELLATION_HOURS}h or more before departure: full refund, no questions`,
-	`Cancel within ${CANCELLATION_HOURS}h: non-refundable`,
-	`We cancel for weather: full refund within ${WEATHER_REFUND_DAYS} days, or free rebook`,
+	`Cancel within ${CANCELLATION_HOURS}h, no-show or late arrival: non-refundable`,
+	`We cancel: reschedule, take an alternative tour, or a full refund within ${WEATHER_REFUND_DAYS} days`,
 	'Private charter deposits are non-refundable',
-	'Other refunds processed within 5–10 business days',
+	`Cancel in writing to ${SITE_EMAIL}; complaints within 7 days of the tour`,
 ];
 ---
 
@@ -36,13 +47,17 @@ const SUMMARY = [
 		<h2><i class="ti ti-info-circle" aria-hidden="true"></i> Overview</h2>
 		<p>
 			We want you to book with confidence. This policy covers group departures and private charters
-			booked directly with {SITE_NAME}. Partner or voucher bookings may follow their platform's terms
-			— contact us with your reference and we'll help.
+			booked directly with {SITE_NAME}, and forms part of our <a href="/legal/terms/">Terms &amp; Conditions</a>.
+			Partner or voucher bookings may follow their platform's terms — contact us with your reference and
+			we'll help.
+		</p>
+		<p>
+			All cancellation requests must be sent in writing to <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>.
 		</p>
 	</section>
 
 	<section id="group">
-		<h2><i class="ti ti-calendar-x" aria-hidden="true"></i> 1. Group tours</h2>
+		<h2><i class="ti ti-calendar-x" aria-hidden="true"></i> 1. Your cancellation</h2>
 		<div class="table-wrap">
 			<table class="legal-table">
 				<thead>
@@ -53,7 +68,7 @@ const SUMMARY = [
 				</thead>
 				<tbody>
 					<tr>
-						<td>More than {CANCELLATION_HOURS} hours before departure</td>
+						<td>{CANCELLATION_HOURS} hours or more before departure</td>
 						<td>100% — full refund</td>
 					</tr>
 					<tr>
@@ -61,7 +76,7 @@ const SUMMARY = [
 						<td>0% — non-refundable</td>
 					</tr>
 					<tr>
-						<td>No show</td>
+						<td>No-show or late arrival</td>
 						<td>0% — non-refundable</td>
 					</tr>
 				</tbody>
@@ -73,8 +88,19 @@ const SUMMARY = [
 			</p></Notice>
 	</section>
 
+	<section id="arrival">
+		<h2><i class="ti ti-clock" aria-hidden="true"></i> 2. Arriving on time</h2>
+		<p>
+			Please arrive at the meeting point at least 15 minutes before departure.
+		</p>
+		<Notice tone="warn"><p>
+				The boat cannot wait for late arrivals. If you don't arrive on time, it counts as a no-show, without
+				refund.
+			</p></Notice>
+	</section>
+
 	<section id="private">
-		<h2><i class="ti ti-crown" aria-hidden="true"></i> 2. Private charters</h2>
+		<h2><i class="ti ti-crown" aria-hidden="true"></i> 3. Private charters</h2>
 		<div class="table-wrap">
 			<table class="legal-table">
 				<thead>
@@ -111,36 +137,66 @@ const SUMMARY = [
 	</section>
 
 	<section id="weather">
-		<h2><i class="ti ti-cloud-storm" aria-hidden="true"></i> 3. Weather cancellations</h2>
+		<h2><i class="ti ti-cloud-storm" aria-hidden="true"></i> 4. When we cancel</h2>
 		<p>
-			If {SITE_NAME} cancels a tour due to unsafe conditions, you receive either a full refund
-			(within {WEATHER_REFUND_DAYS} days) or a free rebook to any available date within the same season —
-			your choice.
+			We may cancel a tour or change its route because of bad weather, technical issues or force majeure.
+			If we cancel, you choose one of:
 		</p>
+		<ul>
+			<li>rescheduling to the next available date,</li>
+			<li>an alternative tour or service, or</li>
+			<li>a full refund of the amount paid, within {WEATHER_REFUND_DAYS} days.</li>
+		</ul>
 		<Notice tone="info"><p>
-				We will notify you at least {WEATHER_NOTICE_HOURS} hours before the scheduled departure in the event of a weather
-				cancellation.
+				If we cancel for weather, we'll tell you at least {WEATHER_NOTICE_HOURS} hours before the scheduled
+				departure.
 			</p></Notice>
 	</section>
 
+	<section id="itinerary">
+		<h2><i class="ti ti-compass-off" aria-hidden="true"></i> 5. Route changes and the Blue Cave</h2>
+		<p>
+			Schedules and itineraries are approximate. For safety, the skipper may change the route, itinerary or
+			schedule at any time depending on weather, sea state or other safety considerations, and the
+			skipper's decision is final.
+		</p>
+		<p>
+			The Blue Cave is sometimes closed because of high seas or by decision of the local authorities who
+			manage it. When that happens the tour continues to alternative locations, and no refund can be
+			claimed for the cave entrance itself.
+		</p>
+		<p>
+			Group tours may be rescheduled if the minimum number of participants is not met.
+		</p>
+	</section>
+
 	<section id="refunds">
-		<h2><i class="ti ti-cash" aria-hidden="true"></i> 4. Refunds</h2>
+		<h2><i class="ti ti-cash" aria-hidden="true"></i> 6. Refunds</h2>
 		<p>
 			Eligible refunds are returned to the original payment method within 5–10 business days, or within
-			{WEATHER_REFUND_DAYS} days when we cancel for weather. Refunds
-			are issued in Euros; we are not liable for exchange rate fluctuations.
+			{WEATHER_REFUND_DAYS} days when we cancel. Refunds are issued in Euros; we are not liable for exchange
+			rate fluctuations.
+		</p>
+	</section>
+
+	<section id="complaints">
+		<h2><i class="ti ti-message" aria-hidden="true"></i> 7. Complaints and refund claims</h2>
+		<p>
+			If you're unhappy with a tour, tell us within 7 days after the tour by email to
+			<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>. Refund claims are considered only if the service was
+			significantly incomplete or below the described standard.
 		</p>
 	</section>
 
 	<section id="how-to">
-		<h2><i class="ti ti-mail" aria-hidden="true"></i> 5. How to cancel</h2>
+		<h2><i class="ti ti-mail" aria-hidden="true"></i> 8. How to cancel</h2>
 		<p>
-			To cancel, contact us with your booking reference via email ({SITE_EMAIL}), WhatsApp, or phone
-			({SITE_PHONE_DISPLAY}).
+			Email your cancellation, with your booking reference, to <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>.
+			If you have questions first, you can also reach us on WhatsApp or by phone ({SITE_PHONE_DISPLAY}), but a
+			cancellation needs to be in writing.
 		</p>
 		<Notice tone="neutral" icon="info-circle"><p>
-				Keep a record of when you sent your cancellation request. We recommend using email so you
-				have a timestamp in case of any dispute.
+				Your email's timestamp is the record of when you cancelled, so keep a copy in case of any dispute.
 			</p></Notice>
 	</section>
 </LegalLayout>

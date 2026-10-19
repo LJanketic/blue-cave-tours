@@ -143,7 +143,7 @@ function bookingTermsLines(booking: Booking): { rows: Row[]; paragraphs: string[
 	const paragraphs = [
 		CANCELLATION_FULL,
 		'This is a leisure service on a fixed date, so the 14-day right of withdrawal for distance contracts does not apply. The cancellation policy above does.',
-		`Questions or complaints: email ${SITE_EMAIL}. We confirm receipt and reply within 15 days.`,
+		`Questions or complaints: email ${SITE_EMAIL}. Complaints should reach us within 7 days after the tour. We confirm receipt and reply within 15 days.`,
 		`Booked under our terms of ${booking.termsVersion ?? TERMS_VERSION}.`,
 	];
 	if (IMPRINT) paragraphs.push(`${IMPRINT.legalName}, ${IMPRINT.address}, OIB ${IMPRINT.oib}.`);
@@ -175,7 +175,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 	const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 	const total = `€${booking.total} — ${PAYMENT_STATUS_TEXT[booking.paymentStatus]}`;
 	const website = siteOrigin.replace(/^https?:\/\//, '');
-	const groupNote = "As you'll be joining a group, please be on time at the meeting point so we don't keep your fellow travelers waiting.";
+	const groupNote = "As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.";
 	const weatherNote = CANCELLATION_WEATHER;
 	const terms = bookingTermsLines(booking);
 

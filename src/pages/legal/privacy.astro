@@ -2,31 +2,51 @@
 export const prerender = true;
 
 /**
- * Privacy policy. Facts that need no legal judgement are fixed here (PR 6,
- * spec §7.2): the real processors, what's stored on your device, how to
- * complain. Legal bases, transfers, retention and the controller's identity
- * go through the lawyer (PR 11, D-18); the controller shows once IMPRINT is set.
+ * Privacy policy: the operator's text of 19 October 2026 (intro and 12
+ * sections, in its order and wording), with every claim about the website
+ * matched to what the site actually does.
  */
 import LegalLayout from '../../layouts/LegalLayout.astro';
-import Notice from '../../components/ui/Notice.astro';
 import { IMPRINT } from '../../config/legal';
 import { SITE_EMAIL, SITE_NAME } from '../../config/site';
+import { RETENTION_DAYS } from '../../lib/bookings/service';
+import { BOOKING_COOKIE, BOOKING_COOKIE_MAX_AGE } from '../../lib/bookings/session';
+import { ADMIN_COOKIE, SESSION_HOURS } from '../../lib/admin/auth';
+
+// OPERATOR: the operator's text mentions analytics (Google Analytics) and
+// marketing/advertising cookies. The site has none today: no analytics, no
+// advertising cookies, no consent banner, no newsletter. Sections 2, 6, 7 and
+// 8 therefore say what is true now. If analytics or marketing cookies are
+// ever added, a consent banner must come first (they may only load after the
+// visitor agrees), and those four sections, the summary and the cookie table
+// below must be updated before they go live.
+
+// OPERATOR: section 5 promises deletion or anonymisation once the retention
+// period ends. The code's sweep (RETENTION_DAYS in src/lib/bookings/service.ts)
+// removes notes, phone numbers, enquiries and email copies early, but nothing
+// yet deletes or anonymises a booking after 11 years. Add that before 2037.
 
 const SECTIONS = [
-	{ id: 'collect', title: 'What we collect' },
-	{ id: 'use', title: 'How we use it' },
-	{ id: 'sharing', title: 'Who processes it' },
-	{ id: 'device', title: 'Your device' },
+	{ id: 'controller', title: 'Data controller' },
+	{ id: 'collect', title: 'Personal data we collect' },
+	{ id: 'purpose', title: 'Purpose of processing' },
+	{ id: 'legal-basis', title: 'Legal basis' },
+	{ id: 'retention', title: 'Data retention' },
+	{ id: 'sharing', title: 'Sharing personal data' },
+	{ id: 'transfers', title: 'Transfers outside the EU' },
+	{ id: 'cookies', title: 'Cookies' },
+	{ id: 'security', title: 'Security' },
 	{ id: 'rights', title: 'Your rights' },
-	{ id: 'contact', title: 'Contact and complaints' },
+	{ id: 'complaints', title: 'Complaints' },
+	{ id: 'changes', title: 'Changes to this policy' },
 ];
 
 const SUMMARY = [
 	'We collect only what we need to run your booking or answer your message',
-	'We never sell your data',
-	'Payment details go directly to Teya or PayPal: we never see them',
-	'No tracking or analytics cookies',
-	'You can ask us to see, correct or delete your data at any time',
+	'We never sell or rent your data',
+	'Card details go directly to Teya or PayPal: we never store them',
+	'No tracking or analytics cookies, and no marketing emails without your consent',
+	'You can ask to see, correct or delete your data, or complain to AZOP',
 ];
 
 // LAWYER (PR 11): confirm each processor's entity and the transfer mechanism
@@ -34,9 +54,26 @@ const SUMMARY = [
 const PROCESSORS = [
 	{ name: 'Teya', role: 'Card payments', data: 'Name, email, payment details', where: 'To be confirmed' },
 	{ name: 'PayPal', role: 'PayPal payments', data: 'Name, email, payment details', where: 'Luxembourg (EU)' },
-	{ name: 'Netlify', role: 'Website hosting and booking storage', data: 'Booking and contact form details', where: 'United States' },
+	{ name: 'Netlify', role: 'Website hosting and booking storage', data: 'Booking and contact form details; IP address, browser type and pages requested', where: 'United States' },
 	{ name: 'Resend', role: 'Sending booking and contact emails', data: 'Name, email, phone, booking details', where: 'United States' },
-	{ name: 'Cloudflare Turnstile', role: 'Spam check on the contact form, when switched on', data: 'Technical data from your browser', where: 'United States' },
+	{ name: 'Cloudflare Turnstile', role: 'Spam check on the contact form (only if switched on; not active yet)', data: 'Technical data from your browser', where: 'United States' },
+];
+
+const COOKIES = [
+	{
+		name: BOOKING_COOKIE,
+		provider: `${SITE_NAME} (first party)`,
+		purpose: 'Keeps your booking between steps',
+		duration: `${BOOKING_COOKIE_MAX_AGE / 3600} hours`,
+		type: 'Strictly necessary',
+	},
+	{
+		name: ADMIN_COOKIE,
+		provider: `${SITE_NAME} (first party)`,
+		purpose: 'Staff login only; never set for visitors',
+		duration: `${SESSION_HOURS} hours`,
+		type: 'Strictly necessary',
+	},
 ];
 ---
 
@@ -47,34 +84,147 @@ const PROCESSORS = [
 	summary={SUMMARY}
 	sections={SECTIONS}
 >
-	{
-		IMPRINT && (
-			<p class="privacy-controller">
-				Data controller: {IMPRINT.legalName}, {IMPRINT.address}, OIB {IMPRINT.oib}.
-			</p>
-		)
-	}
-
-	<section id="collect">
-		<h2><i class="ti ti-database" aria-hidden="true"></i> 1. What we collect</h2>
+	<div class="privacy-intro">
 		<p>
-			When you book or contact us, we collect your name, email address, phone number, booking details, and what you
-			write to us. We don't collect payment card details: Teya or PayPal handle those directly.
+			{SITE_NAME}{IMPRINT && <>, operated by {IMPRINT.legalName},</>} respects your privacy and is committed to
+			protecting your personal data. This Privacy Policy explains how we collect, use, process, and protect your
+			personal data in accordance with the General Data Protection Regulation (EU) 2016/679 (GDPR) and applicable
+			Croatian data protection laws.
+		</p>
+		<p>This policy applies to this website and all services offered through it.</p>
+		<p>By using our website or booking our services, you agree to the practices described in this policy.</p>
+	</div>
+
+	<section id="controller">
+		<h2><i class="ti ti-building" aria-hidden="true"></i> 1. Data controller</h2>
+		<p>The controller responsible for processing your personal data is:</p>
+		<p>
+			{
+				IMPRINT ? (
+					<>
+						{IMPRINT.legalName}
+						<br />
+						{IMPRINT.address}
+						<br />
+						OIB: {IMPRINT.oib}
+						{IMPRINT.register && (
+							<>
+								<br />
+								{IMPRINT.register}
+							</>
+						)}
+						<br />
+					</>
+				) : (
+					<>
+						{SITE_NAME}
+						<br />
+					</>
+				)
+			}
+			Email: <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>
+		</p>
+		<p>
+			If you have any questions regarding this Privacy Policy or the processing of your personal data, you may
+			contact us using the email above.
 		</p>
 	</section>
 
-	<section id="use">
-		<h2><i class="ti ti-settings" aria-hidden="true"></i> 2. How we use it</h2>
+	<section id="collect">
+		<h2><i class="ti ti-database" aria-hidden="true"></i> 2. Personal data we collect</h2>
+		<p>When you use our website or book our services, we may collect the following types of personal data:</p>
+		<ul>
+			<li><strong>Basic identification data:</strong> name and surname.</li>
+			<li><strong>Contact information:</strong> email address, phone number.</li>
+			<li><strong>Booking information:</strong> tour details, booking date and number, number of participants.</li>
+			<li>
+				<strong>Payment information:</strong> payments are processed through third-party payment providers (Teya
+				for cards, and PayPal). We do not store your credit card details.
+			</li>
+			<li>
+				<strong>Technical data:</strong> when you visit this website, our hosting provider (Netlify) automatically
+				logs your IP address, browser type and the pages you request, as part of serving the site and keeping it
+				secure. We don't use analytics and don't track how you use the website.
+			</li>
+			<li>
+				<strong>Additional information:</strong> any information you voluntarily provide through contact forms,
+				emails, or booking requests.
+			</li>
+		</ul>
+	</section>
+
+	<section id="purpose">
+		<h2><i class="ti ti-list-check" aria-hidden="true"></i> 3. Purpose of processing personal data</h2>
+		<p>Your personal data may be processed for the following purposes:</p>
+		<ul>
+			<li>
+				<strong>Providing our services:</strong> processing tour bookings, confirming reservations, communicating
+				booking details.
+			</li>
+			<li><strong>Customer support:</strong> answering inquiries, handling complaints or requests.</li>
+			<li>
+				<strong>Legal and administrative obligations:</strong> accounting and invoicing, compliance with legal
+				requirements.
+			</li>
+			<li>
+				<strong>Marketing (only with consent):</strong> sending special offers or updates, improving our services
+				and customer experience. We don't send marketing emails at the moment, and would only do so with your
+				consent.
+			</li>
+		</ul>
+		<p>You may opt out of marketing communication at any time.</p>
+	</section>
+
+	<section id="legal-basis">
+		<h2><i class="ti ti-scale" aria-hidden="true"></i> 4. Legal basis for processing</h2>
+		<p>Under GDPR, we process personal data based on the following legal grounds:</p>
+		<ul>
+			<li>
+				<strong>Contractual necessity:</strong> processing is necessary to fulfill a booking or service you
+				requested.
+			</li>
+			<li>
+				<strong>Legal obligations:</strong> certain data must be processed to comply with Croatian and EU
+				regulations (tax, accounting, etc.).
+			</li>
+			<li>
+				<strong>Legitimate interest:</strong> we may process data to improve services, maintain website security,
+				or respond to customer inquiries.
+			</li>
+			<li><strong>Consent:</strong> for marketing communications or optional services where consent is required.</li>
+		</ul>
+	</section>
+
+	<section id="retention">
+		<h2><i class="ti ti-hourglass" aria-hidden="true"></i> 5. Data retention</h2>
 		<p>
-			We use it only to run and manage your booking, send confirmations and pre-departure information, tell you
-			about weather changes, and answer your messages.
+			Your personal data will be stored only for as long as necessary to fulfill the purposes outlined in this
+			policy or as required by law.
 		</p>
-		<Notice tone="info"><p>We don't use your data for marketing without your explicit consent.</p></Notice>
+		<p>For example:</p>
+		<ul>
+			<li>Booking and accounting data may be stored for up to 11 years in accordance with Croatian accounting regulations.</li>
+			<li>If you give us marketing consent, that record is stored until consent is withdrawn.</li>
+		</ul>
+		<p>
+			Some details are removed sooner: notes you add to a booking {RETENTION_DAYS.notes} days after the tour,
+			your phone number {RETENTION_DAYS.phone} days after the tour, the text of emails we sent you after
+			{RETENTION_DAYS.emailBody} days, and contact form messages after one year.
+		</p>
+		<p>After the retention period expires, personal data is securely deleted or anonymized.</p>
 	</section>
 
 	<section id="sharing">
-		<h2><i class="ti ti-share" aria-hidden="true"></i> 3. Who processes it</h2>
-		<p>These services process data for us, only for the purpose listed:</p>
+		<h2><i class="ti ti-share" aria-hidden="true"></i> 6. Sharing personal data</h2>
+		<p>We do not sell or rent personal data to third parties.</p>
+		<p>However, your data may be shared with trusted partners when necessary for providing services, such as:</p>
+		<ul>
+			<li>Payment providers (Teya for cards, and PayPal)</li>
+			<li>Booking platforms</li>
+			<li>Accounting service providers</li>
+			<li>Email, IT and hosting providers</li>
+		</ul>
+		<p>These services process data for us on this website, only for the purpose listed:</p>
 		<div class="table-wrap">
 			<table>
 				<thead>
@@ -99,41 +249,153 @@ const PROCESSORS = [
 				</tbody>
 			</table>
 		</div>
+		<p>Your data may also be disclosed to government authorities if required by law.</p>
+		<p>All partners are required to comply with GDPR and ensure the protection of your personal data.</p>
 	</section>
 
-	<section id="device">
-		<h2><i class="ti ti-cookie" aria-hidden="true"></i> 4. Your device</h2>
+	<section id="transfers">
+		<h2><i class="ti ti-map" aria-hidden="true"></i> 7. Data transfers outside the EU</h2>
 		<p>
-			We set no tracking or analytics cookies. We use <code>hbc_booking</code>, which is strictly necessary: it
-			keeps your booking between steps for 2 hours. Cloudflare Turnstile runs on the contact form as a security
-			check. <code>hbc_admin</code> is for staff login only.
+			Some service providers (such as our hosting and email providers) may process data outside the European
+			Union.
 		</p>
+		<p>
+			In such cases, appropriate safeguards are implemented to ensure that personal data is protected according
+			to GDPR standards.
+		</p>
+	</section>
+
+	<section id="cookies">
+		<h2><i class="ti ti-cookie" aria-hidden="true"></i> 8. Cookies</h2>
+		<p>
+			This website uses only the cookies it needs to work. There are no analytics, advertising or
+			preference/language cookies, so no cookie consent banner is needed.
+		</p>
+		<div class="table-wrap">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">Cookie</th>
+						<th scope="col">Provider</th>
+						<th scope="col">Purpose</th>
+						<th scope="col">Duration</th>
+						<th scope="col">Type</th>
+					</tr>
+				</thead>
+				<tbody>
+					{
+						COOKIES.map((c) => (
+							<tr>
+								<td>
+									<code>{c.name}</code>
+								</td>
+								<td>{c.provider}</td>
+								<td>{c.purpose}</td>
+								<td>{c.duration}</td>
+								<td>{c.type}</td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
+		</div>
+		<p>
+			Once Cloudflare Turnstile is switched on for the contact form, it may set its own security cookie there to
+			check that you're not a bot.
+		</p>
+		<p>
+			You can manage or disable cookies through your browser settings. Please note that if you block strictly
+			necessary cookies, booking on this website won't work.
+		</p>
+	</section>
+
+	<section id="security">
+		<h2><i class="ti ti-lock" aria-hidden="true"></i> 9. Security of personal data</h2>
+		<p>We implement appropriate technical and organizational security measures to protect personal data from:</p>
+		<ul>
+			<li>Unauthorized access</li>
+			<li>Loss or destruction</li>
+			<li>Misuse or disclosure</li>
+		</ul>
+		<p>These measures include encrypted connections (SSL), restricted data access, and secure servers.</p>
 	</section>
 
 	<section id="rights">
-		<h2><i class="ti ti-user-check" aria-hidden="true"></i> 5. Your rights</h2>
+		<h2><i class="ti ti-user-check" aria-hidden="true"></i> 10. Your rights under GDPR</h2>
+		<p>Under the General Data Protection Regulation, you have the following rights:</p>
+		<ul>
+			<li><strong>Right of access:</strong> you can request information about the personal data we hold about you.</li>
+			<li><strong>Right to rectification:</strong> you can request correction of inaccurate or incomplete data.</li>
+			<li>
+				<strong>Right to erasure ("right to be forgotten"):</strong> you may request deletion of your personal data
+				when there is no legal reason for us to retain it.
+			</li>
+			<li>
+				<strong>Right to restrict processing:</strong> you can request that we limit the processing of your data
+				under certain circumstances.
+			</li>
+			<li>
+				<strong>Right to data portability:</strong> you can request that we provide your personal data in a
+				structured, commonly used format.
+			</li>
+			<li>
+				<strong>Right to object:</strong> you may object to the processing of your data, particularly for marketing
+				purposes.
+			</li>
+			<li>
+				<strong>Right to withdraw consent:</strong> where processing is based on consent, you may withdraw your
+				consent at any time.
+			</li>
+		</ul>
 		<p>
-			You can ask to see, correct or delete your data, and you can complain to the Croatian Personal Data
-			Protection Agency (AZOP). We keep booking records for as long as Croatian accounting law requires.
+			To exercise your rights, please contact us at <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>. We confirm
+			receipt and reply within 15 days.
 		</p>
 	</section>
 
-	<section id="contact">
-		<h2><i class="ti ti-mail" aria-hidden="true"></i> 6. Contact and complaints</h2>
-		<Notice tone="neutral" icon="shield-check">
-			<p>
-				For privacy requests or complaints, email <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>{IMPRINT && <> or write to {IMPRINT.address}</>}. We confirm receipt and reply within 15 days.
-			</p>
-		</Notice>
+	<section id="complaints">
+		<h2><i class="ti ti-building-bank" aria-hidden="true"></i> 11. Complaints</h2>
+		<p>
+			If you believe that your personal data has been processed unlawfully, you have the right to file a complaint
+			with the competent supervisory authority:
+		</p>
+		<p>
+			<a href="https://azop.hr" rel="noopener" target="_blank">Croatian Personal Data Protection Agency (AZOP)</a>
+		</p>
+	</section>
+
+	<section id="changes">
+		<h2><i class="ti ti-refresh" aria-hidden="true"></i> 12. Changes to this privacy policy</h2>
+		<p>{SITE_NAME} reserves the right to update this Privacy Policy from time to time.</p>
+		<p>Any changes will be published on this page and become effective immediately upon publication.</p>
 	</section>
 </LegalLayout>
 
 <style>
 	@layer pages {
-		.privacy-controller {
-			margin: 0 0 var(--space-5);
-			font-size: var(--font-size-sm);
+		.privacy-intro {
+			margin-bottom: 28px;
+		}
+
+		.privacy-intro p {
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-body-md);
+			line-height: var(--line-height-body-md);
 			color: var(--color-text-secondary);
+		}
+
+		ul {
+			margin: 0 0 var(--space-3);
+			padding-left: 1.25rem;
+		}
+
+		li + li {
+			margin-top: var(--space-1);
+		}
+
+		strong {
+			font-weight: var(--font-weight-medium);
+			color: var(--color-text-primary);
 		}
 
 		code {
