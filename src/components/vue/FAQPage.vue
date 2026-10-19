@@ -14,10 +14,9 @@ type CategoryFilter = FaqCategory | 'all';
 
 const NAV_LABELS: Record<FaqCategory, string> = {
 	booking: 'Booking',
-	weather: 'Weather',
-	onboard: 'On board',
-	guests: 'Guests',
-	private: 'Private',
+	changes: 'Changes',
+	guests: 'Who can join',
+	bring: 'What to bring',
 };
 
 const activeCategory = ref<CategoryFilter>('all');
@@ -76,7 +75,7 @@ onMounted(() => {
 	<div class="faq">
 		<form class="faq__search" role="search" action="/faq/" method="get" @submit.prevent="onSubmit">
 			<label for="faq-search" class="sr-only">Search the FAQ</label>
-			<input id="faq-search" v-model="query" name="q" type="search" placeholder="Search, e.g. cancel, children, weather…" autocomplete="off" />
+			<input id="faq-search" v-model="query" name="q" type="search" placeholder="Search, e.g. cancel, luggage…" autocomplete="off" />
 			<button type="submit" class="faq__search-btn">
 				<i class="ti ti-search" aria-hidden="true"></i>
 				Search
@@ -279,13 +278,12 @@ onMounted(() => {
 		color: var(--color-text-success);
 	}
 
-	.faq__group-icon--weather {
-		background: var(--color-background-info);
-		color: var(--color-category-info-icon);
+	.faq__group-icon--changes {
+		background: var(--color-background-danger);
+		color: var(--color-text-danger);
 	}
 
-	.faq__group-icon--onboard,
-	.faq__group-icon--private {
+	.faq__group-icon--bring {
 		background: var(--color-category-private-bg);
 		color: var(--color-category-private-text);
 	}

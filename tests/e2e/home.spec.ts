@@ -53,7 +53,7 @@ test('without JavaScript: slide 1 shows, FAQ answers are readable, tours scroll'
 
 test('the homepage FAQ opens and closes', async ({ page }) => {
 	await page.goto('/');
-	const trigger = page.getByRole('button', { name: 'How do I book a tour?' });
+	const trigger = page.getByRole('button', { name: 'What’s included in the price?' });
 	await trigger.scrollIntoViewIfNeeded();
 	await expect(trigger).toHaveAttribute('aria-expanded', 'false');
 	await trigger.click();

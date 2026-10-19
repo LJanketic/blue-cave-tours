@@ -3,7 +3,7 @@ export const prerender = true;
 
 import LegalLayout from '../../layouts/LegalLayout.astro';
 import Notice from '../../components/ui/Notice.astro';
-import { CANCELLATION_HOURS, WEATHER_NOTICE_HOURS } from '../../config/cancellation';
+import { CANCELLATION_HOURS, WEATHER_NOTICE_HOURS, WEATHER_REFUND_DAYS } from '../../config/cancellation';
 import { SITE_EMAIL, SITE_NAME, SITE_PHONE_DISPLAY } from '../../config/site';
 
 const SECTIONS = [
@@ -18,9 +18,9 @@ const SECTIONS = [
 const SUMMARY = [
 	`Cancel ${CANCELLATION_HOURS}h or more before departure: full refund, no questions`,
 	`Cancel within ${CANCELLATION_HOURS}h: non-refundable`,
-	'We cancel for weather: full refund or free rebook',
+	`We cancel for weather: full refund within ${WEATHER_REFUND_DAYS} days, or free rebook`,
 	'Private charter deposits are non-refundable',
-	'Refunds processed within 5–10 business days',
+	'Other refunds processed within 5–10 business days',
 ];
 ---
 
@@ -114,7 +114,7 @@ const SUMMARY = [
 		<h2><i class="ti ti-cloud-storm" aria-hidden="true"></i> 3. Weather cancellations</h2>
 		<p>
 			If {SITE_NAME} cancels a tour due to unsafe conditions, you receive either a full refund
-			(within 5–10 business days) or a free rebook to any available date within the same season —
+			(within {WEATHER_REFUND_DAYS} days) or a free rebook to any available date within the same season —
 			your choice.
 		</p>
 		<Notice tone="info"><p>
@@ -126,7 +126,8 @@ const SUMMARY = [
 	<section id="refunds">
 		<h2><i class="ti ti-cash" aria-hidden="true"></i> 4. Refunds</h2>
 		<p>
-			Eligible refunds are returned to the original payment method within 5–10 business days. Refunds
+			Eligible refunds are returned to the original payment method within 5–10 business days, or within
+			{WEATHER_REFUND_DAYS} days when we cancel for weather. Refunds
 			are issued in Euros; we are not liable for exchange rate fluctuations.
 		</p>
 	</section>

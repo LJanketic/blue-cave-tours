@@ -329,6 +329,11 @@ const meetingPoint = meetingPointLines(tour);
 			display: block;
 		}
 
+		/* Keep the new-tab arrow with its place name. */
+		.tour__line a {
+			white-space: nowrap;
+		}
+
 		.tour__line--note {
 			font-weight: var(--font-weight-regular);
 			color: var(--color-text-secondary);

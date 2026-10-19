@@ -3,7 +3,7 @@ export const prerender = true;
 
 import LegalLayout from '../../layouts/LegalLayout.astro';
 import Notice from '../../components/ui/Notice.astro';
-import { CANCELLATION_HOURS } from '../../config/cancellation';
+import { CANCELLATION_HOURS, WEATHER_REFUND_DAYS } from '../../config/cancellation';
 import { SITE_EMAIL, SITE_NAME } from '../../config/site';
 
 const SECTIONS = [
@@ -18,7 +18,7 @@ const SECTIONS = [
 const SUMMARY = [
 	'Book online and get your confirmation by email',
 	`Free cancellation up to ${CANCELLATION_HOURS}h before departure`,
-	'Weather cancellations always get a full refund or rebook',
+	`Weather cancellations always get a full refund (within ${WEATHER_REFUND_DAYS} days) or rebook`,
 	'We can remove guests who endanger safety without refund',
 	'Croatian law applies to all disputes',
 ];

@@ -112,7 +112,7 @@ function paymentRows(booking: Booking, audience: 'customer' | 'admin'): Row[] {
 const DEMO_NOTICE = 'This is a demo booking. No payment was taken.';
 
 /** What to bring, as worded in the confirmation email template. */
-const EMAIL_BRING_LIST = 'Swimsuit and towel, Sunscreen and sunglasses, Hat or cap, Light jacket for cooler sea breezes';
+const EMAIL_BRING_LIST = 'Swimsuit and towel, Sunscreen and sunglasses, Hat or cap, Cash or card for lunch and extras, Light jacket for cooler sea breezes';
 
 const PAYMENT_STATUS_TEXT: Record<Booking['paymentStatus'], string> = {
 	paid: PAYMENTS_ARE_DEMO ? 'Paid (demo, no money taken)' : 'Paid',
