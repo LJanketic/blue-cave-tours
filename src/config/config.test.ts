@@ -19,6 +19,8 @@ describe('cancellation copy', () => {
 		expect(CANCELLATION_SHORT).toBe('Free cancellation up to 48h before departure');
 		expect(CANCELLATION_FULL).toContain('Cancellations within 48 hours are non-refundable');
 		expect(CANCELLATION_WEATHER).toContain('at least 4 hours before departure');
+		expect(CANCELLATION_FULL).toContain('full refund (paid within 30 days) or free rescheduling');
+		expect(CANCELLATION_WEATHER).toContain('full refund, paid within 30 days,');
 	});
 });
 

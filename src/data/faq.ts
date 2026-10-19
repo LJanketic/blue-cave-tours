@@ -1,7 +1,6 @@
-import { charterUrl } from '../config/routes';
 import { CANCELLATION_FULL, CANCELLATION_WEATHER } from '../config/cancellation';
 
-export type FaqCategory = 'booking' | 'weather' | 'onboard' | 'guests' | 'private';
+export type FaqCategory = 'booking' | 'changes' | 'guests' | 'bring';
 
 export type FaqItem = {
 	category: FaqCategory;
@@ -11,131 +10,75 @@ export type FaqItem = {
 };
 
 export const FAQ_CATEGORIES: { id: FaqCategory; label: string; icon: string }[] = [
-	{ id: 'booking', label: 'Booking & cancellation', icon: 'calendar-check' },
-	{ id: 'weather', label: 'Weather & cancellations', icon: 'cloud-storm' },
-	{ id: 'onboard', label: 'On board', icon: 'sailboat' },
-	{ id: 'guests', label: 'Guests & suitability', icon: 'users' },
-	{ id: 'private', label: 'Private charters', icon: 'crown' },
+	{ id: 'booking', label: 'Booking & price', icon: 'receipt' },
+	{ id: 'changes', label: 'Changes & cancellations', icon: 'refresh' },
+	{ id: 'guests', label: 'Who can join', icon: 'users' },
+	{ id: 'bring', label: 'What to bring', icon: 'list-check' },
 ];
 
 export const FAQ_ITEMS: FaqItem[] = [
 	{
 		category: 'booking',
-		question: 'How do I book a tour?',
+		question: 'What’s included in the price?',
 		answer:
-			'Choose a tour on our website, pick your date and guest count, and complete checkout. You’ll receive confirmation with meeting time, stand location, and what to bring.',
+			'The boat tour, a professional skipper, fuel, bottled water, snorkelling masks, safety equipment, insurance and VAT. Lunch, restaurant drinks and entrance tickets (such as the Blue Cave ticket) are not included.',
+	},
+	{
+		category: 'booking',
+		question: 'Do I need to book in advance?',
+		answer: 'Yes, especially in high season, when tours are often fully booked days ahead.',
 		link: { href: '/tours/', label: 'Browse tours' },
 	},
 	{
 		category: 'booking',
-		question: 'Where do we meet?',
+		question: 'Do you offer private tours?',
 		answer:
-			'Group tours meet at Split’s Riva promenade, stand 14. Private tours leave from the Riva or from Zenta, depending on the boat. You’ll receive the exact spot, meeting time and any last-minute updates after booking.',
-	},
-	{
-		category: 'booking',
-		question: 'Will I receive a confirmation after booking?',
-		answer:
-			'Yes, immediately after payment. Check spam if it doesn’t arrive within a few minutes; contact us with your name and tour date if needed.',
-		link: { href: '/contact/', label: 'Contact us' },
-	},
-	{
-		category: 'booking',
-		question: 'Is online payment secure?',
-		answer:
-			'Yes. You pay by card through Teya, or with PayPal. Your card details go straight to them, so we never see or store them. We show prices in Euros and confirm the final total before you pay.',
-		link: { href: '/legal/privacy/', label: 'Privacy policy' },
-	},
-	{
-		category: 'booking',
-		question: 'Can I cancel or reschedule?',
-		answer: `${CANCELLATION_FULL} To reschedule instead, contact us as early as possible. We'll do our best to move you to another date, subject to availability.`,
-		link: { href: '/legal/cancellation/', label: 'Cancellation policy' },
-	},
-	{
-		category: 'weather',
-		question: 'What if the weather is bad?',
-		answer: `We monitor forecasts and shorten, reorder, or reschedule routes to keep the day safe and enjoyable. ${CANCELLATION_WEATHER}`,
-	},
-	{
-		category: 'weather',
-		question: 'How do you decide if conditions are safe to sail?',
-		answer:
-			'Our captains use official forecasts plus local knowledge: wind, wave height, and visibility. Guest safety always comes first.',
-	},
-	{
-		category: 'weather',
-		question: 'What if it rains but the sea is calm?',
-		answer:
-			'Light rain rarely cancels a tour. We only withhold departures when sea conditions make it unsafe. We’ll contact you if there’s any doubt.',
-	},
-	{
-		category: 'onboard',
-		question: 'Is the Blue Cave ticket included?',
-		answer:
-			'No. Entering the Blue Cave is optional and the ticket is paid on site, though most guests go in. Entry depends on sea conditions and official opening hours.',
-	},
-	{
-		category: 'onboard',
-		question: 'What should I bring?',
-		answer:
-			'Sunscreen and hat, swimwear and towel, a light jacket, water, and sea-sickness remedy if you’re prone to it. Soft day bags only, limited space on board.',
-	},
-	{
-		category: 'onboard',
-		question: 'Are life jackets provided?',
-		answer:
-			'Yes, all sizes including children’s. We give a safety briefing at the start of every departure.',
-	},
-	{
-		category: 'onboard',
-		question: 'Is food and drink provided?',
-		answer:
-			'Water is available on board. We don’t include meals on group tours unless stated. Most full-day routes include time to eat ashore.',
-	},
-	{
-		category: 'guests',
-		question: 'Can I bring young children?',
-		answer:
-			'Children are welcome on group tours, with child pricing for ages 0–17. We also provide life jackets in children’s sizes. Private charters suit families who want a flexible pace.',
-	},
-	{
-		category: 'guests',
-		question: 'Is the tour suitable for non-swimmers?',
-		answer:
-			'Yes. Swimming stops are optional, and we provide life jackets. Let the crew know if anyone in your group prefers to stay on the boat.',
-	},
-	{
-		category: 'guests',
-		question: 'Can you cater to food allergies or dietary needs?',
-		answer:
-			'We don’t include meals on group tours, so you choose your own food during stops ashore, which makes allergies easy to manage. On private charters with catering, tell us about any allergies or dietary needs in advance and we’ll do our best to accommodate.',
-	},
-	{
-		category: 'guests',
-		question: 'What if I get seasick?',
-		answer:
-			'Open-sea legs can feel lively on windy days. Take remedy before departure, sit near the centre of the boat, and tell the crew. They’ll suggest the calmest spots.',
-	},
-	{
-		category: 'private',
-		question: 'Private vs group tours?',
-		answer:
-			'Group tours follow a fixed timetable; private charters pick timing and pacing within operational limits: see',
+			'Yes. Most of our tours can also be booked privately, and you can design a fully custom day on a private boat, with a flexible itinerary and a more personal experience.',
 		link: { href: '/tours/create-perfect-day-private/', label: 'Create your perfect day at sea' },
 	},
 	{
-		category: 'private',
-		question: 'Can I choose my own route on a private charter?',
-		answer:
-			'Yes, within fuel and time limits. Describe your ideal day when you enquire and your skipper will help plan the best possible route.',
-		link: { href: charterUrl(), label: 'Request a quote' },
+		category: 'changes',
+		question: 'What’s your cancellation policy?',
+		answer: CANCELLATION_FULL,
+		link: { href: '/legal/cancellation/', label: 'Cancellation policy' },
 	},
 	{
-		category: 'private',
-		question: 'How far in advance should I book a private charter?',
+		category: 'changes',
+		question: 'Can the itinerary change, and what if the Blue Cave is closed?',
+		answer: `Yes. Sea conditions or weather may mean adjusting stops, skipping a location (such as the Blue Cave if it’s closed due to waves), or rescheduling. Your skipper always puts safety first. ${CANCELLATION_WEATHER}`,
+	},
+	{
+		category: 'changes',
+		question: 'What if I’m running late?',
 		answer:
-			'At least two weeks ahead in July and August; one week is often enough in shoulder season. Last-minute slots sometimes open. Contact us directly.',
+			'Contact us immediately. We can usually wait 10–15 minutes, but not longer, since it affects the rest of the day’s schedule.',
 		link: { href: '/contact/', label: 'Contact us' },
+	},
+	{
+		category: 'guests',
+		question: 'Are the tours suitable for children?',
+		answer: 'Yes, children are welcome. For longer tours, please consider the duration and sea conditions for younger kids.',
+	},
+	{
+		category: 'guests',
+		question: 'What about pregnancy, back or neck issues, or mobility needs?',
+		answer:
+			'Our boats aren’t recommended for guests in advanced pregnancy or with acute back or neck conditions, because of the boat’s movement at sea. Some boats can take strollers or wheelchairs. Contact us before booking so we can arrange the right boat for your needs.',
+		link: { href: '/contact/', label: 'Contact us' },
+	},
+	{
+		category: 'guests',
+		question: 'Are pets allowed?',
+		answer: 'Not on group tours. On request, pets may be allowed on private tours.',
+	},
+	{
+		category: 'bring',
+		question: 'What should I bring?',
+		answer: 'Swimsuit, towel, sunscreen, sunglasses, hat, camera, and cash or card for lunch or extras.',
+	},
+	{
+		category: 'bring',
+		question: 'Can I bring luggage?',
+		answer: 'Yes, there’s safe storage space on board.',
 	},
 ];

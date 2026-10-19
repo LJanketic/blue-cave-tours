@@ -10,6 +10,10 @@ const MEETING_POINT =
 const MEETING_POINT_PRIVATE =
 	'Meet at Split’s Riva promenade, stand number 14, or at Zenta, depending on the boat. We confirm the exact spot with you after booking.';
 
+/** Create Your Perfect Day: the meeting point is agreed per booking. */
+const MEETING_POINT_FLEXIBLE =
+	'Flexible: we agree the meeting point with you when you book, for example Split’s Riva promenade, stand number 14, or Zenta.';
+
 const WEATHER_COPY =
 	'We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate the changes.';
 
@@ -21,22 +25,25 @@ const BRING_DEFAULT = [
 	'Sunscreen and sunglasses',
 	'Hat or cap',
 	'Camera or smartphone',
+	'Cash or card for lunch and extras',
 	'Light jacket for cooler sea breezes',
 	'Water shoes or sandals (optional)',
 	'Small bag or backpack for personal items',
 ];
 
 const INCLUDED_DEFAULT = [
-	'Fuel and crew expenses',
-	'Snorkelling equipment',
+	'Professional skipper',
+	'Fuel',
 	'Bottled water on board',
+	'Snorkelling masks',
 	'Safety equipment and insurance',
+	'VAT',
 ];
 
 const NOT_INCLUDED_DEFAULT = [
-	'Entrance tickets where applicable',
+	'Lunch and restaurant drinks, since guests have free time ashore to eat at their own expense',
+	'Entrance tickets where applicable, e.g. the Blue Cave ticket',
 	'Personal expenses',
-	'Lunch expenses, since guests have free time ashore to eat at their own expense',
 ];
 
 const DISCLAIMERS = [
@@ -311,7 +318,7 @@ export const tours: TourDetail[] = [
 		itinerary: [
 			{ label: 'Approx. 08:00–09:30 Departure from Split toward Hvar Old Town.', icon: 'map-pin' },
 			{ label: 'Swim stop in a secluded bay, with scenic coastal cruising toward Korčula.', icon: 'sailboat' },
-			{ label: 'Free time ashore in Korčula Old Town, with time for lunch.', icon: 'swimming' },
+			{ label: 'Free time ashore in Korčula Old Town, with time for lunch, where the schedule allows.', icon: 'swimming' },
 			{ label: 'Second swim stop or snorkelling among the islands (optional).', icon: 'sunset' },
 			{ label: 'Approx. 18:00–19:00 Arrival in Dubrovnik (no return leg, one-way private charter).', icon: 'anchor' },
 		],
@@ -344,7 +351,7 @@ export const tours: TourDetail[] = [
 			'A fully private charter: pick your own route from the Blue Cave, Hvar Town, Pakleni, Brač, Vis, or Šolta, or let your skipper plan the day.',
 		availability: 'On request',
 		scheduleLabel: 'Flexible · 1–10 hours',
-		departure: 'Flexible, typically 09:30 for half-day or full-day charters',
+		departure: 'Flexible, agreed when you book',
 		departures: [] /* private: flexible, agreed per booking */,
 		duration: '1–10 hours, depending on your booking',
 		durationShort: '1–10 h',
@@ -353,14 +360,14 @@ export const tours: TourDetail[] = [
 		itineraryKind: 'flexible',
 		itineraryLabel: 'Flexible itinerary',
 		itinerary: [
-			{ label: 'Departure flexible, typically 09:30 for half-day or full-day charters.', icon: 'map-pin' },
+			{ label: 'Flexible departure, agreed with you when you book.', icon: 'map-pin' },
 			{ label: 'You choose the stops, with your skipper’s recommendation based on weather and conditions: the Blue Cave, Hvar Town, the Pakleni Islands, Brač Island, Vis Island, or Šolta Island.', icon: 'sailboat' },
 			{ label: 'On the water: swim, snorkel, or go ashore at each stop for as long as you like. The itinerary can be adjusted at any time during the tour.', icon: 'swimming' },
-			{ label: 'Return flexible, 1–10 hours after departure depending on half-day or full-day.', icon: 'sunset' },
+			{ label: 'Flexible return, 1–10 hours after departure depending on your booking.', icon: 'sunset' },
 		],
 		overviewHighlights:
 			'This fully private, custom speedboat tour takes you to the destinations of your choice – the Blue Cave, Hvar Town, the Pakleni Islands, Brač, Vis, or Šolta. Along the way there’s time to swim, snorkel, sunbathe, or just relax on deck – the day is built exactly the way you and your group want it.',
-		meetingPoint: MEETING_POINT_PRIVATE,
+		meetingPoint: MEETING_POINT_FLEXIBLE,
 		weather: WEATHER_COPY,
 		importantInfo: SAFETY_COPY,
 		whatToBring: BRING_DEFAULT,

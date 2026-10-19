@@ -95,8 +95,8 @@ test('FAQ: counts follow the search, and "Show all questions" resets', async ({ 
 test('FAQ: one answer open per group; no JavaScript shows every answer', async ({ page, browser }) => {
 	await page.goto('/faq/');
 	await hydrated(page);
-	const first = page.getByRole('button', { name: 'How do I book a tour?' });
-	const second = page.getByRole('button', { name: 'Where do we meet?' });
+	const first = page.getByRole('button', { name: 'What’s included in the price?' });
+	const second = page.getByRole('button', { name: 'Do I need to book in advance?' });
 	await first.click();
 	await second.click();
 	await expect(first).toHaveAttribute('aria-expanded', 'false');

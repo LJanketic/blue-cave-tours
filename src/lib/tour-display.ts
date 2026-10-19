@@ -51,16 +51,24 @@ export type TextPart = { text: string; href?: string };
  * The "Meeting point" tile. Group tours leave from the Riva; private tours
  * may leave from the Riva or Zenta, and the exact spot is confirmed with the
  * guest after booking.
+ * - flexible itinerary (Create Your Perfect Day), whatever the types: agreed
+ *   when booking, with the Riva and Zenta as examples
  * - group only: the Riva link
  * - private only: "Riva stand 14 or Zenta", both linked, plus a note
  * - both: the Riva link, then "Private tours: Riva stand 14 or Zenta"
  */
-export function meetingPointLines(tour: Pick<TourDetail, 'types'>): { lines: TextPart[][]; note: string | null } {
+export function meetingPointLines(
+	tour: Pick<TourDetail, 'types'> & Partial<Pick<TourDetail, 'itineraryKind'>>,
+): { lines: TextPart[][]; note: string | null } {
 	const riva: TextPart = { text: MEETING_POINT_LABEL, href: MEETING_POINT_MAP_URL };
+	const riva14: TextPart = { text: 'Riva stand 14', href: MEETING_POINT_MAP_URL };
 	const zenta: TextPart = { text: 'Zenta', href: ZENTA_MEETING_POINT_MAP_URL };
+	if (tour.itineraryKind === 'flexible') {
+		return { lines: [[{ text: 'Flexible, agreed when you book' }], [{ text: 'For example ' }, riva14, { text: ' or ' }, zenta]], note: null };
+	}
 	if (!tour.types.includes('private')) return { lines: [[riva]], note: null };
 	if (!tour.types.includes('group')) {
-		return { lines: [[{ text: 'Riva stand 14', href: MEETING_POINT_MAP_URL }, { text: ' or ' }, zenta]], note: 'Exact spot confirmed after booking' };
+		return { lines: [[riva14, { text: ' or ' }, zenta]], note: 'Exact spot confirmed after booking' };
 	}
 	return { lines: [[riva], [{ text: 'Private tours: Riva stand 14 or ' }, zenta]], note: null };
 }

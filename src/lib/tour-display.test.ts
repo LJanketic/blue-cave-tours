@@ -57,4 +57,15 @@ describe('meetingPointLines', () => {
 		expect(hrefs(['group', 'private'])).toEqual([MEETING_POINT_MAP_URL, ZENTA_MEETING_POINT_MAP_URL]);
 		expect(view.note).toBeNull();
 	});
+
+	it('agrees the meeting point per booking on the flexible Perfect Day charter', () => {
+		const perfectDay = tours.find((t) => t.slug === 'create-perfect-day-private')!;
+		const view = meetingPointLines(perfectDay);
+		expect(view.lines.map((line) => line.map((part) => part.text).join(''))).toEqual([
+			'Flexible, agreed when you book',
+			'For example Riva stand 14 or Zenta',
+		]);
+		expect(view.lines.flat().flatMap((part) => (part.href ? [part.href] : []))).toEqual([MEETING_POINT_MAP_URL, ZENTA_MEETING_POINT_MAP_URL]);
+		expect(view.note).toBeNull();
+	});
 });
