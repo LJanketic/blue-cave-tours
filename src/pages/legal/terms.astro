@@ -3,25 +3,32 @@ export const prerender = true;
 
 import LegalLayout from '../../layouts/LegalLayout.astro';
 import Notice from '../../components/ui/Notice.astro';
-import { CANCELLATION_HOURS, WEATHER_REFUND_DAYS } from '../../config/cancellation';
+import { CANCELLATION_HOURS } from '../../config/cancellation';
+import { IMPRINT } from '../../config/legal';
 import { SITE_EMAIL, SITE_NAME } from '../../config/site';
 
 const SECTIONS = [
-	{ id: 'bookings', title: 'Bookings' },
-	{ id: 'payment', title: 'Payment' },
-	{ id: 'conduct', title: 'Conduct' },
-	{ id: 'liability', title: 'Liability' },
-	{ id: 'safety', title: 'Safety' },
-	{ id: 'law', title: 'Governing law' },
+	{ id: 'general', title: 'General information' },
+	{ id: 'payment', title: 'Reservations & payment' },
+	{ id: 'pricing', title: 'Pricing & modifications' },
+	{ id: 'cancellation', title: 'Cancellation & refunds' },
+	{ id: 'safety', title: "Itinerary & captain's authority" },
+	{ id: 'health', title: 'Health & safety' },
+	{ id: 'belongings', title: 'Personal belongings' },
+	{ id: 'complaints', title: 'Complaints' },
+	{ id: 'privacy', title: 'Privacy' },
+	{ id: 'final', title: 'Final provisions' },
 ];
 
 const SUMMARY = [
-	'Book online and get your confirmation by email',
-	`Free cancellation up to ${CANCELLATION_HOURS}h before departure`,
-	`Weather cancellations always get a full refund (within ${WEATHER_REFUND_DAYS} days) or rebook`,
-	'We can remove guests who endanger safety without refund',
-	'Croatian law applies to all disputes',
+	'Your booking is confirmed once full payment is received',
+	`Full refund if you cancel in writing at least ${CANCELLATION_HOURS} hours before departure`,
+	'Arrive 15 minutes early: the boat cannot wait, and late arrivals count as a no-show',
+	'If we cancel, you choose a new date, another tour or a full refund',
+	"The captain can change the route for safety, and the captain's decision is final",
 ];
+
+const mail = `mailto:${SITE_EMAIL}`;
 ---
 
 <LegalLayout
@@ -31,79 +38,185 @@ const SUMMARY = [
 	summary={SUMMARY}
 	sections={SECTIONS}
 >
-	<section id="bookings">
-		<h2><i class="ti ti-calendar-check" aria-hidden="true"></i> 1. Bookings</h2>
+	<section id="general">
+		<h2><i class="ti ti-building" aria-hidden="true"></i> 1. General information</h2>
 		<p>
-			A booking is confirmed once full payment (group tours) or the required deposit (private
-			charters) has been received and a confirmation email has been sent. You must be 18 or older
-			to make a booking.
+			By accessing this website and booking through it, you agree to be bound by these Terms &amp;
+			Conditions, including all safety and liability provisions described herein. These terms apply to
+			all services and communications between you and the service provider.
 		</p>
+		<ul>
+			{IMPRINT && <li><strong>Company:</strong> {IMPRINT.legalName}, {IMPRINT.address}</li>}
+			{IMPRINT && <li><strong>OIB:</strong> {IMPRINT.oib}</li>}
+			<li><strong>Operating under the brand name:</strong> {SITE_NAME}</li>
+			<li><strong>Email:</strong> <a href={mail}>{SITE_EMAIL}</a></li>
+		</ul>
+		<p><strong>Service:</strong> Provider of boat tours, private charters, and passenger transfers.</p>
 		<p>
-			Changes to guest numbers or departure date are subject to availability and must be requested at
-			least {CANCELLATION_HOURS} hours before departure.
-		</p>
-		<p>
-			Tours may be operated by contracted entities such as Misericordia d.o.o., Aliskaf d.o.o., or
-			Per Mare d.o.o. depending on the boat and season. The contracting party is confirmed on your
-			booking confirmation.
+			<strong>Client responsibility:</strong> You agree to provide accurate information required for the
+			booking process.
 		</p>
 	</section>
 
 	<section id="payment">
-		<h2><i class="ti ti-credit-card" aria-hidden="true"></i> 2. Payment</h2>
+		<h2><i class="ti ti-credit-card" aria-hidden="true"></i> 2. Reservations &amp; payment</h2>
+		<p><strong>Confirmation:</strong> A booking is confirmed only after full payment is received.</p>
 		<p>
-			Group tours are payable in full at the time of booking. Private charters require a
-			non-refundable deposit of 30% at booking, with the balance due 7 days before departure.
+			<strong>Voucher:</strong> Upon successful payment, you will receive a confirmation email with a
+			digital voucher and tour details.
 		</p>
-		<div class="warn-box">
-			<p>
-				If the balance for a private charter is not received 7 days before departure, {SITE_NAME}
-				reserves the right to cancel the booking and retain the deposit.
-			</p>
-		</div>
 		<p>
-			Card payments are processed by Teya and PayPal payments by PayPal. Prices are quoted in Euros and include all
-			applicable taxes. Additional fees (e.g. cave entry) may be payable on-site where applicable.
+			<strong>Payment methods:</strong> We accept credit/debit cards and PayPal via secure, encrypted
+			payment systems.
+		</p>
+		<p><strong>Currency:</strong> Prices are displayed in EUR (€) and include VAT.</p>
+	</section>
+
+	<section id="pricing">
+		<h2><i class="ti ti-tag" aria-hidden="true"></i> 3. Pricing &amp; modifications</h2>
+		<p>
+			<strong>Rates:</strong> Prices on the website are official. We reserve the right to modify prices
+			due to extreme fuel fluctuations or operational costs.
+		</p>
+		<p>
+			<strong>Guaranteed price:</strong> Confirmed and paid bookings will not be affected by subsequent
+			price changes.
 		</p>
 	</section>
 
-	<section id="conduct">
-		<h2><i class="ti ti-users" aria-hidden="true"></i> 3. Guest conduct</h2>
+	<section id="cancellation">
+		<h2><i class="ti ti-calendar-x" aria-hidden="true"></i> 4. Cancellation &amp; refund policy</h2>
 		<p>
-			All guests must follow the instructions of the captain and crew at all times. The captain has
-			the right to refuse boarding or remove a guest if their behaviour poses a risk to the safety
-			or enjoyment of others.
+			All cancellation requests must be sent in writing to <a href={mail}>{SITE_EMAIL}</a>. See also our
+			<a href="/legal/cancellation/">cancellation policy</a>.
 		</p>
-		<div class="warn-box">
-			<p>Guests removed for conduct reasons are not entitled to a refund, partial or otherwise.</p>
-		</div>
-	</section>
-
-	<section id="liability">
-		<h2><i class="ti ti-shield" aria-hidden="true"></i> 4. Liability</h2>
 		<p>
-			{SITE_NAME} holds full public liability insurance covering all passengers. We are not liable for
-			loss or damage to personal belongings brought on board. Nothing in these terms limits
-			liability for death or personal injury caused by negligence.
+			<strong>Client cancellation:</strong> Flexible policy: full refund for cancellations made up to
+			{CANCELLATION_HOURS} hours before departure. Non-refundable: in case of a "no-show" or cancellations
+			made less than {CANCELLATION_HOURS} hours before departure.
 		</p>
+		<Notice tone="warn"><p>
+				Guests are required to arrive at the meeting point at least 15 minutes before departure. The boat
+				cannot wait for late arrivals, and failure to arrive on time will be considered a no-show without
+				refund.
+			</p></Notice>
+		<p>
+			<strong>Company cancellation:</strong> We reserve the right to cancel or modify routes due to bad
+			weather, technical issues, or force majeure. In these cases, clients can choose:
+		</p>
+		<ul>
+			<li>Reschedule for the next available date.</li>
+			<li>Accept an alternative tour/service.</li>
+			<li>Full refund of the amount paid.</li>
+		</ul>
 	</section>
 
 	<section id="safety">
-		<h2><i class="ti ti-anchor" aria-hidden="true"></i> 5. Safety</h2>
+		<h2><i class="ti ti-anchor" aria-hidden="true"></i> 5. Tour itinerary, safety &amp; captain's authority</h2>
 		<p>
-			All vessels are inspected and certified in accordance with Croatian Maritime Authority
-			requirements. The captain's decision regarding sailing conditions is final.
+			Speedboat and boat tours take place in an open sea environment where weather and sea conditions may
+			change unexpectedly. By booking, passengers acknowledge that during the tour the vessel may
+			encounter waves, wind, sea spray, and sudden movements that may cause water splashing or changes in
+			navigation.
+		</p>
+		<p>
+			Tour schedules and itineraries are approximate and may be adjusted due to sea conditions, weather,
+			port traffic, or other safety requirements.
+		</p>
+		<p>
+			For safety reasons, the skipper/captain has full authority during the tour. The captain may change
+			the route, itinerary, or schedule at any time, without prior notice, depending on weather
+			conditions, sea state, or other safety considerations.
+		</p>
+		<Notice tone="warn"><p>
+				The captain's decision is final and is made to ensure the safety of all passengers and crew.
+			</p></Notice>
+		<p>
+			The Blue Cave may occasionally be closed due to high sea conditions or decisions by the local
+			authorities managing the cave. In such cases, the tour will continue to alternative locations, and
+			refunds related specifically to the cave entrance cannot be claimed.
+		</p>
+		<p>
+			<strong>Minimum participants:</strong> For group tours, we reserve the right to reschedule if the
+			minimum number of participants is not met.
+		</p>
+		<p><strong>Following instructions:</strong> Passengers must follow all instructions provided by the skipper or crew at all times.</p>
+		<Notice tone="warn"><p>Failure to do so may result in removal from the tour without a refund.</p></Notice>
+	</section>
+
+	<section id="health">
+		<h2><i class="ti ti-shield-check" aria-hidden="true"></i> 6. Health &amp; safety requirements</h2>
+		<p>For safety reasons, this tour is not recommended for:</p>
+		<ul>
+			<li>Pregnant women.</li>
+			<li>Persons with back or neck problems.</li>
+			<li>Persons with serious medical conditions.</li>
+			<li>Very young children without proper adult supervision.</li>
+		</ul>
+		<p>
+			Guests with any of the above conditions, or other health/mobility concerns, should
+			<a href={mail}>contact us</a> before booking so we can advise on suitability or arrange appropriate
+			accommodations where possible.
+		</p>
+		<p>
+			Passengers participate in the tour at their own responsibility and must follow all instructions
+			provided by the skipper or crew. Failure to follow safety instructions may result in removal from
+			the tour without refund.
 		</p>
 	</section>
 
-	<section id="law">
-		<h2><i class="ti ti-scale" aria-hidden="true"></i> 6. Governing law</h2>
+	<section id="belongings">
+		<h2><i class="ti ti-droplet" aria-hidden="true"></i> 7. Personal belongings &amp; liability</h2>
 		<p>
-			These terms are governed by the laws of the Republic of Croatia. Disputes shall be subject to
-			the exclusive jurisdiction of the courts of Split-Dalmatia County.
+			Passengers are responsible for securing and protecting their personal belongings during the tour.
+			Due to sea spray and boat movement, personal items such as phones, cameras, and bags may get wet.
+			Passengers are advised to bring waterproof protection for valuables.
+		</p>
+		<p>
+			{SITE_NAME}{IMPRINT && ` and ${IMPRINT.legalName}`} are not responsible for loss, damage, or water
+			exposure of personal belongings (including cameras, phones, and jewelry) during the tour.
+		</p>
+	</section>
+
+	<section id="complaints">
+		<h2><i class="ti ti-message" aria-hidden="true"></i> 8. Complaints &amp; refund claims</h2>
+		<p>
+			Any dissatisfaction must be reported within 7 days after the tour, to
+			<a href={mail}>{SITE_EMAIL}</a>.
+		</p>
+		<p>
+			Refund claims are considered only if the service was significantly incomplete or below the described
+			standard.
+		</p>
+	</section>
+
+	<section id="privacy">
+		<h2><i class="ti ti-lock" aria-hidden="true"></i> 9. Privacy &amp; data processing</h2>
+		<p>
+			Personal information collected during booking (name, email, phone, payment details) is processed
+			solely for booking, communication, and legal/accounting purposes, and is not sold or shared with
+			third parties except as required for payment processing or by law.
+		</p>
+		<p>
+			Full details on what data we collect, why, how long we retain it, and your rights under GDPR are set
+			out in our separate <a href="/legal/privacy/">Privacy Policy</a>, which forms part of these Terms
+			&amp; Conditions.
+		</p>
+	</section>
+
+	<section id="final">
+		<h2><i class="ti ti-scale" aria-hidden="true"></i> 10. Final provisions</h2>
+		<p>
+			<strong>Modifications:</strong> {IMPRINT?.legalName ?? SITE_NAME} may update these Terms &amp;
+			Conditions at any time. The current version in effect is the one published on this page at the time
+			of booking.
+		</p>
+		<p>
+			<strong>Jurisdiction:</strong> Any disputes shall be settled under the jurisdiction of the Commercial
+			Court in Split, Croatia.
 		</p>
 		<Notice tone="neutral" icon="mail"><p>
-				Questions? Email <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>
+				Questions? Email <a href={mail}>{SITE_EMAIL}</a>
 			</p></Notice>
 	</section>
 </LegalLayout>

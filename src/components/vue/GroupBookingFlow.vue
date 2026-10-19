@@ -221,7 +221,7 @@ onMounted(() => {
 					name="notes"
 					as="textarea"
 					:maxlength="NOTES_MAX"
-					hint="For example, a child seat or a late arrival. Please tell us about health matters (allergies, mobility) by phone or in person, not here."
+					hint="For example, a child seat. Please tell us about health matters (allergies, mobility) by phone or in person, not here."
 					:error="fieldErrors.notes"
 				/>
 			</div>

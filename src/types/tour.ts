@@ -29,7 +29,7 @@ export type TourDetail = {
 	availability: string;
 	/** e.g. "Full day: 08:00 – 18:00" */
 	scheduleLabel: string;
-	/** Display copy, e.g. "07:10 check-in · 07:20 departure" or "Departure time confirmed at booking". */
+	/** Display copy, e.g. "07:05 check-in · 07:20 departure" or "Departure time confirmed at booking". */
 	departure: string;
 	/** Fixed daily departures the booking flow offers. Empty when the time isn't fixed yet. */
 	departures: Departure[];

@@ -1,7 +1,7 @@
 /**
  * Cancellation policy: the three figures, and every string built from them, for
- * the booking flow, tour pages and FAQ. /legal/cancellation and /legal/terms
- * still have their own copies of these figures until PR 6 wires them here.
+ * the booking flow, tour pages, FAQ, emails and the legal pages. Wording follows
+ * the operator's Terms & Conditions of 19.10.2026 (sections 4 and 5).
  */
 
 /** Free cancellation up to this many hours before departure. */
@@ -18,7 +18,7 @@ export const CANCELLATION_SHORT = `Free cancellation up to ${CANCELLATION_HOURS}
 export const CANCELLATION_WINDOW = `${CANCELLATION_HOURS} hours`;
 
 export const CANCELLATION_FULL_PREFIX = 'Free cancellation up to ';
-export const CANCELLATION_FULL_SUFFIX = ` before departure. Cancellations within ${CANCELLATION_HOURS} hours are non-refundable. In case of bad weather, you'll receive a full refund (paid within ${WEATHER_REFUND_DAYS} days) or free rescheduling.`;
+export const CANCELLATION_FULL_SUFFIX = ` before departure. Cancellations within ${CANCELLATION_HOURS} hours are non-refundable. If we cancel for bad weather, technical issues or force majeure, you choose: free rescheduling, an alternative tour, or a full refund (paid within ${WEATHER_REFUND_DAYS} days).`;
 
 /**
  * The full policy as plain text, built from PREFIX/WINDOW/SUFFIX. The FAQ,
@@ -26,4 +26,4 @@ export const CANCELLATION_FULL_SUFFIX = ` before departure. Cancellations within
  */
 export const CANCELLATION_FULL = `${CANCELLATION_FULL_PREFIX}${CANCELLATION_WINDOW}${CANCELLATION_FULL_SUFFIX}`;
 
-export const CANCELLATION_WEATHER = `If we cancel for safety reasons, we'll let you know at least ${WEATHER_NOTICE_HOURS} hours before departure. You can take a full refund, paid within ${WEATHER_REFUND_DAYS} days, or move to another date this season.`;
+export const CANCELLATION_WEATHER = `If we cancel for safety reasons, we'll let you know at least ${WEATHER_NOTICE_HOURS} hours before departure. You choose: move to the next available date, switch to an alternative tour, or take a full refund, paid within ${WEATHER_REFUND_DAYS} days.`;

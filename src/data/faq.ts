@@ -51,19 +51,19 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'changes',
 		question: 'What if I’m running late?',
 		answer:
-			'Contact us immediately. We can usually wait 10–15 minutes, but not longer, since it affects the rest of the day’s schedule.',
+			'Please be at the meeting point at least 15 minutes before departure. The boat can’t wait, and a late arrival counts as a no-show, without a refund. If you’re delayed, contact us right away.',
 		link: { href: '/contact/', label: 'Contact us' },
 	},
 	{
 		category: 'guests',
 		question: 'Are the tours suitable for children?',
-		answer: 'Yes, children are welcome. For longer tours, please consider the duration and sea conditions for younger kids.',
+		answer: 'Yes, children are welcome. Very young children need proper adult supervision on board. For longer tours, please consider the duration and sea conditions for younger kids.',
 	},
 	{
 		category: 'guests',
 		question: 'What about pregnancy, back or neck issues, or mobility needs?',
 		answer:
-			'Our boats aren’t recommended for guests in advanced pregnancy or with acute back or neck conditions, because of the boat’s movement at sea. Some boats can take strollers or wheelchairs. Contact us before booking so we can arrange the right boat for your needs.',
+			'Because of the boat’s movement at sea, our tours aren’t recommended for pregnant women, guests with back or neck problems, or anyone with a serious medical condition. Some boats can take strollers or wheelchairs. Contact us before booking with any health or mobility concerns, so we can arrange the right boat for your needs.',
 		link: { href: '/contact/', label: 'Contact us' },
 	},
 	{

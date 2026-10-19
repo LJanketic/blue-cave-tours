@@ -113,7 +113,7 @@ test('legal pages: the switcher marks the page, the figures match the config', a
 	await page.goto('/legal/cancellation/');
 	await expect(page.getByRole('navigation', { name: 'Legal documents' }).getByRole('link', { name: 'Cancellation policy' })).toHaveAttribute('aria-current', 'page');
 	await expect(page.getByRole('navigation', { name: 'On this page' }).getByRole('link').first()).toHaveAttribute('aria-current', 'true');
-	await expect(page.locator('main')).toContainText('More than 48 hours before departure');
+	await expect(page.locator('main')).toContainText('48 hours or more before departure');
 	await page.goto('/legal/privacy/');
 	await expect(page.locator('main')).not.toContainText('Google Analytics');
 	await expect(page.locator('main')).toContainText('Resend');
