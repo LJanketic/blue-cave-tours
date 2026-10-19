@@ -6,6 +6,9 @@ import type { PhotoRef } from '../data/tour-photos';
 import { APPLE_TOUCH_ICON_PATH, SITE_NAME, SITE_EMAIL, SITE_PHONE, SITE_DEFAULT_DESCRIPTION } from '../config/site';
 import { isGroupTour } from './booking';
 
+/** Riva stand 14, the group tours' meeting point (MEETING_POINT_MAP_URL). */
+const MEETING_POINT_GEO = { latitude: 43.5072282, longitude: 16.4391746 };
+
 /** 1200×630 JPG: social platforms don't render SVG previews. */
 export const DEFAULT_OG_IMAGE = '/og-default.jpg';
 
@@ -51,6 +54,7 @@ export function organizationJsonLd(siteUrl: string) {
 		name: SITE_NAME,
 		url: siteUrl,
 		logo: absoluteUrl(APPLE_TOUCH_ICON_PATH, siteUrl),
+		image: absoluteUrl(DEFAULT_OG_IMAGE, siteUrl),
 		email: SITE_EMAIL,
 		telephone: SITE_PHONE,
 		description: SITE_DEFAULT_DESCRIPTION,
@@ -61,6 +65,7 @@ export function organizationJsonLd(siteUrl: string) {
 			postalCode: '21000',
 			addressCountry: 'HR',
 		},
+		geo: { '@type': 'GeoCoordinates', ...MEETING_POINT_GEO },
 		areaServed: {
 			'@type': 'AdministrativeArea',
 			name: 'Central Dalmatia',
@@ -75,11 +80,8 @@ export function websiteJsonLd(siteUrl: string) {
 		name: SITE_NAME,
 		url: siteUrl,
 		description: SITE_DEFAULT_DESCRIPTION,
-		publisher: {
-			'@type': 'Organization',
-			name: SITE_NAME,
-			url: siteUrl,
-		},
+		// The TravelAgency node on the same page, not a second organisation.
+		publisher: { '@id': businessId(siteUrl) },
 	};
 }
 

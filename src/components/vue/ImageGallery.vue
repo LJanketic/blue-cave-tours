@@ -6,7 +6,9 @@
  * back to the control that opened it.
  *
  * Without JavaScript the hero and thumbnails are plain links to the
- * full-size photos.
+ * full-size photos. Once hydrated they stay the same <a> elements, with
+ * role="button": swapping the tag would make Vue rebuild them, and with them
+ * the hero <img> that is the page's largest paint.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { GalleryViewPhoto } from '../../data/tour-photos';
@@ -26,6 +28,8 @@ const count = computed(() => realPhotos.value.length);
 const thumbs = computed(() => realPhotos.value.slice(1, 1 + THUMB_COUNT));
 /** Photos beyond the hero and the four thumbnails, shown as "+N" on the last thumbnail. */
 const moreCount = computed(() => Math.max(0, count.value - 1 - THUMB_COUNT));
+/** The hero's visible text; its accessible name starts with it (WCAG 2.5.3). */
+const heroText = computed(() => (count.value === 1 ? 'View photo' : `View all ${count.value} photos`));
 
 const hydrated = ref(false);
 const dialog = ref<HTMLDialogElement | null>(null);
@@ -41,6 +45,13 @@ function fullSrc(photo: GalleryViewPhoto): string | undefined {
 function thumbLabel(position: number): string {
 	const isLast = position === thumbs.value.length - 1 && moreCount.value > 0;
 	return `Open photo ${position + 2} of ${count.value}${isLast ? `, +${moreCount.value} more` : ''}`;
+}
+
+/** A click (or Space, as on a button) on the hero or a thumbnail: the lightbox instead of the link. */
+function activate(at: number, event: Event) {
+	if (!hydrated.value) return;
+	event.preventDefault();
+	void open(at, event);
 }
 
 async function open(at: number, event: Event) {
@@ -118,14 +129,14 @@ onBeforeUnmount(() => {
 <template>
 	<div class="gallery-ui">
 		<div class="gallery-ui__hero-wrap">
-			<component
-				:is="hydrated ? 'button' : 'a'"
+			<a
 				v-if="count > 0"
 				class="gallery-ui__hero"
-				:type="hydrated ? 'button' : undefined"
-				:href="hydrated ? undefined : fullSrc(realPhotos[0])"
-				:aria-label="`Open photo gallery, ${count} ${count === 1 ? 'photo' : 'photos'}`"
-				@click="hydrated && open(0, $event)"
+				:href="fullSrc(realPhotos[0])"
+				:role="hydrated ? 'button' : undefined"
+				:aria-label="`${heroText}, opens the photo gallery`"
+				@click="activate(0, $event)"
+				@keydown.space="activate(0, $event)"
 			>
 				<img
 					:src="realPhotos[0].src"
@@ -137,9 +148,9 @@ onBeforeUnmount(() => {
 				/>
 				<span class="gallery-ui__count" aria-hidden="true">
 					<i class="ti ti-photo"></i>
-					{{ count === 1 ? 'View photo' : `View all ${count} photos` }}
+					{{ heroText }}
 				</span>
-			</component>
+			</a>
 			<div v-else class="gallery-ui__hero gallery-ui__hero--placeholder" role="img" :aria-label="placeholder?.alt">
 				<i :class="`ti ti-${placeholder?.icon ?? 'sailboat'}`" aria-hidden="true"></i>
 			</div>
@@ -152,19 +163,20 @@ onBeforeUnmount(() => {
 
 		<ul v-if="thumbs.length" class="gallery-ui__thumbs" role="list">
 			<li v-for="(photo, position) in thumbs" :key="photo.src">
-				<component
-					:is="hydrated ? 'button' : 'a'"
+				<a
 					class="gallery-ui__thumb"
-					:type="hydrated ? 'button' : undefined"
-					:href="hydrated ? undefined : fullSrc(photo)"
+					:href="fullSrc(photo)"
+					:role="hydrated ? 'button' : undefined"
 					:aria-label="thumbLabel(position)"
-					@click="hydrated && open(position + 1, $event)"
+					@click="activate(position + 1, $event)"
+					@keydown.space="activate(position + 1, $event)"
 				>
-					<img :src="photo.src" :srcset="photo.srcset" sizes="(max-width: 768px) 25vw, 222px" alt="" loading="lazy" decoding="async" />
+					<!-- The link's label names it; the alt is there for image search. -->
+					<img :src="photo.src" :srcset="photo.srcset" sizes="(max-width: 768px) 25vw, 222px" :alt="photo.alt" loading="lazy" decoding="async" />
 					<span v-if="position === thumbs.length - 1 && moreCount > 0" class="gallery-ui__more" aria-hidden="true">
 						+{{ moreCount }}
 					</span>
-				</component>
+				</a>
 			</li>
 		</ul>
 

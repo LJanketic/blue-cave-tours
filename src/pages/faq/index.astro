@@ -13,7 +13,7 @@ const jsonLd = faqPageJsonLd(FAQ_ITEMS);
 ---
 
 <SiteLayout
-	title={pageTitle('Split boat tour FAQ: booking, cancellations, what to bring')}
+	title={pageTitle('Split boat tour FAQ')}
 	description="Answers about booking, prices, cancellations, who can join and what to bring on our Split boat tours."
 	jsonLd={jsonLd}
 	footerGap="32px"
@@ -21,7 +21,7 @@ const jsonLd = faqPageJsonLd(FAQ_ITEMS);
 	<main id="main" class="faq-page">
 		<h1 class="faq-page__title">Frequently asked questions</h1>
 		<p class="faq-page__lead">Everything you need to know before you book. Can't find the answer? We're happy to help directly.</p>
-		<FAQPage client:load />
+		<FAQPage client:idle />
 		<CtaBand heading="Still have a question?" text={`We reply ${REPLY_TIME}.`} id="faq-contact">
 			<Button href={`mailto:${SITE_EMAIL}`} variant="secondary" size="sm" icon="mail">Email us</Button>
 			<Button href={`tel:${SITE_PHONE}`} size="sm" icon="phone">Call us</Button>
