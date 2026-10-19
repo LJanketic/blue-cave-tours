@@ -42,6 +42,12 @@ describe('createPendingBooking', () => {
 		expect(await bookings().get(booking.id)).toEqual(booking);
 	});
 
+	it('stores an accented email domain in its ASCII form', async () => {
+		const result = await createPendingBooking(tour, { ...input, email: 'ana@žena.hr' }, NOW);
+		if (!result.ok) throw new Error(result.error);
+		expect(result.booking.email).toBe('ana@xn--ena-b3a.hr');
+	});
+
 	it('rejects what the browser should have caught', async () => {
 		const cases = [
 			{ ...input, email: 'not-an-email' },
@@ -57,6 +63,13 @@ describe('createPendingBooking', () => {
 		}
 		expect(errors).toEqual(['email', 'past', 'guests', 'guests', 'name']);
 		expect(await bookings().list()).toHaveLength(0);
+	});
+
+	it("refuses today's departure once the boat has left Split", async () => {
+		// 2027-07-15 07:30 in Split (UTC+2): the 07:20 boat has gone.
+		const today = { ...input, date: '2027-07-15' };
+		expect(await createPendingBooking(tour, today, new Date('2027-07-15T05:10:00Z'))).toMatchObject({ ok: true });
+		expect(await createPendingBooking(tour, today, new Date('2027-07-15T05:30:00Z'))).toEqual({ ok: false, error: 'past' });
 	});
 
 	it('refuses quote-only tours', async () => {
@@ -93,7 +106,7 @@ describe('finalizePaidBooking', () => {
 			`Meeting point: Riva promenade, stand 14, Split — ${MEETING_POINT_MAP_URL}`,
 			"As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.",
 			'Guests: 2 adults, 1 child',
-			`Total: €${booking.total} — Paid (demo, no money taken)`,
+			`Total (incl. VAT): €${booking.total} — Paid (demo, no money taken)`,
 			'Bring: Swimsuit and towel, Sunscreen and sunglasses, Hat or cap, Cash or card for lunch and extras, Light jacket for cooler sea breezes',
 			"If we cancel for safety reasons, we'll let you know at least 4 hours before departure.",
 			'See you aboard!',
@@ -152,6 +165,15 @@ describe('finalizePaidBooking', () => {
 		const upcoming = await pending();
 		expect(isPayable(upcoming, NOW)).toBe(true);
 		expect(isPayable(upcoming, new Date('2027-07-16T10:00:00Z'))).toBe(false);
+		// Same day, after the 07:20 departure (Split time).
+		expect(isPayable(upcoming, new Date('2027-07-15T05:30:00Z'))).toBe(false);
+	});
+
+	it('records a charge that succeeds after the boat left, though no new payment may start', async () => {
+		const booking = await pending();
+		const afterDeparture = new Date('2027-07-15T05:30:00Z');
+		expect(isPayable(booking, afterDeparture)).toBe(false);
+		expect(await finalizePaidBooking(booking.id, 'teya', 'T-late', 'https://example.test', afterDeparture)).toMatchObject({ paymentStatus: 'paid' });
 	});
 
 	it('a declined payment leaves the booking payable', async () => {

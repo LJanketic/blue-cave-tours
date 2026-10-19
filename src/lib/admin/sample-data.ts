@@ -4,6 +4,7 @@ import { newBookingRef, newId } from '../bookings/ids';
 import { bookings, enquiries, nextCounterValue, outbox, resetCounter, type Booking, type Enquiry } from '../bookings/store';
 import { computeBookingTotal, lineItemsFor } from '../price';
 import { TERMS_VERSION } from '../../config/legal';
+import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 import { getAllTours } from '../tours';
 
 /**
@@ -199,6 +200,8 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 
 /** Deletes everything: bookings, enquiries, the outbox and the invoice counter. Showcase only. */
 export async function clearAllData(): Promise<void> {
+	// Real bookings and invoice numbers must survive: refuse once payments are live.
+	if (!PAYMENTS_ARE_DEMO) throw new Error('clearAllData is for the payment showcase only');
 	await resetCounter('invoice');
 	for (const collection of [bookings(), enquiries(), outbox()]) {
 		const records = await collection.list();

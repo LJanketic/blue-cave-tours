@@ -3,18 +3,21 @@ export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { ADMIN_COOKIE, SESSION_HOURS, adminPassword, checkAdminPassword, createSessionToken } from '../../lib/admin/auth';
-import { checkRateLimit } from '../../lib/rate-limit';
+import { checkRateLimit, clientIp } from '../../lib/rate-limit';
 
 const configured = adminPassword() !== null;
 
 // Only same-site admin paths: never an open redirect to another host.
 const nextParam = Astro.url.searchParams.get('next') ?? '';
-const next = /^\/admin(\/|$)/.test(nextParam) && !nextParam.startsWith('//') ? nextParam : '/admin/';
+// No ?next= resolves to this page itself: go to the dashboard instead.
+const nextUrl = nextParam && URL.canParse(nextParam, Astro.url) ? new URL(nextParam, Astro.url) : null;
+const next =
+	nextUrl && nextUrl.origin === Astro.url.origin && /^\/admin(\/|$)/.test(nextUrl.pathname) ? nextUrl.pathname + nextUrl.search : '/admin/';
 let error = '';
 
 if (Astro.request.method === 'POST' && configured) {
-	const ip = Astro.request.headers.get('x-nf-client-connection-ip') ?? 'unknown';
-	const limit = await checkRateLimit('admin-login', ip);
+	// Fails closed: without the limiter there is no cap on password guesses.
+	const limit = await checkRateLimit('admin-login', clientIp(Astro.request), { failClosed: true });
 	const form = await Astro.request.formData();
 	const password = String(form.get('password') ?? '');
 	if (!limit.ok) {

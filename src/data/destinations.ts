@@ -378,7 +378,7 @@ export const destinations: Destination[] = [
 			{ slug: 'blue-cave', name: 'Blue Cave', distance: '~2 hours', icon: 'droplet' },
 		],
 		insiderTips: [
-			'Arrive ten to fifteen minutes before check-in. The Riva gets busy in peak season and parking can take time.',
+			'Be at the meeting point at least 15 minutes before departure. The Riva gets busy in peak season and parking can take time.',
 			'Stand 14 is on the sea side of the promenade; look for our Hello Blue Cave signage near the boat berths.',
 			'If you have luggage, drop it at your hotel first. Board space is limited to day bags and soft packs.',
 		],

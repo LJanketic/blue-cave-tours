@@ -25,7 +25,7 @@ test('gallery lightbox: opens, steps with arrow keys, closes with Escape and ret
 	await page.goto('/dev/kit/');
 	// client:visible: a plain link to the photo until it scrolls into view and hydrates.
 	await page.locator('.gallery-ui__hero').scrollIntoViewIfNeeded();
-	const hero = page.getByRole('button', { name: /Open photo gallery, \d+ photos/ });
+	const hero = page.getByRole('button', { name: /^View all \d+ photos, opens the photo gallery$/ });
 	await hero.focus();
 	await page.keyboard.press('Enter');
 
@@ -45,7 +45,8 @@ test('gallery lightbox: opens, steps with arrow keys, closes with Escape and ret
 	await page.keyboard.press('Escape');
 	await expect(dialog).toBeHidden();
 	await expect(hero).toBeFocused();
-	expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe('');
+	// The browser restores focus at once but fires the dialog's close event (which unlocks scrolling) a task later.
+	await expect.poll(() => page.evaluate(() => document.documentElement.style.overflow)).toBe('');
 });
 
 test('gallery thumbnail opens the lightbox on that photo; the close button works', async ({ page }) => {

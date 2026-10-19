@@ -12,7 +12,8 @@ if (Astro.request.method === 'POST') {
 		await loadSampleData();
 		return Astro.redirect('/admin/?flash=loaded', 303);
 	}
-	if (form.get('action') === 'clear-all' && form.get('confirm') === 'yes') {
+	// Showcase only: once payments are real, the bookings and the invoice counter are accounting records.
+	if (form.get('action') === 'clear-all' && form.get('confirm') === 'yes' && PAYMENTS_ARE_DEMO) {
 		await clearAllData();
 		return Astro.redirect('/admin/tools/?flash=cleared', 303);
 	}
@@ -88,17 +89,21 @@ const sender = emailSender();
 			<input type="hidden" name="action" value="load-sample" />
 			<button class="btn-primary a-block" type="submit"><i class="ti ti-database" aria-hidden="true"></i> Load demo data</button>
 		</form>
-		<details class="a-confirm">
-			<summary class="btn-secondary a-danger a-block">Delete everything…</summary>
-			<div class="a-danger-box">
-				<p><strong>Delete every booking, enquiry and email?</strong> This can't be undone.</p>
-				<form method="post">
-					<input type="hidden" name="action" value="clear-all" />
-					<input type="hidden" name="confirm" value="yes" />
-					<button class="btn-primary a-danger" type="submit">Yes, delete everything</button>
-				</form>
-			</div>
-		</details>
+		{
+			PAYMENTS_ARE_DEMO && (
+				<details class="a-confirm">
+					<summary class="btn-secondary a-danger a-block">Delete everything…</summary>
+					<div class="a-danger-box">
+						<p><strong>Delete every booking, enquiry and email?</strong> This can't be undone.</p>
+						<form method="post">
+							<input type="hidden" name="action" value="clear-all" />
+							<input type="hidden" name="confirm" value="yes" />
+							<button class="btn-primary a-danger" type="submit">Yes, delete everything</button>
+						</form>
+					</div>
+				</details>
+			)
+		}
 	</section>
 
 	<p class="section-label"><span>Account</span></p>

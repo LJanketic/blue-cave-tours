@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import {
 	HONEYPOT_FIELD,
 	CONTACT_LIMITS,
+	asciiEmail,
 	joinName,
 	parseStartedAt,
 	trimField,
@@ -126,7 +127,7 @@ export const POST: APIRoute = async ({ request }) => {
 		await recordEnquiry(
 			{
 				name: fields.name,
-				email: fields.email,
+				email: asciiEmail(fields.email),
 				phone: fields.phone,
 				tourSlug: fields.tourSlug,
 				message: fields.message,

@@ -4,7 +4,7 @@ import { createPendingBooking, type BookingError } from '../../../lib/bookings/s
 import { bookings } from '../../../lib/bookings/store';
 import { BOOKING_COOKIE, bookingCookieOptions, openDraft, sealDraft } from '../../../lib/bookings/session';
 import { getTourBySlug } from '../../../lib/tours';
-import { checkRateLimit, clientIp } from '../../../lib/rate-limit';
+import { checkGlobalLimit, checkRateLimit, clientIp } from '../../../lib/rate-limit';
 import { readFormOrJson } from '../../../lib/request-body';
 
 export const prerender = false;
@@ -39,6 +39,8 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
 
 	// Fails closed (S-11): a booking endpoint never runs without its limit.
 	if (!(await checkRateLimit('booking', clientIp(request), { max: 20, failClosed: true })).ok) return review('busy');
+	// And a cap on everyone together, so many IPs can't flood the store with unpaid bookings.
+	if (!(await checkGlobalLimit('booking', { max: 200, failClosed: true })).ok) return review('busy');
 
 	// The customer confirmed the terms they were shown; if those changed since, they see them again (S-4).
 	if (String(body.fields.termsVersion ?? '') !== TERMS_VERSION) return review('terms-changed');

@@ -26,13 +26,12 @@ import { firstPhotoForDestination } from '../data/destination-photos';
 import { GALLERY_CARD_SIZE, toCardPhoto, type PhotoRef } from '../data/tour-photos';
 import { REVIEWS } from '../data/reviews';
 import { CTA_BAND, DESTINATIONS_INTRO, HERO_SLIDES, HOW_IT_WORKS, TRUST_ITEMS, TYPE_CARDS } from '../data/marketing';
-import { faqPageJsonLd, organizationJsonLd, websiteJsonLd } from '../lib/seo';
+import { organizationJsonLd, websiteJsonLd } from '../lib/seo';
 
 const faqPreview = FAQ_ITEMS.slice(0, 4);
 const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
-const jsonLd = siteUrl
-	? [organizationJsonLd(siteUrl), websiteJsonLd(siteUrl), faqPageJsonLd(faqPreview)]
-	: faqPageJsonLd(faqPreview);
+// FAQPage markup lives on /faq/ only: the home page shows the first few of the same questions.
+const jsonLd = siteUrl ? [organizationJsonLd(siteUrl), websiteJsonLd(siteUrl)] : undefined;
 
 /*
  * Hero photos. The design's own images aren't cleared for use yet (C-17), so

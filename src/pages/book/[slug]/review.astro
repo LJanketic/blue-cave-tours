@@ -37,7 +37,6 @@ if (!draft || draft.tourSlug !== tour.slug || PERSONAL_PARAMS.some((p) => Astro.
 	return Astro.redirect(`/book/${tour.slug}/group/?error=session-expired`, 303);
 }
 Astro.response.headers.set('Cache-Control', 'no-store');
-Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 
 const errorParam = Astro.url.searchParams.get('error');
 const bookingError = isBookingError(errorParam) ? BOOKING_ERRORS[errorParam] : null;
@@ -117,7 +116,7 @@ const photo = getTourCardPhoto(tour);
 					))
 				}
 			</dl>
-			<p class="review__total"><span>Total</span><span>{total !== null ? `€${total}` : 'On request'}</span></p>
+			<p class="review__total"><span>Total (incl. VAT)</span><span>{total !== null ? `€${total}` : 'On request'}</span></p>
 			{fee && <p class="review__fee">{fee}</p>}
 			<p class="review__fee">{tour.priceNotes}</p>
 		</section>

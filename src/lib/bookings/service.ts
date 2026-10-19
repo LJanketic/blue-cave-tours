@@ -3,11 +3,11 @@ import { MAX_GUESTS, parseIsoDate, seatCount, supportsInstantBook } from '../boo
 import { isInSeason, seasonLabel } from '../../config/season';
 import { TERMS_VERSION } from '../../config/legal';
 import { computeBookingTotal, lineItemsFor } from '../price';
-import { EMAIL_RE } from '../contact-validation';
+import { EMAIL_RE, asciiEmail } from '../contact-validation';
 import { adminEmail, sendEmail, type EmailMessage } from '../email/send';
 import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail } from '../email/templates';
 import type { TourDetail } from '../../types/tour';
-import { businessDate } from './dates';
+import { businessDate, departureHasLeft } from './dates';
 import { newBookingRef, newId } from './ids';
 import {
 	bookings,
@@ -42,7 +42,7 @@ export const BOOKING_ERRORS = {
 	quote: 'This tour is booked on request. Please contact us.',
 	guests: `Choose up to ${MAX_GUESTS} guests in total (infants included), with at least one adult.`,
 	date: 'Choose a date for your tour.',
-	past: 'That date has already passed in Split. Please choose another date.',
+	past: 'That departure has already left Split. Please choose another date or time.',
 	season: `Tours run ${seasonLabel()}. Please choose a date in the season.`,
 	slot: 'Choose one of the departure times.',
 	name: 'Enter your first and last name.',
@@ -73,6 +73,8 @@ export function validateBookingInput(tour: TourDetail, input: NewBookingInput, n
 	// A tour with fixed departures needs one of them; one with none takes no time (D-16).
 	const slot = input.slot ?? '';
 	if (tour.departures.length === 0 ? slot !== '' : !tour.departures.some((d) => d.time === slot)) return 'slot';
+	// Today's boat may already have left: the date alone isn't enough.
+	if (departureHasLeft(input.date, slot, now)) return 'past';
 	if (!input.firstName || !input.lastName) return 'name';
 	if (!input.email || !EMAIL_RE.test(input.email)) return 'email';
 	if ((input.notes ?? '').length > NOTES_MAX) return 'notes';
@@ -125,7 +127,7 @@ export async function createPendingBooking(
 		termsAcceptedAt: at,
 		firstName: input.firstName as string,
 		lastName: input.lastName as string,
-		email: input.email as string,
+		email: asciiEmail(input.email as string),
 		phone: input.phone ?? '',
 		customerNotes: input.notes ?? '',
 		invoice: null,
@@ -136,16 +138,17 @@ export async function createPendingBooking(
 	return { ok: true, booking };
 }
 
+/** Still waiting for payment: never paid, cancelled or refunded. */
+function awaitingPayment(booking: Booking): boolean {
+	return booking.status === 'pending_payment' && (booking.paymentStatus === 'unpaid' || booking.paymentStatus === 'failed');
+}
+
 /**
- * Whether the customer may pay for this booking now: still waiting for
- * payment (never paid, cancelled or refunded) and the trip hasn't passed.
+ * Whether the customer may start paying for this booking now: still waiting
+ * for payment and the boat hasn't left yet.
  */
 export function isPayable(booking: Booking, now: Date = new Date()): boolean {
-	return (
-		booking.status === 'pending_payment' &&
-		(booking.paymentStatus === 'unpaid' || booking.paymentStatus === 'failed') &&
-		booking.date >= businessDate(now)
-	);
+	return awaitingPayment(booking) && !departureHasLeft(booking.date, booking.slot, now);
 }
 
 /** Stand-in for the fiscalization service (Phase 3): same shape, clearly fake values. */
@@ -178,7 +181,9 @@ export async function finalizePaidBooking(
 ): Promise<Booking | null> {
 	const at = now.toISOString();
 	const paid = await bookings().update(id, (booking) => {
-		if (!isPayable(booking, now)) return null;
+		// Not isPayable: a charge that started before departure and succeeds after it
+		// (a provider's webhook) must still be recorded. The pay page gates the start.
+		if (!awaitingPayment(booking)) return null;
 		booking.paymentStatus = 'paid';
 		booking.status = 'confirmed';
 		booking.paymentProvider = provider;
@@ -223,7 +228,7 @@ const RESEND_COOLDOWN_MS = 60_000;
 export async function recordFailedPayment(id: string, provider: PaymentProvider, now: Date = new Date()): Promise<void> {
 	const at = now.toISOString();
 	await bookings().update(id, (booking) => {
-		if (!isPayable(booking, now)) return null;
+		if (!awaitingPayment(booking)) return null;
 		booking.paymentStatus = 'failed';
 		booking.updatedAt = at;
 		booking.history.push({ at, by: providerName(provider), action: 'Payment declined' });
@@ -333,17 +338,30 @@ export function takesSeats(booking: Booking): boolean {
  * data that's no longer needed, and keeps what accounting needs (ref, date,
  * amounts, invoice, name):
  * - booking notes 30 days after the trip, phone numbers 90 days after
- * - contact enquiries 12 months after they came in
- * - the text of sent emails after 90 days (who, when and what kind stay)
+ * - bookings that were never paid (no invoice, so no accounting record) 30 days after the trip
+ * - contact enquiries 12 months after they came in, with the notification email about them
+ * - the text and reply-to address of sent emails after 90 days (who, when and what kind stay)
  * Runs when the admin dashboard loads. Returns what it changed.
  */
-export const RETENTION_DAYS = { notes: 30, phone: 90, enquiry: 365, emailBody: 90 } as const;
+export const RETENTION_DAYS = { notes: 30, phone: 90, unpaidBooking: 30, enquiry: 365, emailBody: 90 } as const;
+
+function neverPaid(booking: Booking): boolean {
+	return booking.invoice === null && (booking.paymentStatus === 'unpaid' || booking.paymentStatus === 'failed');
+}
 
 export async function sweepPersonalData(now: Date = new Date()): Promise<{ bookings: number; enquiries: number; emails: number }> {
 	const day = (offset: number) => businessDate(now, -offset);
 	const at = now.toISOString();
 	let changedBookings = 0;
+	// Emails about records deleted here go with them: their subject and reply-to name the person.
+	const deletedIds = new Set<string>();
 	for (const booking of await bookings().list()) {
+		if (neverPaid(booking) && booking.date < day(RETENTION_DAYS.unpaidBooking)) {
+			await bookings().delete(booking.id);
+			deletedIds.add(booking.id);
+			changedBookings++;
+			continue;
+		}
 		const dropNotes = booking.customerNotes && booking.date < day(RETENTION_DAYS.notes);
 		const dropPhone = booking.phone && booking.date < day(RETENTION_DAYS.phone);
 		if (!dropNotes && !dropPhone) continue;
@@ -360,14 +378,19 @@ export async function sweepPersonalData(now: Date = new Date()): Promise<{ booki
 	for (const enquiry of await enquiries().list()) {
 		if (enquiry.createdAt < enquiryCutoff) {
 			await enquiries().delete(enquiry.id);
+			deletedIds.add(enquiry.id);
 			removedEnquiries++;
 		}
 	}
 	let trimmedEmails = 0;
 	const emailCutoff = new Date(now.getTime() - RETENTION_DAYS.emailBody * 86_400_000).toISOString();
 	for (const email of await outbox().list()) {
-		if (email.createdAt < emailCutoff && (email.html || email.text)) {
-			await outbox().put({ ...email, html: '', text: '' });
+		if (email.relatedId && deletedIds.has(email.relatedId)) {
+			await outbox().delete(email.id);
+			trimmedEmails++;
+		} else if (email.createdAt < emailCutoff && (email.html || email.text || email.replyTo || email.deliveryError)) {
+			// A provider's error message can quote the recipient, so it goes too.
+			await outbox().put({ ...email, html: '', text: '', replyTo: null, deliveryError: undefined });
 			trimmedEmails++;
 		}
 	}

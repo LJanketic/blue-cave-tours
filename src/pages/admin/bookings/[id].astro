@@ -187,13 +187,13 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 				<h2 class="a-card-title" id="guest-title">Guest details</h2>
 				<dl class="a-rows">
 					<div><dt>Name</dt><dd>{booking.firstName} {booking.lastName}</dd></div>
-					<div><dt>Email</dt><dd><a href={`mailto:${booking.email}`}>{booking.email}</a></dd></div>
+					<div><dt>Email</dt><dd><a href={`mailto:${encodeURIComponent(booking.email)}`}>{booking.email}</a></dd></div>
 					<div><dt>Phone</dt><dd>{booking.phone ? <a href={`tel:${booking.phone.replace(/\s/g, '')}`}>{booking.phone}</a> : 'Not given'}</dd></div>
 				</dl>
 				<div class="a-btnrow contact">
 					{booking.phone && <a class="btn-secondary" href={`tel:${booking.phone.replace(/\s/g, '')}`}><i class="ti ti-phone" aria-hidden="true"></i> Call</a>}
 					{wa && <a class="btn-secondary" href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp</a>}
-					<a class="btn-secondary" href={`mailto:${booking.email}?subject=${encodeURIComponent(`Your booking ${booking.ref}`)}`}><i class="ti ti-mail" aria-hidden="true"></i> Email</a>
+					<a class="btn-secondary" href={`mailto:${encodeURIComponent(booking.email)}?subject=${encodeURIComponent(`Your booking ${booking.ref}`)}`}><i class="ti ti-mail" aria-hidden="true"></i> Email</a>
 				</div>
 			</section>
 
