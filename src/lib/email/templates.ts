@@ -98,7 +98,7 @@ function bookingRows(booking: Booking): Row[] {
 function paymentRows(booking: Booking, audience: 'customer' | 'admin'): Row[] {
 	const demo = PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : '';
 	const rows: Row[] = [
-		['Total paid', `€${booking.total}${demo}`],
+		['Total paid (incl. VAT)', `€${booking.total}${demo}`],
 		['Paid with', booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card'],
 	];
 	if (booking.invoice) {
@@ -136,7 +136,7 @@ function bookingTermsLines(booking: Booking): { rows: Row[]; paragraphs: string[
 		item.qty > 1 || item.unit > 0 ? `${item.label} (${item.qty} × €${item.unit})` : item.label,
 		`€${item.amount}`,
 	]);
-	rows.push(['Total', `€${booking.total}${PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : ''}`]);
+	rows.push(['Total (incl. VAT)', `€${booking.total}${PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : ''}`]);
 	for (const fee of tour?.additionalFees ?? []) {
 		rows.push([fee.mandatory ? 'Not included' : 'Extra', fee.amountLabel ? `${fee.shortText} (${fee.amountLabel})` : fee.shortText]);
 	}
@@ -188,7 +188,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 	];
 	const partyRows: Row[] = [
 		['Guests', guests],
-		['Total', total],
+		['Total (incl. VAT)', total],
 		['Bring', EMAIL_BRING_LIST],
 	];
 
@@ -222,7 +222,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 		groupNote,
 		'',
 		`Guests: ${guests}`,
-		`Total: ${total}`,
+		`Total (incl. VAT): ${total}`,
 		`Bring: ${EMAIL_BRING_LIST}`,
 		'',
 		weatherNote,

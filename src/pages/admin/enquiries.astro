@@ -57,7 +57,7 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 		rows.map((e) => {
 			const tour = e.tourSlug ? (getTourBySlug(e.tourSlug)?.title ?? e.tourSlug) : 'General enquiry';
 			const wa = whatsappNumber(e.phone);
-			const reply = `mailto:${e.email}?subject=${encodeURIComponent(`Re: ${tour}`)}`;
+			const reply = `mailto:${encodeURIComponent(e.email)}?subject=${encodeURIComponent(`Re: ${tour}`)}`;
 			const next = NEXT[e.status];
 			return (
 				<article class:list={['a-card enquiry', { 'is-new': e.status === 'new' }]}>
@@ -95,7 +95,7 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 					{e.notified === false && <p class="card-meta">Not emailed: the day's notification limit (40) was reached.</p>}
 					<ul class="from" aria-label={`Contact ${e.name}`}>
 						<li>
-							<a href={`mailto:${e.email}`}>
+							<a href={`mailto:${encodeURIComponent(e.email)}`}>
 								<i class="ti ti-mail" aria-hidden="true" /> <span>{e.email}</span>
 							</a>
 						</li>

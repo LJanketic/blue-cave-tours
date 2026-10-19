@@ -84,7 +84,7 @@ const missing = computed(() => {
 	if (!firstName.value.trim()) out.push('your first name');
 	if (!lastName.value.trim()) out.push('your last name');
 	if (!email.value.trim()) out.push('your email');
-	else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.value.trim())) out.push('a valid email');
+	else if (!/^[A-Za-z0-9.!#$%'*+/=^_`{|}~-]+@[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?(?:\.[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?)*\.[\p{L}]{2,}$/u.test(email.value.trim())) out.push('a valid email');
 	return out;
 });
 const canSubmit = computed(() => missing.value.length === 0);
@@ -225,9 +225,10 @@ onMounted(() => {
 					:error="fieldErrors.notes"
 				/>
 			</div>
+			<p class="flow__privacy">We use these details only to run your booking. See our <a href="/legal/privacy/">privacy policy</a>.</p>
 		</section>
 
-		<SummaryCard title="Your booking" :rows="summaryRows" :total="{ label: 'Total', value: total !== null ? `€${total}` : 'Price on request' }">
+		<SummaryCard title="Your booking" :rows="summaryRows" :total="{ label: 'Total (incl. VAT)', value: total !== null ? `€${total}` : 'Price on request' }">
 			<p v-if="feeLabel" class="flow__fee">{{ feeLabel }}</p>
 			<p class="flow__notes">{{ priceNotes }}</p>
 		</SummaryCard>
@@ -349,6 +350,18 @@ onMounted(() => {
 		margin: var(--space-2) 0 0;
 		font-size: var(--font-size-sm);
 		color: var(--color-text-danger);
+	}
+
+	.flow__privacy {
+		margin: 14px 0 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.flow__privacy a {
+		color: inherit;
+		text-decoration: underline;
+		text-underline-offset: 3px;
 	}
 
 	.flow__policy {

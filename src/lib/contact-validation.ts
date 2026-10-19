@@ -46,7 +46,28 @@ export function joinName(first: string, last: string): string {
 	return [first, last].map((part) => part.trim()).filter(Boolean).join(' ');
 }
 
-export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+/**
+ * The usual shape of an address: letters, digits and the RFC 5322 "atext" signs
+ * before the @, a dotted host name after it. Stricter than the old "anything but
+ * spaces", which let `a@b.co?bcc=x@y.z` through into mailto links and Resend.
+ * Host names may use any letters (`žena.hr`); the part before the @ stays ASCII.
+ * GroupBookingFlow.vue keeps a copy of this pattern (its island has a size budget).
+ */
+export const EMAIL_RE = /^[A-Za-z0-9.!#$%'*+/=^_`{|}~-]+@[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?(?:\.[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?)*\.[\p{L}]{2,}$/u;
+
+/**
+ * The address with its host name in ASCII (`ana@žena.hr` → `ana@xn--ena-b3a.hr`),
+ * so storage, mailto links and Resend never depend on internationalised mail support.
+ * Call it after EMAIL_RE has passed.
+ */
+export function asciiEmail(email: string): string {
+	const at = email.lastIndexOf('@');
+	try {
+		return `${email.slice(0, at)}@${new URL(`http://${email.slice(at + 1)}`).hostname}`;
+	} catch {
+		return email;
+	}
+}
 const PHONE_RE = /^[\d\s+().-]{7,30}$/;
 
 export function trimField(value: unknown, max: number): string {
