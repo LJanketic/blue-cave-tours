@@ -1,7 +1,7 @@
 import type { TourDetail } from '../types/tour';
 
 /** Guests per departure, enforced both client-side (GroupBookingFlow) and here. */
-export const MAX_GUESTS = 12;
+export const MAX_GUESTS = 14;
 
 /** Group departure (shared boat, per-person price) vs private-only charter. */
 export function isGroupTour(tour: Pick<TourDetail, 'types'>): boolean {
@@ -13,13 +13,13 @@ export function isGroupTour(tour: Pick<TourDetail, 'types'>): boolean {
  * per-person price. Private-only charters and tours priced "on request" (e.g.
  * hvar-red-rocks-pakleni until its price is confirmed) go to the contact form.
  */
-export function supportsInstantBook(tour: Pick<TourDetail, 'types' | 'adultPrice'>): boolean {
-	return isGroupTour(tour) && tour.adultPrice !== null;
+export function supportsInstantBook(tour: Pick<TourDetail, 'types' | 'prices'>): boolean {
+	return isGroupTour(tour) && tour.prices !== null;
 }
 
 /** Price unit next to "From …", and none when the tour is priced on request. */
-export function tourPriceUnit(tour: Pick<TourDetail, 'adultPrice' | 'priceUnit'>): string {
-	if (tour.adultPrice === null) return '';
+export function tourPriceUnit(tour: Pick<TourDetail, 'prices' | 'priceUnit'>): string {
+	if (tour.prices === null) return '';
 	return tour.priceUnit === 'person' ? '/ person' : '/ boat';
 }
 
@@ -42,8 +42,6 @@ export type GroupBookingDetails = {
 	email: string | null;
 	phone: string | null;
 	notes: string | null;
-	total: string | null;
-	guests: string | null;
 };
 
 export function hasRequiredBookingDetails(details: GroupBookingDetails): boolean {
@@ -65,11 +63,16 @@ function clip(value: string | null, max = 200): string | null {
 	return trimmed.slice(0, max);
 }
 
-function parseCount(value: string | null, max: number): number | null {
+/**
+ * A count above MAX_GUESTS is kept (capped at COUNT_MAX), not dropped, so
+ * validation refuses it with the guest limit ('guests') instead of reading it
+ * as a missing value.
+ */
+const COUNT_MAX = 999;
+
+function parseCount(value: string | null): number | null {
 	if (!value || !/^\d+$/.test(value)) return null;
-	const n = Number.parseInt(value, 10);
-	if (n < 0 || n > max) return null;
-	return n;
+	return Math.min(Number.parseInt(value, 10), COUNT_MAX);
 }
 
 export function parseGroupBookingParams(params: URLSearchParams): GroupBookingDetails {
@@ -77,9 +80,9 @@ export function parseGroupBookingParams(params: URLSearchParams): GroupBookingDe
 	const date = dateRaw && parseIsoDate(dateRaw) ? dateRaw : null;
 	const slotRaw = clip(params.get('slot'), 8);
 	const slot = slotRaw && /^\d{2}:\d{2}$/.test(slotRaw) ? slotRaw : null;
-	const adults = parseCount(params.get('adults'), MAX_GUESTS);
-	const children = parseCount(params.get('children'), MAX_GUESTS) ?? 0;
-	const infants = parseCount(params.get('infants'), MAX_GUESTS) ?? 0;
+	const adults = parseCount(params.get('adults'));
+	const children = parseCount(params.get('children')) ?? 0;
+	const infants = parseCount(params.get('infants')) ?? 0;
 
 	return {
 		date,
@@ -92,8 +95,6 @@ export function parseGroupBookingParams(params: URLSearchParams): GroupBookingDe
 		email: clip(params.get('email'), 120),
 		phone: clip(params.get('phone'), 40),
 		notes: clip(params.get('notes'), 500),
-		total: clip(params.get('total'), 40),
-		guests: clip(params.get('guests'), 80),
 	};
 }
 

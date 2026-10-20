@@ -29,7 +29,7 @@ function step(kind: Kind, delta: number, min: number) {
 	const value = model[kind].value + delta;
 	if (value < min) return;
 	if (delta > 0 && total.value >= props.max) {
-		status.value = `Up to ${props.max} guests per departure, infants included.`;
+		status.value = `Up to ${props.max} persons per departure, infants included.`;
 		return;
 	}
 	model[kind].value = value;
@@ -68,7 +68,7 @@ function step(kind: Kind, delta: number, min: number) {
 			</div>
 		</div>
 		<p class="sr-only" role="status">{{ status }}</p>
-		<p v-if="total >= max" class="guests__cap">That's the maximum of {{ max }} guests per departure, infants included.</p>
+		<p v-if="total >= max" class="guests__cap">That's the maximum of {{ max }} persons per departure, infants included.</p>
 	</div>
 </template>
 

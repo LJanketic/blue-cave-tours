@@ -2,12 +2,13 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { MAX_GUESTS, parseIsoDate, seatCount, supportsInstantBook } from '../booking';
 import { isInSeason, seasonLabel } from '../../config/season';
 import { TERMS_VERSION } from '../../config/legal';
+import { BOOKING_CUTOFF_NOTE } from '../../config/booking';
 import { computeBookingTotal, lineItemsFor } from '../price';
 import { EMAIL_RE, asciiEmail } from '../contact-validation';
 import { adminEmail, sendEmail, type EmailMessage } from '../email/send';
 import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail } from '../email/templates';
 import type { TourDetail } from '../../types/tour';
-import { businessDate, departureHasLeft } from './dates';
+import { bookingClosed, businessDate } from './dates';
 import { newBookingRef, newId } from './ids';
 import {
 	bookings,
@@ -40,9 +41,9 @@ export const NOTES_MAX = 500;
 /** Shown to the customer when the server rejects a booking. Redirects carry only these codes. */
 export const BOOKING_ERRORS = {
 	quote: 'This tour is booked on request. Please contact us.',
-	guests: `Choose up to ${MAX_GUESTS} guests in total (infants included), with at least one adult.`,
+	guests: `Choose up to ${MAX_GUESTS} persons in total (infants included), with at least one adult.`,
 	date: 'Choose a date for your tour.',
-	past: 'That departure has already left Split. Please choose another date or time.',
+	past: `Booking for that departure has closed. ${BOOKING_CUTOFF_NOTE} Please choose another date or time.`,
 	season: `Tours run ${seasonLabel()}. Please choose a date in the season.`,
 	slot: 'Choose one of the departure times.',
 	name: 'Enter your first and last name.',
@@ -73,8 +74,8 @@ export function validateBookingInput(tour: TourDetail, input: NewBookingInput, n
 	// A tour with fixed departures needs one of them; one with none takes no time (D-16).
 	const slot = input.slot ?? '';
 	if (tour.departures.length === 0 ? slot !== '' : !tour.departures.some((d) => d.time === slot)) return 'slot';
-	// Today's boat may already have left: the date alone isn't enough.
-	if (departureHasLeft(input.date, slot, now)) return 'past';
+	// Today's departure may already be closed (cut-off before it leaves): the date alone isn't enough.
+	if (bookingClosed(input.date, slot, now)) return 'past';
 	if (!input.firstName || !input.lastName) return 'name';
 	if (!input.email || !EMAIL_RE.test(input.email)) return 'email';
 	if ((input.notes ?? '').length > NOTES_MAX) return 'notes';
@@ -84,9 +85,10 @@ export function validateBookingInput(tour: TourDetail, input: NewBookingInput, n
 export type CreateResult = { ok: true; booking: Booking } | { ok: false; error: BookingError };
 
 /**
- * Validates, recomputes the price from the tour's data, and stores an unpaid
- * booking with the terms version the server knows (S-4). Seats are not held:
- * overbooking protection comes with the real database.
+ * Validates, recomputes the price from the tour's data for the booking date's
+ * season, and stores an unpaid booking with the terms version the server
+ * knows (S-4). Seats are not held: overbooking protection comes with the
+ * real database.
  */
 export async function createPendingBooking(
 	tour: TourDetail,
@@ -99,8 +101,10 @@ export async function createPendingBooking(
 	const children = input.children;
 	const infants = input.infants ?? 0;
 
-	const total = computeBookingTotal(tour, adults, children);
-	const lineItems = lineItemsFor(tour, adults, children, infants);
+	// The tour date's season sets the price (seasonFor), never a total from the client.
+	const date = input.date as string;
+	const total = computeBookingTotal(tour, date, adults, children);
+	const lineItems = lineItemsFor(tour, date, adults, children, infants);
 	if (total === null || lineItems === null) return { ok: false, error: 'quote' };
 
 	const at = now.toISOString();
@@ -116,7 +120,7 @@ export async function createPendingBooking(
 		paidAt: null,
 		tourSlug: tour.slug,
 		tourTitle: tour.title,
-		date: input.date as string,
+		date,
 		slot: input.slot ?? '',
 		adults,
 		children,
@@ -145,10 +149,11 @@ function awaitingPayment(booking: Booking): boolean {
 
 /**
  * Whether the customer may start paying for this booking now: still waiting
- * for payment and the boat hasn't left yet.
+ * for payment and booking for its departure hasn't closed yet (the same
+ * cut-off as a new booking).
  */
 export function isPayable(booking: Booking, now: Date = new Date()): boolean {
-	return awaitingPayment(booking) && !departureHasLeft(booking.date, booking.slot, now);
+	return awaitingPayment(booking) && !bookingClosed(booking.date, booking.slot, now);
 }
 
 /** Stand-in for the fiscalization service (Phase 3): same shape, clearly fake values. */

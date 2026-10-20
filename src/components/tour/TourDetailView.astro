@@ -9,7 +9,7 @@ import { contactHrefForTour, groupBookHref, isGroupTour, MAX_GUESTS } from '../.
 import { charterUrl } from '../../config/routes';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 import { seasonLabel } from '../../config/season';
-import { tourFromPrice } from '../../lib/price';
+import { formatFromPrice } from '../../lib/price';
 import { feeLabel } from '../../lib/cards';
 import { meetingPointLines, showsBestseller, tourCtas } from '../../lib/tour-display';
 import { WHY_GO_PRIVATE, WHY_GO_PRIVATE_TOURS } from '../../data/private-tours';
@@ -25,6 +25,7 @@ import Notice from '../ui/Notice.astro';
 import StickyAside from '../ui/StickyAside.astro';
 import Button from '../ui/Button.astro';
 import MobileActionBar from '../ui/MobileActionBar.astro';
+import SeasonPrice from '../ui/SeasonPrice.vue';
 
 type Props = { tour: TourDetail };
 
@@ -50,8 +51,9 @@ const crumbs = [
 	{ label: tour.title },
 ];
 
-const price = tourFromPrice(tour);
-const hasPrice = tour.adultPrice !== null;
+// Prerendered: both seasons' prices go in the HTML and SeasonPrice shows today's (BaseLayout).
+const prices = tour.prices;
+const requestLabel = formatFromPrice(null, tour.priceUnit);
 const unit = tour.priceUnit === 'boat' ? '/ boat' : '/ adult';
 // Mandatory fees with a "+", then optional ones (the Blue Cave ticket most guests add).
 const feeLine = feeLabel(tour);
@@ -75,7 +77,7 @@ const meetingPoint = meetingPointLines(tour);
 				<span aria-hidden="true">·</span>
 				<span>
 					<i class={`ti ti-${isGroup ? 'users' : 'crown'}`} aria-hidden="true"></i>
-					{isGroup ? `Small group, max ${MAX_GUESTS}` : 'Private charter'}
+					{isGroup ? `Small group, max ${MAX_GUESTS} persons` : 'Private charter'}
 				</span>
 			</p>
 			<!-- [DEVIATE, content] The operator's full description, not the card blurb: it's the only overview the page has. -->
@@ -192,20 +194,22 @@ const meetingPoint = meetingPointLines(tour);
 			<h2 id="book-heading" class="tour__book-heading">Book now</h2>
 			<p class="tour__price">
 				{
-					hasPrice ? (
+					prices ? (
 						<>
-							<span class="tour__from">From</span> <strong>{price}</strong> <span class="tour__unit">{unit}</span>
+							<span class="tour__from">From</span>{' '}
+							<strong><SeasonPrice low={prices.low.adult} peak={prices.peak.adult} /></strong>{' '}
+							<span class="tour__unit">{unit}</span>
 						</>
 					) : (
-						<strong>{price}</strong>
+						<strong>{requestLabel}</strong>
 					)
 				}
 			</p>
 			{feeLine && <p class="tour__fee">{feeLine}</p>}
 			{
-				tour.childPrice !== null && (
+				prices && (
 					<p class="tour__child">
-						<i class="ti ti-baby-carriage" aria-hidden="true" /> Children from €{tour.childPrice}
+						<i class="ti ti-baby-carriage" aria-hidden="true" /> Children from <SeasonPrice low={prices.low.child} peak={prices.peak.child} />
 					</p>
 				)
 			}
@@ -214,13 +218,8 @@ const meetingPoint = meetingPointLines(tour);
 					<dt><i class="ti ti-calendar" aria-hidden="true"></i> Next departure</dt>
 					<dd>{nextDeparture}</dd>
 				</div>
-				<div>
-					<dt><i class="ti ti-sun" aria-hidden="true"></i> Season</dt>
-					<dd>{seasonLabel()}</dd>
-				</div>
 			</dl>
-			<!-- Season-dependent prices must be disclosed ([DEVIATE, legal], §6.3.4). -->
-			<p class="tour__price-notes">{tour.priceNotes}</p>
+			<!-- [DEVIATE, legal] §6.3.4: seasonal prices are disclosed in the booking flow and the FAQ (operator, Oct 2026), not here. -->
 			<hr class="tour__divider" />
 			<Button href={primary.href} block iconEnd="arrow-right" class="tour__cta">{primary.label}</Button>
 			{secondary && <Button href={secondary.href} variant="secondary" block icon="crown" class="tour__cta tour__cta--secondary">{secondary.label}</Button>}
@@ -230,7 +229,16 @@ const meetingPoint = meetingPointLines(tour);
 
 	<MobileActionBar target="book" label={primary.label === 'Book group tour' ? 'Book now' : primary.label === 'Plan your charter' ? 'Plan your charter' : 'Enquire'}>
 		<p>
-			{hasPrice ? <><strong>{price}</strong> {unit}</> : <strong>{price}</strong>}
+			{
+				prices ? (
+					<>
+						<strong><SeasonPrice low={prices.low.adult} peak={prices.peak.adult} /></strong>{' '}
+						{unit}
+					</>
+				) : (
+					<strong>{requestLabel}</strong>
+				)
+			}
 		</p>
 		{feeLine && <p>{feeLine}</p>}
 	</MobileActionBar>
@@ -440,13 +448,6 @@ const meetingPoint = meetingPointLines(tour);
 			margin: 0;
 			font-weight: var(--font-weight-medium);
 			text-align: right;
-		}
-
-		.tour__price-notes {
-			margin: var(--space-2) 0 0;
-			font-size: var(--font-size-xs);
-			line-height: var(--line-height-normal);
-			color: var(--color-text-tertiary);
 		}
 
 		.tour__divider {

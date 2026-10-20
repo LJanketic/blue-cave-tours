@@ -27,12 +27,26 @@ describe('tours catalog filtering', () => {
 	});
 
 	it('sorts by price with quote-only tours last', () => {
-		const list = filterCatalog(cards, parseCatalogQuery('?sort=price-asc'));
-		const prices = list.map((t) => t.adultPrice);
-		const firstNull = prices.indexOf(null);
-		const priced = (firstNull === -1 ? prices : prices.slice(0, firstNull)) as number[];
-		expect(priced).toEqual([...priced].sort((a, b) => a - b));
-		if (firstNull !== -1) expect(prices.slice(firstNull).every((p) => p === null)).toBe(true);
+		for (const season of ['low', 'peak'] as const) {
+			const list = filterCatalog(cards, parseCatalogQuery('?sort=price-asc'), season);
+			const prices = list.map((t) => t.fromPrice?.[season] ?? null);
+			const firstNull = prices.indexOf(null);
+			const priced = (firstNull === -1 ? prices : prices.slice(0, firstNull)) as number[];
+			expect(priced).toEqual([...priced].sort((a, b) => a - b));
+			if (firstNull !== -1) expect(prices.slice(firstNull).every((p) => p === null)).toBe(true);
+		}
+	});
+
+	it('sorts by the given season’s price', () => {
+		// Synthetic cards whose order flips between the seasons, so only the season argument decides.
+		const a = { ...cards[0], slug: 'a', fromPrice: { low: 100, peak: 300 } };
+		const b = { ...cards[0], slug: 'b', fromPrice: { low: 200, peak: 250 } };
+		const slugs = (season: 'low' | 'peak', sort: string) =>
+			filterCatalog([a, b], parseCatalogQuery(`?sort=${sort}`), season).map((t) => t.slug);
+		expect(slugs('low', 'price-asc')).toEqual(['a', 'b']);
+		expect(slugs('peak', 'price-asc')).toEqual(['b', 'a']);
+		expect(slugs('low', 'price-desc')).toEqual(['b', 'a']);
+		expect(slugs('peak', 'price-desc')).toEqual(['a', 'b']);
 	});
 
 	it('round-trips the URL, and accepts the older parameter names', () => {

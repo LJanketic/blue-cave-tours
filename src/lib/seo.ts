@@ -85,9 +85,13 @@ export function websiteJsonLd(siteUrl: string) {
 	};
 }
 
+/**
+ * Tour pages are prerendered, so the offer doesn't depend on the build date: an
+ * AggregateOffer spanning the adult price in both seasons (low and peak).
+ */
 export function tourJsonLd(tour: TourDetail, siteUrl: string) {
 	const tourUrl = absoluteUrl(`/tours/${tour.slug}/`, siteUrl);
-	const adultPrice = tour.adultPrice;
+	const adultPrices = tour.prices ? [tour.prices.low.adult, tour.prices.peak.adult] : null;
 
 	return {
 		'@context': 'https://schema.org',
@@ -96,12 +100,14 @@ export function tourJsonLd(tour: TourDetail, siteUrl: string) {
 		description: tour.shortDescription,
 		url: tourUrl,
 		touristType: isGroupTour(tour) ? 'Group tour' : 'Private tour',
-		...(adultPrice !== null
+		...(adultPrices
 			? {
 					offers: {
-						'@type': 'Offer',
-						price: adultPrice,
+						'@type': 'AggregateOffer',
 						priceCurrency: 'EUR',
+						lowPrice: Math.min(...adultPrices),
+						highPrice: Math.max(...adultPrices),
+						offerCount: adultPrices.length,
 						url: tourUrl,
 						availability: 'https://schema.org/InStock',
 					},

@@ -113,7 +113,7 @@ export const ABOUT = {
 	trustStats: [
 		// Years from FOUNDING_YEAR (D-14, C-1).
 		{ icon: 'calendar', value: `${yearsOperating()} years`, label: 'operating from Split', confirmed: true },
-		{ icon: 'users', value: `${MAX_GUESTS} max`, label: 'guests per group tour', confirmed: true },
+		{ icon: 'users', value: `${MAX_GUESTS} max`, label: 'persons per group tour', confirmed: true },
 		// Hidden until there's a rating source with its disclosures (D-5, C-2).
 		{ icon: 'star', value: '4.9', label: 'average guest rating', confirmed: false },
 		// Hidden until the licence is confirmed (C-7); see LICENCE_CONFIRMED.

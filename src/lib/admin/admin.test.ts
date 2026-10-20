@@ -91,13 +91,13 @@ describe('overbooking', () => {
 	it('names the booking that crossed capacity, not the earlier ones', () => {
 		const [d] = departuresOn('2027-07-15', [
 			paid('a', '2027-07-01T10:00:00Z', 6),
-			paid('b', '2027-07-02T10:00:00Z', 5),
+			paid('b', '2027-07-02T10:00:00Z', 7),
 			paid('late', '2027-07-03T10:00:00Z', 4),
 		]);
-		expect(d.seatsTaken).toBe(15);
+		expect(d.seatsTaken).toBe(17);
 		expect(d.overBy).toBe(3);
 		expect(d.overbookings).toHaveLength(1);
-		expect(d.overbookings[0]).toMatchObject({ seatsOver: 3, seatsBefore: 11, seatsAfter: 15, capacity: MAX_GUESTS });
+		expect(d.overbookings[0]).toMatchObject({ seatsOver: 3, seatsBefore: 13, seatsAfter: 17, capacity: MAX_GUESTS });
 		expect(d.overbookings[0].booking.id).toBe('late');
 	});
 
@@ -105,14 +105,14 @@ describe('overbooking', () => {
 		const [d] = departuresOn('2027-07-15', [
 			paid('late', '2027-07-03T10:00:00Z', 4),
 			paid('a', '2027-07-01T10:00:00Z', 6),
-			paid('b', '2027-07-02T10:00:00Z', 5),
+			paid('b', '2027-07-02T10:00:00Z', 7),
 		]);
 		expect(d.overbookings.map((o) => o.booking.id)).toEqual(['late']);
 	});
 
 	it('counts every later booking as fully over once the boat is already past capacity', () => {
 		const [d] = departuresOn('2027-07-15', [
-			paid('a', '2027-07-01T10:00:00Z', 12),
+			paid('a', '2027-07-01T10:00:00Z', 14),
 			paid('b', '2027-07-02T10:00:00Z', 2),
 			paid('c', '2027-07-03T10:00:00Z', 3),
 		]);
@@ -124,7 +124,7 @@ describe('overbooking', () => {
 
 	it('is not flagged at exactly full, and ignores unpaid and cancelled bookings', () => {
 		const [d] = departuresOn('2027-07-15', [
-			paid('a', '2027-07-01T10:00:00Z', 12),
+			paid('a', '2027-07-01T10:00:00Z', 14),
 			booking({ id: 'u', status: 'pending_payment', paymentStatus: 'unpaid', adults: 4 }),
 			paid('x', '2027-07-02T10:00:00Z', 4, { status: 'cancelled', paymentStatus: 'refunded' }),
 		]);
@@ -136,16 +136,16 @@ describe('overbooking', () => {
 		const [d] = departuresOn('2027-07-15', [
 			paid('back', '2027-07-01T10:00:00Z', 4, { seatsSince: '2027-07-05T10:00:00Z' }),
 			paid('a', '2027-07-02T10:00:00Z', 6),
-			paid('b', '2027-07-03T10:00:00Z', 5),
+			paid('b', '2027-07-03T10:00:00Z', 7),
 		]);
 		expect(d.overbookings.map((o) => o.booking.id)).toEqual(['back']);
 	});
 
 	it('finds overbookings across dates by id, and lists overbooked departures from a date on', () => {
 		const all = [
-			paid('a', '2027-07-01T10:00:00Z', 10),
+			paid('a', '2027-07-01T10:00:00Z', 11),
 			paid('b', '2027-07-02T10:00:00Z', 4),
-			paid('old1', '2027-06-01T10:00:00Z', 10, { date: '2027-07-10' }),
+			paid('old1', '2027-06-01T10:00:00Z', 11, { date: '2027-07-10' }),
 			paid('old2', '2027-06-02T10:00:00Z', 4, { date: '2027-07-10' }),
 		];
 		expect([...overbookingsById(all).keys()].sort()).toEqual(['b', 'old2']);
@@ -158,7 +158,7 @@ describe('overbooking', () => {
 			paid('b', '2027-07-02T10:00:00Z', 5),
 			paid('c', '2027-07-01T10:00:00Z', 2, { slot: '07:20', tourSlug: 'x', tourTitle: 'X' }),
 		]);
-		expect(day).toMatchObject({ guests: 17, free: 10, overbooked: 1 });
+		expect(day).toMatchObject({ guests: 17, free: 12, overbooked: 1 });
 	});
 });
 
@@ -356,8 +356,8 @@ describe('demo data', () => {
 		const over = [...dates].flatMap((date) => departuresOn(date, all).filter((d) => d.seatsTaken > MAX_GUESTS).map((d) => ({ date, d })));
 		expect(over).toHaveLength(1);
 		expect(over[0].date).toBe('2027-07-02');
-		// 11 seats, then Smith: 4 adults and an infant. Infants take seats (D-9).
-		expect(over[0].d.seatsTaken).toBe(16);
+		// 13 seats, then Smith: 4 adults and an infant. Infants take seats (D-9).
+		expect(over[0].d.seatsTaken).toBe(18);
 		expect(over[0].d.infants).toBe(1);
 		expect(over[0].d.overbookings.map((o) => [o.booking.lastName, o.seatsOver])).toEqual([['Smith', 4]]);
 		// Bookings are never created after "now".

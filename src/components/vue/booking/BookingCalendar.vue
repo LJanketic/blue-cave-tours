@@ -3,10 +3,13 @@
  * Date picker for the booking flow (spec §8.1.2). Monday-first; each day is a
  * button with its full date as its name. Days in the past or outside the
  * season (D-15) are aria-disabled and explained by a visible legend. "Today"
- * is Split's today (Europe/Zagreb).
+ * is Split's today (Europe/Zagreb), worked out in the browser: the page is
+ * prerendered, so `renderedOn` is only the build date. Today is blocked too
+ * once booking has closed for every departure (dayClosed).
  */
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { parseIsoDate, toIsoDate } from '../../../lib/booking';
+import { businessDate, dayClosed } from '../../../lib/bookings/dates';
 
 const props = defineProps<{
 	/** YYYY-MM-DD the page was built, so the first client render matches the HTML. */
@@ -15,11 +18,17 @@ const props = defineProps<{
 	seasonStart: string;
 	seasonEnd: string;
 	seasonLabel: string;
+	/** The current moment, set by the parent once mounted (null while server-rendering). */
+	now: Date | null;
+	/** Fixed departure times ("HH:MM"); empty when the time isn't fixed. */
+	departures: string[];
 }>();
 
 const selected = defineModel<string | null>({ default: null });
 
-const today = ref(props.renderedOn);
+const today = computed(() => (props.now ? businessDate(props.now) : props.renderedOn));
+/** Booking has closed for every one of today's departures. */
+const todayClosed = computed(() => props.now !== null && dayClosed(today.value, props.departures, props.now));
 const start = parseIsoDate(props.renderedOn) ?? new Date();
 const viewYear = ref(start.getFullYear());
 const viewMonth = ref(start.getMonth());
@@ -46,14 +55,15 @@ const cells = computed<Cell[]>(() => {
 		const date = new Date(viewYear.value, viewMonth.value, d);
 		const iso = toIsoDate(date);
 		const past = iso < today.value;
+		const closed = iso === today.value && todayClosed.value;
 		const off = !inSeason(iso);
 		out.push({
 			key: iso,
 			iso,
 			day: d,
 			label: date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-			blocked: past || off,
-			reason: past ? ', in the past' : off ? ', outside the season' : '',
+			blocked: past || closed || off,
+			reason: past ? ', in the past' : closed ? ', booking closed for today' : off ? ', outside the season' : '',
 			today: iso === today.value,
 		});
 	}
@@ -81,17 +91,21 @@ function showSelected() {
 }
 defineExpose({ showSelected });
 
-onMounted(() => {
-	// Split's today, whatever the visitor's time zone.
-	today.value = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zagreb' }).format(new Date());
-	const t = parseIsoDate(today.value);
-	if (t && !selected.value) {
-		viewYear.value = t.getFullYear();
-		viewMonth.value = t.getMonth();
-	}
-	// Out of season this month: open on the first month that has bookable days.
-	for (let i = 0; i < 12 && !cells.value.some((c) => c.iso && !c.blocked); i++) move(1);
-});
+// Once the browser knows the real time: open on Split's today, whatever the visitor's time zone.
+watch(
+	() => props.now !== null,
+	(known) => {
+		if (!known) return;
+		const t = parseIsoDate(today.value);
+		if (t && !selected.value) {
+			viewYear.value = t.getFullYear();
+			viewMonth.value = t.getMonth();
+		}
+		// Out of season this month: open on the first month that has bookable days.
+		for (let i = 0; i < 12 && !cells.value.some((c) => c.iso && !c.blocked); i++) move(1);
+	},
+	{ immediate: true },
+);
 </script>
 
 <template>
@@ -126,7 +140,7 @@ onMounted(() => {
 		</div>
 		<p class="cal__legend">
 			<span class="cal__swatch" aria-hidden="true"></span>
-			Greyed-out days are past or outside the season ({{ seasonLabel }}).
+			Greyed-out days are past, closed for booking or outside the season ({{ seasonLabel }}).
 		</p>
 	</div>
 </template>

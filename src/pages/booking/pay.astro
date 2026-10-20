@@ -46,11 +46,11 @@ if (Astro.request.method === 'POST' && payable) {
 	return Astro.redirect(`/booking/success/?id=${booking.id}`, 303);
 }
 
-// Cancelled, refunded or past-date bookings can't be paid: say so instead of offering a button.
+// Cancelled, refunded or closed-departure bookings can't be paid: say so instead of offering a button.
 const closedReason =
 	booking.status === 'cancelled' || booking.paymentStatus === 'refunded'
 		? 'This booking was cancelled.'
-		: 'This booking can no longer be paid, because the tour has already departed.';
+		: 'This booking can no longer be paid, because booking for this departure has closed.';
 
 const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 const tour = getTourBySlug(booking.tourSlug);

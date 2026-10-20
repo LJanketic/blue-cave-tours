@@ -8,7 +8,8 @@ defineProps<{
 	legend: string;
 	/** Hide the legend visually when a card heading already says it. */
 	legendHidden?: boolean;
-	options: { value: string; label: string; sub?: string; icon?: string }[];
+	/** A disabled option stays visible (greyed out); its `sub` should say why. */
+	options: { value: string; label: string; sub?: string; icon?: string; disabled?: boolean }[];
 }>();
 const model = defineModel<string>({ required: true });
 </script>
@@ -16,8 +17,8 @@ const model = defineModel<string>({ required: true });
 <template>
 	<fieldset class="choices">
 		<legend :class="legendHidden ? 'sr-only' : 'choices__legend'">{{ legend }}</legend>
-		<label v-for="option in options" :key="option.value" class="choices__card" :class="{ 'is-on': model === option.value }">
-			<input v-model="model" type="radio" :name="name" :value="option.value" class="choices__input" />
+		<label v-for="option in options" :key="option.value" class="choices__card" :class="{ 'is-on': model === option.value, 'is-off': option.disabled }">
+			<input v-model="model" type="radio" :name="name" :value="option.value" :disabled="option.disabled" class="choices__input" />
 			<span v-if="option.icon" class="choices__icon" aria-hidden="true"><i :class="`ti ti-${option.icon}`"></i></span>
 			<span>
 				<span class="choices__label">{{ option.label }}</span>
@@ -87,6 +88,19 @@ const model = defineModel<string>({ required: true });
 		background: var(--color-background-secondary);
 		font-size: 18px;
 		color: var(--color-text-brand);
+	}
+
+	.choices__card.is-off {
+		color: var(--color-text-tertiary);
+		cursor: default;
+	}
+
+	.choices__card.is-off:hover {
+		border-color: var(--color-border-card);
+	}
+
+	.choices__card.is-off .choices__label {
+		text-decoration: line-through;
 	}
 
 	.choices__label {

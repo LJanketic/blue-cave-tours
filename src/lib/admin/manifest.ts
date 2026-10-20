@@ -44,7 +44,7 @@ function seatOrder(a: Booking, b: Booking): number {
 
 /**
  * Replays the passengers in the order they took their seats, so the booking
- * that crossed capacity (and every one after it) is named, e.g. 11 of 12
+ * that crossed capacity (and every one after it) is named, e.g. 13 of 14
  * taken, then a booking for 4 arrives: that booking is 3 seats over.
  */
 function findOverbookings(passengers: Booking[], capacity: number): Overbooking[] {

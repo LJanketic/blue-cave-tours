@@ -18,9 +18,31 @@ describe('tour catalog', () => {
 	it('gives every group tour with a price a fixed departure, except those waiting for a time', () => {
 		// Group tours on sale whose time isn't fixed yet (D-16). Add a departure, then remove the slug here.
 		const timeToBeConfirmed = new Set<string>();
-		for (const tour of tours.filter((t) => t.types.includes('group') && t.adultPrice !== null)) {
+		for (const tour of tours.filter((t) => t.types.includes('group') && t.prices !== null)) {
 			if (timeToBeConfirmed.has(tour.slug)) expect(tour.departures, tour.slug).toEqual([]);
 			else expect(tour.departures.length, tour.slug).toBeGreaterThan(0);
+		}
+	});
+
+	it('prices every tour as the operator sheet does (Oct 2026)', () => {
+		// Frozen on purpose: change it only together with the operator's price sheet.
+		const sheet: Record<string, { low: [number, number]; peak: [number, number] } | null> = {
+			'blue-cave-hvar-5-islands': { low: [149, 129], peak: [169, 139] },
+			'golden-horn-brac-hvar': { low: [129, 89], peak: [139, 99] },
+			'blue-lagoon-morning': { low: [65, 59], peak: [75, 69] },
+			'blue-lagoon-afternoon': { low: [65, 59], peak: [75, 69] },
+			'hvar-red-rocks-pakleni': null,
+			'dubrovnik-one-way': null,
+			'create-perfect-day-private': null,
+		};
+		expect([...tourSlugs].sort()).toEqual(Object.keys(sheet).sort());
+		for (const tour of tours) {
+			const row = sheet[tour.slug];
+			const actual = tour.prices && {
+				low: [tour.prices.low.adult, tour.prices.low.child],
+				peak: [tour.prices.peak.adult, tour.prices.peak.child],
+			};
+			expect(actual, tour.slug).toEqual(row);
 		}
 	});
 

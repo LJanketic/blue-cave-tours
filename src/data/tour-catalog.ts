@@ -1,6 +1,7 @@
 import type { AgeBands, TourDetail } from '../types/tour';
 import { galleryFromDestinations } from './destination-photos';
 import { PHOTO } from './tour-photos';
+import { CHILD_MAX_AGE, INFANT_MAX_AGE, PRICE_BLUE_CAVE, PRICE_BLUE_LAGOON, PRICE_GOLDEN_HORN } from './prices';
 
 /** Tour catalog — Hello Blue Cave. Content sourced from the verified FigJam tour board. */
 const MEETING_POINT =
@@ -54,20 +55,12 @@ const DISCLAIMERS = [
 const CAVE_NOTE =
 	'Entering the Blue Cave is optional and the ticket is paid on site. Most guests go in; entry depends on sea conditions and official cave opening hours.';
 
-const PRICE_BLUE_CAVE =
-	'Low season (1 Apr–15 Jun, 1 Sep–30 Nov): €149 per adult, €129 per child (0–17). Peak season (15 Jun–30 Sep): €169 per adult, €139 per child (0–17). Final price confirmed at booking.';
-
-const PRICE_GOLDEN_HORN =
-	'Low season (1 Apr–15 Jun, 1 Sep–30 Nov): €129 per adult, €89 per child (0–17). Peak season (15 Jun–30 Sep): €139 per adult, €99 per child (0–17). Final price confirmed at booking.';
-
-const PRICE_BLUE_LAGOON =
-	'Low season (1 Apr–15 Jun, 1 Sep–30 Nov): €65 per adult, €59 per child (0–17). Peak season (15 Jun–30 Sep): €75 per adult, €69 per child (0–17). Final price confirmed at booking.';
-
-const PRICE_PRIVATE =
-	'Private charters are quoted per boat and season. Request a quote via the contact form or by phone.';
-
 /** Age bands shown in the booking flow unless a tour sets its own (D-9: infants 0–2 travel free but take a seat). */
-export const DEFAULT_AGE_BANDS: AgeBands = { adult: 'Age 18+', child: 'Age 0–17', infantMaxAge: 2 };
+export const DEFAULT_AGE_BANDS: AgeBands = {
+	adult: `Age ${CHILD_MAX_AGE + 1}+`,
+	child: `Age 0–${CHILD_MAX_AGE}`,
+	infantMaxAge: INFANT_MAX_AGE,
+};
 
 export const tours: TourDetail[] = [
 	{
@@ -108,9 +101,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: INCLUDED_DEFAULT,
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: PRICE_BLUE_CAVE,
-		adultPrice: 169,
-		childPrice: 139,
+		prices: PRICE_BLUE_CAVE,
 		priceUnit: 'person',
 		additionalFees: [{ text: CAVE_NOTE, shortText: 'Blue Cave entry optional, ticket paid on site', mandatory: false }],
 		disclaimers: DISCLAIMERS,
@@ -153,9 +144,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: INCLUDED_DEFAULT,
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: PRICE_GOLDEN_HORN,
-		adultPrice: 139,
-		childPrice: 99,
+		prices: PRICE_GOLDEN_HORN,
 		priceUnit: 'person',
 		additionalFees: [],
 		disclaimers: DISCLAIMERS,
@@ -198,9 +187,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: INCLUDED_DEFAULT,
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: PRICE_PRIVATE,
-		adultPrice: null,
-		childPrice: null,
+		prices: null,
 		priceUnit: 'boat',
 		additionalFees: [],
 		disclaimers: DISCLAIMERS,
@@ -242,9 +229,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: INCLUDED_DEFAULT,
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: PRICE_BLUE_LAGOON,
-		adultPrice: 75,
-		childPrice: 69,
+		prices: PRICE_BLUE_LAGOON,
 		priceUnit: 'person',
 		additionalFees: [],
 		disclaimers: DISCLAIMERS,
@@ -286,9 +271,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: INCLUDED_DEFAULT,
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: PRICE_BLUE_LAGOON,
-		adultPrice: 75,
-		childPrice: 69,
+		prices: PRICE_BLUE_LAGOON,
 		priceUnit: 'person',
 		additionalFees: [],
 		disclaimers: DISCLAIMERS,
@@ -330,9 +313,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: INCLUDED_DEFAULT,
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: 'Priced as a private one-way charter. Request a quote via the contact form or by phone.',
-		adultPrice: null,
-		childPrice: null,
+		prices: null,
 		priceUnit: 'boat',
 		additionalFees: [],
 		disclaimers: DISCLAIMERS,
@@ -373,9 +354,7 @@ export const tours: TourDetail[] = [
 		whatToBring: BRING_DEFAULT,
 		included: ['Private use of the booked vessel for the agreed time block', ...INCLUDED_DEFAULT],
 		notIncluded: NOT_INCLUDED_DEFAULT,
-		priceNotes: PRICE_PRIVATE,
-		adultPrice: null,
-		childPrice: null,
+		prices: null,
 		priceUnit: 'boat',
 		additionalFees: [
 			{

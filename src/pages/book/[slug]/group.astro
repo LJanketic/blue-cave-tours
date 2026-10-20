@@ -60,9 +60,7 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 				tourSlug={tour.slug}
 				tourTitle={tour.title}
 				departures={tour.departures}
-				adultPrice={tour.adultPrice}
-				childPrice={tour.childPrice}
-				priceNotes={tour.priceNotes}
+				prices={tour.prices}
 				feeLabel={fee}
 				ageBands={ageBands}
 				renderedOn={renderedOn}
@@ -94,7 +92,7 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 			<label>Adults ({ageBands.adult}) *<select name="adults">{counts(MAX_GUESTS, 1).map((n) => <option selected={n === 2}>{n}</option>)}</select></label>
 			<label>Children ({ageBands.child})<select name="children">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
 			<label>Infants (under {ageBands.infantMaxAge + 1}, free)<select name="infants">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
-			<p class="no-js__note">Up to {MAX_GUESTS} guests in total, infants included.</p>
+			<p class="no-js__note">Up to {MAX_GUESTS} persons in total, infants included.</p>
 			<label>First name *<input name="firstName" required autocomplete="given-name" /></label>
 			<label>Last name *<input name="lastName" required autocomplete="family-name" /></label>
 			<label>Email *<input name="email" type="email" required autocomplete="email" /></label>

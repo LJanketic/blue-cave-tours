@@ -8,6 +8,21 @@ import { tours } from './tour-catalog';
  * its last values are frozen below.
  */
 
+/**
+ * The peak-season "From" prices were the only numeric prices then; seasonal
+ * pricing (Oct 2026) keeps them as `prices.peak`. The child prices are the
+ * peak figures the old priceNotes copy gave (that copy is gone).
+ */
+const OLD_CHILD_PRICE: Record<string, number | null> = {
+	'blue-cave-hvar-5-islands': 139,
+	'golden-horn-brac-hvar': 99,
+	'hvar-red-rocks-pakleni': null,
+	'blue-lagoon-morning': 69,
+	'blue-lagoon-afternoon': 69,
+	'dubrovnik-one-way': null,
+	'create-perfect-day-private': null,
+};
+
 const OLD_FROM_PRICE: Record<string, string> = {
 	'blue-cave-hvar-5-islands': '€169',
 	'golden-horn-brac-hvar': '€139',
@@ -21,11 +36,6 @@ const OLD_FROM_PRICE: Record<string, string> = {
 function parseAdultPrice(fromPrice: string): number | null {
 	const match = fromPrice.match(/€(\d+)/);
 	return match ? Number.parseInt(match[1], 10) : null;
-}
-
-function parseChildPrice(priceNotes: string): number | null {
-	const matches = [...priceNotes.matchAll(/€(\d+)[^€]*?child/gi)];
-	return matches.length ? Number.parseInt(matches[matches.length - 1][1], 10) : null;
 }
 
 function parseDurationHours(duration: string): number | null {
@@ -56,9 +66,9 @@ describe('catalog migration (PR 1b)', () => {
 
 	for (const tour of tours) {
 		describe(tour.slug, () => {
-			it('prices equal the old copy', () => {
-				expect(tour.adultPrice).toBe(parseAdultPrice(OLD_FROM_PRICE[tour.slug]));
-				expect(tour.childPrice).toBe(parseChildPrice(tour.priceNotes));
+			it('peak prices equal the old copy', () => {
+				expect(tour.prices?.peak.adult ?? null).toBe(parseAdultPrice(OLD_FROM_PRICE[tour.slug]));
+				expect(tour.prices?.peak.child ?? null).toBe(OLD_CHILD_PRICE[tour.slug]);
 			});
 
 			it('departures equal the old fixed-time parse', () => {

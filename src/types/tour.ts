@@ -17,6 +17,12 @@ export type TourTag = 'sunset' | 'swim' | 'snorkel' | 'cave' | 'half-day' | 'fam
  */
 export type AdditionalFee = { text: string; shortText: string; amountLabel?: string; mandatory: boolean; url?: string };
 
+/** One season's per-person prices in euros (children 0–17). */
+export type PriceTier = { adult: number; child: number };
+
+/** Low- and peak-season prices; which applies depends on the tour date (seasonFor). */
+export type SeasonalPrices = { low: PriceTier; peak: PriceTier };
+
 export type AgeBands = { adult: string; child: string; infantMaxAge: number };
 
 export type TourDetail = {
@@ -50,15 +56,12 @@ export type TourDetail = {
 	whatToBring: string[];
 	included: string[];
 	notIncluded: string[];
-	/** Display pricing copy (seasonal tiers, "quoted per boat") shown on detail and booking pages. */
-	priceNotes: string;
 	/**
-	 * Peak-season prices in euros, what the booking total is computed from.
-	 * Null when the tour is quoted on request. Seasonal pricing is out of scope
-	 * (payments plan D8); the low-season figures are only in `priceNotes`.
+	 * Per-person prices in euros by price season (src/config/season.ts): the
+	 * tour date's season decides the price, and the booking total is computed
+	 * from it (src/lib/price.ts). Null when the tour is quoted on request.
 	 */
-	adultPrice: number | null;
-	childPrice: number | null;
+	prices: SeasonalPrices | null;
 	priceUnit: 'person' | 'boat';
 	/** Fees on top of the price; shown next to it (consumer law, C-23). */
 	additionalFees: AdditionalFee[];
@@ -70,7 +73,7 @@ export type TourDetail = {
 	featured?: boolean;
 	/**
 	 * Which booking modes this tour offers. Drives the Group/Private labels;
-	 * together with a numeric `adultPrice` it also decides whether the tour
+	 * together with `prices` it also decides whether the tour
 	 * can be booked instantly (see supportsInstantBook).
 	 */
 	types: ('group' | 'private')[];
