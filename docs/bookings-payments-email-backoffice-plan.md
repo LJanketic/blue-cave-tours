@@ -29,7 +29,7 @@ Payments use **Teya** (primary; the account exists) and **PayPal** (secondary). 
 - **One "paid" step for everything after payment:** booking confirmed, račun issued, customer confirmation and admin notification sent. It runs once, even if called twice.
 - **Contact enquiries are stored,** and the admin gets an email for each one.
 - **Admin at `/admin`** (mobile first: bottom tab bar on phones, sidebar on computers):
-  - the Today/Tomorrow passenger list per departure, with seats out of 12 and call/WhatsApp buttons
+  - the Today/Tomorrow passenger list per departure, with seats out of 14 (12 until 2026-10-20) and call/WhatsApp buttons
   - the bookings list grouped by day, with search and filters
   - booking detail with status changes, notes, mark-refunded, resend the confirmation, and a history log
   - the enquiry inbox
@@ -76,8 +76,8 @@ The site **looks** like it takes bookings, but nothing behind it is real yet:
 | All booking data (name, email, phone) travels in the URL | `GroupBookingFlow.vue:224`, `review.astro`, `success.astro:21-54` | Personal data ends up in browser history and logs, and anyone can craft a "confirmed" page |
 | Success page says "Confirmation sent to …" | `src/pages/booking/success.astro:77-86` | No email is sent |
 | Booking ref is a hash of the details, mod 100000 | `src/lib/booking.ts:167` | Not unique; collisions happen |
-| Max 12 guests is checked **per booking**, not per departure | `src/lib/booking.ts:5` | Overbooking is possible |
-| Price always uses the peak-season figure | `src/lib/price.ts`, `tour-catalog.ts:49-56` | Low-season customers would be overcharged |
+| Max 12 guests (14 since 2026-10-20) is checked **per booking**, not per departure | `src/lib/booking.ts:5` | Overbooking is possible |
+| Price always uses the peak-season figure | `src/lib/price.ts`, `tour-catalog.ts:49-56` | Low-season customers would be overcharged. **Fixed 2026-10-20** (D8) |
 | Contact form validates the message, then throws it away | `src/pages/api/contact.ts:115` | Enquiries are lost today |
 | "Stripe" appears in 6 places | `review.astro:250`, `faq.ts:45`, `privacy.astro:45,62,90`, `terms.astro:88` | Wrong once we use Teya and PayPal |
 | Privacy page claims Google Analytics and cookies that don't exist | `privacy.astro:95-97,112-138` | Needs correcting |
@@ -230,7 +230,7 @@ The terms already say the full price for group tours and a 30% deposit for priva
 ✏️ Answer:
 
 **D8. Seasonal pricing.** Today the site always charges the peak price. Should the price depend on the date (low/peak season from `priceNotes`), and what are the exact date ranges and prices per tour?
-✏️ Answer:
+✏️ Answer: **Decided 2026-10-20.** Yes, by tour date. Peak 15 Jun–30 Sep; low 1 Apr–14 Jun and 1 Oct–30 Nov. Per person (adult/child): Blue Cave low €149/€129, peak €169/€139; Golden Horn low €129/€89, peak €139/€99; Blue Lagoon low €65/€59, peak €75/€69. Prices shown on the site are today's season (Split date); the booking total is the chosen date's season, recomputed on the server. Built in `src/config/season.ts` and `src/data/prices.ts`; `priceNotes` is gone.
 
 **D9. Cancellation rules in detail.**
 - Free cancellation up to 48h: full refund?
@@ -384,7 +384,7 @@ Estimates are developer days. The total for the MVP is roughly **15–22 days** 
 
 ### Phase 5: backoffice MVP (~5–7 days) · needs D15, D17, D18
 - [ ] `/admin` login (per D17); invite the boss and staff
-- [ ] **Today / Tomorrow** screen: each departure with seats taken out of 12, the passenger list, and tap-to-call/WhatsApp. Big text, phone-first
+- [ ] **Today / Tomorrow** screen: each departure with seats taken out of 14 (12 until 2026-10-20), the passenger list, and tap-to-call/WhatsApp. Big text, phone-first
 - [ ] Bookings list with date and status filters, plus search by name, email, phone or ref
 - [ ] Booking detail: status buttons (confirmed / cancelled / no-show / completed), internal notes, resend the confirmation, and a link to the Teya/PayPal transaction
 - [ ] Enquiries inbox (new / replied / converted / closed)
