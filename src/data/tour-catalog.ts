@@ -70,7 +70,7 @@ export const tours: TourDetail[] = [
 		tagline: 'Full-day signature route',
 		shortDescription:
 			'Our flagship day: the Blue Cave on Biševo, a swim at Budikovac Blue Lagoon, Stiniva Cove on Vis, and free time in Hvar Town and the Pakleni Islands.',
-		availability: 'Every day from 1 April to 30 November',
+		availability: 'Every day, all year round',
 		scheduleLabel: 'Full day: 07:20 – approx. 17:30–18:00',
 		departure: '07:05 check-in · 07:20 departure',
 		departures: [{ time: '07:20', checkIn: '07:05' }],
@@ -119,7 +119,7 @@ export const tours: TourDetail[] = [
 		tagline: 'Full-day · Golden Horn & Hvar',
 		shortDescription:
 			'The iconic Golden Horn Beach on Brač, a relaxed lunch stop at Pakleni or Milna, and free time in historic Hvar Town.',
-		availability: 'Every day from 1 April to 30 November',
+		availability: 'Every day, all year round',
 		scheduleLabel: 'Full day: 08:30 – 18:00',
 		departure: '08:15 check-in · 08:30 departure',
 		departures: [{ time: '08:30', checkIn: '08:15' }],
@@ -205,7 +205,7 @@ export const tours: TourDetail[] = [
 		tagline: 'Half day · Blue Lagoon & Trogir',
 		shortDescription:
 			'A relaxed half-day to Duga Bay on Čiovo and the turquoise Blue Lagoon, with free time in Trogir Old Town.',
-		availability: 'Every day from 1 April to 30 November',
+		availability: 'Every day, all year round',
 		scheduleLabel: 'Half day: 09:30 – 14:00',
 		departure: '09:15 check-in · 09:30 departure',
 		departures: [{ time: '09:30', checkIn: '09:15' }],
@@ -247,7 +247,7 @@ export const tours: TourDetail[] = [
 		tagline: 'Half day · Blue Lagoon & Trogir',
 		shortDescription:
 			'An afternoon half-day to Duga Bay on Čiovo and the turquoise Blue Lagoon, with a stroll through Trogir Old Town as the day winds down.',
-		availability: 'Every day from 1 April to 30 November',
+		availability: 'Every day, all year round',
 		scheduleLabel: 'Half day: 14:30 – 19:00',
 		departure: '14:15 check-in · 14:30 departure',
 		departures: [{ time: '14:30', checkIn: '14:15' }],

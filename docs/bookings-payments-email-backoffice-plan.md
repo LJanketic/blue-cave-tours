@@ -230,7 +230,7 @@ The terms already say the full price for group tours and a 30% deposit for priva
 ✏️ Answer:
 
 **D8. Seasonal pricing.** Today the site always charges the peak price. Should the price depend on the date (low/peak season from `priceNotes`), and what are the exact date ranges and prices per tour?
-✏️ Answer: **Decided 2026-10-20.** Yes, by tour date. Peak 15 Jun–30 Sep; low 1 Apr–14 Jun and 1 Oct–30 Nov. Per person (adult/child): Blue Cave low €149/€129, peak €169/€139; Golden Horn low €129/€89, peak €139/€99; Blue Lagoon low €65/€59, peak €75/€69. Prices shown on the site are today's season (Split date); the booking total is the chosen date's season, recomputed on the server. Built in `src/config/season.ts` and `src/data/prices.ts`; `priceNotes` is gone.
+✏️ Answer: **Decided 2026-10-20.** Yes, by tour date. Revised 2026-10-20 by the operator: low 1 Apr–15 May and 1 Oct–1 Nov; peak every other day (16 May–30 Sep and 2 Nov–31 Mar); tours run all year round. Per person (adult/child): Blue Cave low €149/€129, peak €169/€139; Golden Horn low €129/€89, peak €139/€99; Blue Lagoon low €65/€59, peak €75/€69. Prices shown on the site are today's season (Split date); the booking total is the chosen date's season, recomputed on the server. Built in `src/config/season.ts` and `src/data/prices.ts`; `priceNotes` is gone.
 
 **D9. Cancellation rules in detail.**
 - Free cancellation up to 48h: full refund?

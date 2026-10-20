@@ -35,8 +35,8 @@ describe('FAQ pricing answer', () => {
 		expect(item?.category).toBe('booking');
 		expect(item?.answer).toBe(pricingAnswer());
 		const answer = pricingAnswer();
-		expect(answer).toContain('1 April to 14 June and 1 October to 30 November');
-		expect(answer).toContain('15 June to 30 September');
+		expect(answer).toContain('1 April to 15 May and 1 October to 1 November');
+		expect(answer).toContain('16 May to 30 September and 2 November to 31 March');
 		for (const { prices } of PRICE_LIST) {
 			for (const amount of [prices.low.adult, prices.low.child, prices.peak.adult, prices.peak.child]) expect(answer).toContain(`€${amount}`);
 		}

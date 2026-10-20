@@ -86,7 +86,7 @@ export const TRUST_ITEMS: TrustItem[] = [
 
 export const HOW_IT_WORKS: { title: string; description: string }[] = [
 	{ title: 'Choose a tour', description: 'Browse by destination or duration. Group or private, your call.' },
-	{ title: 'Pick your date', description: 'Choose a day in the season and how many of you are coming.' },
+	{ title: 'Pick your date', description: 'Choose a day and how many of you are coming.' },
 	{ title: 'Book securely', description: 'Pay online by card or PayPal. Your confirmation comes by email.' },
 	{ title: 'Show up and sail', description: 'Meet your skipper at Riva stand 14. We take care of the rest.' },
 ];
@@ -119,7 +119,7 @@ export const TYPE_CARDS: TypeCard[] = [
 		description: `Join a small shared departure, max ${MAX_GUESTS} persons. Great for solo travellers, couples, and anyone who likes meeting people on the water.`,
 		features: [
 			{ text: 'From {strong} per person', strong: LOWEST_GROUP_PRICES },
-			{ text: 'Fixed departures, daily in season' },
+			{ text: 'Fixed departures, every day' },
 			...(LICENCE_CONFIRMED ? [{ text: 'Licensed skipper on every route' }] : []),
 		],
 		ctaLabel: 'Browse group tours',

@@ -111,7 +111,7 @@ The columns are:
 | D-12 | Tour detail drops Highlights, destination chips and "Please note" | Drop Highlights (also fixes the bug where it repeats `included`) and the chips. **[DEVIATE, legal] Keep "Please note"**: the operator-supplied caveats have legal weight. | – | owner |
 | D-13 | Destination weather widget ("Sunny 28°C") | Remove it. Static weather is misleading. | – | owner |
 | D-14 | Founding year | Copy computes years from `FOUNDING_YEAR`. The default is **2016** (current site); the design says 2015. | – | owner |
-| D-15 | Season dates | **1 Apr – 30 Nov** (`tour-catalog.ts`), moved into `src/config/season.ts`. Calendar dates outside the season are disabled. | – | owner |
+| D-15 | Season dates | **1 Apr – 30 Nov** (`tour-catalog.ts`), moved into `src/config/season.ts`. Calendar dates outside the season are disabled. **2026-10-20:** tours run all year round (`SEASON_START` 01-01, `SEASON_END` 12-31). | – | owner |
 | D-16 | Departure slots per tour | Data-driven `departures[]`. One slot per tour today, and **none (time to be confirmed) for `blue-lagoon-afternoon`**. | – | owner |
 | D-17 | Should the admin follow the new look? | Yes, last. PR 0b freezes its look; PR 10 re-skins it. It must keep looking like "the site's own back office". | – | owner |
 | D-18 | Legal texts: imprint, controller, processors, legal bases, transfers, retention, complaints, jurisdiction, Croatian versions, accessibility statement under the European Accessibility Act (EAA) | Facts that need no legal judgement ship with PR 6. Everything that needs judgement goes through the lawyer in PR 11. **The privacy policy must name the controller and the real processors before PR 7b or PR 8 reach production** (S-10). | PR 7b and PR 8 go-live | lawyer + owner |
@@ -773,7 +773,7 @@ Responsive behaviour: §3.1.1, row "Home".
 - 4 grey cards: radius 12, padding 14, gap 8. Grid gap 12 on home, 16 on Tours. Number circle 26px, white, 0.5px border, 12px/500. `h3` 16px/500; text 16/1.6 secondary.
 - **[CHANGE, fact] Copy** (the board claims "live availability" and "instant confirmation", which don't exist):
   1. "Choose a tour": "Browse by destination or duration. Group or private, your call."
-  2. "Pick your date": "Choose a day in the season and how many of you are coming."
+  2. "Pick your date": "Choose a day and how many of you are coming." (was "a day in the season" until 2026-10-20)
   3. "Book securely": "Pay online by card or PayPal. Your confirmation comes by email."
   4. "Show up and sail": "Meet your skipper at Riva stand 14. We take care of the rest."
 
@@ -1608,7 +1608,7 @@ Responsive behaviour: §3.1.1, row "Destination detail".
 
 | Field | Type | Purpose / source |
 |---|---|---|
-| `prices` | `{ low: { adult, child }; peak: { adult, child } } \| null` | **Since 2026-10-20** (D8 decided): per-person euro prices by price season, from `src/data/prices.ts`; `null` for quote-only tours. Replaces `adultPrice` / `childPrice` / `priceNotes`. Season by tour date: peak 15 Jun–30 Sep, low 1 Apr–14 Jun and 1 Oct–30 Nov (`PEAK_START`/`PEAK_END`, `seasonFor()` in `src/config/season.ts`). Shown prices are today's season in Split (prerendered pages switch client-side via `html[data-season]`, `SeasonPrice.vue`); the booking total is the chosen date's season, recomputed on the server. |
+| `prices` | `{ low: { adult, child }; peak: { adult, child } } \| null` | **Since 2026-10-20** (D8 decided): per-person euro prices by price season, from `src/data/prices.ts`; `null` for quote-only tours. Replaces `adultPrice` / `childPrice` / `priceNotes`. Season by tour date: low 1 Apr–15 May and 1 Oct–1 Nov, peak every other day (`LOW_SEASON`, `seasonFor()` in `src/config/season.ts`; revised 2026-10-20). Shown prices are today's season in Split (prerendered pages switch client-side via `html[data-season]`, `SeasonPrice.vue`); the booking total is the chosen date's season, recomputed on the server. |
 | ~~`adultPrice` / `childPrice`~~ | ~~`number \| null`~~ | Superseded 2026-10-20 by `prices`. Was: numeric prices, migrated from `fromPrice` and `priceNotes`. `fromPrice` is **deleted**; its label is derived with `formatFromPrice(adultPrice, priceUnit)`. |
 | `priceUnit` | `'person' \| 'boat'` | explicit |
 | `durationShort` / `durationHours` | `string` / `number` | card label; Half-day filter; sort |

@@ -33,6 +33,7 @@ const start = parseIsoDate(props.renderedOn) ?? new Date();
 const viewYear = ref(start.getFullYear());
 const viewMonth = ref(start.getMonth());
 
+const allYear = computed(() => props.seasonStart === '01-01' && props.seasonEnd === '12-31');
 const inSeason = (iso: string) => {
 	const md = iso.slice(5);
 	return md >= props.seasonStart && md <= props.seasonEnd;
@@ -140,7 +141,8 @@ watch(
 		</div>
 		<p class="cal__legend">
 			<span class="cal__swatch" aria-hidden="true"></span>
-			Greyed-out days are past, closed for booking or outside the season ({{ seasonLabel }}).
+			<template v-if="allYear">Greyed-out days are past or closed for booking.</template>
+			<template v-else>Greyed-out days are past, closed for booking or outside the season ({{ seasonLabel }}).</template>
 		</p>
 	</div>
 </template>

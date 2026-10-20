@@ -229,7 +229,7 @@ onUnmounted(() => clearInterval(clock));
 	<form class="flow" method="post" action="/api/bookings/draft" novalidate @submit.prevent="review">
 		<section class="flow__card" aria-labelledby="date-heading">
 			<h2 id="date-heading" class="flow__title"><i class="ti ti-calendar" aria-hidden="true"></i> Choose a date</h2>
-			<p class="flow__sub">Tours run daily in the season. Pick your day.</p>
+			<p class="flow__sub">Tours run every day. Pick your day.</p>
 			<BookingCalendar
 				ref="calendar"
 				v-model="date"

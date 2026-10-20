@@ -5,12 +5,10 @@ import { isInSeason, seasonLabel } from './season';
 import { caveEntryNote, showsBestseller } from '../lib/tour-display';
 
 describe('season', () => {
-	it('includes the first and last day and nothing outside', () => {
-		expect(isInSeason('2027-04-01')).toBe(true);
-		expect(isInSeason('2027-11-30')).toBe(true);
-		expect(isInSeason('2027-03-31')).toBe(false);
-		expect(isInSeason('2027-12-01')).toBe(false);
-		expect(seasonLabel()).toBe('1 April to 30 November');
+	it('runs all year round', () => {
+		expect(isInSeason('2027-01-01')).toBe(true);
+		expect(isInSeason('2027-12-31')).toBe(true);
+		expect(seasonLabel()).toBe('all year round');
 	});
 });
 

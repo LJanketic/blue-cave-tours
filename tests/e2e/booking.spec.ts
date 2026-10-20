@@ -99,8 +99,9 @@ test('the draft endpoint refuses bad input with a code only, and other content t
 	expect(json.status()).toBe(400);
 	expect((await json.json()).errors).toHaveProperty('slot');
 
-	const offSeason = await startDraft(request, { date: `${new Date().getUTCFullYear() + 1}-01-15` });
-	expect((await offSeason.json()).code).toBe('season');
+	// Tours run all year round: a winter date is bookable.
+	const winter = await startDraft(request, { date: `${new Date().getUTCFullYear() + 1}-01-15` });
+	expect(winter.status()).toBe(200);
 
 	const text = await request.post('/api/bookings/draft', { data: 'hello', headers: { 'Content-Type': 'text/plain', ...ip() } });
 	expect([403, 415]).toContain(text.status());
