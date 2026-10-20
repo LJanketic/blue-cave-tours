@@ -473,7 +473,7 @@ export const destinations: Destination[] = [
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
 		bestTimeNote:
-			'Pleasant to walk year-round in season; May, June, and September are quieter than peak summer afternoons.',
+			'Pleasant to walk year-round; May, June, and September are quieter than peak summer afternoons.',
 		geo: [
 			{ label: 'Distance from Split', value: '~25 km by sea' },
 			{ label: 'Travel time by boat', value: '~45–60 min' },
@@ -567,7 +567,7 @@ export const destinations: Destination[] = [
 			{ icon: 'beach', text: 'No return leg, a one-way transfer rather than a round trip' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
-		bestTimeNote: 'Run as a private charter on request throughout the season. Timing is arranged directly with you.',
+		bestTimeNote: 'Run as a private charter on request all year round. Timing is arranged directly with you.',
 		geo: [
 			{ label: 'Distance from Split', value: '~220 km by sea (via Hvar & Korčula)' },
 			{ label: 'Travel time', value: '~10 hours, one-way' },

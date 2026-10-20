@@ -37,6 +37,8 @@ import { getAllTours, getTourCardPhoto } from '../lib/tours';
 import { toDestinationCardDTO, toTourCardDTO, feeLabel } from '../lib/cards';
 import { CANCELLATION_SHORT } from '../config/cancellation';
 import { seasonLabel } from '../config/season';
+import { seasonalPrices } from '../lib/price';
+import { businessDate } from '../lib/bookings/dates';
 
 const tours = getAllTours();
 const tourCards = await Promise.all(
@@ -49,6 +51,8 @@ const tourCards = await Promise.all(
 	),
 );
 const blueCave = tours.find((t) => t.slug === 'blue-cave-hvar-5-islands') ?? tours[0];
+// The dev kit shows today's season's price (a dev-only page; build-time "today" is fine).
+const kitPrice = seasonalPrices(blueCave, businessDate()) ?? { adult: 0, child: 0 };
 const destinations = getAllDestinations();
 const destinationCards = await Promise.all(
 	destinations.slice(0, 4).map(async (d) =>
@@ -159,7 +163,7 @@ const fee = feeLabel(blueCave);
 				</div>
 				<StickyAside id="book" aria-labelledby="kit-aside-title">
 					<h2 id="kit-aside-title" class="kit__aside-title">Sticky aside</h2>
-					<p class="kit__price">From <strong>€{blueCave.adultPrice}</strong> / adult</p>
+					<p class="kit__price">From <strong>€{kitPrice.adult}</strong> / adult</p>
 					{fee && <p class="kit__fee">{fee}</p>}
 					<Button href={`/book/${blueCave.slug}/group/`} block>Book group tour</Button>
 					<p class="kit__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {CANCELLATION_SHORT}</p>
@@ -199,10 +203,10 @@ const fee = feeLabel(blueCave);
 					rows={[
 						{ label: 'Tour', value: blueCave.title },
 						{ label: 'Guests', value: '2 adults, 1 child' },
-						{ label: 'Adults', value: `2 × €${blueCave.adultPrice}` },
-						{ label: 'Children', value: `1 × €${blueCave.childPrice}` },
+						{ label: 'Adults', value: `2 × €${kitPrice.adult}` },
+						{ label: 'Children', value: `1 × €${kitPrice.child}` },
 					]}
-					total={{ label: 'Total', value: `€${2 * (blueCave.adultPrice ?? 0) + (blueCave.childPrice ?? 0)}` }}
+					total={{ label: 'Total', value: `€${2 * kitPrice.adult + kitPrice.child}` }}
 					note={fee}
 				/>
 				<StepBar current={4} />
@@ -210,19 +214,19 @@ const fee = feeLabel(blueCave);
 			</div>
 
 			<SectionHeader title="CTA bands" />
-			<CtaBand variant="photo" heading="Ready to get on the water?" text="Tours run daily from Split in season." image={HERO_IMAGE.src} id="kit-cta-photo">
+			<CtaBand variant="photo" heading="Ready to get on the water?" text="Tours run daily from Split." image={HERO_IMAGE.src} id="kit-cta-photo">
 				<Button variant="on-image" size="md" href="/tours/">Browse all tours</Button>
 				<Button variant="on-image-ghost" size="md" href="/contact/">Plan a private charter</Button>
 			</CtaBand>
 			<div class="kit__gap"></div>
-			<CtaBand heading="Come sailing with us" text="Group tours depart daily in season." id="kit-cta-plain">
+			<CtaBand heading="Come sailing with us" text="Group tours depart daily." id="kit-cta-plain">
 				<Button href="/tours/">Browse tours</Button>
 				<Button variant="secondary" href="/contact/">Plan a private charter</Button>
 			</CtaBand>
 		</div>
 
 		<MobileActionBar target="book" label="Book now">
-			<p><strong>€{blueCave.adultPrice}</strong> / adult</p>
+			<p><strong>€{kitPrice.adult}</strong> / adult</p>
 			{fee && <p>{fee}</p>}
 		</MobileActionBar>
 	</main>

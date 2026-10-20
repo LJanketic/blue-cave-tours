@@ -31,10 +31,10 @@ const CHARTER_LANDING = 'create-perfect-day-private';
  * second button to the same form.
  */
 export function tourCtas(
-	tour: Pick<TourDetail, 'slug' | 'types' | 'adultPrice'>,
+	tour: Pick<TourDetail, 'slug' | 'types' | 'prices'>,
 	links: { book: (slug: string) => string; contact: (slug: string) => string; charter: (slug: string) => string },
 ): { primary: Cta; secondary: Cta | null } {
-	const instant = tour.types.includes('group') && tour.adultPrice !== null;
+	const instant = tour.types.includes('group') && tour.prices !== null;
 	const primary: Cta = instant
 		? { label: 'Book group tour', href: links.book(tour.slug) }
 		: tour.slug === CHARTER_LANDING

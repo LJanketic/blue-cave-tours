@@ -7,7 +7,7 @@ import { secretKey } from './secrets';
  * survive cold starts (spec S-11).
  *
  * Privacy: keys never hold the raw IP. It's HMAC-SHA256'd with a secret salt
- * (RATE_LIMIT_SALT, else derived from the admin secret) and cut to 16 bytes;
+ * (RATE_LIMIT_SALT, its own secret) and cut to 16 bytes;
  * IPv6 addresses are first cut to their /64, since one household gets a whole
  * /64. Keys carry the UTC date, and writes now and then sweep earlier days'
  * keys, so nothing about a visitor outlives the day it was counted (S-13).
@@ -32,6 +32,9 @@ export type RateLimitOptions = { max?: number; windowMs?: number; failClosed?: b
 
 /** The /64 network for IPv6, the address for IPv4. */
 export function ipNetwork(ip: string): string {
+	// An IPv4 address written as IPv6 (::ffff:1.2.3.4) is that IPv4 address, not a shared /64.
+	const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(ip);
+	if (mapped) return mapped[1];
 	if (!ip.includes(':')) return ip;
 	const [head] = ip.split('%');
 	const parts = head.split('::');
@@ -43,7 +46,7 @@ export function ipNetwork(ip: string): string {
 
 /** What the store keeps instead of the IP: a keyed hash, 16 bytes. */
 export function hashClient(ip: string): string | null {
-	const salt = secretKey('rate-limit', 'RATE_LIMIT_SALT');
+	const salt = secretKey('rate-limit');
 	return salt ? createHmac('sha256', salt).update(ipNetwork(ip)).digest().subarray(0, 16).toString('base64url') : null;
 }
 

@@ -10,6 +10,8 @@ import {
 	SITE_THEME_COLOR,
 } from '../config/site';
 import { DEFAULT_OG_IMAGE } from '../lib/seo';
+import { seasonFor, seasonHeadScript } from '../config/season';
+import { BUSINESS_TIME_ZONE, businessDate } from '../lib/bookings/dates';
 
 type Props = {
 	title: string;
@@ -39,11 +41,15 @@ const canonical = new URL(Astro.url.pathname, String(Astro.site ?? Astro.url));
 const showCanonicalTag = showCanonical && !robots?.includes('noindex');
 const ogImagePath = ogImage ?? DEFAULT_OG_IMAGE;
 const ogImageUrl = new URL(ogImagePath, Astro.site ?? Astro.url).href;
+// Price season for SeasonPrice: right for the render (build) date, then
+// corrected in <head> to the visitor's day in Split, before the first paint, so
+// prerendered prices follow the season without a rebuild (seasonHeadScript).
+const renderSeason = seasonFor(businessDate());
 const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-season={renderSeason}>
 	<head>
 		<meta charset="utf-8" />
 		<!--
@@ -53,6 +59,9 @@ const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 			they only define variables, and legacy modules still override some.
 		-->
 		<style is:inline>@layer tokens, legacy, base, components, pages, utilities;</style>
+		{/* SeasonPrice: show only today's season's amount, no separator (unlayered, so it beats any component display rule). */}
+		<style is:inline>[data-season='low'] .season-price-ui--peak,[data-season='peak'] .season-price-ui--low,[data-season] .season-price-ui__sep{display:none}</style>
+		<script is:inline set:html={seasonHeadScript(BUSINESS_TIME_ZONE)} />
 		<link rel="icon" type="image/svg+xml" href={FAVICON_PATH} />
 		<link rel="apple-touch-icon" href={APPLE_TOUCH_ICON_PATH} />
 		<link rel="manifest" href="/site.webmanifest" />

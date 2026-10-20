@@ -10,6 +10,7 @@ import type { TourCardDTO } from '../../lib/cards';
 import Badge from '../ui/Badge.vue';
 import { cardPhotoSrc } from '../../lib/cards';
 import { formatFromPrice } from '../../lib/price';
+import SeasonPrice from '../ui/SeasonPrice.vue';
 
 const props = withDefaults(
 	defineProps<{
@@ -26,7 +27,7 @@ const props = withDefaults(
 );
 
 const unit = computed(() => (props.tour?.priceUnit === 'boat' ? '/ boat' : '/ person'));
-const priceLabel = computed(() => (props.tour ? formatFromPrice(props.tour.adultPrice, props.tour.priceUnit) : ''));
+const requestLabel = computed(() => (props.tour ? formatFromPrice(null, props.tour.priceUnit) : ''));
 </script>
 
 <template>
@@ -53,12 +54,12 @@ const priceLabel = computed(() => (props.tour ? formatFromPrice(props.tour.adult
 			<component :is="`h${headingLevel}`" class="tour-card-ui__name">{{ tour.title }}</component>
 			<div class="tour-card-ui__foot">
 				<span class="tour-card-ui__price">
-					<template v-if="tour.adultPrice !== null">
+					<template v-if="tour.fromPrice">
 						<span class="tour-card-ui__from">From</span>
-						<span class="tour-card-ui__amount">{{ priceLabel }}</span>
+						<span class="tour-card-ui__amount"><SeasonPrice :low="tour.fromPrice.low" :peak="tour.fromPrice.peak" /></span>
 						<span class="tour-card-ui__per">{{ ` ${unit}` }}</span>
 					</template>
-					<span v-else class="tour-card-ui__amount tour-card-ui__amount--request">{{ priceLabel }}</span>
+					<span v-else class="tour-card-ui__amount tour-card-ui__amount--request">{{ requestLabel }}</span>
 				</span>
 				<span class="tour-card-ui__duration">
 					<i class="ti ti-clock" aria-hidden="true"></i>

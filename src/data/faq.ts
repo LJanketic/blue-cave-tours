@@ -1,4 +1,25 @@
 import { CANCELLATION_FULL, CANCELLATION_WEATHER } from '../config/cancellation';
+import { priceSeasonDates } from '../config/season';
+import { CHILD_MAX_AGE, INFANT_MAX_AGE, PRICE_LIST } from './prices';
+
+/**
+ * The pricing answer, generated from the price data and the season dates
+ * (src/data/prices.ts, src/config/season.ts), so it can't drift from what the
+ * booking flow charges.
+ */
+export function pricingAnswer(): string {
+	const lines = PRICE_LIST.map(
+		({ label, prices }) =>
+			`${label}: €${prices.low.adult} per adult and €${prices.low.child} per child in low season, €${prices.peak.adult} and €${prices.peak.child} in peak season.`,
+	);
+	return [
+		`Group tour prices are per person (children up to ${CHILD_MAX_AGE} pay the child price; infants up to ${INFANT_MAX_AGE} travel free) and depend on the season of your tour date, not the day you book.`,
+		`Low season is ${priceSeasonDates('low')}; peak season is ${priceSeasonDates('peak')}.`,
+		...lines,
+		'Private charters are quoted on request.',
+		'When you pick a date in the booking flow, you see the price for that date before you pay.',
+	].join(' ');
+}
 
 export type FaqCategory = 'booking' | 'changes' | 'guests' | 'bring';
 
@@ -39,7 +60,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 	{
 		category: 'changes',
 		question: 'What’s your cancellation policy?',
-		answer: CANCELLATION_FULL,
+		answer: `Group tours: ${CANCELLATION_FULL} Private charters have their own cancellation terms, set out in the cancellation policy.`,
 		link: { href: '/legal/cancellation/', label: 'Cancellation policy' },
 	},
 	{
@@ -80,5 +101,13 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'bring',
 		question: 'Can I bring luggage?',
 		answer: 'Yes, there’s safe storage space on board.',
+	},
+	// Listed last so the homepage's four-question preview stays as it was; the
+	// FAQ page groups by category, so it shows at the end of "Booking & price".
+	{
+		category: 'booking',
+		question: 'How much do the tours cost? Do prices change by season?',
+		answer: pricingAnswer(),
+		link: { href: '/tours/', label: 'Browse tours' },
 	},
 ];

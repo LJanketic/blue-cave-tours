@@ -1,8 +1,8 @@
 import { charterUrl } from '../config/routes';
 import { CANCELLATION_HOURS } from '../config/cancellation';
-import { seasonLabel } from '../config/season';
+import { seasonLabel, type SeasonAmount } from '../config/season';
 import { FOUNDING_YEAR, LICENCE_CONFIRMED } from '../config/site';
-import { MAX_GUESTS } from '../lib/booking';
+import { MAX_GUESTS, supportsInstantBook } from '../lib/booking';
 import { tours } from './tour-catalog';
 
 /**
@@ -28,7 +28,7 @@ export type HeroSlide = {
 };
 
 // C-22: the board's copy, adjusted: "real skippers" (not guides), no "for two
-// or twenty" (the cap is 12), the year computed, "Licensed and insured" only
+// or twenty" (the cap is 14), the year computed, "Licensed and insured" only
 // once the licence is confirmed (C-7).
 export const HERO_SLIDES: HeroSlide[] = [
 	{
@@ -79,22 +79,24 @@ export const TRUST_ITEMS: TrustItem[] = [
 		href: '/legal/cancellation/',
 		confirmed: true,
 	},
-	{ icon: 'users', strong: `Max ${MAX_GUESTS} guests`, text: 'per departure', confirmed: true },
+	{ icon: 'users', strong: `Max ${MAX_GUESTS} persons`, text: 'per departure', confirmed: true },
 	{ icon: 'certificate', strong: `${yearsOperating()} years`, text: 'on the water', confirmed: true },
 	{ icon: 'anchor', strong: 'Small boats,', text: 'real skippers', confirmed: true },
 ];
 
 export const HOW_IT_WORKS: { title: string; description: string }[] = [
 	{ title: 'Choose a tour', description: 'Browse by destination or duration. Group or private, your call.' },
-	{ title: 'Pick your date', description: 'Choose a day in the season and how many of you are coming.' },
+	{ title: 'Pick your date', description: 'Choose a day and how many of you are coming.' },
 	{ title: 'Book securely', description: 'Pay online by card or PayPal. Your confirmation comes by email.' },
 	{ title: 'Show up and sail', description: 'Meet your skipper at Riva stand 14. We take care of the rest.' },
 ];
 
-/** The cheapest group tour's adult price, so the type card can't drift from the catalog. */
-export const LOWEST_GROUP_PRICE = Math.min(
-	...tours.filter((t) => t.types.includes('group') && t.adultPrice !== null).map((t) => t.adultPrice as number),
-);
+/** The cheapest group tour's adult price in each season, so the type card can't drift from the catalog. */
+const groupPrices = tours.filter(supportsInstantBook).flatMap((t) => (t.prices ? [t.prices] : []));
+export const LOWEST_GROUP_PRICES: SeasonAmount = {
+	low: Math.min(...groupPrices.map((p) => p.low.adult)),
+	peak: Math.min(...groupPrices.map((p) => p.peak.adult)),
+};
 
 export type TypeCard = {
 	kind: 'group' | 'private';
@@ -102,8 +104,8 @@ export type TypeCard = {
 	icon: string;
 	title: string;
 	description: string;
-	/** `strong` is shown bold inside the line, e.g. the price. */
-	features: { text: string; strong?: string }[];
+	/** `strong` is shown bold inside the line, e.g. the price; a seasonal price shows today's season's (SeasonPrice). */
+	features: { text: string; strong?: string | SeasonAmount }[];
 	ctaLabel: string;
 	ctaHref: string;
 };
@@ -114,10 +116,10 @@ export const TYPE_CARDS: TypeCard[] = [
 		badge: { icon: 'users', label: 'Other people on board' },
 		icon: 'users',
 		title: 'Group tour',
-		description: `Join a small shared departure, max ${MAX_GUESTS} guests. Great for solo travellers, couples, and anyone who likes meeting people on the water.`,
+		description: `Join a small shared departure, max ${MAX_GUESTS} persons. Great for solo travellers, couples, and anyone who likes meeting people on the water.`,
 		features: [
-			{ text: 'From {strong} per person', strong: `€${LOWEST_GROUP_PRICE}` },
-			{ text: 'Fixed departures, daily in season' },
+			{ text: 'From {strong} per person', strong: LOWEST_GROUP_PRICES },
+			{ text: 'Fixed departures, every day' },
 			...(LICENCE_CONFIRMED ? [{ text: 'Licensed skipper on every route' }] : []),
 		],
 		ctaLabel: 'Browse group tours',

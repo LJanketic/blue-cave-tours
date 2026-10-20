@@ -87,7 +87,7 @@ test('changed terms send the customer back to review them', async ({ page }) => 
 
 test('the draft endpoint refuses bad input with a code only, and other content types with 415', async ({ request }) => {
 	const bad = await request.post('/api/bookings/draft', {
-		form: Object.fromEntries(Object.entries(details({ adults: 10, children: 2, infants: 1 })).map(([k, v]) => [k, String(v)])),
+		form: Object.fromEntries(Object.entries(details({ adults: 12, children: 2, infants: 1 })).map(([k, v]) => [k, String(v)])),
 		maxRedirects: 0,
 		headers: { Origin: 'http://localhost:4329', ...ip() },
 	});
@@ -99,8 +99,9 @@ test('the draft endpoint refuses bad input with a code only, and other content t
 	expect(json.status()).toBe(400);
 	expect((await json.json()).errors).toHaveProperty('slot');
 
-	const offSeason = await startDraft(request, { date: `${new Date().getUTCFullYear() + 1}-01-15` });
-	expect((await offSeason.json()).code).toBe('season');
+	// Tours run all year round: a winter date is bookable.
+	const winter = await startDraft(request, { date: `${new Date().getUTCFullYear() + 1}-01-15` });
+	expect(winter.status()).toBe(200);
 
 	const text = await request.post('/api/bookings/draft', { data: 'hello', headers: { 'Content-Type': 'text/plain', ...ip() } });
 	expect([403, 415]).toContain(text.status());
@@ -154,6 +155,25 @@ test('step 2 in the browser: pick a day, fill in, review', async ({ page }) => {
 	await page.getByRole('button', { name: /Review booking/ }).click();
 	await expect(page).toHaveURL(new RegExp(`/book/${TOUR}/review/$`));
 	await expect(page.locator('main')).toContainText('guest@example.com');
+});
+
+test("step 2 closes today's departure 15 minutes before it leaves (Split time)", async ({ page }) => {
+	// 15 Jul 2027 in Split (UTC+2): booking for the 09:30 boat closes at 09:15.
+	for (const [utc, closed] of [['2027-07-15T07:14:00Z', false], ['2027-07-15T07:15:00Z', true]] as const) {
+		await page.clock.setFixedTime(new Date(utc));
+		await page.goto(`/book/${TOUR}/group/`);
+		await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
+		await expect(page.getByRole('paragraph').filter({ hasText: 'July 2027' })).toBeVisible();
+		const today = page.locator('.cal__day[aria-current="date"]');
+		await expect(today).toHaveAccessibleName(/15 July 2027/);
+		if (closed) {
+			await expect(today).toHaveAttribute('aria-disabled', 'true');
+			await expect(today).toHaveAccessibleName(/booking closed for today/);
+		} else {
+			await expect(today).not.toHaveAttribute('aria-disabled', 'true');
+		}
+		await expect(page.locator('.cal__day[aria-label*="14 July 2027"]')).toHaveAttribute('aria-disabled', 'true');
+	}
 });
 
 test('step 2 without JavaScript: the plain form posts to the draft endpoint', async ({ browser }) => {

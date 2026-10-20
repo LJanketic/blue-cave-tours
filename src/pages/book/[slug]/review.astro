@@ -7,7 +7,6 @@ export const prerender = false;
  * server when the booking is made. "Continue to payment" posts only the
  * terms version the customer saw.
  */
-import { Image } from 'astro:assets';
 import { pageTitle } from '../../../config/site';
 import { TERMS_VERSION } from '../../../config/legal';
 import { CANCELLATION_FULL, CANCELLATION_SHORT } from '../../../config/cancellation';
@@ -17,9 +16,11 @@ import Badge from '../../../components/ui/Badge.astro';
 import Notice from '../../../components/ui/Notice.astro';
 import Button from '../../../components/ui/Button.astro';
 import { getTourBySlug, getTourCardPhoto } from '../../../lib/tours';
+import { thumbImage } from '../../../data/destination-photos';
 import { feeLabel } from '../../../lib/cards';
 import { contactHrefForTour, formatBookingDate, guestSummaryFromCounts, meetingPointShort, supportsInstantBook } from '../../../lib/booking';
-import { computeBookingTotal, lineItemsFor } from '../../../lib/price';
+import { computeBookingTotal, lineItemsFor, seasonPriceLabel, seasonalPriceSummary } from '../../../lib/price';
+import { seasonFor } from '../../../config/season';
 import { BOOKING_ERRORS, isBookingError } from '../../../lib/bookings/service';
 import { BOOKING_COOKIE, openDraft } from '../../../lib/bookings/session';
 
@@ -43,10 +44,13 @@ const bookingError = isBookingError(errorParam) ? BOOKING_ERRORS[errorParam] : n
 // Step 2 refills itself from the cookie (WCAG 3.3.7).
 const editHref = `/book/${tour.slug}/group/`;
 
-const total = computeBookingTotal(tour, draft.adults, draft.children);
-const items = lineItemsFor(tour, draft.adults, draft.children, draft.infants) ?? [];
+// Priced by the tour date's season (not today's), as createPendingBooking charges it.
+const total = computeBookingTotal(tour, draft.date, draft.adults, draft.children);
+const items = lineItemsFor(tour, draft.date, draft.adults, draft.children, draft.infants) ?? [];
+const seasonNote = seasonPriceLabel(seasonFor(draft.date));
+const seasonSummary = tour.prices ? seasonalPriceSummary(tour.prices) : '';
 const fee = feeLabel(tour);
-const photo = getTourCardPhoto(tour);
+const thumb = thumbImage(getTourCardPhoto(tour));
 ---
 
 <SiteLayout title={pageTitle(`Review booking: ${tour.title}`)} description={`Review your booking for ${tour.title}.`} checkout robots="noindex, nofollow">
@@ -60,8 +64,8 @@ const photo = getTourCardPhoto(tour);
 			</div>
 			<div class="review__trip">
 				{
-					photo.src ? (
-						<Image src={photo.src} alt="" widths={[128, 192]} sizes="64px" quality={70} format="webp" class="review__thumb" />
+					thumb ? (
+						<img src={thumb.src} srcset={thumb.srcset} sizes="64px" width="64" height="64" alt="" class="review__thumb" />
 					) : (
 						<span class="review__thumb review__thumb--empty" aria-hidden="true">
 							<i class="ti ti-sailboat" />
@@ -106,6 +110,7 @@ const photo = getTourCardPhoto(tour);
 			<div class="review__head">
 				<h2 id="price-heading"><i class="ti ti-receipt" aria-hidden="true"></i> Price</h2>
 			</div>
+			<p class="review__season">{seasonNote} for {formatBookingDate(draft.date)}</p>
 			<dl class="review__rows">
 				{
 					items.map((item) => (
@@ -118,7 +123,7 @@ const photo = getTourCardPhoto(tour);
 			</dl>
 			<p class="review__total"><span>Total (incl. VAT)</span><span>{total !== null ? `€${total}` : 'On request'}</span></p>
 			{fee && <p class="review__fee">{fee}</p>}
-			<p class="review__fee">{tour.priceNotes}</p>
+			{seasonSummary && <p class="review__fee">{seasonSummary}</p>}
 		</section>
 
 		<section class="review__card" aria-labelledby="policy-heading">
@@ -266,6 +271,12 @@ const photo = getTourCardPhoto(tour);
 			border-top: 0.5px solid var(--color-border-tertiary);
 			font-size: var(--font-size-xl);
 			font-weight: var(--font-weight-medium);
+		}
+
+		.review__season {
+			margin: 0 0 var(--space-2);
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
 		}
 
 		.review__fee {

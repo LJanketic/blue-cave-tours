@@ -42,6 +42,20 @@ describe('createPendingBooking', () => {
 		expect(await bookings().get(booking.id)).toEqual(booking);
 	});
 
+	it('prices by the tour date’s season, not the day of purchase', async () => {
+		// Bought on 1 April (low season) for 10 July (peak season): peak prices.
+		// (A forged client total can't reach this input type; the endpoint test covers that.)
+		const april = new Date('2027-04-01T09:00:00Z');
+		const peak = await createPendingBooking(tour, { ...input, date: '2027-07-10' }, april);
+		if (!peak.ok) throw new Error(peak.error);
+		expect(peak.booking.total).toBe(169 * 2 + 139);
+		expect(peak.booking.lineItems?.map((i) => i.unit)).toEqual([169, 139]);
+		// The same purchase day for a low-season date: low prices.
+		const low = await createPendingBooking(tour, { ...input, date: '2027-10-01' }, april);
+		if (!low.ok) throw new Error(low.error);
+		expect(low.booking.total).toBe(149 * 2 + 129);
+	});
+
 	it('stores an accented email domain in its ASCII form', async () => {
 		const result = await createPendingBooking(tour, { ...input, email: 'ana@žena.hr' }, NOW);
 		if (!result.ok) throw new Error(result.error);
@@ -53,7 +67,7 @@ describe('createPendingBooking', () => {
 			{ ...input, email: 'not-an-email' },
 			{ ...input, date: '2027-05-31' },
 			{ ...input, adults: 0 },
-			{ ...input, adults: 12, children: 1 },
+			{ ...input, adults: 14, children: 1 },
 			{ ...input, firstName: null },
 		];
 		const errors = [];
@@ -65,10 +79,11 @@ describe('createPendingBooking', () => {
 		expect(await bookings().list()).toHaveLength(0);
 	});
 
-	it("refuses today's departure once the boat has left Split", async () => {
-		// 2027-07-15 07:30 in Split (UTC+2): the 07:20 boat has gone.
+	it("refuses today's departure from 15 minutes before it leaves Split", async () => {
+		// 2027-07-15 in Split (UTC+2): booking for the 07:20 boat closes at 07:05.
 		const today = { ...input, date: '2027-07-15' };
-		expect(await createPendingBooking(tour, today, new Date('2027-07-15T05:10:00Z'))).toMatchObject({ ok: true });
+		expect(await createPendingBooking(tour, today, new Date('2027-07-15T05:04:00Z'))).toMatchObject({ ok: true });
+		expect(await createPendingBooking(tour, today, new Date('2027-07-15T05:05:00Z'))).toEqual({ ok: false, error: 'past' });
 		expect(await createPendingBooking(tour, today, new Date('2027-07-15T05:30:00Z'))).toEqual({ ok: false, error: 'past' });
 	});
 
@@ -165,7 +180,9 @@ describe('finalizePaidBooking', () => {
 		const upcoming = await pending();
 		expect(isPayable(upcoming, NOW)).toBe(true);
 		expect(isPayable(upcoming, new Date('2027-07-16T10:00:00Z'))).toBe(false);
-		// Same day, after the 07:20 departure (Split time).
+		// Same day: payment can start until 07:04 and not from 07:05 (Split time), the booking cut-off.
+		expect(isPayable(upcoming, new Date('2027-07-15T05:04:00Z'))).toBe(true);
+		expect(isPayable(upcoming, new Date('2027-07-15T05:05:00Z'))).toBe(false);
 		expect(isPayable(upcoming, new Date('2027-07-15T05:30:00Z'))).toBe(false);
 	});
 

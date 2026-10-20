@@ -11,8 +11,8 @@ import { getAllTours } from '../tours';
  * "Load demo data" in the admin: a believable spread of bookings around
  * today so the manifest and lists aren't empty when showing the admin.
  * Records are flagged `sample` and no emails are sent for them. Tomorrow has
- * one overbooked boat on purpose (11 of 12 taken, then a booking for 4), so
- * the overbooking warnings can be shown.
+ * one overbooked boat on purpose (13 of 14 taken, then a booking for 4 adults
+ * and an infant), so the overbooking warnings can be shown.
  */
 
 const GUESTS: [first: string, last: string, phone: string][] = [
@@ -51,9 +51,9 @@ const PLAN: [number, number, number, number, number, Booking['status'], Booking[
 	[1, 1, 8, 1, 0, 'confirmed', 'paid'],
 	[1, 3, 9, 2, 2, 'confirmed', 'paid'],
 	[1, 0, 1, 2, 0, 'cancelled', 'refunded'],
-	// The overbooked boat: Ferrari and Wagner book early (11 seats), Smith pays last for 4.
+	// The overbooked boat: Ferrari and Wagner book early (13 of 14 seats), Smith pays last for 4 adults and an infant.
 	[1, 2, 11, 4, 2, 'confirmed', 'paid'],
-	[1, 2, 13, 5, 0, 'confirmed', 'paid'],
+	[1, 2, 13, 7, 0, 'confirmed', 'paid'],
 	[1, 2, 15, 4, 0, 'confirmed', 'paid'],
 	...futurePlan(),
 ];
@@ -144,7 +144,9 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 		const paid = paymentStatus !== 'unpaid';
 		const slot = tour.departures[0]?.time ?? '';
 		const infants = INFANTS.get(`${offset}|${guestIndex}`) ?? 0;
-		const total = computeBookingTotal(tour, adults, children) ?? 0;
+		const date = businessDate(now, offset);
+		// Priced by the tour date's season, as a real booking is.
+		const total = computeBookingTotal(tour, date, adults, children) ?? 0;
 		const booking: Booking = {
 			id: newId(),
 			ref: newBookingRef(),
@@ -157,13 +159,13 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 			paidAt: paid ? createdAt : null,
 			tourSlug: tour.slug,
 			tourTitle: tour.title,
-			date: businessDate(now, offset),
+			date,
 			slot,
 			adults,
 			children,
 			infants,
 			total,
-			lineItems: lineItemsFor(tour, adults, children, infants) ?? [],
+			lineItems: lineItemsFor(tour, date, adults, children, infants) ?? [],
 			termsVersion: TERMS_VERSION,
 			termsAcceptedAt: createdAt,
 			firstName,

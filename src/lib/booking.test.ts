@@ -12,6 +12,9 @@ import {
 	tourPriceUnit,
 } from './booking';
 
+/** Any seasonal prices: only whether a tour has them matters here. */
+const P = { low: { adult: 65, child: 59 }, peak: { adult: 75, child: 69 } };
+
 describe('ISO dates', () => {
 	it('formats a local date without shifting the day', () => {
 		expect(toIsoDate(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
@@ -41,8 +44,10 @@ describe('parseGroupBookingParams', () => {
 		expect(details.firstName).toBe('Jane');
 	});
 
-	it('rejects guest counts above the per-departure cap', () => {
-		expect(parseGroupBookingParams(new URLSearchParams('adults=99')).adults).toBeNull();
+	it('keeps guest counts above the per-departure cap, so validation can refuse them', () => {
+		expect(parseGroupBookingParams(new URLSearchParams('adults=99')).adults).toBe(99);
+		expect(parseGroupBookingParams(new URLSearchParams('children=99999999999999999999')).children).toBe(999);
+		expect(hasRequiredBookingDetails(parseGroupBookingParams(new URLSearchParams('date=2027-07-15&adults=99&firstName=J&lastName=S&email=j@example.com')))).toBe(false);
 	});
 });
 
@@ -73,17 +78,17 @@ describe('booking paths', () => {
 
 describe('instant book and price unit', () => {
 	it('only group tours with a real price book instantly', () => {
-		expect(supportsInstantBook({ types: ['group'], adultPrice: 75 })).toBe(true);
-		expect(supportsInstantBook({ types: ['group'], adultPrice: null })).toBe(false);
-		expect(supportsInstantBook({ types: ['private'], adultPrice: null })).toBe(false);
-		expect(supportsInstantBook({ types: ['private'], adultPrice: 900 })).toBe(false);
+		expect(supportsInstantBook({ types: ['group'], prices: P })).toBe(true);
+		expect(supportsInstantBook({ types: ['group'], prices: null })).toBe(false);
+		expect(supportsInstantBook({ types: ['private'], prices: null })).toBe(false);
+		expect(supportsInstantBook({ types: ['private'], prices: P })).toBe(false);
 	});
 
 	it('labels the unit from the price unit, and none on request', () => {
-		expect(tourPriceUnit({ adultPrice: 169, priceUnit: 'person' })).toBe('/ person');
-		expect(tourPriceUnit({ adultPrice: null, priceUnit: 'person' })).toBe('');
-		expect(tourPriceUnit({ adultPrice: 900, priceUnit: 'boat' })).toBe('/ boat');
-		expect(tourPriceUnit({ adultPrice: null, priceUnit: 'boat' })).toBe('');
+		expect(tourPriceUnit({ prices: P, priceUnit: 'person' })).toBe('/ person');
+		expect(tourPriceUnit({ prices: null, priceUnit: 'person' })).toBe('');
+		expect(tourPriceUnit({ prices: P, priceUnit: 'boat' })).toBe('/ boat');
+		expect(tourPriceUnit({ prices: null, priceUnit: 'boat' })).toBe('');
 	});
 });
 

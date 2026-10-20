@@ -3,7 +3,7 @@ import { parseGroupBookingParams } from '../../../lib/booking';
 import { BOOKING_ERRORS, validateBookingInput, type BookingError } from '../../../lib/bookings/service';
 import { BOOKING_COOKIE, bookingCookieOptions, openDraft, sealDraft, type BookingDraft } from '../../../lib/bookings/session';
 import { getTourBySlug } from '../../../lib/tours';
-import { checkGlobalLimit, checkRateLimit, clientIp } from '../../../lib/rate-limit';
+import { checkRateLimit, clientIp } from '../../../lib/rate-limit';
 import { readFormOrJson } from '../../../lib/request-body';
 import { jsonResponse } from '../../../lib/json-response';
 
@@ -49,11 +49,10 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
 	const tour = getTourBySlug(String(fields.tourId ?? fields.tourSlug ?? ''));
 	if (!tour) return fail(body.asForm, null, 'session-expired', 400);
 
-	// Fails closed (S-11): a booking endpoint never runs without its limits.
-	const ip = clientIp(request);
-	const perClient = await checkRateLimit('draft', ip, { max: 30, failClosed: true });
-	const everyone = perClient.ok ? await checkGlobalLimit('draft', { max: 300, failClosed: true }) : perClient;
-	if (!perClient.ok || !everyone.ok) return fail(body.asForm, tour.slug, 'busy', 429);
+	// Fails closed (S-11): a booking endpoint never runs without its limit. No cap
+	// on everyone together here: a draft is only a sealed cookie and stores
+	// nothing, and a shared cap would let a few IPs lock every customer out.
+	if (!(await checkRateLimit('draft', clientIp(request), { max: 30, failClosed: true })).ok) return fail(body.asForm, tour.slug, 'busy', 429);
 
 	const params = new URLSearchParams();
 	for (const [key, value] of Object.entries(fields)) if (typeof value === 'string' || typeof value === 'number') params.set(key, String(value));

@@ -8,11 +8,14 @@
  *
  * Without JavaScript the page shows a plain form instead (group.astro).
  */
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { MAX_GUESTS, guestSummaryFromCounts, parseIsoDate } from '../../lib/booking';
-import { computeBookingTotal } from '../../lib/price';
-import type { AgeBands, Departure } from '../../types/tour';
+import { bookingClosed, businessDate, dayClosed } from '../../lib/bookings/dates';
+import { computeBookingTotal, seasonPriceLabel, seasonalPriceSummary, seasonalPrices } from '../../lib/price';
+import { seasonFor } from '../../config/season';
+import type { AgeBands, Departure, SeasonalPrices } from '../../types/tour';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
+import { BOOKING_CUTOFF_NOTE } from '../../config/booking';
 import BookingCalendar from './booking/BookingCalendar.vue';
 import GuestSteppers from './booking/GuestSteppers.vue';
 import ChoiceCards from './booking/ChoiceCards.vue';
@@ -25,10 +28,8 @@ const props = defineProps<{
 	tourTitle: string;
 	/** Fixed daily departures; empty when the time isn't fixed yet. */
 	departures: Departure[];
-	adultPrice: number | null;
-	childPrice: number | null;
-	/** Seasonal price copy, shown under the total (season pricing must be disclosed). */
-	priceNotes: string;
+	/** Low- and peak-season prices; the chosen date's season applies (seasonal pricing is disclosed below the total). */
+	prices: SeasonalPrices | null;
 	/** "+ Blue Cave ticket, paid on site", an optional fee's line, or none (feeLabel). */
 	feeLabel?: string;
 	ageBands: AgeBands;
@@ -53,12 +54,35 @@ const phone = ref('');
 const notes = ref('');
 const calendar = ref<InstanceType<typeof BookingCalendar> | null>(null);
 
+/*
+ * The current moment, known only in the browser: the page is prerendered, so
+ * nothing about "now" may come from the build. Null on the server (and during
+ * hydration), then refreshed every 30 seconds so a page left open closes
+ * departures as their cut-off passes. The server re-checks on submit.
+ */
+const now = ref<Date | null>(null);
+let clock: ReturnType<typeof setInterval> | undefined;
+const departureTimes = computed(() => props.departures.map((d) => d.time));
+/** Booking has closed for this departure on the chosen date. */
+const isClosed = (time: string) => now.value !== null && date.value !== null && bookingClosed(date.value, time, now.value);
+const dateNotice = ref('');
+
 const dateLabel = computed(() => {
 	const d = date.value ? parseIsoDate(date.value) : null;
 	return d ? d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'Not chosen yet';
 });
 
-const total = computed(() => computeBookingTotal({ adultPrice: props.adultPrice, childPrice: props.childPrice }, adults.value, children.value));
+/*
+ * The price follows the tour date's season. Before a date is chosen it's
+ * today's season in Split (the build date until mounted, so hydration matches
+ * the HTML). The server recomputes the total from the date either way.
+ */
+const priceDate = computed(() => date.value ?? (now.value ? businessDate(now.value) : props.renderedOn));
+const unitPrice = computed(() => seasonalPrices({ prices: props.prices }, priceDate.value));
+const total = computed(() => computeBookingTotal({ prices: props.prices }, priceDate.value, adults.value, children.value));
+const dateSeason = computed(() => (date.value ? seasonFor(date.value) : null));
+const seasonNote = computed(() => (dateSeason.value ? `${seasonPriceLabel(dateSeason.value)} for your date` : 'Prices depend on the season of your tour date; pick a date to see yours.'));
+const priceSummary = computed(() => (props.prices ? seasonalPriceSummary(props.prices) : ''));
 
 const summaryRows = computed(() => {
 	const rows = [
@@ -67,20 +91,45 @@ const summaryRows = computed(() => {
 		{ label: 'Departure', value: slot.value || 'Confirmed at booking' },
 		{ label: 'Guests', value: guestSummaryFromCounts(adults.value, children.value, infants.value) },
 	];
-	if (props.adultPrice !== null) rows.push({ label: 'Adults', value: `${adults.value} × €${props.adultPrice}` });
-	if (children.value > 0 && props.childPrice !== null) rows.push({ label: 'Children', value: `${children.value} × €${props.childPrice}` });
+	if (dateSeason.value) rows.push({ label: 'Price', value: seasonPriceLabel(dateSeason.value) });
+	if (unitPrice.value) rows.push({ label: 'Adults', value: `${adults.value} × €${unitPrice.value.adult}` });
+	if (children.value > 0 && unitPrice.value) rows.push({ label: 'Children', value: `${children.value} × €${unitPrice.value.child}` });
 	if (infants.value > 0) rows.push({ label: 'Infants', value: `${infants.value} × free` });
 	return rows;
 });
 
 const slotOptions = computed(() =>
-	props.departures.map((d) => ({ value: d.time, label: d.time, sub: d.checkIn ? `Check-in ${d.checkIn}` : d.label, icon: 'clock' })),
+	props.departures.map((d) => {
+		const closed = isClosed(d.time);
+		return { value: d.time, label: d.time, sub: closed ? 'Booking closed' : d.checkIn ? `Check-in ${d.checkIn}` : d.label, icon: 'clock', disabled: closed };
+	}),
 );
+
+/*
+ * Keep the choice bookable as time passes. A new date pre-selects its first
+ * open departure. If the clock closes the departure already chosen, it stays
+ * chosen (submit is blocked) and the notice says so: switching it silently
+ * could book a time the visitor didn't pick. When every departure that day
+ * has closed, the date is dropped (the calendar greys it out).
+ */
+watch([date, now, slot], ([day], [previousDay]) => {
+	if (!day || !now.value) return;
+	if (dayClosed(day, departureTimes.value, now.value)) {
+		date.value = null;
+		dateNotice.value = 'Booking for that day has closed. Please choose another date.';
+		return;
+	}
+	if (day !== previousDay && isClosed(slot.value)) {
+		slot.value = departureTimes.value.find((t) => !isClosed(t)) ?? '';
+	}
+	dateNotice.value = isClosed(slot.value) ? `Booking for the ${slot.value} departure has just closed. Please choose another time.` : '';
+});
 
 /** What still blocks "Review booking", said next to the button. */
 const missing = computed(() => {
 	const out: string[] = [];
 	if (!date.value) out.push('a date');
+	else if (isClosed(slot.value)) out.push('a departure that is still open');
 	if (!firstName.value.trim()) out.push('your first name');
 	if (!lastName.value.trim()) out.push('your last name');
 	if (!email.value.trim()) out.push('your email');
@@ -143,7 +192,7 @@ async function restore() {
 		if (res.status !== 200) return;
 		const d = (await res.json()) as Record<string, string | number> & { tourSlug?: string };
 		if (d.tourSlug !== props.tourSlug) return;
-		const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zagreb' }).format(new Date());
+		const today = businessDate();
 		if (typeof d.date === 'string' && d.date >= today) {
 			date.value = d.date;
 			calendar.value?.showSelected();
@@ -166,17 +215,33 @@ async function restore() {
 }
 
 onMounted(() => {
+	now.value = new Date();
+	clock = setInterval(() => {
+		now.value = new Date();
+	}, 30_000);
 	void restore();
 });
+
+onUnmounted(() => clearInterval(clock));
 </script>
 
 <template>
 	<form class="flow" method="post" action="/api/bookings/draft" novalidate @submit.prevent="review">
 		<section class="flow__card" aria-labelledby="date-heading">
 			<h2 id="date-heading" class="flow__title"><i class="ti ti-calendar" aria-hidden="true"></i> Choose a date</h2>
-			<p class="flow__sub">Tours run daily in the season. Pick your day.</p>
-			<BookingCalendar ref="calendar" v-model="date" :rendered-on="renderedOn" :season-start="seasonStart" :season-end="seasonEnd" :season-label="seasonLabel" />
+			<p class="flow__sub">Tours run every day. Pick your day.</p>
+			<BookingCalendar
+				ref="calendar"
+				v-model="date"
+				:rendered-on="renderedOn"
+				:season-start="seasonStart"
+				:season-end="seasonEnd"
+				:season-label="seasonLabel"
+				:now="now"
+				:departures="departureTimes"
+			/>
 			<p v-if="fieldErrors.date" class="flow__error" role="alert">{{ fieldErrors.date }}</p>
+			<p class="flow__status" role="status">{{ dateNotice }}</p>
 
 			<div class="flow__departure">
 				<p v-if="departures.length === 0" class="flow__line"><i class="ti ti-clock" aria-hidden="true"></i> Departure time confirmed at booking</p>
@@ -186,21 +251,23 @@ onMounted(() => {
 					<span v-else>Departure {{ departures[0].time }}</span>
 				</p>
 				<ChoiceCards v-else v-model="slot" name="slot" legend="Departure time" :options="slotOptions" />
+				<p v-if="departures.length" class="flow__cutoff">{{ BOOKING_CUTOFF_NOTE }}</p>
 			</div>
 		</section>
 
 		<section class="flow__card" aria-labelledby="guests-heading">
 			<h2 id="guests-heading" class="flow__title"><i class="ti ti-users" aria-hidden="true"></i> How many guests?</h2>
-			<p class="flow__sub">Up to {{ MAX_GUESTS }} guests per departure, infants included.</p>
+			<p class="flow__sub">Up to {{ MAX_GUESTS }} persons per departure, infants included.</p>
 			<GuestSteppers
 				v-model:adults="adults"
 				v-model:children="children"
 				v-model:infants="infants"
 				:age-bands="ageBands"
-				:adult-price="adultPrice"
-				:child-price="childPrice"
+				:adult-price="unitPrice?.adult ?? null"
+				:child-price="unitPrice?.child ?? null"
 				:max="MAX_GUESTS"
 			/>
+			<p v-if="prices" class="flow__season"><i class="ti ti-sun" aria-hidden="true"></i> {{ seasonNote }}</p>
 			<p v-if="fieldErrors.adults" class="flow__error" role="alert">{{ fieldErrors.adults }}</p>
 			<p class="flow__lock"><i class="ti ti-lock" aria-hidden="true"></i> We confirm your seats as soon as you pay.</p>
 		</section>
@@ -230,7 +297,7 @@ onMounted(() => {
 
 		<SummaryCard title="Your booking" :rows="summaryRows" :total="{ label: 'Total (incl. VAT)', value: total !== null ? `€${total}` : 'Price on request' }">
 			<p v-if="feeLabel" class="flow__fee">{{ feeLabel }}</p>
-			<p class="flow__notes">{{ priceNotes }}</p>
+			<p class="flow__notes">{{ priceSummary }}</p>
 		</SummaryCard>
 
 		<div class="flow__actions">
@@ -296,6 +363,15 @@ onMounted(() => {
 		color: var(--color-text-tertiary);
 	}
 
+	.flow__season {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin: var(--space-3) 0 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
 	.flow__lock {
 		display: flex;
 		align-items: center;
@@ -350,6 +426,23 @@ onMounted(() => {
 		margin: var(--space-2) 0 0;
 		font-size: var(--font-size-sm);
 		color: var(--color-text-danger);
+	}
+
+	.flow__status {
+		margin: var(--space-2) 0 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	/* Empty, it takes no space but stays in the accessibility tree, so screen readers announce what's put in it later. */
+	.flow__status:empty {
+		margin: 0;
+	}
+
+	.flow__cutoff {
+		margin: var(--space-2) 0 0;
+		font-size: var(--font-size-xs);
+		color: var(--color-text-secondary);
 	}
 
 	.flow__privacy {

@@ -39,8 +39,13 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
 
 	// Fails closed (S-11): a booking endpoint never runs without its limit.
 	if (!(await checkRateLimit('booking', clientIp(request), { max: 20, failClosed: true })).ok) return review('busy');
-	// And a cap on everyone together, so many IPs can't flood the store with unpaid bookings.
-	if (!(await checkGlobalLimit('booking', { max: 200, failClosed: true })).ok) return review('busy');
+	// And a cap on everyone together, so many IPs can't flood the store with unpaid
+	// bookings. Set far above real traffic so a handful of IPs can't use it to lock
+	// customers out; when it trips, the log says so.
+	if (!(await checkGlobalLimit('booking', { max: 1000, failClosed: true })).ok) {
+		console.error('[bookings] global booking cap reached: refusing new bookings for up to 10 minutes');
+		return review('busy');
+	}
 
 	// The customer confirmed the terms they were shown; if those changed since, they see them again (S-4).
 	if (String(body.fields.termsVersion ?? '') !== TERMS_VERSION) return review('terms-changed');

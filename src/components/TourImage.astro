@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import type { PhotoRef } from '../data/tour-photos';
+import { thumbImage } from '../data/destination-photos';
 
 type Layout = 'hero' | 'card' | 'thumb' | 'gallery' | 'dest';
 
@@ -16,16 +17,22 @@ const { photo, layout = 'card', icon = 'sailboat', class: className } = Astro.pr
 const LAYOUT_IMAGE = {
 	hero: { widths: [800, 1280, 1920], sizes: '100vw' },
 	card: { widths: [400, 800], sizes: '(max-width: 700px) 88vw, 380px' },
-	thumb: { widths: [120, 240], sizes: '72px' },
+	thumb: { widths: [128, 256], sizes: '72px' },
 	gallery: { widths: [200, 400], sizes: '(max-width: 700px) 22vw, 160px' },
 	dest: { widths: [400, 800], sizes: '(max-width: 700px) 88vw, 420px' },
 } as const;
 
 const imageLayout = LAYOUT_IMAGE[layout];
+// Thumbs are shown on server-rendered admin pages: prebuilt files, never /_image.
+const thumb = layout === 'thumb' ? thumbImage(photo) : null;
 ---
 
 {
-	photo.src ? (
+	thumb ? (
+		<div class:list={['photo-frame', `photo-frame--${layout}`, className]}>
+			<img src={thumb.src} srcset={thumb.srcset} sizes={imageLayout.sizes} alt={photo.alt} loading="lazy" decoding="async" class="photo-frame__img" />
+		</div>
+	) : photo.src ? (
 		<div class:list={['photo-frame', `photo-frame--${layout}`, className]}>
 			<Image
 				src={photo.src}

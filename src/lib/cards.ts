@@ -1,5 +1,6 @@
 import type { Destination } from '../data/destinations';
 import type { TourDetail } from '../types/tour';
+import type { SeasonAmount } from '../config/season';
 import { showsBestseller } from './tour-display';
 
 /*
@@ -26,7 +27,11 @@ export type CardBadge = { label: string; tone: 'brand' | 'private' | 'premium' |
 export type TourCardDTO = {
 	slug: string;
 	title: string;
-	adultPrice: number | null;
+	/**
+	 * Adult "From" price by season; the card shows today's (SeasonPrice). Left
+	 * out when the tour is quoted on request.
+	 */
+	fromPrice?: SeasonAmount;
 	priceUnit: TourDetail['priceUnit'];
 	durationShort: string;
 	durationHours: number;
@@ -77,7 +82,7 @@ export function toTourCardDTO(tour: TourDetail, destinationSlugs: string[], phot
 	return {
 		slug: tour.slug,
 		title: tour.title,
-		adultPrice: tour.adultPrice,
+		...(tour.prices ? { fromPrice: { low: tour.prices.low.adult, peak: tour.prices.peak.adult } } : {}),
 		priceUnit: tour.priceUnit,
 		durationShort: tour.durationShort,
 		durationHours: tour.durationHours,

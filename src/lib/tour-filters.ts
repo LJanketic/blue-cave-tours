@@ -1,4 +1,5 @@
 import type { TourCardDTO } from './cards';
+import type { Season } from '../config/season';
 
 /*
  * Tours overview filtering and sorting (spec §6.2.1), on the slim card DTO
@@ -35,25 +36,27 @@ export function matchesAnyFilter(tour: Filterable, filters: Iterable<TourFilter>
 	return active.length === 0 || active.some((filter) => matchesFilter(tour, filter));
 }
 
-/** Quote-only tours ("On request") sort after priced ones either way. */
-function comparePrice(a: TourCardDTO, b: TourCardDTO, direction: 1 | -1): number {
-	if (a.adultPrice === null && b.adultPrice === null) return 0;
-	if (a.adultPrice === null) return 1;
-	if (b.adultPrice === null) return -1;
-	return (a.adultPrice - b.adultPrice) * direction;
+/** By the price shown for `season`; quote-only tours ("On request") sort after priced ones either way. */
+function comparePrice(a: TourCardDTO, b: TourCardDTO, direction: 1 | -1, season: Season): number {
+	const pa = a.fromPrice?.[season];
+	const pb = b.fromPrice?.[season];
+	if (pa === undefined && pb === undefined) return 0;
+	if (pa === undefined) return 1;
+	if (pb === undefined) return -1;
+	return (pa - pb) * direction;
 }
 
 /**
  * Recommended = featured first, then catalog order ([CHANGE, UCPD] not "Most
  * popular": that would claim sales data). Array.sort is stable.
  */
-export function sortTours(tours: TourCardDTO[], sort: TourSort): TourCardDTO[] {
+export function sortTours(tours: TourCardDTO[], sort: TourSort, season: Season = 'low'): TourCardDTO[] {
 	const copy = [...tours];
 	switch (sort) {
 		case 'price-asc':
-			return copy.sort((a, b) => comparePrice(a, b, 1));
+			return copy.sort((a, b) => comparePrice(a, b, 1, season));
 		case 'price-desc':
-			return copy.sort((a, b) => comparePrice(a, b, -1));
+			return copy.sort((a, b) => comparePrice(a, b, -1, season));
 		case 'duration':
 			return copy.sort((a, b) => a.durationHours - b.durationHours);
 		default:
@@ -91,8 +94,9 @@ export function catalogQueryString(query: CatalogQuery): string {
 	return text ? `?${text}` : '';
 }
 
-export function filterCatalog(tours: TourCardDTO[], query: CatalogQuery): TourCardDTO[] {
+/** `season`: the price season the cards show today, for the price sorts. */
+export function filterCatalog(tours: TourCardDTO[], query: CatalogQuery, season: Season = 'low'): TourCardDTO[] {
 	let list = tours.filter((tour) => matchesAnyFilter(tour, query.filters));
 	if (query.destination) list = list.filter((tour) => tour.destinationSlugs.includes(query.destination));
-	return sortTours(searchTours(list, query.q), query.sort);
+	return sortTours(searchTours(list, query.q), query.sort, season);
 }

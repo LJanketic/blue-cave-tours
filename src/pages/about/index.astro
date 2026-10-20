@@ -15,6 +15,7 @@ import Timeline from '../../components/ui/Timeline.astro';
 import CtaBand from '../../components/ui/CtaBand.astro';
 import Button from '../../components/ui/Button.astro';
 import { ABOUT } from '../../data/about';
+import { MAX_GUESTS } from '../../lib/booking';
 import { HERO_IMAGE } from '../../data/hero-image';
 
 const stats = ABOUT.trustStats.filter((stat) => stat.confirmed);
@@ -99,7 +100,7 @@ const stats = ABOUT.trustStats.filter((stat) => stat.confirmed);
 			</ul>
 		</section>
 
-		<CtaBand heading="Come sailing with us" text="Group tours depart daily in season. Private charters for up to 12 guests." id="about-cta">
+		<CtaBand heading="Come sailing with us" text={`Group tours depart daily. Private charters for up to ${MAX_GUESTS} persons.`} id="about-cta">
 			<Button href="/tours/">Browse tours</Button>
 			<Button href={charterUrl()} variant="secondary">Plan a private charter</Button>
 		</CtaBand>

@@ -2,10 +2,10 @@
 export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { ADMIN_COOKIE, SESSION_HOURS, adminPassword, checkAdminPassword, createSessionToken } from '../../lib/admin/auth';
+import { ADMIN_COOKIE, SESSION_HOURS, adminConfigured, checkAdminPassword, createSessionToken } from '../../lib/admin/auth';
 import { checkRateLimit, clientIp } from '../../lib/rate-limit';
 
-const configured = adminPassword() !== null;
+const configured = adminConfigured();
 
 // Only same-site admin paths: never an open redirect to another host.
 const nextParam = Astro.url.searchParams.get('next') ?? '';
@@ -77,7 +77,7 @@ if (Astro.request.method === 'POST' && configured) {
 						<button class="btn-primary a-block" type="submit">Log in</button>
 					</form>
 				) : (
-					<p class="login-sub">The admin is switched off. Set ADMIN_PASSWORD in the Netlify environment variables and redeploy.</p>
+					<p class="login-sub">The admin is switched off. Set ADMIN_PASSWORD and ADMIN_SESSION_SECRET in the Netlify environment variables and redeploy.</p>
 				)
 			}
 		</div>

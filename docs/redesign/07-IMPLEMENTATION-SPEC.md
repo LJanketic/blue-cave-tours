@@ -111,7 +111,7 @@ The columns are:
 | D-12 | Tour detail drops Highlights, destination chips and "Please note" | Drop Highlights (also fixes the bug where it repeats `included`) and the chips. **[DEVIATE, legal] Keep "Please note"**: the operator-supplied caveats have legal weight. | – | owner |
 | D-13 | Destination weather widget ("Sunny 28°C") | Remove it. Static weather is misleading. | – | owner |
 | D-14 | Founding year | Copy computes years from `FOUNDING_YEAR`. The default is **2016** (current site); the design says 2015. | – | owner |
-| D-15 | Season dates | **1 Apr – 30 Nov** (`tour-catalog.ts`), moved into `src/config/season.ts`. Calendar dates outside the season are disabled. | – | owner |
+| D-15 | Season dates | **1 Apr – 30 Nov** (`tour-catalog.ts`), moved into `src/config/season.ts`. Calendar dates outside the season are disabled. **2026-10-20:** tours run all year round (`SEASON_START` 01-01, `SEASON_END` 12-31). | – | owner |
 | D-16 | Departure slots per tour | Data-driven `departures[]`. One slot per tour today, and **none (time to be confirmed) for `blue-lagoon-afternoon`**. | – | owner |
 | D-17 | Should the admin follow the new look? | Yes, last. PR 0b freezes its look; PR 10 re-skins it. It must keep looking like "the site's own back office". | – | owner |
 | D-18 | Legal texts: imprint, controller, processors, legal bases, transfers, retention, complaints, jurisdiction, Croatian versions, accessibility statement under the European Accessibility Act (EAA) | Facts that need no legal judgement ship with PR 6. Everything that needs judgement goes through the lawyer in PR 11. **The privacy policy must name the controller and the real processors before PR 7b or PR 8 reach production** (S-10). | PR 7b and PR 8 go-live | lawyer + owner |
@@ -676,7 +676,7 @@ Responsive behaviour: §3.1.1, row "Home".
 | Slides | 3, from `marketing.ts`. Images per §3.4. `object-fit: cover; inset: 0` absolute. `object-position` comes from data: `calc(70% + 180px) center` for slides 1–2, `right center` for slide 3, `70% center` at ≤768. **QA the left edge at 1280, 1440 and 1920**: the board shows a ~105px uncovered strip on slides 1–2. |
 | Scrim | **[DEVIATE, a11y]** `--color-overlay-hero` + `--color-overlay-header`. The board defines a scrim but never renders it. At ≤1024, also add `--text-shadow-hero` and `--text-shadow-hero-sub` (as on the board). |
 | Contrast | Hero text must reach ≥4.5:1, or ≥3:1 for display text at 24px and up. Measure against the **lightest** pixel of the scrimmed photo under the text box, for each slide at 390, 768, 1280 and 1920px. Record the values in the PR. |
-| Copy (C-22) | 1. `titleLines: ["Escape", "in style", "& comfort"]` / "Group departures along the Dalmatian coast. Small boats, real skippers, no tourist conveyor belts." → **Browse group tours** `/tours/?type=group`. 2. `["All", "aboard,", "mateys!"]` / "Private charters for your group. Set the route, set the pace, skip the crowds." → **Plan a private charter** (charter URL). 3. `["Hello", "Blue Cave", "Croatia"]` / "Speedboat tours from Split since {FOUNDING_YEAR}. Licensed and insured." → **See the Blue Cave tour** `/tours/blue-cave-hvar-5-islands/`. [CHANGE, fact] "real guides" becomes "real skippers"; "for two or twenty" is dropped (the cap is 12); the year is computed. "Licensed and insured" stays only once C-7 is confirmed; otherwise the line ends at "since {year}". |
+| Copy (C-22) | 1. `titleLines: ["Escape", "in style", "& comfort"]` / "Group departures along the Dalmatian coast. Small boats, real skippers, no tourist conveyor belts." → **Browse group tours** `/tours/?type=group`. 2. `["All", "aboard,", "mateys!"]` / "Private charters for your group. Set the route, set the pace, skip the crowds." → **Plan a private charter** (charter URL). 3. `["Hello", "Blue Cave", "Croatia"]` / "Speedboat tours from Split since {FOUNDING_YEAR}. Licensed and insured." → **See the Blue Cave tour** `/tours/blue-cave-hvar-5-islands/`. [CHANGE, fact] "real guides" becomes "real skippers"; "for two or twenty" is dropped (the cap is 14 since 2026-10-20, was 12); the year is computed. "Licensed and insured" stays only once C-7 is confirmed; otherwise the line ends at "since {year}". |
 | Title type | Display face, `--font-size-display-xl`, line-height .94, letter-spacing −.02em, uppercase, white. Lines render from `titleLines` with `<br>` and `white-space: nowrap`, as on the board. |
 | Sub and CTA | Sub: 16/1.6, white .9, max 375px, margin-bottom 24 (20 at ≤768). CTA: `Button on-image lg` (orange, 46px, radius 11, `--shadow-cta`, hover orange-900, arrow moves +3px). |
 | Layout | Content max 960, left-aligned, vertically centred. At ≤768 it is bottom-aligned with `padding-bottom: 168px`. At ≤480 the panel is max 375. |
@@ -694,7 +694,7 @@ Responsive behaviour: §3.1.1, row "Home".
 - **Placement:** directly below the hero. The video section follows with `margin-top: 0`.
 - **Items** come from `marketing.ts`, and each needs `confirmed: true` to render:
   1. `ti-shield-check` "**Free cancellation** up to 48h on group tours", linking to `/legal/cancellation/`.
-  2. `ti-users` "**Max 12 guests** per departure".
+  2. `ti-users` "**Max {MAX_GUESTS} persons** per departure" (14, decided 2026-10-20; was 12 guests).
   3. `ti-certificate` "**{years} years** on the water", with years computed from `FOUNDING_YEAR` (D-14; as on the board).
   4. The rating slot: "★★★★★ **4.9** from N reviews". Stars use `--color-star` and are `aria-hidden`; the text says "4.9 out of 5". It appears only once D-5 is answered. Until then this slot is `ti-anchor` "**Small boats**, real skippers".
 - **≤1024:** `Marquee` (40s linear; item spacing 48px, 40 at ≤768; edge masks fade over 20 → 64px). Under reduced motion the items **wrap into a 2×2 grid** ([DEVIATE, a11y]: the board clips them).
@@ -773,7 +773,7 @@ Responsive behaviour: §3.1.1, row "Home".
 - 4 grey cards: radius 12, padding 14, gap 8. Grid gap 12 on home, 16 on Tours. Number circle 26px, white, 0.5px border, 12px/500. `h3` 16px/500; text 16/1.6 secondary.
 - **[CHANGE, fact] Copy** (the board claims "live availability" and "instant confirmation", which don't exist):
   1. "Choose a tour": "Browse by destination or duration. Group or private, your call."
-  2. "Pick your date": "Choose a day in the season and how many of you are coming."
+  2. "Pick your date": "Choose a day and how many of you are coming." (was "a day in the season" until 2026-10-20)
   3. "Book securely": "Pay online by card or PayPal. Your confirmation comes by email."
   4. "Show up and sail": "Meet your skipper at Riva stand 14. We take care of the rest."
 
@@ -949,7 +949,7 @@ Responsive behaviour: §3.1.1, row "Tours".
 
 ```ts
 type TourCardDTO = {
-  slug, title, adultPrice: number|null, priceUnit, priceLabel, durationShort, durationHours,
+  slug, title, fromPrice?: { low: number; peak: number } /* adult, by season; absent when quoted */, priceUnit, priceLabel, durationShort, durationHours,
   badge, types, tags, destinationSlugs, mandatoryFeeLabel?: string,
   searchText /* title + tagline + shortDescription, lower-cased */, photo
 }
@@ -1014,7 +1014,7 @@ Responsive behaviour: §3.1.1, row "Tour detail".
 #### 6.3.3 Main column (section titles: `SectionHeader plain`, h2)
 
 1. **h1:** sans `--font-size-hero`/500, line-height 1.3.
-2. **Meta row:** 14px secondary. `ti-clock` duration · `ti-users` "Small group, max 12" or "Private charter". [CHANGE, fact] The board's "500+ happy guests" isn't confirmed (C-3).
+2. **Meta row:** 14px secondary. `ti-clock` duration · `ti-users` "Small group, max 14 persons" (`MAX_GUESTS`; 12 until 2026-10-20) or "Private charter". [CHANGE, fact] The board's "500+ happy guests" isn't confirmed (C-3).
 3. **Intro:** `p` (body-md, secondary) with **no heading**, as designed. Text comes from `shortDescription`.
 4. **Itinerary:** `Timeline variant="itinerary"`.
    - Each stop: a 32px dot (blue-100 with a 0.5px blue-300 border, 16px info icon, margin-top 6) and a 0.5px connector line.
@@ -1038,13 +1038,13 @@ Responsive behaviour: §3.1.1, row "Tour detail".
 
 #### 6.3.4 Booking aside (`#book`, `StickyAside`)
 
-- **Price:** "From" (13px tertiary) **{adultPrice}** (22px/600) "/ adult" (13px secondary). For private-only tours: "/ boat". For quote-only tours: "Price on request".
+- **Price:** "From" (13px tertiary) **{today's season's adult price}** (22px/600; `SeasonPrice`, see §9.1) "/ adult" (13px secondary). For private-only tours: "/ boat". For quote-only tours: "Price on request".
 - **Fees:** the mandatory fee line (§6.2.2), directly under the price.
-- **Children:** `ti-baby-carriage` "Children from {childPrice}" (body-sm), only when a numeric child price exists.
+- **Children:** `ti-baby-carriage` "Children from {today's season's child price}" (body-sm, `SeasonPrice`), only when the tour has `prices`.
 - **Rows:**
   - `ti-calendar` "Next departure" … `departures[0].time`. If there are several departures: "Several departures daily". If there are none: "Time confirmed at booking". [CHANGE] The board's "Next available: Today, 18:00" needs availability data (§16).
-  - `ti-sun` "Season" … `seasonLabel()`.
-- **Notes:** `priceNotes` (season prices) in 13px tertiary. [DEVIATE, legal] Season-dependent pricing must be disclosed.
+  - ~~`ti-sun` "Season" … `seasonLabel()`.~~ **Removed 2026-10-20** (operator request), with the notes below.
+- ~~**Notes:** `priceNotes` (season prices) in 13px tertiary.~~ **Removed 2026-10-20** (operator request; `priceNotes` no longer exists). [DEVIATE, legal] Season-dependent pricing must be disclosed: it now is in the booking flow (step 2 summary) and in the FAQ's generated pricing answer (`pricingAnswer()`, `src/data/faq.ts`).
 - **Divider**, then the CTAs:
   - **Primary** (padding 12, 14px/500, radius 8, full width): "Book group tour →" `/book/{slug}/group/` for instant-book tours, or "Enquire about this tour" `/contact/?tour={slug}` for quote-only tours.
   - **Secondary** (padding 10, 0.5px border, grey hover): `ti-crown` "Book as private charter" → `charterUrl(slug)`. Shown for group+private and private-only tours, **except `dubrovnik-one-way`**: it's a one-way transfer, so it uses "Enquire" instead.
@@ -1312,7 +1312,7 @@ Responsive behaviour: §3.1.1, row "Destination detail".
    - **≤768:** scroll-snap row (40%; 80% at ≤480) with `data-scroll-region`.
 5. **"What we believe in":** 2×2 value tiles (1 column at ≤768).
 6. **"As featured in": [DROP]** unless real press exists (C-4). If guest quotes are approved under D-5 rules, show "What guests say" instead.
-7. **`CtaBand plain`:** h2 20px/500 "Come sailing with us"; padding 1.5rem; text "Group tours depart daily in season. Private charters for up to 12 guests."; "Browse tours" (primary) + "Plan a private charter" (secondary).
+7. **`CtaBand plain`:** h2 20px/500 "Come sailing with us"; padding 1.5rem; text "Group tours depart daily in season. Private charters for up to {MAX_GUESTS} persons." (14 since 2026-10-20); "Browse tours" (primary) + "Plan a private charter" (secondary).
 
 ### 7.5 Contact `/contact/` (board 14)
 
@@ -1434,10 +1434,10 @@ Responsive behaviour: §3.1.1, row "Destination detail".
 | Tour snapshot | Grey, radius 12, padding `12px 14px`, margin-bottom 20. 56px thumbnail (real photo), name, "{duration} · {meetingPointShort}". No rating unless D-5. |
 | `BookingCalendar` "Choose a date" | [KEEP] Monday-first grid; `aria-pressed`; `aria-current="date"`; month change announced with `aria-live`. Day cells 36px, radius 8, gap 4 (2 at ≤768). Hover grey with a border. Weekday headers 12px/500 tertiary. Today outlined in info blue; selected day brand-filled. Day names read like "Tuesday 14 April 2027", with ", selected" or ", outside the season" appended. **[CHANGE]** Days outside the season (D-15) are `aria-disabled`, explained by a **visible legend** under the grid (not a tooltip). "Today" uses Europe/Zagreb (`businessDate`), and so does `renderedOn` in `group.astro`. **[DROP]** availability dots until real availability data exists (§16). Can't navigate before the current month. |
 | Departure time | Data-driven (D-16). **None:** the line "Departure time confirmed at booking" (as today). **One:** a read-only line "Check-in {checkIn} · departure {time}". **Several:** `ChoiceCards`, 2 columns, gap 10, padding `14px 16px`, 36px icon tile, time 17/500. The server accepts `slot === ''` only when `departures` is empty; otherwise the slot must be one of `departures`. |
-| `GuestSteppers` "How many guests?" | Adults "{adult band} · €{adult}" (min 1) · Children "{child band} · €{child}" (min 0) · **[NEW] Infants** "Under {infantMaxAge + 1} · free" (min 0, D-9). **The cap of 12 counts all three.** Steppers are 28px with a ≥24px hit area. At a bound they get `aria-disabled`. One `role=status` region announces "3 adults" and the cap warning. |
+| `GuestSteppers` "How many guests?" | Adults "{adult band} · €{adult}" (min 1) · Children "{child band} · €{child}" (min 0) · **[NEW] Infants** "Under {infantMaxAge + 1} · free" (min 0, D-9). Prices are the chosen date's season (today's in Split before a date is picked; 2026-10-20). **The cap of 14 (`MAX_GUESTS`; 12 until 2026-10-20) counts all three.** Steppers are 28px with a ≥24px hit area. At a bound they get `aria-disabled`. One `role=status` region announces "3 adults" and the cap warning. |
 | Hold note | **[DROP]** "Your spots are held for 12 minutes" (PR 0a hotfix, S-1). In its place, the board's grey lock box: "We confirm your seats as soon as you pay." |
 | Your details | `FormField`s: First\*, Last\*, Email\*, Phone (label "Phone, so the skipper can reach you on the day"), and **"Anything the crew should know? (optional)"** with the hint "For example, a child seat or a late arrival. Please tell us about health matters (allergies, mobility) by phone or in person, not here." **[CHANGE, GDPR Art. 9; lawyer verifies, S-5]** The field doesn't invite health data. Notes are capped at 500 characters. `autocomplete` tokens [KEEP]. |
-| `SummaryCard` | Tour · Date · Departure · Guests ("2 adults, 1 child, 1 infant") · Adults n × €a · Children n × €c (only when > 0) · **Total** (17/500). Note [CHANGE, legal]: replace the board's "Includes all taxes and fees" with "+ {mandatory fees} paid on site" plus a 13px `priceNotes` summary. |
+| `SummaryCard` | Tour · Date · Departure · Guests ("2 adults, 1 child, 1 infant") · Adults n × €a · Children n × €c (only when > 0) · **Total** (17/500). Note [CHANGE, legal]: replace the board's "Includes all taxes and fees" with "+ {mandatory fees} paid on site" plus a 13px seasonal price summary (`seasonalPriceSummary()`; was `priceNotes` until 2026-10-20). Once a date is chosen a "Price" row names its season, and the rates and total follow that season. |
 | CTAs | **Review booking →** (primary, padding 13, full width): [KEEP] gated with `aria-disabled` plus a hint · "← Back to tour" (secondary, padding 10) · policy line (14px success colour) `CANCELLATION_SHORT`. |
 | Submit [CHANGE] | A real `<form method="post" action="/api/bookings/draft">`. With JS it's sent by `fetch` (§3.5). **Nothing goes in the URL. No `sessionStorage`.** |
 | Prefill [NEW] | On mount, the island calls `GET /api/bookings/draft` (same origin; reads the booking cookie). If a valid draft exists for this tour, every field is restored, so **Edit** from the review page needs no retyping (WCAG 3.3.7). |
@@ -1522,7 +1522,7 @@ Responsive behaviour: §3.1.1, row "Destination detail".
   - The review page reads the cookie, sends anything with personal parameters back to step 2, and sets `no-store` and `no-referrer`.
   - `bookingReviewPath` is deleted. Bodies are read by the shared `src/lib/request-body.ts`.
 - **Validation:** `validateBookingInput()` is shared by both endpoints and checks:
-  - infants count toward the 12 seats
+  - infants count toward the 12 seats (14 since 2026-10-20)
   - the season (D-15) and the departures (D-16)
   - notes are at most 500 characters
 - **Stored records:** bookings gain `infants`, `lineItems`, `termsVersion`, `termsAcceptedAt` and `personalDataRemovedAt`. Enquiries gain `kind`. `normalizeBooking()` / `normalizeEnquiry()` run on every read.
@@ -1560,7 +1560,7 @@ Responsive behaviour: §3.1.1, row "Destination detail".
   - print styles
 - **Error:** the danger Notice is an alert ("We don't hold seats until you pay…"), with common reasons and phone help. The "We couldn't save your booking" variant is kept.
 - **Legacy CSS:** 61 dead rules removed from `_booking.css`, `_responsive.css`, `_catalog.css`, `_destination-detail.css` and `_base.css`. The computed styles of every public page are unchanged.
-- **Known, out of scope:** the total uses the tour's single adult and child price, while `priceNotes` shows lower low-season prices (seasonal pricing is payments plan D8).
+- **Known, out of scope:** the total uses the tour's single adult and child price, while `priceNotes` shows lower low-season prices (seasonal pricing is payments plan D8). **Resolved 2026-10-20:** D8 decided; the total uses the chosen date's season, recomputed on the server (§9.1).
 - **Tests:** the success page has no personal data. There are tests for step 2 without JavaScript, and for a decline followed by "Try payment again".
 - **Admin baselines** were re-taken. The only differences were text sizes from infants, the new subject line on enquiries, and one bookings-list row order that varies between runs with the random refs.
 
@@ -1608,7 +1608,8 @@ Responsive behaviour: §3.1.1, row "Destination detail".
 
 | Field | Type | Purpose / source |
 |---|---|---|
-| `adultPrice` / `childPrice` | `number \| null` | Numeric prices. Migrated from `fromPrice` and `priceNotes`. `fromPrice` is **deleted**; its label is derived with `formatFromPrice(adultPrice, priceUnit)`. |
+| `prices` | `{ low: { adult, child }; peak: { adult, child } } \| null` | **Since 2026-10-20** (D8 decided): per-person euro prices by price season, from `src/data/prices.ts`; `null` for quote-only tours. Replaces `adultPrice` / `childPrice` / `priceNotes`. Season by tour date: low 1 Apr–15 May and 1 Oct–1 Nov, peak every other day (`LOW_SEASON`, `seasonFor()` in `src/config/season.ts`; revised 2026-10-20). Shown prices are today's season in Split (prerendered pages switch client-side via `html[data-season]`, `SeasonPrice.vue`); the booking total is the chosen date's season, recomputed on the server. |
+| ~~`adultPrice` / `childPrice`~~ | ~~`number \| null`~~ | Superseded 2026-10-20 by `prices`. Was: numeric prices, migrated from `fromPrice` and `priceNotes`. `fromPrice` is **deleted**; its label is derived with `formatFromPrice(adultPrice, priceUnit)`. |
 | `priceUnit` | `'person' \| 'boat'` | explicit |
 | `durationShort` / `durationHours` | `string` / `number` | card label; Half-day filter; sort |
 | `departures` | `{ time: string; checkIn?: string; label?: string }[]` | Migrated from the `departure` string. **May be empty** (time to be confirmed: `blue-lagoon-afternoon`). |
@@ -1638,14 +1639,14 @@ Responsive behaviour: §3.1.1, row "Destination detail".
   - every bookable tour has numeric prices, plus either ≥1 departure or `departures: []` with a comment
   - every icon used exists in the icon subset
 
-**Out of scope:** seasonal pricing (payments plan D8).
+**Out of scope:** seasonal pricing (payments plan D8). **Decided and built 2026-10-20:** see `prices` above.
 
 **As built (PR 1b, 2026-10-14):**
-- `departure`, `duration` and `priceNotes` stay as **display copy**: private tours have free-text times ("Approx. 08:00–09:00", "Flexible, typically 09:30") that `departures[]` can't hold. All logic now reads `departures`, `durationHours`, `adultPrice`/`childPrice` and `tags`; nothing parses copy any more. `adultPrice`/`childPrice` are the **peak-season** figures, as the booking total always used.
+- `departure`, `duration` and `priceNotes` stay as **display copy**: private tours have free-text times ("Approx. 08:00–09:00", "Flexible, typically 09:30") that `departures[]` can't hold. All logic now reads `departures`, `durationHours`, `adultPrice`/`childPrice` and `tags`; nothing parses copy any more. `adultPrice`/`childPrice` are the **peak-season** figures, as the booking total always used. *(2026-10-20: superseded by date-based `prices`; `priceNotes` removed.)*
 - `caveTicketNote` → `additionalFees` (Blue Cave tour: mandatory on-site ticket; the private charter: optional). The "Cave entry" row is `caveEntryNote()` in `src/lib/tour-display.ts`, which also holds `showsBestseller()`: **"Best seller" badges are hidden** until `BESTSELLER_EVIDENCE` is set (C-24).
 - Itinerary steps keep their full text as `label` (times stay in the text for now); `time` and `icon` are new.
 - `charterUrl()` replaces the hard-coded `/contact/?tour=create-perfect-day-private` CTAs (home, destination, About, FAQ) and the tour page's private-charter links. The footer's and FAQ's links to the **landing page** `/tours/create-perfect-day-private/` stay (D-23); the footer is rebuilt in PR 2.
-- Homepage copy moved to `src/data/marketing.ts`; "From €75" and "max 12" are computed from the catalog. About's "9 yrs" is **not** yet computed from `FOUNDING_YEAR` (it would read 10): PR 6, after the owner confirms D-14.
+- Homepage copy moved to `src/data/marketing.ts`; "From €75" and "max 12" are computed from the catalog. *(2026-10-20: now "From €65/€75" by today's season and "max 14 persons".)* About's "9 yrs" is **not** yet computed from `FOUNDING_YEAR` (it would read 10): PR 6, after the owner confirms D-14.
 - Destination `mapUrl`s are Maps place searches (no invented coordinates); the owner checks them (Blue Lagoon is searched as Drvenik Veli).
 
 ### 9.2 `Destination` (`src/data/destinations.ts`): PR 1b
@@ -1945,7 +1946,7 @@ It's injected only when `command === 'dev'` or `process.env.CONTEXT === 'deploy-
 | Language switcher and site-wide i18n | Translated copy, legal texts, `hreflang`, routing. Croatian legal texts may be required sooner (D-3). | D-3 |
 | Availability: calendar dots, "Next available", seat holds with a real timer, a "hold expired" error variant | Needs departures and transactional seat counts (payments plan Phase 1) | `docs/bookings-payments-email-backoffice-plan.md` |
 | Real Teya/PayPal, deposits, Pay-by-Link for charter quotes, fiscal receipt (račun) | Payments plan Phases 2–6 | same |
-| Seasonal pricing | Payments plan D8 | same |
+| ~~Seasonal pricing~~ | Decided and built 2026-10-20 (payments plan D8; §9.1 `prices`) | same |
 | Live weather on destination pages | Needs a free source and a CSP `connect-src` + privacy note | D-13 |
 | Homepage search band (Group / Private / Transfer) | Hidden on the board itself; Transfer isn't a product | §6.1 |
 | Reviews integration | D-5 and the Omnibus rules | D-5 |
