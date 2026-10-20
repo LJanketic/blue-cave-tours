@@ -83,32 +83,44 @@ const DOCS: { id: Doc; label: string; href: string }[] = [
 
 <script>
 	// Marks the section being read in the "On this page" list (aria-current):
-	// the first section whose top part is on screen.
+	// the last section whose top has passed the line a jump lands it on (its
+	// scroll-margin-top), so a click marks the section it opened, not the one
+	// before it. At the end of the page, where the last short sections can't
+	// reach that line, the last one is marked; a clicked link stays marked
+	// until the reader scrolls again.
 	const toc = document.querySelector<HTMLElement>('[data-legal-toc]');
 	const links = toc ? [...toc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')] : [];
 	const targets = links.map((a) => document.getElementById(a.hash.slice(1))).filter((el): el is HTMLElement => el !== null);
 	if (links.length && targets.length === links.length) {
-		const visible = new Set<Element>();
-		const mark = () => {
-			const current = targets.find((t) => visible.has(t));
-			if (!current) return;
+		let pinned: string | null = null;
+		const mark = (id: string) => {
 			for (const a of links) {
-				if (a.hash === `#${current.id}`) a.setAttribute('aria-current', 'true');
+				if (a.hash === `#${id}`) a.setAttribute('aria-current', 'true');
 				else a.removeAttribute('aria-current');
 			}
 		};
-		const observer = new IntersectionObserver(
-			(entries) => {
-				for (const entry of entries) {
-					if (entry.isIntersecting) visible.add(entry.target);
-					else visible.delete(entry.target);
-				}
-				mark();
-			},
-			{ rootMargin: '-80px 0px -60% 0px' },
-		);
-		targets.forEach((t) => observer.observe(t));
-		links[0].setAttribute('aria-current', 'true');
+		const update = () => {
+			if (pinned) return mark(pinned);
+			const line = parseFloat(getComputedStyle(targets[0]).scrollMarginTop) + 1;
+			const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+			const current = atEnd ? targets[targets.length - 1] : (targets.findLast((t) => t.getBoundingClientRect().top <= line) ?? targets[0]);
+			mark(current.id);
+		};
+		let frame = 0;
+		window.addEventListener('scroll', () => {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(update);
+		}, { passive: true });
+		// Input that scrolls the page hands marking back to the scroll position.
+		for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+			window.addEventListener(type, () => (pinned = null), { passive: true });
+		}
+		toc?.addEventListener('click', (event) => {
+			const link = (event.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
+			if (link) pinned = link.hash.slice(1);
+			update();
+		});
+		update();
 	}
 </script>
 
