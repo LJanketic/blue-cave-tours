@@ -7,7 +7,7 @@
 import type { TourDetail } from '../../types/tour';
 import { contactHrefForTour, groupBookHref, isGroupTour, MAX_GUESTS } from '../../lib/booking';
 import { charterUrl } from '../../config/routes';
-import { CANCELLATION_SHORT } from '../../config/cancellation';
+import { CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT, CANCELLATION_SHORT } from '../../config/cancellation';
 import { seasonLabel } from '../../config/season';
 import { formatFromPrice } from '../../lib/price';
 import { feeLabel } from '../../lib/cards';
@@ -31,6 +31,7 @@ type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
 const isGroup = isGroupTour(tour);
+const isPrivateToo = isGroup && tour.types.includes('private');
 const { primary, secondary } = tourCtas(tour, { book: (s) => groupBookHref({ slug: s }), contact: (s) => contactHrefForTour({ slug: s }), charter: charterUrl });
 
 // Order as on board 03: private first, then group.
@@ -223,7 +224,13 @@ const meetingPoint = meetingPointLines(tour);
 			<hr class="tour__divider" />
 			<Button href={primary.href} block iconEnd="arrow-right" class="tour__cta">{primary.label}</Button>
 			{secondary && <Button href={secondary.href} variant="secondary" block icon="crown" class="tour__cta tour__cta--secondary">{secondary.label}</Button>}
-			<p class="tour__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {CANCELLATION_SHORT}</p>
+			{/* The 48h rule is the group tours'; private charters have their own terms (legal/cancellation §3). */}
+			{isGroup && <p class="tour__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {isPrivateToo ? `Group tours: ${CANCELLATION_SHORT.toLowerCase()}` : CANCELLATION_SHORT}</p>}
+			{tour.types.includes('private') && (
+				<p class="tour__policy tour__policy--private">
+					<a href={CANCELLATION_PRIVATE_HREF}>{CANCELLATION_PRIVATE_SHORT}</a>
+				</p>
+			)}
 		</StickyAside>
 	</div>
 
@@ -470,6 +477,11 @@ const meetingPoint = meetingPointLines(tour);
 			font-size: var(--font-size-xs);
 			color: var(--color-text-success);
 			text-align: center;
+		}
+
+		.tour__policy--private {
+			margin-top: 4px;
+			color: var(--color-text-secondary);
 		}
 
 		@media (max-width: 768px) {

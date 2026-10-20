@@ -1,10 +1,11 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { secretKey } from '../secrets';
 
 /**
  * Showcase login for /admin: one shared password from `ADMIN_PASSWORD`, and a
- * signed, expiring session cookie. Real per-person accounts come later
- * (plan D17). Without `ADMIN_PASSWORD` the admin is locked, except in
- * `astro dev`, where the password is "demo".
+ * session cookie signed with ADMIN_SESSION_SECRET, expiring after SESSION_HOURS. Real per-person accounts come later
+ * (plan D17). Without `ADMIN_PASSWORD` or `ADMIN_SESSION_SECRET` the admin is
+ * locked, except in `astro dev`, where the password is "demo".
  */
 
 export const ADMIN_COOKIE = 'hbc_admin';
@@ -14,11 +15,15 @@ export function adminPassword(): string | null {
 	return process.env.ADMIN_PASSWORD || (import.meta.env.DEV ? 'demo' : null);
 }
 
-function signingKey(): string | null {
-	const password = adminPassword();
-	if (!password) return null;
-	// Changing the password signs everyone out.
-	return process.env.ADMIN_SESSION_SECRET || `hbc-admin-session:${password}`;
+/** Signs session cookies with ADMIN_SESSION_SECRET alone (never the password). Rotating it signs everyone out. */
+function signingKey(): Buffer | null {
+	if (!adminPassword()) return null;
+	return secretKey('admin-session');
+}
+
+/** Login is possible: a password to check and a secret to sign the session with. */
+export function adminConfigured(): boolean {
+	return signingKey() !== null;
 }
 
 function sameText(a: string, b: string): boolean {
@@ -31,7 +36,7 @@ export function checkAdminPassword(input: string): boolean {
 	return Boolean(password) && sameText(input, password as string);
 }
 
-function sign(payload: string, key: string): string {
+function sign(payload: string, key: Buffer): string {
 	return createHmac('sha256', key).update(payload).digest('base64url');
 }
 

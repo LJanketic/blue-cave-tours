@@ -66,6 +66,24 @@ const loadDotenvInDev = {
 	},
 };
 
+/**
+ * Production builds swap Astro's on-demand /_image endpoint for a 404, so the
+ * deployed function never resizes images: a public resize endpoint would let
+ * anyone burn function time on sharp encodes. `astro dev` keeps the real one,
+ * which it uses to serve every image locally.
+ *
+ * @type {import('astro').AstroIntegration}
+ */
+const imageEndpointOffInBuild = {
+	name: 'image-endpoint-off-in-build',
+	hooks: {
+		'astro:config:setup': ({ command, updateConfig }) => {
+			if (command !== 'build') return;
+			updateConfig({ image: { endpoint: { route: '/_image', entrypoint: './src/lib/image-endpoint-off.ts' } } });
+		},
+	},
+};
+
 // https://astro.build/config — Netlify adapter for SSR + API routes.
 export default defineConfig({
 	output: 'server',
@@ -80,9 +98,15 @@ export default defineConfig({
 	// optimizes images once at build time (free, uses the direct `sharp`
 	// dependency, pinned to the major Astro 6 supports) instead of paying per
 	// transformed image forever.
-	adapter: netlify({ imageCDN: false }),
-	// Every image-bearing page is prerendered, so `sharp` only ever runs during
-	// `astro build` — the deployed function never touches it at request time.
+	// sharp never runs in the function (see below), so its native binaries
+	// (~16 MB) stay out of it: a smaller bundle starts faster.
+	adapter: netlify({
+		imageCDN: false,
+		excludeFiles: ['./node_modules/sharp/**/*', './node_modules/@img/sharp-*/**/*'],
+	}),
+	// `sharp` only runs during `astro build`: prerendered pages are optimised
+	// then, server-rendered pages use prebuilt thumbnails (scripts/thumbs.mjs),
+	// and /_image is a 404 in production (imageEndpointOffInBuild).
 	// Left un-externalized, the adapter's dependency tracer walks into sharp's
 	// own conditional requires for every platform's native binary and throws
 	// on whichever ones aren't installed locally (only one ever is). Marking
@@ -97,6 +121,7 @@ export default defineConfig({
 	integrations: [
 		requireSiteUrlOnBuild,
 		loadDotenvInDev,
+		imageEndpointOffInBuild,
 		devKitIntegration,
 		vue(),
 		...(site

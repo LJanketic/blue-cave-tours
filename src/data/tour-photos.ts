@@ -11,6 +11,8 @@ export type PhotoRef = {
 	color: string;
 	/** Present on destination-owned assets; omitted for hero placeholders. */
 	src?: ImageMetadata;
+	/** Prebuilt thumbnails (scripts/thumbs.mjs) for server-rendered pages: `/thumbs/<place>/<nn>`. */
+	thumb?: string;
 };
 
 export const PHOTO = {

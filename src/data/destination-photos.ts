@@ -55,6 +55,21 @@ const DEST_ALTS: Record<string, Record<string, string>> = {
 	},
 };
 
+/** Widths built by scripts/thumbs.mjs (WIDTHS there). */
+export const THUMB_WIDTHS = [128, 256] as const;
+
+/**
+ * src and srcset of a photo's prebuilt thumbnail, for server-rendered pages:
+ * they must not use astro:assets, which would resize on demand through /_image.
+ */
+export function thumbImage(photo: PhotoRef): { src: string; srcset: string } | null {
+	if (!photo.thumb) return null;
+	return {
+		src: `${photo.thumb}-${THUMB_WIDTHS[0]}.webp`,
+		srcset: THUMB_WIDTHS.map((w) => `${photo.thumb}-${w}.webp ${w}w`).join(', '),
+	};
+}
+
 function fileName(path: string): string {
 	return path.split('/').pop()?.replace(/\.jpg$/i, '') ?? path;
 }
@@ -77,6 +92,7 @@ function photosBySlug(): Record<string, PhotoRef[]> {
 			alt: DEST_ALTS[slug]?.[name] ?? `${slug} — ${name}`,
 			color: DEST_COLOR[slug] ?? '#2a5060',
 			src: mod.default,
+			thumb: `/thumbs/${slug}/${name}`,
 		};
 		(grouped[slug] ??= []).push(photo);
 	}

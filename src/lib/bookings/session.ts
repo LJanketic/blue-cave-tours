@@ -31,7 +31,7 @@ export type BookingDraft = {
 };
 
 function key(): Buffer | null {
-	return secretKey('booking-cookie', 'BOOKING_COOKIE_SECRET');
+	return secretKey('booking-cookie');
 }
 
 /** base64url(iv | tag | ciphertext). Null when no key can be had (fail closed). */

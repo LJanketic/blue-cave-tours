@@ -9,8 +9,9 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "check": "astro check && node scripts/icons.mjs --check && node scripts/tokens-check.mjs",
+    "check": "astro check && node scripts/icons.mjs --check && node scripts/thumbs.mjs --check && node scripts/tokens-check.mjs",
     "icons": "node scripts/icons.mjs",
+    "thumbs": "node scripts/thumbs.mjs",
     "test": "vitest run",
     "astro": "astro",
     "test:e2e": "playwright test tests/e2e",

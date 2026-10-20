@@ -7,7 +7,6 @@ export const prerender = false;
  * server when the booking is made. "Continue to payment" posts only the
  * terms version the customer saw.
  */
-import { Image } from 'astro:assets';
 import { pageTitle } from '../../../config/site';
 import { TERMS_VERSION } from '../../../config/legal';
 import { CANCELLATION_FULL, CANCELLATION_SHORT } from '../../../config/cancellation';
@@ -17,6 +16,7 @@ import Badge from '../../../components/ui/Badge.astro';
 import Notice from '../../../components/ui/Notice.astro';
 import Button from '../../../components/ui/Button.astro';
 import { getTourBySlug, getTourCardPhoto } from '../../../lib/tours';
+import { thumbImage } from '../../../data/destination-photos';
 import { feeLabel } from '../../../lib/cards';
 import { contactHrefForTour, formatBookingDate, guestSummaryFromCounts, meetingPointShort, supportsInstantBook } from '../../../lib/booking';
 import { computeBookingTotal, lineItemsFor, seasonPriceLabel, seasonalPriceSummary } from '../../../lib/price';
@@ -50,7 +50,7 @@ const items = lineItemsFor(tour, draft.date, draft.adults, draft.children, draft
 const seasonNote = seasonPriceLabel(seasonFor(draft.date));
 const seasonSummary = tour.prices ? seasonalPriceSummary(tour.prices) : '';
 const fee = feeLabel(tour);
-const photo = getTourCardPhoto(tour);
+const thumb = thumbImage(getTourCardPhoto(tour));
 ---
 
 <SiteLayout title={pageTitle(`Review booking: ${tour.title}`)} description={`Review your booking for ${tour.title}.`} checkout robots="noindex, nofollow">
@@ -64,8 +64,8 @@ const photo = getTourCardPhoto(tour);
 			</div>
 			<div class="review__trip">
 				{
-					photo.src ? (
-						<Image src={photo.src} alt="" widths={[128, 192]} sizes="64px" quality={70} format="webp" class="review__thumb" />
+					thumb ? (
+						<img src={thumb.src} srcset={thumb.srcset} sizes="64px" width="64" height="64" alt="" class="review__thumb" />
 					) : (
 						<span class="review__thumb review__thumb--empty" aria-hidden="true">
 							<i class="ti ti-sailboat" />

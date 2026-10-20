@@ -60,13 +60,15 @@ describe('booking cookie', () => {
 		expect(openDraft(sealed, createdAt + 7201_000)).toBeNull();
 	});
 
-	it('without its own secret, derives the key from the admin secret', () => {
-		delete process.env.BOOKING_COOKIE_SECRET;
-		process.env.ADMIN_SESSION_SECRET = 'first-admin-secret';
+	it('never derives the key from the admin password or session secret', () => {
+		process.env.BOOKING_COOKIE_SECRET = Buffer.alloc(32, 7).toString('base64');
+		process.env.ADMIN_PASSWORD = 'first-password';
+		process.env.ADMIN_SESSION_SECRET = 'a'.repeat(44);
 		const sealed = sealDraft(draft()) as string;
+		process.env.ADMIN_PASSWORD = 'second-password';
+		process.env.ADMIN_SESSION_SECRET = 'b'.repeat(44);
 		expect(openDraft(sealed)).not.toBeNull();
-		// Rotating the admin secret ends drafts in progress (they last 2 hours anyway).
-		process.env.ADMIN_SESSION_SECRET = 'second-admin-secret';
-		expect(openDraft(sealed)).toBeNull();
+		delete process.env.ADMIN_PASSWORD;
+		delete process.env.ADMIN_SESSION_SECRET;
 	});
 });

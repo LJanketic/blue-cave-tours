@@ -60,7 +60,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 	{
 		category: 'changes',
 		question: 'What’s your cancellation policy?',
-		answer: CANCELLATION_FULL,
+		answer: `Group tours: ${CANCELLATION_FULL} Private charters have their own cancellation terms, set out in the cancellation policy.`,
 		link: { href: '/legal/cancellation/', label: 'Cancellation policy' },
 	},
 	{

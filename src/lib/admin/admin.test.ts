@@ -22,16 +22,21 @@ describe('admin session', () => {
 		expect(checkAdminPassword('')).toBe(false);
 	});
 
-	it('issues tokens that expire and break when tampered with or the password changes', () => {
+	it('issues tokens that expire and break when tampered with or the session secret changes', () => {
 		process.env.ADMIN_PASSWORD = 'sea-breeze';
+		process.env.ADMIN_SESSION_SECRET = 'a'.repeat(44);
 		const now = 1_800_000_000_000;
 		const token = createSessionToken(now) as string;
 		expect(verifySessionToken(token, now + 60_000)).toBe(true);
 		expect(verifySessionToken(token, now + 13 * 3_600_000)).toBe(false);
 		expect(verifySessionToken(`9${token}`, now)).toBe(false);
 		expect(verifySessionToken(undefined, now)).toBe(false);
+		// The password never signs: changing it alone keeps sessions; rotating the secret ends them.
 		process.env.ADMIN_PASSWORD = 'new-password';
+		expect(verifySessionToken(token, now + 60_000)).toBe(true);
+		process.env.ADMIN_SESSION_SECRET = 'b'.repeat(44);
 		expect(verifySessionToken(token, now + 60_000)).toBe(false);
+		delete process.env.ADMIN_SESSION_SECRET;
 	});
 });
 
