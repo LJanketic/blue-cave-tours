@@ -1,5 +1,5 @@
 import { MAX_GUESTS, seatCount } from '../booking';
-import { takesSeats } from '../bookings/service';
+import { isDeadQuote, takesSeats } from '../bookings/service';
 import type { Booking } from '../bookings/store';
 
 export type Departure = {
@@ -7,6 +7,8 @@ export type Departure = {
 	tourSlug: string;
 	tourTitle: string;
 	slot: string;
+	/** A private charter: one booking has the whole boat, so it's never shared with a group. */
+	private: boolean;
 	capacity: number;
 	seatsTaken: number;
 	adults: number;
@@ -64,8 +66,11 @@ function findOverbookings(passengers: Booking[], capacity: number): Overbooking[
 export function departuresOn(date: string, all: Booking[]): Departure[] {
 	const byKey = new Map<string, Departure>();
 	for (const booking of all) {
-		if (booking.date !== date) continue;
-		const key = `${booking.tourSlug}|${booking.slot}`;
+		// A replaced, withdrawn or expired charter quote is no boat at all.
+		if (booking.date !== date || isDeadQuote(booking)) continue;
+		// A private charter is its own boat: its own card, never counted against the group departure.
+		const isPrivate = booking.kind === 'private';
+		const key = isPrivate ? `private:${booking.id}|${booking.slot}` : `${booking.tourSlug}|${booking.slot}`;
 		let departure = byKey.get(key);
 		if (!departure) {
 			departure = {
@@ -73,6 +78,7 @@ export function departuresOn(date: string, all: Booking[]): Departure[] {
 				tourSlug: booking.tourSlug,
 				tourTitle: booking.tourTitle,
 				slot: booking.slot,
+				private: isPrivate,
 				capacity: MAX_GUESTS,
 				seatsTaken: 0,
 				adults: 0,
@@ -97,6 +103,8 @@ export function departuresOn(date: string, all: Booking[]): Departure[] {
 	}
 	const departures = [...byKey.values()].filter((d) => d.passengers.length || d.unpaid.length);
 	for (const d of departures) {
+		// A private boat has no seats to sell: its capacity is its own party, so "seats free" never counts it.
+		if (d.private) d.capacity = d.seatsTaken || seatCount(d.unpaid[0] ?? { adults: 0, children: 0 });
 		d.overBy = Math.max(0, d.seatsTaken - d.capacity);
 		d.overbookings = findOverbookings(d.passengers, d.capacity);
 		d.passengers.sort((a, b) => a.lastName.localeCompare(b.lastName));

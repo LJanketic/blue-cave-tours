@@ -6,7 +6,9 @@ import { BOOKING_CUTOFF_NOTE } from '../../config/booking';
 import { computeBookingTotal, lineItemsFor } from '../price';
 import { EMAIL_RE, asciiEmail } from '../contact-validation';
 import { adminEmail, sendEmail, type EmailMessage } from '../email/send';
-import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail } from '../email/templates';
+import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail, charterQuoteEmail } from '../email/templates';
+import { durationLabel, routeById } from '../../config/charter';
+import type { QuoteError, QuoteInput } from '../charter';
 import type { TourDetail } from '../../types/tour';
 import { bookingClosed, businessDate } from './dates';
 import { newBookingRef, newId } from './ids';
@@ -118,6 +120,7 @@ export async function createPendingBooking(
 		paymentProvider: null,
 		paymentRef: null,
 		paidAt: null,
+		kind: 'group',
 		tourSlug: tour.slug,
 		tourTitle: tour.title,
 		date,
@@ -147,13 +150,26 @@ function awaitingPayment(booking: Booking): boolean {
 	return booking.status === 'pending_payment' && (booking.paymentStatus === 'unpaid' || booking.paymentStatus === 'failed');
 }
 
+/** A private charter quote past its "valid until". */
+export function quoteExpired(booking: Booking, now: Date = new Date()): boolean {
+	return Boolean(booking.quoteExpiresAt) && now.toISOString() > (booking.quoteExpiresAt as string);
+}
+
+/**
+ * A charter quote that will never be paid: replaced by a newer quote, withdrawn,
+ * or expired. The admin's lists and the day's boats leave these out.
+ */
+export function isDeadQuote(booking: Booking, now: Date = new Date()): boolean {
+	return booking.kind === 'private' && neverPaid(booking) && (booking.status === 'cancelled' || quoteExpired(booking, now));
+}
+
 /**
  * Whether the customer may start paying for this booking now: still waiting
- * for payment and booking for its departure hasn't closed yet (the same
- * cut-off as a new booking).
+ * for payment, booking for its departure hasn't closed yet (the same cut-off
+ * as a new booking) and, for a charter quote, the quote is still valid.
  */
 export function isPayable(booking: Booking, now: Date = new Date()): boolean {
-	return awaitingPayment(booking) && !bookingClosed(booking.date, booking.slot, now);
+	return awaitingPayment(booking) && !bookingClosed(booking.date, booking.slot, now) && !quoteExpired(booking, now);
 }
 
 /** Stand-in for the fiscalization service (Phase 3): same shape, clearly fake values. */
@@ -189,6 +205,11 @@ export async function finalizePaidBooking(
 		// Not isPayable: a charge that started before departure and succeeds after it
 		// (a provider's webhook) must still be recorded. The pay page gates the start.
 		if (!awaitingPayment(booking)) return null;
+		// A charter quote's terms are accepted on the pay page (it has no review step), so they're recorded with the payment.
+		if (booking.kind === 'private' && !booking.termsAcceptedAt) {
+			booking.termsVersion = TERMS_VERSION;
+			booking.termsAcceptedAt = at;
+		}
 		booking.paymentStatus = 'paid';
 		booking.status = 'confirmed';
 		booking.paymentProvider = provider;
@@ -333,6 +354,102 @@ export async function recordEnquiry(
 	return enquiry;
 }
 
+export type QuoteResult = { ok: true; booking: Booking } | { ok: false; error: QuoteError | 'stale' };
+
+/**
+ * Answers a private charter request with a quote (spec §8.2, payments plan
+ * Phase 5, mocked): an unpaid private booking for the whole boat at the
+ * quoted price, and an email to the customer with a link to pay it.
+ *
+ * `previousQuoteId` is the quote the form was showing (or ''). If the request
+ * was quoted since, nothing happens: a double click or a stale tab can't send
+ * two quotes. A newer quote replaces an unpaid older one, which is cancelled;
+ * a request whose quote was paid can't be quoted again.
+ */
+export async function sendCharterQuote(
+	enquiryId: string,
+	quote: QuoteInput,
+	previousQuoteId: string,
+	by: string,
+	siteOrigin: string,
+	now: Date = new Date(),
+): Promise<QuoteResult> {
+	const enquiry = await enquiries().get(enquiryId);
+	const request = enquiry?.charter;
+	if (!enquiry || enquiry.kind !== 'charter' || !request) return { ok: false, error: 'missing' };
+	if ((enquiry.quoteBookingId ?? '') !== previousQuoteId) return { ok: false, error: 'stale' };
+	const previous = enquiry.quoteBookingId ? await bookings().get(enquiry.quoteBookingId) : null;
+	if (previous?.paymentStatus === 'paid' || previous?.paymentStatus === 'refunded') return { ok: false, error: 'paid' };
+
+	const route = routeById(request.route);
+	const at = now.toISOString();
+	// The boss may offer another length than asked for (e.g. 6 h instead of 8): the quote's length is what's sold.
+	const duration = durationLabel(quote.durationHours);
+	const booking: Booking = {
+		id: newId(),
+		ref: newBookingRef(),
+		createdAt: at,
+		updatedAt: at,
+		status: 'pending_payment',
+		paymentStatus: 'unpaid',
+		paymentProvider: null,
+		paymentRef: null,
+		paidAt: null,
+		kind: 'private',
+		enquiryId: enquiry.id,
+		quoteExpiresAt: new Date(now.getTime() + quote.validDays * 86_400_000).toISOString(),
+		durationHours: quote.durationHours,
+		tourSlug: route?.tourSlug ?? enquiry.tourSlug,
+		tourTitle: `Private charter: ${route?.label ?? 'Your own route'}`,
+		date: quote.date,
+		slot: quote.time,
+		adults: request.adults,
+		children: request.children,
+		infants: request.infants,
+		total: quote.price,
+		lineItems: [{ label: `Private boat with skipper, ${duration.toLowerCase()}`, unit: quote.price, qty: 1, amount: quote.price }],
+		firstName: request.firstName,
+		lastName: request.lastName,
+		email: enquiry.email,
+		phone: enquiry.phone,
+		customerNotes: enquiry.message,
+		invoice: null,
+		staffNotes: quote.note ? [{ at, by, text: `Note sent with the quote: ${quote.note}` }] : [],
+		history: [{ at, by, action: `Quote sent: €${quote.price}, valid ${quote.validDays} day${quote.validDays === 1 ? '' : 's'}` }],
+		...(enquiry.sample ? { sample: true } : {}),
+	};
+
+	// 1. Withdraw the old link first, and stop if the customer paid it meanwhile: they must never be able to pay twice.
+	if (previous) {
+		let paidMeanwhile = false;
+		await bookings().update(previous.id, (old) => {
+			if (old.paymentStatus === 'paid' || old.paymentStatus === 'refunded') {
+				paidMeanwhile = true;
+				return null;
+			}
+			if (old.status === 'cancelled') return null;
+			old.status = 'cancelled';
+			old.updatedAt = at;
+			old.history.push({ at, by, action: `Quote replaced by a newer one (${booking.ref})` });
+			return old;
+		});
+		if (paidMeanwhile) return { ok: false, error: 'paid' };
+	}
+	// 2. Save the new quote, then 3. claim the request for it: only the request that moves it to this quote goes on.
+	await bookings().put(booking);
+	const claimed = await enquiries().update(enquiry.id, (current) =>
+		(current.quoteBookingId ?? '') === previousQuoteId ? { ...current, quoteBookingId: booking.id, status: 'replied' } : null,
+	);
+	if (!claimed.written) {
+		await bookings().delete(booking.id);
+		return { ok: false, error: 'stale' };
+	}
+	// The pay link uses this deploy's address, not the public site's: each deploy keeps its own bookings.
+	const payUrl = `${siteOrigin}/booking/pay/?id=${booking.id}`;
+	await sendBookingEmail(booking.id, charterQuoteEmail(booking, quote.note, payUrl, siteOrigin, Boolean(previous)), at);
+	return { ok: true, booking: (await bookings().get(booking.id)) ?? booking };
+}
+
 /** Seats counted against a departure: everything paid that hasn't been cancelled. */
 export function takesSeats(booking: Booking): boolean {
 	return booking.paymentStatus === 'paid' && booking.status !== 'cancelled';
@@ -385,6 +502,18 @@ export async function sweepPersonalData(now: Date = new Date()): Promise<{ booki
 			await enquiries().delete(enquiry.id);
 			deletedIds.add(enquiry.id);
 			removedEnquiries++;
+		} else if (enquiry.charter) {
+			// A charter request holds what its booking holds: special requests go 30 days after the trip, the phone after 90.
+			const dropMessage = enquiry.message && enquiry.charter.date < day(RETENTION_DAYS.notes);
+			const dropPhone = enquiry.phone && enquiry.charter.date < day(RETENTION_DAYS.phone);
+			if (!dropMessage && !dropPhone) continue;
+			const { written } = await enquiries().update(enquiry.id, (current) => ({
+				...current,
+				message: dropMessage ? '' : current.message,
+				phone: dropPhone ? '' : current.phone,
+				personalDataRemovedAt: at,
+			}));
+			if (written) removedEnquiries++;
 		}
 	}
 	let trimmedEmails = 0;

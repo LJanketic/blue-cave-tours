@@ -11,6 +11,9 @@ export const STATIC_ROUTES = [
 	'/legal/terms/',
 	'/legal/privacy/',
 	'/legal/cancellation/',
+	'/private-charter/',
+	'/private-charter/sent/',
+	'/private-charter/problem/?error=email',
 	'/not-a-page/',
 	// The component kit (dev server and deploy previews only): new components must be clean.
 	'/dev/kit/',

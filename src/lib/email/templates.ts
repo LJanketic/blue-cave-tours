@@ -5,7 +5,9 @@ import { topicLabel } from '../contact-validation';
 import { getTourBySlug } from '../tours';
 import type { EmailMessage } from './send';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
-import { CANCELLATION_FULL, CANCELLATION_WEATHER } from '../../config/cancellation';
+import { CANCELLATION_FULL, CANCELLATION_PRIVATE_HREF, CANCELLATION_WEATHER } from '../../config/cancellation';
+import { durationLabel, routeById } from '../../config/charter';
+import { formatTimestamp } from '../bookings/dates';
 import { IMPRINT, TERMS_VERSION } from '../../config/legal';
 
 export function escapeHtml(value: string): string {
@@ -91,6 +93,7 @@ function bookingRows(booking: Booking): Row[] {
 		['Guests', guestSummaryFromCounts(booking.adults, booking.children, booking.infants)],
 	];
 	if (booking.slot) rows.splice(3, 0, ['Departure', booking.slot]);
+	if (booking.kind === 'private' && booking.durationHours) rows.push(['Duration', durationLabel(booking.durationHours)]);
 	return rows;
 }
 
@@ -130,7 +133,7 @@ function detailsTable(rows: Row[]): string {
  * What the confirmation must state as text, not just link to: a link is not a
  * durable medium (CJEU C-49/11). §9.4; the lawyer verifies the wording (PR 11).
  */
-function bookingTermsLines(booking: Booking): { rows: Row[]; paragraphs: string[] } {
+function bookingTermsLines(booking: Booking, siteOrigin: string): { rows: Row[]; paragraphs: string[] } {
 	const tour = getTourBySlug(booking.tourSlug);
 	const rows: Row[] = (booking.lineItems ?? []).map((item) => [
 		item.qty > 1 || item.unit > 0 ? `${item.label} (${item.qty} × €${item.unit})` : item.label,
@@ -140,8 +143,12 @@ function bookingTermsLines(booking: Booking): { rows: Row[]; paragraphs: string[
 	for (const fee of tour?.additionalFees ?? []) {
 		rows.push([fee.mandatory ? 'Not included' : 'Extra', fee.amountLabel ? `${fee.shortText} (${fee.amountLabel})` : fee.shortText]);
 	}
+	const policy =
+		booking.kind === 'private'
+			? `Private charters follow their own cancellation terms, set out in section 3 of our cancellation policy: ${siteOrigin}${CANCELLATION_PRIVATE_HREF}`
+			: CANCELLATION_FULL;
 	const paragraphs = [
-		CANCELLATION_FULL,
+		policy,
 		'This is a leisure service on a fixed date, so the 14-day right of withdrawal for distance contracts does not apply. The cancellation policy above does.',
 		`Questions or complaints: email ${SITE_EMAIL}. Complaints should reach us within 7 days after the tour. We confirm receipt and reply within 15 days.`,
 		`Booked under our terms of ${booking.termsVersion ?? TERMS_VERSION}.`,
@@ -175,15 +182,19 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 	const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 	const total = `€${booking.total} — ${PAYMENT_STATUS_TEXT[booking.paymentStatus]}`;
 	const website = siteOrigin.replace(/^https?:\/\//, '');
-	const groupNote = "As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.";
+	const groupNote =
+		booking.kind === 'private'
+			? 'The boat and skipper are yours for the day. Please be at the meeting point 15 minutes before departure, so you get every minute of your charter.'
+			: "As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.";
 	const weatherNote = CANCELLATION_WEATHER;
-	const terms = bookingTermsLines(booking);
+	const terms = bookingTermsLines(booking, siteOrigin);
 
 	const tripRows: Row[] = [
 		['Booking ref', booking.ref],
 		['Tour', booking.tourTitle],
 		['Date', date],
 		['Departure', departure],
+		...(booking.kind === 'private' && booking.durationHours ? ([['Duration', durationLabel(booking.durationHours)]] as Row[]) : []),
 		['Meeting point', meeting, { href: mapUrl, hint: 'Open in Google Maps' }],
 	];
 	const partyRows: Row[] = [
@@ -217,6 +228,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 		`Tour: ${booking.tourTitle}`,
 		`Date: ${date}`,
 		`Departure: ${departure}`,
+		...(booking.kind === 'private' && booking.durationHours ? [`Duration: ${durationLabel(booking.durationHours)}`] : []),
 		`Meeting point: ${meeting} — ${mapUrl}`,
 		'',
 		groupNote,
@@ -256,14 +268,14 @@ export function adminBookingEmail(booking: Booking, to: string, adminUrl: string
 		// Notes can hold health details (GDPR Art. 9): they stay in the admin, never in an email (S-5).
 		['Notes', booking.customerNotes ? 'Has notes, see admin' : 'None'],
 	];
-	const subject = `New booking ${booking.ref}: ${booking.tourTitle}, ${formatBookingDate(booking.date)}, ${guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}`;
+	const subject = `New ${booking.kind === 'private' ? 'private charter' : 'booking'} ${booking.ref}: ${charterRoute(booking)}, ${formatBookingDate(booking.date)}, ${guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}`;
 	const html = layout(
 		'New booking',
-		`A customer booked and paid on the website${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}. <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">Open it in the admin</a>.`,
+		`${booking.kind === 'private' ? 'A customer paid their private charter quote' : 'A customer booked and paid on the website'}${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}. <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">Open it in the admin</a>.`,
 		section('Booking', bookingRows(booking)) + section('Customer', customerRows) + section('Payment', paymentRows(booking, 'admin')),
 	);
 	const text = [
-		`A customer booked and paid on the website${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}.`,
+		`${booking.kind === 'private' ? 'A customer paid their private charter quote' : 'A customer booked and paid on the website'}${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}.`,
 		'',
 		rowsText(bookingRows(booking)),
 		'',
@@ -287,16 +299,109 @@ export function adminEnquiryEmail(enquiry: Enquiry, to: string, adminUrl: string
 		...(enquiry.topic ? ([['Subject', topicLabel(enquiry.topic)]] as Row[]) : []),
 		...(enquiry.bookingRef ? ([['Booking ref', enquiry.bookingRef]] as Row[]) : []),
 	];
-	const subject = `New enquiry from ${enquiry.name}: ${tourTitle}`;
+	const charter = enquiry.charter ? charterRequestRows(enquiry.charter) : null;
+	const isCharter = Boolean(enquiry.charter);
+	const routeLabel = enquiry.charter ? (routeById(enquiry.charter.route)?.label ?? enquiry.charter.route) : '';
+	// A charter's route is in its own section, so "About" (the tour) isn't repeated under From.
+	const fromRows = isCharter ? rows.filter(([label]) => label !== 'About') : rows;
+	const subject = isCharter
+		? `Private charter request from ${enquiry.name}: ${routeLabel}, ${formatBookingDate(enquiry.charter?.date ?? '')}`
+		: `New enquiry from ${enquiry.name}: ${tourTitle}`;
+	// Special requests can hold health details (GDPR Art. 9), as booking notes can: they stay in the admin (S-5).
+	const message = isCharter
+		? paragraph(enquiry.message ? '<strong>Special requests:</strong> yes, see the admin' : '<strong>Special requests:</strong> none')
+		: paragraph(`<strong>Message</strong><br>${escapeHtml(enquiry.message).replace(/\n/g, '<br>')}`);
 	const html = layout(
-		'New enquiry',
-		`Someone sent a message through the contact form. Reply to this email to answer them, or <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">open the enquiries in the admin</a>.`,
-		section('From', rows) +
-			paragraph(`<strong>Message</strong><br>${escapeHtml(enquiry.message).replace(/\n/g, '<br>')}`),
+		isCharter ? 'Private charter request' : 'New enquiry',
+		isCharter
+			? `Someone asked for a private charter. Check the boat and skipper are free, then <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">send a quote from the admin</a>.`
+			: `Someone sent a message through the contact form. Reply to this email to answer them, or <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">open the enquiries in the admin</a>.`,
+		(charter ? section('Charter', charter) : '') + section('From', fromRows) + message,
 	);
-	const text = ['New enquiry from the contact form.', '', rowsText(rows), '', 'Message:', enquiry.message, '', `Admin: ${adminUrl}`].join(
-		'\n',
-	);
+	const text = (
+		isCharter
+			? ['Private charter request.', '', rowsText(charter ?? []), '', rowsText(fromRows), '', `Special requests: ${enquiry.message ? 'yes, see the admin' : 'none'}`, '', `Admin: ${adminUrl}`]
+			: ['New enquiry from the contact form.', '', rowsText(rows), '', 'Message:', enquiry.message, '', `Admin: ${adminUrl}`]
+	).join('\n');
 
 	return { kind: 'admin_enquiry', to, replyTo: enquiry.email, subject, html, text, relatedId: enquiry.id };
+}
+
+/** A private booking's route ("Blue Lagoon & Trogir") without the "Private charter:" prefix of its title. */
+function charterRoute(booking: Booking): string {
+	return booking.tourTitle.replace(/^Private charter: /, '');
+}
+
+/** What a charter request asked for, as label/value rows (the admin email and the enquiries page). */
+export function charterRequestRows(request: NonNullable<Enquiry['charter']>): Row[] {
+	return [
+		['Route', routeById(request.route)?.label ?? request.route],
+		['Date', formatBookingDate(request.date)],
+		['Preferred departure', request.time],
+		['Duration', durationLabel(request.durationHours)],
+		['Guests', guestSummaryFromCounts(request.adults, request.children, request.infants)],
+	];
+}
+
+/**
+ * The quote for a private charter (payments plan Phase 5, mocked): the price,
+ * what it covers, how long it holds, and a link to pay. Sent by staff from
+ * the admin, so it isn't the auto-reply D-22 rules out.
+ */
+export function charterQuoteEmail(booking: Booking, note: string, payUrl: string, requestOrigin: string, replacesEarlier: boolean): EmailMessage {
+	const siteOrigin = publicOrigin(requestOrigin);
+	const date = formatBookingDate(booking.date);
+	const validUntil = booking.quoteExpiresAt ? formatTimestamp(booking.quoteExpiresAt) : '';
+	const rows: Row[] = [
+		['Quote ref', booking.ref],
+		['Charter', charterRoute(booking)],
+		['Date', date],
+		['Departure', booking.slot],
+		...(booking.durationHours ? ([['Duration', durationLabel(booking.durationHours)]] as Row[]) : []),
+		['Guests', guestSummaryFromCounts(booking.adults, booking.children, booking.infants)],
+		['Price (incl. VAT)', `€${booking.total}${PAYMENTS_ARE_DEMO ? ' (demo, no money is taken)' : ''}`],
+		...(validUntil ? ([['Valid until', `${validUntil} (Split time)`]] as Row[]) : []),
+	];
+	const policyUrl = `${siteOrigin}${CANCELLATION_PRIVATE_HREF}`;
+	const subject = `Your ${replacesEarlier ? 'updated ' : ''}private charter quote – ${charterRoute(booking)}, ${date}`;
+	const replaces = 'This quote replaces our earlier one, whose payment link no longer works.';
+	const button =
+		`<tr><td style="padding:4px 0 20px"><a href="${escapeHtml(payUrl)}" style="display:inline-block;background:${BRAND_COLOR};color:#ffffff;` +
+		`font-size:15px;font-weight:600;text-decoration:none;padding:12px 22px;border-radius:8px">Review and pay €${booking.total}</a></td></tr>`;
+	const html = layout(
+		'',
+		`${PAYMENTS_ARE_DEMO ? `<strong>This is a demo quote. No payment will be taken.</strong><br><br>` : ''}Dear ${escapeHtml(booking.firstName)},<br><br>` +
+			`Thank you for your private charter request. Here is our quote for the date below:`,
+		(replacesEarlier ? paragraph(`<strong>${escapeHtml(replaces)}</strong>`) : '') +
+			detailsTable(rows) +
+			(note ? paragraph(`<strong>A note from us</strong><br>${escapeHtml(note).replace(/\n/g, '<br>')}`) : '') +
+			paragraph('Your charter is booked once it is paid. Until then we hold nothing, so please pay before the quote expires.') +
+			button +
+			paragraph(`If the button doesn't work, open this link: <a href="${escapeHtml(payUrl)}" style="color:${LINK_COLOR}">${escapeHtml(payUrl)}</a>`) +
+			paragraph(`Private charters follow their own cancellation terms: <a href="${escapeHtml(policyUrl)}" style="color:${LINK_COLOR}">cancellation policy, section 3</a>.`) +
+			paragraph(`Questions or changes? Just reply to this email, or call ${escapeHtml(SITE_PHONE_DISPLAY)}.`),
+		{ title: subject },
+	);
+	const text = [
+		...(PAYMENTS_ARE_DEMO ? ['This is a demo quote. No payment will be taken.', ''] : []),
+		`Dear ${booking.firstName},`,
+		'',
+		'Thank you for your private charter request. Here is our quote for the date below:',
+		'',
+		...(replacesEarlier ? [replaces, ''] : []),
+		rowsText(rows),
+		'',
+		...(note ? ['A note from us:', note, ''] : []),
+		'Your charter is booked once it is paid. Until then we hold nothing, so please pay before the quote expires.',
+		'',
+		`Review and pay: ${payUrl}`,
+		'',
+		`Private charters follow their own cancellation terms: ${policyUrl}`,
+		'',
+		`Questions or changes? Just reply to this email, or call ${SITE_PHONE_DISPLAY}.`,
+		'',
+		`${EMAIL_SIGN_OFF} · ${SITE_NAME}`,
+	].join('\n');
+	// "Just reply to this email" must reach us, whatever address the email is sent from.
+	return { kind: 'charter_quote', to: booking.email, replyTo: SITE_EMAIL, subject, html, text, relatedId: booking.id };
 }

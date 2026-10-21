@@ -10,6 +10,7 @@ const KIND: Record<OutboxEmail['kind'], { label: string; icon: string }> = {
 	booking_confirmation: { label: 'To customer', icon: 'ti-user' },
 	admin_booking: { label: 'New booking', icon: 'ti-ticket' },
 	admin_enquiry: { label: 'New enquiry', icon: 'ti-headset' },
+	charter_quote: { label: 'Quote to customer', icon: 'ti-receipt' },
 };
 
 const rows = (await outbox().list()).sort(byCreatedDesc);

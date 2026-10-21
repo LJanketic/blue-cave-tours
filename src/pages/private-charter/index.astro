@@ -1,0 +1,196 @@
+---
+export const prerender = true;
+
+/**
+ * Private charter request (spec §8.2, board 06 as changed by the 20 Oct
+ * handoff; D-7, D-8, D-23). A request, not a payment: the boss confirms
+ * availability and replies with a quote and a payment link. Noindex; the
+ * indexable landing page is /tours/create-perfect-day-private/.
+ *
+ * With JavaScript: the CharterRequest island (`?tour=` preselects the route).
+ * Without it: a plain form posting to the same endpoint (§3.5).
+ */
+import { REPLY_TIME, pageTitle } from '../../config/site';
+import { SEASON_END, SEASON_START, seasonLabel } from '../../config/season';
+import { CANCELLATION_PRIVATE_HREF } from '../../config/cancellation';
+import {
+	CHARTER_DEFAULT_TIME,
+	CHARTER_DURATIONS,
+	CHARTER_EARLIEST_TIME,
+	CHARTER_LATEST_TIME,
+	CHARTER_ROUTES,
+	CUSTOM_ROUTE_ID,
+	closestDuration,
+	durationLabel,
+} from '../../config/charter';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import BookingShell from '../../components/booking/BookingShell.astro';
+import CharterRequest from '../../components/vue/CharterRequest.vue';
+import { DEFAULT_AGE_BANDS } from '../../data/tour-catalog';
+import { MAX_GUESTS } from '../../lib/booking';
+import { businessDate } from '../../lib/bookings/dates';
+import { HONEYPOT_FIELD } from '../../lib/contact-validation';
+import { getTourBySlug } from '../../lib/tours';
+
+const renderedOn = businessDate();
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+
+/** The usual departure and length of a tour, as a starting point the guest can change. */
+function preset(slug: string): { time: string; hours: number } {
+	const tour = getTourBySlug(slug);
+	const first = tour?.departures[0]?.time;
+	return {
+		time: first && first >= CHARTER_EARLIEST_TIME && first <= CHARTER_LATEST_TIME ? first : CHARTER_DEFAULT_TIME,
+		hours: tour ? closestDuration(tour.durationHours) : 4,
+	};
+}
+
+const routes = CHARTER_ROUTES.map((route) => {
+	const custom = route.id === CUSTOM_ROUTE_ID;
+	const base = custom ? { time: CHARTER_DEFAULT_TIME, hours: 4 } : preset(route.tourSlug);
+	// Coming from a tour (e.g. the Blue Lagoon afternoon), that tour's own time is suggested.
+	const presets = Object.fromEntries((route.aliases ?? []).map((slug) => [slug, preset(slug)]));
+	return {
+		id: route.id,
+		label: route.label,
+		sub: custom ? 'Tell us where in special requests' : 'The group tour route, just your group',
+		icon: route.icon,
+		matches: [route.id, route.tourSlug, ...(route.aliases ?? [])],
+		...base,
+		presets,
+	};
+});
+const durations = CHARTER_DURATIONS.map((hours) => ({ value: String(hours), label: durationLabel(hours) }));
+const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (_, i) => i + min);
+---
+
+<SiteLayout title={pageTitle('Plan your private charter')} description="Ask for a private boat from Split: choose a route, date and guests, and we'll reply with a quote." checkout robots="noindex, nofollow">
+	<BookingShell exitHref="/tours/" heading="Plan your private charter" headingVisible>
+		<p class="charter__lead">
+			Tell us what you have in mind. We'll confirm availability and reply with a quote and a secure payment link,
+			usually {REPLY_TIME}. No contract is made and nothing is charged until you accept our quote.
+		</p>
+
+		<div class="with-js">
+			<CharterRequest
+				client:load
+				routes={routes}
+				customRouteId={CUSTOM_ROUTE_ID}
+				durations={durations}
+				ageBands={DEFAULT_AGE_BANDS}
+				renderedOn={renderedOn}
+				seasonStart={SEASON_START}
+				seasonEnd={SEASON_END}
+				seasonLabel={seasonLabel()}
+				earliestTime={CHARTER_EARLIEST_TIME}
+				latestTime={CHARTER_LATEST_TIME}
+				replyTime={REPLY_TIME}
+				cancellationHref={CANCELLATION_PRIVATE_HREF}
+				turnstileSiteKey={turnstileSiteKey}
+			/>
+		</div>
+
+		<!-- Without JavaScript: native controls, the same endpoint, a plain form post. -->
+		<form class="no-js" method="post" action="/api/charter-request">
+			<p class="no-js__note">All fields except special requests are required. We sail {seasonLabel()}.</p>
+			<label>Route *
+				<select name="route">
+					{routes.map((r) => <option value={r.id} selected={r.id === CUSTOM_ROUTE_ID}>{r.label}</option>)}
+				</select>
+			</label>
+			<label>Date (from tomorrow on) *<input type="date" name="date" required /></label>
+			<label>Preferred departure *<input type="time" name="time" required value={CHARTER_DEFAULT_TIME} min={CHARTER_EARLIEST_TIME} max={CHARTER_LATEST_TIME} /></label>
+			<label>Duration *
+				<select name="duration">
+					{durations.map((d) => <option value={d.value} selected={d.value === '4'}>{d.label}</option>)}
+				</select>
+			</label>
+			<label>Adults ({DEFAULT_AGE_BANDS.adult}) *<select name="adults">{counts(MAX_GUESTS, 1).map((n) => <option selected={n === 2}>{n}</option>)}</select></label>
+			<label>Children ({DEFAULT_AGE_BANDS.child})<select name="children">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
+			<label>Infants (under {DEFAULT_AGE_BANDS.infantMaxAge + 1})<select name="infants">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
+			<p class="no-js__note">Up to {MAX_GUESTS} persons in total, infants included.</p>
+			<label>Special requests (optional)<textarea name="notes" maxlength="500"></textarea></label>
+			<label>First name *<input name="firstName" required autocomplete="given-name" /></label>
+			<label>Last name *<input name="lastName" required autocomplete="family-name" /></label>
+			<label>Email *<input name="email" type="email" required autocomplete="email" /></label>
+			<label>Phone *<input name="phone" type="tel" required autocomplete="tel" /></label>
+			<div class="no-js__trap" aria-hidden="true"><label>Company<input name={HONEYPOT_FIELD} tabindex="-1" autocomplete="off" /></label></div>
+			<p class="no-js__note">Nothing is charged now. Private charters have <a href={CANCELLATION_PRIVATE_HREF}>their own cancellation terms</a>.</p>
+			<button type="submit">Send request</button>
+		</form>
+	</BookingShell>
+</SiteLayout>
+
+{turnstileSiteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}
+
+<style>
+	@layer pages {
+		.charter__lead {
+			margin: 0 0 var(--space-5);
+			font-size: var(--font-size-body-md);
+			line-height: var(--line-height-body-md);
+			color: var(--color-text-secondary);
+		}
+
+		/* One or the other: the island with JavaScript, the plain form without. */
+		.no-js {
+			display: none;
+		}
+
+		@media (scripting: none) {
+			.with-js {
+				display: none;
+			}
+
+			.no-js {
+				display: grid;
+				gap: var(--space-3);
+			}
+		}
+
+		.no-js label {
+			display: grid;
+			gap: 4px;
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.no-js input,
+		.no-js select,
+		.no-js textarea {
+			min-height: 40px;
+			padding: var(--space-2) 10px;
+			border: 1px solid var(--color-border-input);
+			border-radius: var(--radius-md);
+			font: inherit;
+		}
+
+		.no-js button {
+			min-height: 46px;
+			border: 0;
+			border-radius: var(--radius-btn);
+			background: var(--color-background-brand);
+			color: var(--color-text-on-image);
+			font: inherit;
+			font-weight: var(--font-weight-semibold);
+		}
+
+		.no-js__note {
+			margin: 0;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.no-js__note a {
+			color: inherit;
+		}
+
+		.no-js__trap {
+			position: absolute;
+			left: -10000px;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+		}
+	}
+</style>

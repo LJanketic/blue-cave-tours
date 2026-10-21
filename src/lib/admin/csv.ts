@@ -31,6 +31,7 @@ const COLUMNS: [header: string, value: (b: Booking) => string | number][] = [
 	['Phone', (b) => b.phone],
 	['Special requests', (b) => b.customerNotes],
 	['Booked at', (b) => b.createdAt],
+	['Type', (b) => (b.kind === 'private' ? 'Private charter' : 'Group')],
 ];
 
 export function bookingsCsv(rows: Booking[]): string {

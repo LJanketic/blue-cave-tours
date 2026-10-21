@@ -7,7 +7,19 @@
 import { computed, ref } from 'vue';
 import type { AgeBands } from '../../../types/tour';
 
-const props = defineProps<{ ageBands: AgeBands; adultPrice: number | null; childPrice: number | null; max: number }>();
+const props = withDefaults(
+	defineProps<{
+		ageBands: AgeBands;
+		adultPrice: number | null;
+		childPrice: number | null;
+		max: number;
+		/** What the cap is per: a group departure, or a private boat. */
+		capUnit?: string;
+		/** Infants ride free on a group tour; a private boat is priced by quote, so it doesn't say "free". */
+		infantsFree?: boolean;
+	}>(),
+	{ capUnit: 'per departure', infantsFree: true },
+);
 const adults = defineModel<number>('adults', { required: true });
 const children = defineModel<number>('children', { required: true });
 const infants = defineModel<number>('infants', { required: true });
@@ -19,7 +31,7 @@ type Kind = 'adults' | 'children' | 'infants';
 const ROWS = computed(() => [
 	{ kind: 'adults' as Kind, label: 'Adults', sub: `${props.ageBands.adult}${props.adultPrice !== null ? ` · €${props.adultPrice}` : ''}`, min: 1 },
 	{ kind: 'children' as Kind, label: 'Children', sub: `${props.ageBands.child}${props.childPrice !== null ? ` · €${props.childPrice}` : ''}`, min: 0 },
-	{ kind: 'infants' as Kind, label: 'Infants', sub: `Under ${props.ageBands.infantMaxAge + 1} · free`, min: 0 },
+	{ kind: 'infants' as Kind, label: 'Infants', sub: `Under ${props.ageBands.infantMaxAge + 1}${props.infantsFree ? ' · free' : ''}`, min: 0 },
 ]);
 
 const model = { adults, children, infants };
@@ -29,7 +41,7 @@ function step(kind: Kind, delta: number, min: number) {
 	const value = model[kind].value + delta;
 	if (value < min) return;
 	if (delta > 0 && total.value >= props.max) {
-		status.value = `Up to ${props.max} persons per departure, infants included.`;
+		status.value = `Up to ${props.max} persons ${props.capUnit}, infants included.`;
 		return;
 	}
 	model[kind].value = value;
@@ -68,7 +80,7 @@ function step(kind: Kind, delta: number, min: number) {
 			</div>
 		</div>
 		<p class="sr-only" role="status">{{ status }}</p>
-		<p v-if="total >= max" class="guests__cap">That's the maximum of {{ max }} persons per departure, infants included.</p>
+		<p v-if="total >= max" class="guests__cap">That's the maximum of {{ max }} persons {{ capUnit }}, infants included.</p>
 	</div>
 </template>
 

@@ -1,5 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
+import { scopedName } from './bookings/store';
 import { secretKey } from './secrets';
 
 /**
@@ -56,7 +57,8 @@ function day(now: number): string {
 
 function openStore() {
 	try {
-		return getStore({ name: 'rate-limits', consistency: 'strong' });
+		// Per deploy context, like the bookings: previews and tests never count against production's limits.
+		return getStore({ name: scopedName('rate-limits'), consistency: 'strong' });
 	} catch {
 		return null;
 	}

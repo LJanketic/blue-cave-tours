@@ -68,7 +68,8 @@ export function asciiEmail(email: string): string {
 		return email;
 	}
 }
-const PHONE_RE = /^[\d\s+().-]{7,30}$/;
+/** Digits, spaces and + ( ) - . ; shared by the contact and charter forms. */
+export const PHONE_RE = /^[\d\s+().-]{7,30}$/;
 
 export function trimField(value: unknown, max: number): string {
 	return typeof value === 'string' ? value.trim().slice(0, max) : '';
