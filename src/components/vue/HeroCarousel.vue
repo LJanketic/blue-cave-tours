@@ -5,7 +5,8 @@
  * H1, H4: rendered once, outside the slide loop). Rotates every 6s, but never under reduced motion, never while the
  * pointer is on the text or controls, never while keyboard focus is inside,
  * and never after Pause. The pause button is the first control in the DOM
- * (WAI-ARIA carousel pattern), though it shows next to the dots below the CTAs.
+ * (WAI-ARIA carousel pattern), but shows only on keyboard focus; a tap on the
+ * active dot pauses too.
  *
  * Without JavaScript, slide 1 shows on its own. Slides 2 and 3 get their
  * image source only after hydration, so they don't compete with the LCP.
@@ -194,8 +195,9 @@ onBeforeUnmount(() => {
 
 			<!--
 				Pause comes first in the DOM, so it's the first thing a keyboard reaches (§11.3, WAI-ARIA carousel
-				pattern); the grid shows it next to the dots, below the CTAs (handoff H5). The label says what it
-				does and changes with the state, so no aria-pressed (a pressed "Play" would contradict itself).
+				pattern); the grid puts it next to the dots, below the CTAs (handoff H5), but it only shows while it
+				has keyboard focus: the design has no visible Pause. The label says what it does and changes with
+				the state, so no aria-pressed (a pressed "Play" would contradict itself).
 			-->
 			<button
 				v-if="count > 1 && hydrated && !reducedMotion"
@@ -237,7 +239,7 @@ onBeforeUnmount(() => {
 				<Button variant="on-image-ghost" size="lg" :href="ctas.secondary.href">{{ ctas.secondary.label }}</Button>
 			</div>
 
-			<!-- After the CTAs, as they look. Each dot only shows its slide: pausing is Pause's job. -->
+			<!-- After the CTAs, as they look. A tap on the active dot pauses or plays: the way to pause without a keyboard. -->
 			<div
 				v-if="count > 1"
 				class="home-hero__dots"
@@ -255,7 +257,7 @@ onBeforeUnmount(() => {
 					:class="{ 'is-active': i === index }"
 					:aria-label="`Show slide ${i + 1} of ${count}`"
 					:aria-current="i === index ? 'true' : undefined"
-					@click="i !== index && show(i)"
+					@click="i === index ? count > 1 && !reducedMotion && togglePause() : show(i)"
 				></button>
 			</div>
 		</div>
@@ -543,21 +545,18 @@ onBeforeUnmount(() => {
 	}
 
 	/*
-	 * With a mouse on a wide screen the dots show alone, as on the board, and
-	 * Pause appears like the arrows: on hover and on keyboard focus. Touch
-	 * screens and phones always show it, as they have no hover.
+	 * The dots show alone, as on the board, on every screen. Pause stays first
+	 * in the DOM for keyboard users (WCAG 2.2.2) but only shows while it has
+	 * keyboard focus; everyone else pauses with a tap on the active dot.
 	 */
-	@media (min-width: 769px) and (hover: hover) {
-		.home-hero__pause {
-			opacity: 0;
-			pointer-events: none;
-		}
+	.home-hero__pause {
+		opacity: 0;
+		pointer-events: none;
+	}
 
-		.home-hero:hover .home-hero__pause,
-		.home-hero:focus-within .home-hero__pause {
-			opacity: 1;
-			pointer-events: auto;
-		}
+	.home-hero__pause:focus-visible {
+		opacity: 1;
+		pointer-events: auto;
 	}
 
 	/* 20px from the edges; shown on hover and whenever a control has keyboard focus. */
