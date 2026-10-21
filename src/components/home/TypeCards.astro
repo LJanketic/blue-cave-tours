@@ -86,13 +86,23 @@ const { cards, withCtas = true } = Astro.props;
 			padding-bottom: 26px;
 		}
 
-		.type-cards__card:hover {
-			border-color: var(--color-border-primary);
-			box-shadow: var(--shadow-card-hover-lg);
+		/* Only cards with a CTA react to hover: plain ones (Tours page) do nothing on click.
+		   Mouse and trackpad only, so a tap doesn't leave the effect stuck (as TourCard). */
+		@media (hover: hover) {
+			.type-cards:not(.type-cards--plain) .type-cards__card:hover {
+				border-color: var(--color-border-primary);
+				box-shadow: var(--shadow-card-hover-lg);
+			}
+
+			.type-cards__card:hover :global(.type-cards__cta) {
+				border-color: var(--color-border-highlight);
+				background: var(--color-background-highlight);
+				color: var(--color-text-on-image);
+			}
 		}
 
 		.type-cards__card--private {
-			background: linear-gradient(180deg, var(--color-premium-bg) 0%, var(--color-background-primary) 55%);
+			background: var(--color-premium-card-bg);
 		}
 
 		.type-cards__badge {
@@ -181,12 +191,6 @@ const { cards, withCtas = true } = Astro.props;
 
 		.type-cards__card :global(.type-cards__cta) {
 			margin-top: auto;
-		}
-
-		.type-cards__card:hover :global(.type-cards__cta) {
-			border-color: var(--color-border-highlight);
-			background: var(--color-background-highlight);
-			color: var(--color-text-on-image);
 		}
 
 		@media (max-width: 768px) {

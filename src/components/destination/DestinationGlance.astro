@@ -1,6 +1,7 @@
 ---
 import StickyAside from '../ui/StickyAside.astro';
 import Button from '../ui/Button.astro';
+import CrownIcon from '../ui/CrownIcon.astro';
 import { charterUrl } from '../../config/routes';
 
 type Props = {
@@ -41,7 +42,10 @@ const shortName = name.split('(')[0].trim();
 		}
 	</dl>
 	<Button href={`/tours/?destination=${slug}`} block icon="sailboat" class="glance__cta">Browse {shortName} tours</Button>
-	<Button href={charterUrl()} variant="secondary" block icon="crown" class="glance__cta glance__cta--secondary">Plan a private charter</Button>
+	<Button href={charterUrl()} variant="secondary" block class="glance__cta glance__cta--secondary">
+		<CrownIcon slot="icon" />
+		Plan a private experience
+	</Button>
 </StickyAside>
 
 <style>

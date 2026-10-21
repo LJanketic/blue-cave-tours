@@ -43,3 +43,19 @@ export const REVIEWS: ReviewsData = {
 	count: null,
 	items: [],
 };
+
+/**
+ * Whether ratings may be shown anywhere: a named source with its link, the
+ * average, count and "as of" date, and at least two reviews (the Omnibus
+ * disclosure in GuestReviews needs all of them). One rule for every page.
+ */
+export function reviewsReady(reviews: ReviewsData = REVIEWS): boolean {
+	return (
+		reviews.source !== null &&
+		reviews.sourceUrl !== null &&
+		reviews.average !== null &&
+		reviews.count !== null &&
+		reviews.asOf !== null &&
+		reviews.items.length >= 2
+	);
+}

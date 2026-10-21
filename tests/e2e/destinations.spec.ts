@@ -19,15 +19,42 @@ test('category chips filter the cards and the label counts what is shown', async
 test('every destination page: the tour count matches the cards, the map links to the place', async ({ page }) => {
 	await page.goto('/destinations/');
 	const links = await page.locator('a.dest-card-ui__link').evaluateAll((as) => as.map((a) => a.getAttribute('href') ?? ''));
-	expect(links).toHaveLength(10);
+	expect(links).toHaveLength(9); // 20 Oct handoff: Split is no longer a destination
 	for (const href of links) {
 		await page.goto(href);
 		const heading = await page.locator('#tours-heading').innerText();
 		const n = Number(heading.match(/\((\d+)\)$/)?.[1]);
 		await expect(page.locator('#tours .tour-card-ui'), href).toHaveCount(n);
-		await expect(page.locator('.dest__map'), href).toHaveAttribute('href', /google\.com\/maps\/search/);
-		await expect(page.locator('.dest__map'), href).not.toHaveAttribute('href', /43\.5072282/); // not the meeting point
+		const map = page.locator('a.map-link');
+		await expect(map, href).toHaveAttribute('href', /google\.com\/maps\/search/);
+		await expect(map, href).not.toHaveAttribute('href', /43\.5072282/); // not the meeting point
+		await expect(map, href).toHaveAttribute('target', '_blank');
+		await expect(map, href).toContainText('View on map');
 	}
+});
+
+test('"Caves & nature" shows the Blue Cave and Brač & Zlatni Rat', async ({ page }) => {
+	await page.goto('/destinations/');
+	await page.getByRole('group', { name: 'Filter destinations' }).getByRole('button', { name: 'Caves & nature' }).click();
+	await expect(page.locator('.dest-card-ui__name')).toHaveText(['Blue Cave (Biševo)', 'Brač & Zlatni Rat']);
+});
+
+test('the Split destination page is gone', async ({ page }) => {
+	await page.goto('/destinations/');
+	await expect(page.locator('a[href^="/destinations/split"]')).toHaveCount(0);
+	// Netlify answers with the 301 in public/_redirects; the dev server has no redirects, so a 404 there.
+	const response = await page.goto('/destinations/split/');
+	expect(response?.status() === 404 || new URL(page.url()).pathname === '/destinations/').toBe(true);
+});
+
+test('the grid has three columns on wide screens and two up to 1024px', async ({ page }) => {
+	const columns = async () =>
+		page.locator('.dest-results__grid > li').evaluateAll((lis) => new Set(lis.map((li) => Math.round(li.getBoundingClientRect().left))).size);
+	await page.setViewportSize({ width: 1280, height: 900 });
+	await page.goto('/destinations/');
+	expect(await columns()).toBe(3);
+	await page.setViewportSize({ width: 1024, height: 900 });
+	expect(await columns()).toBe(2);
 });
 
 test('the destination grid stays a single column on small phones and has no sideways scroll', async ({ page }) => {

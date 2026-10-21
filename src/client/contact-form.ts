@@ -34,6 +34,7 @@ export function initContactForm(): void {
 
 	const params = new URLSearchParams(window.location.search);
 	const tourFromUrl = params.get('tour');
+	const topicFromUrl = params.get('topic');
 	const topicSelect = contactForm.querySelector<HTMLSelectElement>('#topic');
 	const tourWrap = contactForm.querySelector('[data-contact-tour]')?.closest<HTMLElement>('.form-field-ui');
 	const refWrap = contactForm.querySelector('[data-contact-ref]')?.closest<HTMLElement>('.form-field-ui');
@@ -54,7 +55,16 @@ export function initContactForm(): void {
 		refWrap?.classList.toggle('is-shown', topic === 'change');
 	}
 
+	// Tour pages link here with ?topic=group or ?topic=charter, so the operator
+	// can tell a group question from a private request. Unknown values are ignored.
+	function applyTopicPreselect() {
+		if (topicSelect && topicFromUrl && [...topicSelect.options].some((o) => o.value === topicFromUrl)) {
+			topicSelect.value = topicFromUrl;
+		}
+	}
+
 	applyTourPreselect();
+	applyTopicPreselect();
 	syncOptionalFields();
 	topicSelect?.addEventListener('change', syncOptionalFields);
 
@@ -137,6 +147,7 @@ export function initContactForm(): void {
 			contactForm.reset();
 			startedAtEl.value = String(Date.now());
 			applyTourPreselect();
+			applyTopicPreselect();
 			syncOptionalFields();
 		} catch (err) {
 			statusEl.textContent = err instanceof Error ? err.message : 'Something went wrong';

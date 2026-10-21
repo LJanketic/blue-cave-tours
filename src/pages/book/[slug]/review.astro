@@ -18,7 +18,7 @@ import Button from '../../../components/ui/Button.astro';
 import { getTourBySlug, getTourCardPhoto } from '../../../lib/tours';
 import { thumbImage } from '../../../data/destination-photos';
 import { feeLabel } from '../../../lib/cards';
-import { contactHrefForTour, formatBookingDate, guestSummaryFromCounts, meetingPointShort, supportsInstantBook } from '../../../lib/booking';
+import { contactHrefForTour, departureLabel, formatBookingDate, guestSummaryFromCounts, meetingPointShort, supportsInstantBook } from '../../../lib/booking';
 import { computeBookingTotal, lineItemsFor, seasonPriceLabel, seasonalPriceSummary } from '../../../lib/price';
 import { seasonFor } from '../../../config/season';
 import { BOOKING_ERRORS, isBookingError } from '../../../lib/bookings/service';
@@ -28,7 +28,7 @@ const slug = Astro.params.slug;
 const tour = slug ? getTourBySlug(slug) : undefined;
 if (!tour) return Astro.redirect('/404');
 // Quote-only tours have no instant-book review: they're routed to the contact form.
-if (!supportsInstantBook(tour)) return Astro.redirect(contactHrefForTour(tour));
+if (!supportsInstantBook(tour)) return Astro.redirect(contactHrefForTour(tour, 'group'));
 
 // From the sealed cookie, never the URL (S-2). No cookie, an expired one, or one for
 // another tour: back to step 2. Old links with details in the query get the same.
@@ -79,7 +79,7 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 			</div>
 			<dl class="review__rows">
 				<div><dt><i class="ti ti-calendar" aria-hidden="true"></i> Date</dt><dd>{formatBookingDate(draft.date)}</dd></div>
-				<div><dt><i class="ti ti-clock" aria-hidden="true"></i> Departure</dt><dd>{draft.slot || 'Confirmed at booking'}</dd></div>
+				<div><dt><i class="ti ti-clock" aria-hidden="true"></i> Departure</dt><dd>{departureLabel(tour.departures, draft.slot)}</dd></div>
 				<div><dt><i class="ti ti-hourglass" aria-hidden="true"></i> Duration</dt><dd>{tour.duration}</dd></div>
 				<div><dt><i class="ti ti-map-pin" aria-hidden="true"></i> Meeting point</dt><dd>{meetingPointShort(tour.meetingPoint)}</dd></div>
 			</dl>

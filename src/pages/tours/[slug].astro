@@ -5,7 +5,7 @@ import TourDetailView from '../../components/tour/TourDetailView.astro';
 import { pageTitle } from '../../config/site';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { getAllTours, getTourBySlug, getTourCardPhoto } from '../../lib/tours';
-import { getPrimaryDestinationForTour } from '../../lib/destinations';
+import { tourBreadcrumbs } from '../../lib/tour-display';
 import { breadcrumbJsonLd, socialImageFor, tourJsonLd } from '../../lib/seo';
 
 export function getStaticPaths() {
@@ -19,20 +19,14 @@ const tour = slug ? getTourBySlug(slug) : undefined;
 if (!tour) throw new Error(`Unknown tour: ${slug}`);
 
 const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
-// Matches the visible breadcrumb in TourDetailView.astro, which also routes
-// its middle crumb through the tour's primary destination when it has one.
-const primaryDestination = getPrimaryDestinationForTour(tour);
+// Same trail as the visible breadcrumb in TourDetailView.astro, with Home first.
 const jsonLd =
 	siteUrl
 		? [
 				tourJsonLd(tour, siteUrl),
 				breadcrumbJsonLd([
 					{ name: 'Home', url: `${siteUrl}/` },
-					{ name: 'Tours', url: `${siteUrl}/tours/` },
-					...(primaryDestination
-						? [{ name: primaryDestination.name, url: `${siteUrl}/destinations/${primaryDestination.slug}/` }]
-						: []),
-					{ name: tour.title, url: `${siteUrl}/tours/${tour.slug}/` },
+					...tourBreadcrumbs(tour).map((crumb) => ({ name: crumb.label, url: `${siteUrl}${crumb.href}` })),
 				]),
 			]
 		: undefined;

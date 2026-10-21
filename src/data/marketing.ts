@@ -16,27 +16,32 @@ export function yearsOperating(today = new Date()): number {
 	return today.getFullYear() - FOUNDING_YEAR;
 }
 
+/** The page's only h1 (handoff H1): fixed above the rotating slides, so it never changes. */
+export const HERO_OVERLINE = 'Blue Cave & island hopping · Split, Croatia';
+
 export type HeroSlide = {
 	id: 'group' | 'charter' | 'blue-cave';
-	/** Display title, one line each (the slide title is a <p>; the page h1 is fixed, §6.1.1). */
+	/** Display title, one line each (the slide title is a <p>; the h1 is {@link HERO_OVERLINE}). */
 	titleLines: string[];
 	sub: string;
-	ctaLabel: string;
-	ctaHref: string;
 	/** object-position of the photo on wide screens; phones use 70% center (§6.1.2). */
 	position: string;
 };
 
-// C-22: the board's copy, adjusted: "real skippers" (not guides), no "for two
-// or twenty" (the cap is 14), the year computed, "Licensed and insured" only
-// once the licence is confirmed (C-7).
+// Handoff H2/H3: the designer's copy with this operator's facts. Capacity and
+// founding year come from config, never from the handoff's copy (D2, D3), and
+// "licensed" shows only once the licence is confirmed (D11, C-7).
 export const HERO_SLIDES: HeroSlide[] = [
+	{
+		id: 'blue-cave',
+		titleLines: ['Hello', 'Blue Cave', 'Croatia'],
+		sub: `Small-group and private boat tours from Split to the Blue Cave, Hvar and the Pakleni islands — running since ${FOUNDING_YEAR}.`,
+		position: 'right center',
+	},
 	{
 		id: 'group',
 		titleLines: ['Escape', 'in style', '& comfort'],
-		sub: 'Group departures along the Dalmatian coast. Small boats, real skippers, no tourist conveyor belts.',
-		ctaLabel: 'Browse group tours',
-		ctaHref: '/tours/?type=group',
+		sub: `Modern, comfortable speedboats with a ${LICENCE_CONFIRMED ? 'licensed ' : ''}skipper — fast, smooth rides to the islands, max ${MAX_GUESTS} persons on board.`,
 		// Not the board's calc(70% + 180px): when the photo is only as wide as the
 		// screen, that offset uncovers a strip on the left (seen at 1920px).
 		position: 'right center',
@@ -44,20 +49,16 @@ export const HERO_SLIDES: HeroSlide[] = [
 	{
 		id: 'charter',
 		titleLines: ['All', 'aboard,', 'mateys!'],
-		sub: 'Private charters for your group. Set the route, set the pace, skip the crowds.',
-		ctaLabel: 'Plan a private charter',
-		ctaHref: charterUrl(),
+		sub: `Private boat tours from Split for up to ${MAX_GUESTS} persons. Your route, your pace — the Blue Cave, Hvar or a quiet bay.`,
 		position: '70% center',
 	},
-	{
-		id: 'blue-cave',
-		titleLines: ['Hello', 'Blue Cave', 'Croatia'],
-		sub: `Speedboat tours from Split since ${FOUNDING_YEAR}.${LICENCE_CONFIRMED ? ' Licensed and insured.' : ''}`,
-		ctaLabel: 'See the Blue Cave tour',
-		ctaHref: '/tours/blue-cave-hvar-5-islands/',
-		position: 'right center',
-	},
 ];
+
+/** The same two actions on every slide (handoff H4), so the hero renders them once. */
+export const HERO_CTAS = {
+	primary: { label: 'Browse group tours', href: '/tours/?type=group' },
+	secondary: { label: 'Plan a private experience', href: charterUrl() },
+};
 
 export type TrustItem = {
 	icon: string;
@@ -119,7 +120,7 @@ export const TYPE_CARDS: TypeCard[] = [
 		description: `Join a small shared departure, max ${MAX_GUESTS} persons. Great for solo travellers, couples, and anyone who likes meeting people on the water.`,
 		features: [
 			{ text: 'From {strong} per person', strong: LOWEST_GROUP_PRICES },
-			{ text: 'Fixed departures, every day' },
+			{ text: 'Fixed daily departures on most routes' },
 			...(LICENCE_CONFIRMED ? [{ text: 'Licensed skipper on every route' }] : []),
 		],
 		ctaLabel: 'Browse group tours',
@@ -144,7 +145,7 @@ export const DESTINATIONS_INTRO = 'Islands, sea caves and old towns along the Da
 export const CTA_BAND = {
 	heading: 'Ready to get on the water?',
 	// No "most sell out 3–5 days ahead": an unbacked scarcity claim (UCPD).
-	text: `Tours run daily from Split, ${seasonLabel()}. Book early in July and August.`,
+	text: `Most tours run daily from Split, ${seasonLabel()}. Book early in July and August.`,
 	primary: { label: 'Browse all tours', href: '/tours/' },
 	secondary: { label: 'Plan a private charter', href: charterUrl() },
 };

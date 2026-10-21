@@ -9,7 +9,7 @@ import TypeCards from '../../components/home/TypeCards.astro';
 import HowItWorks from '../../components/home/HowItWorks.astro';
 import TourFilters from '../../components/vue/TourFilters.vue';
 import ToursCatalog from '../../components/vue/ToursCatalog.vue';
-import { getAllDestinations, getDestinationsForTour } from '../../lib/destinations';
+import { getDestinationsForTour } from '../../lib/destinations';
 import { getAllTours, getTourCardPhoto } from '../../lib/tours';
 import { toTourCardDTO } from '../../lib/cards';
 import { GALLERY_CARD_SIZE, toCardPhoto } from '../../data/tour-photos';
@@ -26,7 +26,6 @@ const cards = await Promise.all(
 		),
 	),
 );
-const destinationNames = Object.fromEntries(getAllDestinations().map((d) => [d.slug, d.name]));
 const hasSunset = tours.some((t) => t.tags.includes('sunset'));
 
 // The design's hero photo isn't cleared for use (C-17): the site's own aerial
@@ -50,7 +49,7 @@ if (!heroPhoto?.src) throw new Error('Tours hero photo missing');
 			title="Our tours"
 			lead="Group departures and private charters, from half-day lagoon trips to full-day island hops."
 		>
-			<TourFilters client:idle destinationNames={destinationNames} hasSunset={hasSunset} />
+			<TourFilters client:idle hasSunset={hasSunset} />
 		</PhotoHero>
 
 		<div class="tours-page__wrap">

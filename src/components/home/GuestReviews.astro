@@ -1,19 +1,13 @@
 ---
 import SectionHeader from '../ui/SectionHeader.astro';
-import type { ReviewsData } from '../../data/reviews';
+import { reviewsReady, type ReviewsData } from '../../data/reviews';
 
 type Props = { reviews: ReviewsData; tourNames: Record<string, string> };
 
 const { reviews, tourNames } = Astro.props;
 // D-5: nothing renders without a named source, its average and count, and at
 // least two reviews. The Omnibus disclosure below is part of the section.
-const show =
-	reviews.source !== null &&
-	reviews.sourceUrl !== null &&
-	reviews.average !== null &&
-	reviews.count !== null &&
-	reviews.asOf !== null &&
-	reviews.items.length >= 2;
+const show = reviewsReady(reviews);
 
 const monthYear = (iso: string) =>
 	new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -84,13 +78,14 @@ const stars = (rating: number) => '★'.repeat(Math.round(rating));
 			gap: var(--space-3);
 		}
 
+		/* Handoff H11: dark brand blue, light-blue score, amber stars. */
 		.reviews__summary {
 			display: flex;
 			flex-direction: column;
 			padding: var(--space-5);
 			border-radius: var(--radius-lg);
-			background: var(--color-background-info);
-			color: var(--color-text-brand);
+			background: var(--color-brand-dark);
+			color: var(--color-text-on-brand);
 		}
 
 		.reviews p {
@@ -101,11 +96,16 @@ const stars = (rating: number) => '★'.repeat(Math.round(rating));
 			font-size: var(--font-size-score);
 			font-weight: var(--font-weight-semibold);
 			line-height: 1;
+			color: var(--color-text-on-brand-score);
 		}
 
 		.reviews__stars {
 			color: var(--color-star);
 			letter-spacing: 2px;
+		}
+
+		.reviews__summary .reviews__stars {
+			color: var(--color-star-on-dark);
 		}
 
 		.reviews .reviews__count {
@@ -117,10 +117,15 @@ const stars = (rating: number) => '★'.repeat(Math.round(rating));
 			margin-top: auto;
 			padding-top: var(--space-4);
 			font-size: var(--font-size-sm);
+			color: var(--color-text-on-brand-soft);
 		}
 
 		.reviews__disclosure a {
 			color: inherit;
+		}
+
+		.reviews__disclosure a:focus-visible {
+			outline-color: var(--color-text-on-brand);
 		}
 
 		.reviews__card {

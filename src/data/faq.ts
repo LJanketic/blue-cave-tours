@@ -54,7 +54,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'booking',
 		question: 'Do you offer private tours?',
 		answer:
-			'Yes. Most of our tours can also be booked privately, and you can design a fully custom day on a private boat, with a flexible itinerary and a more personal experience.',
+			'Yes. Every tour can also be booked privately, and you can design a fully custom day on a private boat, with a flexible itinerary and a more personal experience.',
 		link: { href: '/tours/create-perfect-day-private/', label: 'Create your perfect day at sea' },
 	},
 	{

@@ -2,7 +2,8 @@ import { tours } from '../data/tour-catalog';
 import type { PhotoRef } from '../data/tour-photos';
 import type { TourDetail } from '../types/tour';
 
-const FEATURED_HOME_COUNT = 5;
+/** Perfect Day, the private "Build your own" day (D4c): a custom charter, so not in the homepage slider. */
+const BUILD_YOUR_OWN_SLUG = 'create-perfect-day-private';
 
 export function getAllTours(): TourDetail[] {
 	return tours;
@@ -17,23 +18,13 @@ export function getTourCardPhoto(tour: TourDetail): PhotoRef {
 	return tour.gallery.find((photo) => photo.src) ?? tour.image;
 }
 
-/** Homepage: up to five tours — starred first, then remaining catalog order. */
-export function getFeaturedTours(): TourDetail[] {
-	const starred = tours.filter((t) => t.featured);
-	const seen = new Set<string>();
-	const out: TourDetail[] = [];
-
-	for (const t of starred) {
-		if (out.length >= FEATURED_HOME_COUNT) break;
-		out.push(t);
-		seen.add(t.slug);
-	}
-	for (const t of tours) {
-		if (out.length >= FEATURED_HOME_COUNT) break;
-		if (!seen.has(t.slug)) {
-			out.push(t);
-			seen.add(t.slug);
-		}
-	}
-	return out.slice(0, FEATURED_HOME_COUNT);
+/**
+ * Homepage slider (handoff H10): every tour but the "Build your own" day, in
+ * the Tours page's "recommended" order: featured first, then catalog order
+ * (as `sortTours` in tour-filters.ts; Array.sort is stable).
+ */
+export function getSliderTours(): TourDetail[] {
+	return tours
+		.filter((t) => t.slug !== BUILD_YOUR_OWN_SLUG)
+		.sort((a, b) => Number(b.featured === true) - Number(a.featured === true));
 }

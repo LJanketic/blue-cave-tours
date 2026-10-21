@@ -20,9 +20,9 @@ withDefaults(defineProps<{ destination: DestinationCardDTO; eager?: boolean; hea
 			<div class="dest-card-ui__img">
 				<img
 					v-if="destination.photo"
-				:src="cardPhotoSrc(destination.photo)"
+					:src="cardPhotoSrc(destination.photo)"
 					:srcset="destination.photo.srcset"
-					sizes="(max-width: 640px) 92vw, 460px"
+					sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 300px"
 					:alt="destination.photo.alt"
 					:loading="eager ? 'eager' : 'lazy'"
 					decoding="async"
@@ -56,7 +56,7 @@ withDefaults(defineProps<{ destination: DestinationCardDTO; eager?: boolean; hea
 
 <style scoped>
 @layer components {
-	/* board 04: a tour card with a 220px image and a footer row */
+	/* board 04: a tour card with an image and a footer row */
 	.dest-card-ui {
 		/* Contains the absolutely positioned .sr-only text, so it can't escape a scrolling row. */
 		position: relative;
@@ -94,7 +94,7 @@ withDefaults(defineProps<{ destination: DestinationCardDTO; eager?: boolean; hea
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 220px; /* board 04 */
+		height: 180px; /* 20 Oct handoff, all widths */
 		overflow: hidden;
 		background: var(--color-background-secondary);
 	}
@@ -201,12 +201,6 @@ withDefaults(defineProps<{ destination: DestinationCardDTO; eager?: boolean; hea
 
 	.dest-card-ui:hover .pill-link .ti {
 		transform: translateX(2px);
-	}
-
-	@media (max-width: 640px) {
-		.dest-card-ui__img {
-			height: 200px;
-		}
 	}
 }
 </style>

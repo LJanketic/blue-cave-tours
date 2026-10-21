@@ -7,7 +7,7 @@ type Props = Omit<HTMLAttributes<'a'> & HTMLAttributes<'button'>, 'class'> & {
 	size?: 'sm' | 'base' | 'md' | 'lg';
 	/** Renders an <a> when set, a <button> otherwise. */
 	href?: string;
-	/** Tabler icon before the label. */
+	/** Tabler icon before the label. For an inline-SVG icon, use the `icon` slot instead (e.g. `<CrownIcon slot="icon" />`). */
 	icon?: string;
 	/** Tabler icon after the label; it nudges right on hover (e.g. 'arrow-right'). */
 	iconEnd?: string;
@@ -33,12 +33,14 @@ const classes = ['button', `button--${variant}`, size !== 'base' && `button--${s
 	href ? (
 		<a href={href} class:list={classes} {...rest}>
 			{icon && <i class={`ti ti-${icon}`} aria-hidden="true" />}
+			<slot name="icon" />
 			<slot />
 			{iconEnd && <i class={`ti ti-${iconEnd} button__end-icon`} aria-hidden="true" />}
 		</a>
 	) : (
 		<button type={type} class:list={classes} {...rest}>
 			{icon && <i class={`ti ti-${icon}`} aria-hidden="true" />}
+			<slot name="icon" />
 			<slot />
 			{iconEnd && <i class={`ti ti-${iconEnd} button__end-icon`} aria-hidden="true" />}
 		</button>

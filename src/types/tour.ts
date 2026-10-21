@@ -95,4 +95,10 @@ export type TourDetail = {
 	 * tours with no single namesake destination (e.g. a custom/flexible route).
 	 */
 	primaryDestinationSlug?: string;
+	/** Overrides for the search-worded headings tourHeadings() builds (src/lib/tour-display.ts). */
+	seoHeadings?: { about?: string; itinerary?: string };
+	/** The intro shows about 4 lines with "Read more" (handoff D5). */
+	introCollapsible?: boolean;
+	/** Further intro paragraphs after `overviewHighlights`, inside the same Read more. */
+	introMore?: string[];
 };

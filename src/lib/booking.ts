@@ -1,4 +1,5 @@
-import type { TourDetail } from '../types/tour';
+import type { Departure, TourDetail } from '../types/tour';
+import type { ContactTopic } from './contact-validation';
 
 /** Guests per departure, enforced both client-side (GroupBookingFlow) and here. */
 export const MAX_GUESTS = 14;
@@ -23,8 +24,19 @@ export function tourPriceUnit(tour: Pick<TourDetail, 'prices' | 'priceUnit'>): s
 	return tour.priceUnit === 'person' ? '/ person' : '/ boat';
 }
 
-export function contactHrefForTour(tour: Pick<TourDetail, 'slug'>): string {
-	return `/contact/?tour=${encodeURIComponent(tour.slug)}`;
+/**
+ * The chosen departure as guests should read it: "07:20 (check-in 07:05)".
+ * The booking summary and the review page are where the time shows (handoff B1).
+ */
+export function departureLabel(departures: readonly Departure[], slot: string): string {
+	if (!slot) return 'Confirmed at booking';
+	const checkIn = departures.find((d) => d.time === slot)?.checkIn;
+	return checkIn ? `${slot} (check-in ${checkIn})` : slot;
+}
+
+/** The contact form with the tour preselected; `topic` preselects the subject too (src/client/contact-form.ts). */
+export function contactHrefForTour(tour: Pick<TourDetail, 'slug'>, topic?: ContactTopic): string {
+	return `/contact/?tour=${encodeURIComponent(tour.slug)}${topic ? `&topic=${topic}` : ''}`;
 }
 
 export function groupBookHref(tour: Pick<TourDetail, 'slug'>): string {

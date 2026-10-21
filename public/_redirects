@@ -10,6 +10,10 @@
 /tours/three-islands-trogir     /tours/    301
 /tours/brac-golden-horn         /tours/    301
 
+# Retired destination slugs (REMOVED_DESTINATION_SLUGS in src/data/destinations.ts)
+# → overview. src/data/destinations-redirects.test.ts keeps them in sync.
+/destinations/split             /destinations/    301
+
 # No private-charter booking flow: private requests go through the contact form.
 # Netlify matches with or without the trailing slash.
-/book/:slug/private             /contact/?tour=:slug    301
+/book/:slug/private             /contact/?tour=:slug&topic=charter    301

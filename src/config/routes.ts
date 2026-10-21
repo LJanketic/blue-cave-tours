@@ -6,5 +6,5 @@
 const DEFAULT_CHARTER_TOUR = 'create-perfect-day-private';
 
 export function charterUrl(slug?: string): string {
-	return `/contact/?tour=${encodeURIComponent(slug ?? DEFAULT_CHARTER_TOUR)}`;
+	return `/contact/?tour=${encodeURIComponent(slug ?? DEFAULT_CHARTER_TOUR)}&topic=charter`;
 }

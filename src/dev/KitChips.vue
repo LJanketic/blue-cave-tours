@@ -6,7 +6,7 @@ import ChipGroup from '../components/ui/ChipGroup.vue';
 
 const CHIPS = [
 	{ id: 'group', label: 'Group', icon: 'users' },
-	{ id: 'private', label: 'Private only', icon: 'crown' },
+	{ id: 'private', label: 'Private', icon: 'crown' },
 	{ id: 'half-day', label: 'Half day', icon: 'clock' },
 ];
 const active = ref<string[]>(['group']);

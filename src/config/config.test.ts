@@ -23,9 +23,9 @@ describe('cancellation copy', () => {
 });
 
 describe('charterUrl', () => {
-	it('goes to the contact form until the charter page exists (PR 8)', () => {
-		expect(charterUrl()).toBe('/contact/?tour=create-perfect-day-private');
-		expect(charterUrl('dubrovnik-one-way')).toBe('/contact/?tour=dubrovnik-one-way');
+	it('goes to the contact form, on the charter topic, until the charter page exists (PR 8)', () => {
+		expect(charterUrl()).toBe('/contact/?tour=create-perfect-day-private&topic=charter');
+		expect(charterUrl('dubrovnik-one-way')).toBe('/contact/?tour=dubrovnik-one-way&topic=charter');
 	});
 });
 

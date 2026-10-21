@@ -44,7 +44,7 @@ const { steps, wide = false } = Astro.props;
 			gap: var(--space-2);
 			padding: 14px;
 			border-radius: var(--radius-lg);
-			background: var(--color-background-secondary);
+			background: var(--color-background-info); /* handoff G6: light-blue cards */
 		}
 
 		.how-it-works__num {
@@ -53,17 +53,19 @@ const { steps, wide = false } = Astro.props;
 			justify-content: center;
 			width: 26px;
 			height: 26px;
-			border: 0.5px solid var(--color-border-secondary);
+			border: 0.5px solid var(--color-border-info);
 			border-radius: 50%;
 			background: var(--color-background-primary);
+			color: var(--color-text-brand);
 			font-size: var(--font-size-micro);
-			font-weight: var(--font-weight-medium);
+			font-weight: var(--font-weight-semibold);
 		}
 
 		.how-it-works__title {
 			margin: 0;
 			font-size: var(--font-size-base);
 			font-weight: var(--font-weight-medium);
+			color: var(--color-text-brand);
 		}
 
 		.how-it-works__desc {

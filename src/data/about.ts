@@ -1,18 +1,12 @@
-import { LICENCE_CONFIRMED } from '../config/site';
+import { FOUNDING_YEAR, LICENCE_CONFIRMED } from '../config/site';
 import { MAX_GUESTS } from '../lib/booking';
 import { yearsOperating } from './marketing';
+import { REVIEWS, reviewsReady } from './reviews';
 
 export type TimelineEvent = {
 	year: string;
 	title: string;
 	description: string;
-};
-
-export type CrewMember = {
-	initials: string;
-	name: string;
-	role: string;
-	bio: string;
 };
 
 export type ValueItem = {
@@ -29,18 +23,28 @@ export type TrustStat = {
 	confirmed: boolean;
 };
 
+// The same rule as the homepage reviews: no rating without its Omnibus disclosure.
+const hasRating = reviewsReady(REVIEWS);
+
 /**
- * About page content (C-5: crew and history as on the current site, not yet
- * confirmed by the owner). Guest quotes were removed: they need a source and
- * the Omnibus disclosures (D-5).
+ * About page content (C-5: history as on the current site, not yet confirmed
+ * by the owner). Guest quotes were removed: they need a source and the Omnibus
+ * disclosures (D-5). The crew section was removed in the 20 Oct handoff.
  */
 export const ABOUT = {
+	/** The hero's one-line lead. */
 	headline: 'Split locals, open-sea specialists',
+	/** Section H2s (20 Oct handoff); the years follow FOUNDING_YEAR. */
+	headings: {
+		intro: 'Small-group boat tours from Split, by design',
+		story: `Our story — ${yearsOperating()} years on the Adriatic`,
+		values: 'How we run our boat tours',
+	},
 	intro:
 		'Hello Blue Cave started with a simple idea: show guests the islands the way we explore them ourselves, with early departures, small groups, and routes that follow the weather rather than a rigid script. We’re based on Split’s Riva, run our own boats, and still take every charter seriously enough to turn back when the sea says no.',
 	foundingTimeline: [
 		{
-			year: '2016',
+			year: String(FOUNDING_YEAR),
 			title: 'First season from the Riva',
 			description:
 				'We launched with one speedboat and a Blue Cave–focused route, meeting guests at stand 14 and capping groups small enough that everyone could swim.',
@@ -64,26 +68,6 @@ export const ABOUT = {
 				'Today we run seven scheduled routes from Split, from half-day lagoon escapes to full-day island-hopping, still with local skippers on every departure.',
 		},
 	] satisfies TimelineEvent[],
-	crew: [
-		{
-			initials: 'MV',
-			name: 'Marko Vuković',
-			role: 'Founder & Lead Skipper',
-			bio: 'Split-born captain with fifteen years on the Adriatic. Knows every channel between Vis and Hvar, and when not to take them.',
-		},
-		{
-			initials: 'AK',
-			name: 'Ana Kovač',
-			role: 'Operations & Bookings',
-			bio: 'Runs the schedule, the stand, and the WhatsApp inbox. If your tour time changes because of weather, Ana tells you first.',
-		},
-		{
-			initials: 'LP',
-			name: 'Luka Perić',
-			role: 'Skipper & Guide',
-			bio: 'Former dive instructor turned speedboat skipper. Great at spotting calm bays and explaining why the Blue Cave glows the way it does.',
-		},
-	] satisfies CrewMember[],
 	values: [
 		{
 			icon: 'users',
@@ -110,13 +94,19 @@ export const ABOUT = {
 				'Experienced crew, maintained boats, life jackets for every size, and briefings before every departure. Non-negotiable.',
 		},
 	] satisfies ValueItem[],
+	// The stats band under the hero, in the handoff's order; only confirmed ones show.
 	trustStats: [
-		// Years from FOUNDING_YEAR (D-14, C-1).
-		{ icon: 'calendar', value: `${yearsOperating()} years`, label: 'operating from Split', confirmed: true },
-		{ icon: 'users', value: `${MAX_GUESTS} max`, label: 'persons per group tour', confirmed: true },
-		// Hidden until there's a rating source with its disclosures (D-5, C-2).
-		{ icon: 'star', value: '4.9', label: 'average guest rating', confirmed: false },
 		// Hidden until the licence is confirmed (C-7); see LICENCE_CONFIRMED.
-		{ icon: 'certificate', value: 'Licensed', label: 'Croatian Maritime Authority', confirmed: LICENCE_CONFIRMED },
+		{ icon: 'certificate', value: 'Licensed', label: 'maritime operator', confirmed: LICENCE_CONFIRMED },
+		// Years from FOUNDING_YEAR (D-14, C-1).
+		{ icon: 'calendar', value: `${yearsOperating()} years`, label: 'on the water', confirmed: true },
+		{ icon: 'users', value: `Max ${MAX_GUESTS} persons`, label: 'per group tour', confirmed: true },
+		// Only from REVIEWS, once it has a source with its disclosures (D-5, C-2).
+		{
+			icon: 'star',
+			value: hasRating ? String(REVIEWS.average) : '',
+			label: hasRating ? `from ${REVIEWS.count} reviews` : '',
+			confirmed: hasRating,
+		},
 	] satisfies TrustStat[],
 };

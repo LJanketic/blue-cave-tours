@@ -116,25 +116,32 @@ function stopLabel(item: ItineraryItem): string {
 			color: var(--color-text-secondary);
 		}
 
-		/* History (spec §7.4, board 13 .timeline). */
+		/* History (spec §7.4, board 13 .timeline). 20 Oct handoff: at most
+		   680px wide, left-aligned, and the line runs from dot to dot only. */
 		.timeline-ui--history {
-			position: relative;
+			--timeline-ring: 16px;
+			--timeline-ring-top: 1px; /* centres the ring on the 18px year line */
+			max-width: 680px;
+			margin-inline: 0;
 			padding-left: var(--space-6);
-		}
-
-		.timeline-ui--history::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			bottom: 0;
-			left: 7.75px; /* centred on the 16px rings (the board puts it at their left edge) */
-			width: 0.5px;
-			background: var(--color-border-secondary);
 		}
 
 		.timeline-ui__event {
 			position: relative;
 			padding-bottom: var(--space-5);
+		}
+
+		/* One segment per gap, from this ring's centre to the next one's (the
+		   next item starts where this one's padding ends, so its ring centre sits
+		   the same distance below). The rings paint over the ends. */
+		.timeline-ui__event:not(:last-child)::before {
+			content: '';
+			position: absolute;
+			top: calc(var(--timeline-ring-top) + var(--timeline-ring) / 2);
+			bottom: calc(-1 * (var(--timeline-ring-top) + var(--timeline-ring) / 2));
+			left: calc(-1 * var(--space-6) + var(--timeline-ring) / 2 - 0.25px);
+			width: 0.5px;
+			background: var(--color-border-secondary);
 		}
 
 		.timeline-ui__event:last-child {
@@ -143,13 +150,14 @@ function stopLabel(item: ItineraryItem): string {
 
 		.timeline-ui__ring {
 			position: absolute;
-			top: 3px;
+			z-index: 1;
+			top: var(--timeline-ring-top);
 			left: calc(-1 * var(--space-6));
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			width: 16px;
-			height: 16px;
+			width: var(--timeline-ring);
+			height: var(--timeline-ring);
 			border: 2px solid var(--color-border-secondary);
 			border-radius: 50%;
 			background: var(--color-background-primary);
@@ -170,6 +178,7 @@ function stopLabel(item: ItineraryItem): string {
 		.timeline-ui__year {
 			margin-bottom: 2px;
 			font-size: var(--font-size-xs);
+			line-height: 18px;
 			font-weight: var(--font-weight-medium);
 			text-transform: uppercase;
 			letter-spacing: 0.06em;
