@@ -22,31 +22,28 @@ test('the carousel can be paused from the keyboard, and Pause comes first', asyn
 	await expect(carousel.locator('.home-hero__dot[aria-current="true"]')).toHaveAttribute('aria-label', current ?? '');
 });
 
-test('on a touch phone, Pause shows beside the dots, after the CTAs', async ({ browser }) => {
+test('on a touch phone the dots show alone after the CTAs, and a tap on the active dot pauses', async ({ browser }) => {
 	const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 	const page = await context.newPage();
 	await page.goto('/');
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
 	const carousel = page.locator('[aria-roledescription="carousel"]');
-	const pause = carousel.getByRole('button', { name: 'Pause slideshow' });
-	await expect(pause).toBeVisible();
-	await expect(pause).toHaveCSS('opacity', '1');
-	const [button, dots, ctas] = await Promise.all([pause.boundingBox(), carousel.locator('.home-hero__dots').boundingBox(), carousel.locator('.home-hero__ctas').boundingBox()]);
-	if (!button || !dots || !ctas) throw new Error('hero controls not laid out');
-	expect(button.width).toBeGreaterThanOrEqual(24);
-	expect(button.height).toBeGreaterThanOrEqual(24);
-	expect(button.x).toBeGreaterThanOrEqual(dots.x + dots.width);
-	expect(Math.abs(button.y + button.height / 2 - (dots.y + dots.height / 2))).toBeLessThanOrEqual(1);
+	// The design has no visible Pause: it shows only on keyboard focus.
+	await expect(carousel.getByRole('button', { name: 'Pause slideshow' })).toHaveCSS('opacity', '0');
+	const [dots, ctas] = await Promise.all([carousel.locator('.home-hero__dots').boundingBox(), carousel.locator('.home-hero__ctas').boundingBox()]);
+	if (!dots || !ctas) throw new Error('hero controls not laid out');
 	expect(dots.y).toBeGreaterThan(ctas.y + ctas.height);
 
 	// DOM order matches the look for everything but Pause: CTAs, then the dots.
 	const order = await carousel.locator('.home-hero__content').locator('button, a').evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? el.textContent?.trim()));
 	expect(order).toEqual(['Pause slideshow', 'Browse group tours', 'Plan a private experience', 'Show slide 1 of 3', 'Show slide 2 of 3', 'Show slide 3 of 3']);
 
-	await pause.tap();
-	await expect(carousel.getByRole('button', { name: 'Play slideshow' })).toBeVisible();
-	// The active dot is only "Show slide 1 of 3": tapping it doesn't toggle the slideshow.
-	await carousel.getByRole('button', { name: 'Show slide 1 of 3' }).tap();
-	await expect(carousel.getByRole('button', { name: 'Play slideshow' })).toBeVisible();
+	const active = carousel.locator('.home-hero__dot[aria-current="true"]');
+	await active.tap();
+	await expect(carousel.locator('.home-hero__slides')).toHaveAttribute('aria-live', 'polite');
+	await expect(carousel.locator('.home-hero__pause')).toHaveAccessibleName('Play slideshow');
+	await active.tap();
+	await expect(carousel.locator('.home-hero__pause')).toHaveAccessibleName('Pause slideshow');
 	await context.close();
 });
 
