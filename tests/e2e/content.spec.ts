@@ -119,6 +119,18 @@ test('legal pages: the switcher marks the page, the figures match the config', a
 	await expect(page.locator('main')).toContainText('Resend');
 });
 
+test('legal pages: a clicked section is the one marked, the last one too', async ({ page }) => {
+	await page.goto('/legal/terms/');
+	const toc = page.getByRole('navigation', { name: 'On this page' });
+	for (const name of ["Itinerary & captain's authority", 'Pricing & modifications', 'Final provisions']) {
+		await toc.getByRole('link', { name }).click();
+		await expect(toc.locator('a[aria-current]')).toHaveText(name);
+	}
+	// Scrolling takes over again.
+	await page.mouse.wheel(0, -100000);
+	await expect(toc.locator('a[aria-current]')).toHaveText('General information');
+});
+
 test('404 offers a way on', async ({ page }) => {
 	const response = await page.goto('/no-such-page/');
 	expect(response?.status()).toBe(404);
