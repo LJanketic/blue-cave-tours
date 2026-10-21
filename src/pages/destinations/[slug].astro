@@ -15,6 +15,7 @@ import Breadcrumb from '../../components/ui/Breadcrumb.astro';
 import SectionHeader from '../../components/ui/SectionHeader.astro';
 import InfoTile from '../../components/ui/InfoTile.astro';
 import InfoTileGrid from '../../components/ui/InfoTileGrid.astro';
+import MapLink from '../../components/ui/MapLink.astro';
 import MobileActionBar from '../../components/ui/MobileActionBar.astro';
 import DestinationHighlights from '../../components/destination/DestinationHighlights.astro';
 import DestinationGlance from '../../components/destination/DestinationGlance.astro';
@@ -30,6 +31,7 @@ import { getTourCardPhoto } from '../../lib/tours';
 import { toTourCardDTO } from '../../lib/cards';
 import { breadcrumbJsonLd, destinationJsonLd, socialImageFor } from '../../lib/seo';
 import { GALLERY_CARD_SIZE, GALLERY_PHOTO_SIZE, toCardPhoto, toGalleryView } from '../../data/tour-photos';
+import { MAP_IMAGES } from '../../data/map-images';
 
 export function getStaticPaths() {
 	return getAllDestinations().map((destination) => ({ params: { slug: destination.slug }, props: { destination } }));
@@ -42,9 +44,6 @@ const TAG_ICONS: Record<string, string> = {
 	Culture: 'building-castle',
 	'Half-day': 'clock',
 	Snorkelling: 'mask',
-	Departure: 'anchor',
-	'Historic city': 'building',
-	'Riva harbour': 'map-pin',
 	'Must-see': 'star',
 	'Hidden bays': 'beach',
 };
@@ -57,11 +56,15 @@ const tourCards = await Promise.all(
 	),
 );
 
-// The gallery opens on the first real photo; places without photos get the placeholder.
+const shortName = destination.name.split('(')[0].trim();
+
+// The gallery opens on the first real photo. Places without one (Trogir,
+// Korčula, Dubrovnik, Brač) get the icon placeholder, labelled as what it is:
+// the registry's alt describes a photo that doesn't exist yet.
 const destinationPhoto = getDestinationPhoto(destination);
 const galleryRefs = getDestinationGallery(destination);
 const galleryPhotos = await Promise.all(
-	(galleryRefs.some((photo) => photo.src) ? galleryRefs : [destinationPhoto]).map((photo) =>
+	(galleryRefs.some((photo) => photo.src) ? galleryRefs : [{ ...destinationPhoto, alt: `No photo of ${shortName} yet` }]).map((photo) =>
 		toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE),
 	),
 );
@@ -70,11 +73,10 @@ const galleryTags: GalleryTag[] = [
 	...(destination.tipTag ? [{ icon: destination.tipTag.icon, label: destination.tipTag.label, tone: 'tip' as const }] : []),
 ];
 
-const shortName = destination.name.split('(')[0].trim();
 const distance = destination.geo.find((g) => /^distance/i.test(g.label));
 const travel = destination.geo.find((g) => /travel time/i.test(g.label));
 const mapLabel = distance ? `View on map: ${distance.value.replace(/^~/, 'about ')} from Split` : `View ${shortName} on the map`;
-const toursHeading = destination.isDepartureHub ? `Tours from ${shortName} (${tours.length})` : `Tours that visit ${shortName} (${tours.length})`;
+const toursHeading = `Tours that visit ${shortName} (${tours.length})`;
 
 const shareImage = await socialImageFor(destinationPhoto);
 const siteUrl = Astro.site ? String(Astro.site).replace(/\/$/, '') : '';
@@ -88,10 +90,7 @@ const jsonLd = siteUrl
 			]),
 		]
 	: undefined;
-// Split is where every tour leaves from, not a stop, so it gets its own title.
-const titleSegment = destination.isDepartureHub
-	? `${destination.name} Riva: boat tour departure point`
-	: `${destination.name} boat trips from Split`;
+const titleSegment = `${destination.name} boat trips from Split`;
 ---
 
 <SiteLayout
@@ -117,11 +116,7 @@ const titleSegment = destination.isDepartureHub
 
 				<section class="dest__section" aria-labelledby="location-heading">
 					<SectionHeader variant="plain" title="Location & getting there" id="location-heading" />
-					<a class="dest__map" href={destination.mapUrl} target="_blank" rel="noopener">
-						<i class="ti ti-map-2" aria-hidden="true"></i>
-						{mapLabel}
-						<span class="sr-only"> (opens in a new tab)</span>
-					</a>
+					<MapLink href={destination.mapUrl} caption={mapLabel} map={MAP_IMAGES[destination.slug]} height={100} />
 					<InfoTileGrid>
 						{destination.geo.map((fact) => <InfoTile label={fact.label}>{fact.value}</InfoTile>)}
 					</InfoTileGrid>
@@ -211,32 +206,6 @@ const titleSegment = destination.isDepartureHub
 
 		.dest__section:last-child {
 			margin-bottom: 0;
-		}
-
-		/* A real link to the map (board 10's map stub was a dead box). */
-		.dest__map {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: var(--space-2);
-			height: 100px;
-			margin-bottom: var(--space-3);
-			border: 1px solid var(--color-border-card);
-			border-radius: var(--radius-lg);
-			background: var(--color-background-secondary);
-			color: var(--color-text-primary);
-			font-size: var(--font-size-sm);
-			font-weight: var(--font-weight-medium);
-			text-decoration: none;
-		}
-
-		.dest__map:hover {
-			background: var(--color-background-hover);
-		}
-
-		.dest__map .ti {
-			font-size: 20px;
-			color: var(--color-accent);
 		}
 
 		.dest__tips {

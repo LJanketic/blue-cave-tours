@@ -8,6 +8,7 @@ import { computed, onMounted, ref } from 'vue';
 import type { TourCardDTO } from '../../lib/cards';
 import { catalogState } from '../../lib/tours-catalog-state';
 import { filterCatalog, parseCatalogQuery } from '../../lib/tour-filters';
+import { buildYourOwnLast, isBuildYourOwn, withBuildYourOwnBadge } from '../../lib/build-your-own';
 import type { Season } from '../../config/season';
 import TourCard from './TourCard.vue';
 import EmptyState from '../ui/EmptyState.vue';
@@ -24,7 +25,8 @@ const query = computed(() => (mounted.value ? catalogState : parseCatalogQuery('
 // the season the page shows (<html data-season>, BaseLayout). Read on mount:
 // the sort is "recommended" until then anyway.
 const season = ref<Season>('low');
-const shown = computed(() => filterCatalog(props.tours, query.value, season.value));
+// The custom private day closes the list as the "Build your own" card, whatever the sort.
+const shown = computed(() => buildYourOwnLast(filterCatalog(props.tours, query.value, season.value)).map(withBuildYourOwnBadge));
 const filtered = computed(
 	() => query.value.filters.length > 0 || query.value.destination !== '' || query.value.q.trim() !== '',
 );
@@ -52,7 +54,7 @@ onMounted(() => {
 			<button v-if="filtered" type="button" class="tours-results__clear" @click="clearFilters">Clear filters</button>
 		</div>
 		<ul v-if="shown.length" class="tours-results__grid" role="list">
-			<li v-for="tour in shown" :key="tour.slug">
+			<li v-for="tour in shown" :key="tour.slug" :class="{ 'tours-results__custom': isBuildYourOwn(tour) }">
 				<TourCard :tour="tour" />
 			</li>
 		</ul>
@@ -119,6 +121,11 @@ onMounted(() => {
 
 	.tours-results__grid > li > :deep(*) {
 		flex: 1;
+	}
+
+	/* The "Build your own" card: the private card's gold wash, as on the "Group or private?" card. */
+	.tours-results__custom :deep(.tour-card-ui__body) {
+		background: var(--color-premium-card-bg);
 	}
 }
 </style>

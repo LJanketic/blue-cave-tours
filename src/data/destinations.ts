@@ -61,12 +61,6 @@ export type Destination = {
 	imagePhotoId: keyof typeof PHOTO;
 	featured: boolean;
 	tourSlugs: string[];
-	/**
-	 * True for the departure point (Split) — every tour lists it in
-	 * `tourSlugs` since every tour leaves from there, but it isn't a
-	 * touristic stop. Excluded from "destinations this tour visits" UI.
-	 */
-	isDepartureHub?: boolean;
 };
 
 export const destinations: Destination[] = [
@@ -310,7 +304,6 @@ export const destinations: Destination[] = [
 			{ icon: 'building-fortress', text: 'Morning and afternoon departure options' },
 			{ icon: 'leaf', text: 'Short boat ride from Split, maximum time in the water' },
 			{ icon: 'glass-full', text: 'Perfect introduction to Adriatic boat touring' },
-			{ icon: 'beach', text: 'Featured on our Three islands sampler route' },
 			{ icon: 'moon-stars', text: 'Consistently clear water in summer months' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
@@ -323,85 +316,26 @@ export const destinations: Destination[] = [
 			{ label: 'How we get there', value: 'Coastal run from Split harbour' },
 		],
 		nearby: [
-			{ slug: 'split', name: 'Split (departure)', distance: '~45 min return', icon: 'anchor' },
 			{ slug: 'pakleni', name: 'Pakleni islands', distance: '~45 min', icon: 'beach' },
 			{ slug: 'hvar', name: 'Hvar island', distance: '~1 hour', icon: 'building-castle' },
 		],
 		insiderTips: [
 			'Half-day tours mean less packing. Still bring sunscreen, towel, and a water bottle.',
 			'Morning slots tend to have fewer boats in the lagoon; afternoons are quieter on weekdays.',
-			'If you love the lagoon, the Three islands tour adds more stops without committing to a full cave day.',
+			'Want a full day instead? The Blue Cave, Hvar & 5 islands and Golden Horn tours go further out to the islands.',
 		],
 		imagePhotoId: 'blueLagoon',
 		featured: true,
 		tourSlugs: ['blue-lagoon-morning', 'blue-lagoon-afternoon'],
 	},
 	{
-		slug: 'split',
-		name: 'Split',
-		region: 'Central Dalmatia · Departure hub',
-		tagline: 'Departure · Historic city · Riva harbour',
-		categories: ['coastal-town'],
-		mapUrl: mapSearchUrl('Split, Croatia'),
-		icon: 'anchor',
-		shortDescription:
-			'Your starting point on the Riva: Roman palace walls on one side, the Adriatic on the other, and our stand at number 14.',
-		intro:
-			'Every Hello Blue Cave tour begins in Split, where Diocletian’s Palace meets a working harbour and the Riva promenade buzzes with cafés and boats. We meet at stand 14, easy to find, right on the waterfront. Split is more than a transit point: it’s the gateway to the islands, and many guests add a day in the old town before or after their tour.',
-		tags: ['Departure', 'Historic city', 'Riva harbour'],
-		tipTag: { icon: 'map-pin', label: 'Meet at Riva, stand 14' },
-		attrs: [
-			{ icon: 'map-pin', label: 'Meeting point' },
-			{ icon: 'building-castle', label: 'UNESCO old town' },
-			{ icon: 'plane', label: 'Ferry & airport access' },
-		],
-		highlights: [
-			{ icon: 'droplet', text: 'Meet at Riva promenade, stand 14, waterfront location' },
-			{ icon: 'building-fortress', text: 'Diocletian’s Palace, UNESCO World Heritage old town' },
-			{ icon: 'leaf', text: 'Direct access to island routes south and east' },
-			{ icon: 'glass-full', text: 'Excellent pre- or post-tour dining on the Riva' },
-			{ icon: 'beach', text: 'Split airport and ferry connections for island-hopping trips' },
-			{ icon: 'moon-stars', text: 'Home base for all Hello Blue Cave departures' },
-		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
-		bestTimeNote:
-			'Tour season runs April–November. Shoulder months (May, June, September) combine warm weather with a more relaxed city pace.',
-		geo: [
-			{ label: 'Meeting point', value: 'Riva promenade, stand 14' },
-			{ label: 'Airport', value: 'Split (SPU) ~30 min by taxi' },
-			{ label: 'Harbour', value: 'Central Split waterfront' },
-			{ label: 'How we depart', value: 'Speedboat from Riva area' },
-		],
-		nearby: [
-			{ slug: 'blue-lagoon', name: 'Blue Lagoon', distance: '~45 min by boat', icon: 'swimming' },
-			{ slug: 'hvar', name: 'Hvar island', distance: '~1–1.5 hours', icon: 'building-castle' },
-			{ slug: 'blue-cave', name: 'Blue Cave', distance: '~2 hours', icon: 'droplet' },
-		],
-		insiderTips: [
-			'Be at the meeting point at least 15 minutes before departure. The Riva gets busy in peak season and parking can take time.',
-			'Stand 14 is on the sea side of the promenade; look for our Hello Blue Cave signage near the boat berths.',
-			'If you have luggage, drop it at your hotel first. Board space is limited to day bags and soft packs.',
-		],
-		imagePhotoId: 'boatSpeed',
-		featured: false,
-		tourSlugs: [
-			'blue-cave-hvar-5-islands',
-			'golden-horn-brac-hvar',
-			'hvar-red-rocks-pakleni',
-			'blue-lagoon-morning',
-			'blue-lagoon-afternoon',
-			'dubrovnik-one-way',
-			'create-perfect-day-private',
-		],
-		isDepartureHub: true,
-	},
-	{
 		slug: 'zlatni-rat',
 		bentoOrder: 5,
-		name: 'Zlatni Rat (Golden Horn)',
+		// The slug stays (links, redirects); the name follows the 20 Oct handoff.
+		name: 'Brač & Zlatni Rat',
 		region: 'Central Dalmatia · Brač island',
 		tagline: 'Beach · Swimming · Iconic shape',
-		categories: ['swimming'],
+		categories: ['cave-nature', 'swimming'],
 		mapUrl: mapSearchUrl('Zlatni Rat beach, Bol, Croatia'),
 		icon: 'beach',
 		shortDescription:
@@ -434,7 +368,6 @@ export const destinations: Destination[] = [
 		nearby: [
 			{ slug: 'pakleni', name: 'Pakleni islands', distance: '~30–60 min', icon: 'beach' },
 			{ slug: 'hvar', name: 'Hvar town', distance: '~1 hour', icon: 'building-castle' },
-			{ slug: 'split', name: 'Split (departure)', distance: '~1–1.5 hours', icon: 'anchor' },
 		],
 		insiderTips: [
 			'The beach tip changes shape with the current and wind. No two visits look the same.',
@@ -482,7 +415,6 @@ export const destinations: Destination[] = [
 		],
 		nearby: [
 			{ slug: 'blue-lagoon', name: 'Blue Lagoon', distance: '~60 min', icon: 'swimming' },
-			{ slug: 'split', name: 'Split (departure)', distance: '~45–60 min', icon: 'anchor' },
 		],
 		insiderTips: [
 			'The old town is small enough to see on foot in under an hour, so there’s time for a coffee too.',
@@ -534,7 +466,7 @@ export const destinations: Destination[] = [
 		insiderTips: [
 			'This is a lunch stop on a long one-way day. Plan a quick, easy meal near the old town gate.',
 			'The town walls make for a short, scenic walk if time is tight before reboarding.',
-			'Only visited on the Dubrovnik one-way private charter, not on any round-trip tour.',
+			'Only visited on the one-way Split–Dubrovnik tour, not on any round-trip tour.',
 		],
 		imagePhotoId: 'korcula',
 		featured: false,
@@ -549,37 +481,37 @@ export const destinations: Destination[] = [
 		mapUrl: mapSearchUrl('Dubrovnik, Croatia'),
 		icon: 'building-castle',
 		shortDescription:
-			'The endpoint of our one-way private transfer from Split, a full day’s scenic cruise via Hvar and Korčula, arriving in Dubrovnik by early evening.',
+			'The endpoint of our one-way tour from Split, a full day’s scenic cruise via Hvar and Korčula, arriving in Dubrovnik by early evening.',
 		intro:
-			'Dubrovnik’s walled old town, with its limestone streets and city walls looking out over the Adriatic, is the endpoint of our longest route, a one-way private charter that threads south past Hvar and Korčula before arriving by early evening. There’s no return leg; this is a scenic, one-way transfer for guests continuing their trip from Dubrovnik.',
+			'Dubrovnik’s walled old town, with its limestone streets and city walls looking out over the Adriatic, is the endpoint of our longest route, a one-way trip that threads south past Hvar and Korčula before arriving by early evening. There’s no return leg; this is a scenic, one-way transfer for guests continuing their trip from Dubrovnik.',
 		tags: ['City', 'One-way transfer', 'History'],
-		tipTag: { icon: 'building-castle', label: 'One-way private transfer' },
+		tipTag: { icon: 'building-castle', label: 'One-way from Split' },
 		attrs: [
 			{ icon: 'building-castle', label: 'Historic walled city' },
 			{ icon: 'map-pin', label: 'South Dalmatia' },
 			{ icon: 'anchor', label: 'Arrival point, no return leg' },
 		],
 		highlights: [
-			{ icon: 'droplet', text: 'Endpoint of our one-way Split-to-Dubrovnik private charter' },
+			{ icon: 'droplet', text: 'Endpoint of our one-way Split-to-Dubrovnik tour' },
 			{ icon: 'building-fortress', text: 'Full day’s scenic cruise via Hvar Old Town and Korčula' },
 			{ icon: 'leaf', text: 'Two swim or snorkelling stops along the way' },
 			{ icon: 'glass-full', text: 'Arrival by early evening, ready to continue your trip' },
 			{ icon: 'beach', text: 'No return leg, a one-way transfer rather than a round trip' },
 		],
 		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
-		bestTimeNote: 'Run as a private charter on request all year round. Timing is arranged directly with you.',
+		bestTimeNote: 'Runs on request all year round: group dates and times on request, private timing arranged with you.',
 		geo: [
 			{ label: 'Distance from Split', value: '~220 km by sea (via Hvar & Korčula)' },
 			{ label: 'Travel time', value: '~10 hours, one-way' },
 			{ label: 'Region', value: 'Dubrovnik-Neretva' },
-			{ label: 'How we get there', value: 'Private speedboat charter, one-way' },
+			{ label: 'How we get there', value: 'Speedboat, one-way' },
 		],
 		nearby: [
 			{ slug: 'korcula', name: 'Korčula', distance: 'earlier on the route', icon: 'building-castle' },
 			{ slug: 'hvar', name: 'Hvar town', distance: 'earlier on the route', icon: 'building-castle' },
 		],
 		insiderTips: [
-			'This route is priced and booked as a private one-way charter, not an instant-book group tour.',
+			'This route isn’t booked online: ask us for the group price or a private charter quote.',
 			'Arrange onward accommodation in Dubrovnik in advance. There’s no return leg to Split.',
 			'The full day covers real distance; bring layers for the cooler evening arrival.',
 		],
@@ -588,3 +520,11 @@ export const destinations: Destination[] = [
 		tourSlugs: ['dubrovnik-one-way'],
 	},
 ];
+
+/**
+ * Destination pages taken down, each with a 301 in public/_redirects
+ * (destinations-redirects.test.ts keeps the two in sync). 'split': the
+ * departure point, not a stop (20 Oct handoff); the meeting point lives on
+ * the Contact page.
+ */
+export const REMOVED_DESTINATION_SLUGS = ['split'] as const;

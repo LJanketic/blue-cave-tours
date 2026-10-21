@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	contactHrefForTour,
+	departureLabel,
 	groupBookHref,
 	hasRequiredBookingDetails,
 	meetingPointShort,
@@ -73,6 +74,14 @@ describe('booking paths', () => {
 	it('uses trailing-slash URLs so links skip the 301', () => {
 		expect(groupBookHref({ slug: 'blue-lagoon-morning' })).toBe('/book/blue-lagoon-morning/group/');
 		expect(contactHrefForTour({ slug: 'a b' })).toBe('/contact/?tour=a%20b');
+		expect(contactHrefForTour({ slug: 'x' }, 'group')).toBe('/contact/?tour=x&topic=group');
+	});
+
+	it('shows the departure with its check-in time', () => {
+		const departures = [{ time: '07:20', checkIn: '07:05' }, { time: '14:30' }];
+		expect(departureLabel(departures, '07:20')).toBe('07:20 (check-in 07:05)');
+		expect(departureLabel(departures, '14:30')).toBe('14:30');
+		expect(departureLabel([], '')).toBe('Confirmed at booking');
 	});
 });
 

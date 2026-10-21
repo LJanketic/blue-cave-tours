@@ -15,6 +15,17 @@ describe('tour catalog', () => {
 		for (const tour of tours) expect(tour.types.length, tour.slug).toBeGreaterThan(0);
 	});
 
+	it('prices every group tour per person, so an unpriced one reads "Price on request"', () => {
+		for (const tour of tours.filter((t) => t.types.includes('group'))) expect(tour.priceUnit, tour.slug).toBe('person');
+	});
+
+	it('offers every tour as a group and a private tour, except the custom private day (user ruling, 20 Oct 2026)', () => {
+		// Create Your Perfect Day is the "Build your own" private card: no group departure (D4c).
+		for (const tour of tours) {
+			expect(tour.types, tour.slug).toEqual(tour.slug === 'create-perfect-day-private' ? ['private'] : ['group', 'private']);
+		}
+	});
+
 	it('gives every group tour with a price a fixed departure, except those waiting for a time', () => {
 		// Group tours on sale whose time isn't fixed yet (D-16). Add a departure, then remove the slug here.
 		const timeToBeConfirmed = new Set<string>();

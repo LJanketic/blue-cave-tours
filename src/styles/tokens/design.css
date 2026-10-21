@@ -90,7 +90,9 @@
 	--palette-star-on-white: #f59e0b;
 	--palette-star-on-photo: #fbbf24;
 
+	--palette-green-800: #146b40; /* 5.77:1 on green-100 */
 	--palette-green-600: #1a9e5c;
+	--palette-green-100: #e3f5ea;
 	--palette-red-600: #d33a2c;
 	--palette-red-900: #8b1a15;
 	--palette-red-100: #fdecea;
@@ -114,6 +116,10 @@
 	--color-text-danger: var(--palette-red-900);
 	--color-text-warning: var(--palette-amber-700); /* [DEVIATE, a11y] the design's amber-400 is 3.72:1; it's for icons only */
 	--color-text-on-image: var(--palette-white);
+	/* Text on --color-brand-dark (the reviews summary card, handoff H11) */
+	--color-text-on-brand: var(--palette-white); /* 9.84:1 */
+	--color-text-on-brand-score: var(--palette-blue-300); /* 4.46:1: large text only (≥24px or ≥18.66px bold), hence the name */
+	--color-text-on-brand-soft: var(--palette-blue-100); /* 8.6:1: any size */
 
 	/* Brand: sea blue for identity, actions and selected states */
 	--color-brand: var(--palette-blue-500);
@@ -131,6 +137,8 @@
 	--color-background-brand-soft: var(--palette-blue-100);
 	--color-background-highlight-soft: var(--palette-blue-100);
 	--color-background-success: var(--palette-blue-100);
+	/* [DEVIATE] "success" above is blue (badges, notices); the payment-success check is green (handoff B5) */
+	--color-background-positive: var(--palette-green-100); /* green, unlike --color-background-success (blue): the payment-done check */
 	--color-background-brand: var(--palette-blue-500);
 	--color-background-highlight: var(--palette-blue-500);
 	--color-background-warning: var(--palette-amber-100);
@@ -153,10 +161,15 @@
 	--color-cta-on-image: var(--palette-orange-600);
 	--color-cta-on-image-dark: var(--palette-orange-900);
 	--color-progress: var(--palette-orange-500); /* hero-dot fill, decorative */
+	/* [DEVIATE, colour] The handoff's crown is #F97316 (Tailwind's orange-500); ours is the
+	   site's orange-500 (#f2662b), so the crown matches the other orange accents. Decorative. */
+	--color-crown-hover: var(--palette-orange-500); /* private-experience crown on hover/focus (handoff G8) */
 
 	/* Premium (private charters): gold */
 	--color-premium-gradient: linear-gradient(135deg, var(--palette-gold-grad-start), var(--palette-gold-grad-end));
 	--color-premium-bg: var(--palette-gold-50);
+	/* Private-card wash: gold fading to the card white (Group or private? card, Build your own card) */
+	--color-premium-card-bg: linear-gradient(180deg, var(--color-premium-bg) 0%, var(--color-background-primary) 55%);
 	--color-premium-bg-strong: var(--palette-gold-100);
 	--color-premium-border: var(--palette-gold-300);
 	--color-premium-icon: var(--palette-gold-500);
@@ -174,9 +187,11 @@
 	--color-category-warning-icon: var(--palette-amber-500);
 	--color-icon-sunset: var(--palette-coral-500);
 	--color-icon-included: var(--palette-green-600);
+	--color-icon-positive: var(--palette-green-800); /* on --color-background-positive */
 	--color-icon-excluded: var(--palette-red-600);
 	--color-star: var(--palette-star-on-white); /* always aria-hidden */
 	--color-star-on-photo: var(--palette-star-on-photo);
+	--color-star-on-dark: var(--palette-amber-500); /* the handoff's #ef9f27, on --color-brand-dark */
 
 	/* Focus, glass, overlays */
 	--color-focus-ring: var(--palette-blue-500);
@@ -211,11 +226,16 @@
 	--color-overlay-photo-hero:
 		linear-gradient(90deg, rgba(6, 24, 40, 0.75) 0%, rgba(6, 24, 40, 0.5) max(45%, calc(50% + 120px)), rgba(6, 24, 40, 0) max(80%, calc(50% + 480px))),
 		linear-gradient(0deg, rgba(6, 24, 40, 0.75) 0%, rgba(6, 24, 40, 0) 65%);
-	--color-overlay-hero-home-phone: linear-gradient(0deg, rgba(6, 24, 40, 0.88) 0%, rgba(6, 24, 40, 0.7) 45%, rgba(6, 24, 40, 0.15) 75%);
+	/* Phones: taller since the h1 overline, two stacked CTAs and the dots joined the text block (handoff H1, H4, H5).
+	   [a11y] The text block is a fixed ~500-530px from the bottom, so the dark part is at least 560px tall: on
+	   short phones (580-670px heroes) a percentage alone left the overline on ~0.35 alpha (3.5:1). */
+	--color-overlay-hero-home-phone: linear-gradient(0deg, rgba(6, 24, 40, 0.88) 0%, rgba(6, 24, 40, 0.7) max(60%, 560px), rgba(6, 24, 40, 0.15) max(88%, 680px));
 	/* [DEVIATE, a11y] stronger than the board's .38 / 160px fade, so the overlay nav text has contrast */
 	--color-overlay-header: linear-gradient(180deg, rgba(6, 24, 40, 0.55) 0, rgba(6, 24, 40, 0) 120px);
 	/* [DEVIATE, a11y] the board's .45 → .6 measured 3.1:1 behind the band's text (PR 3) */
 	--color-overlay-band: linear-gradient(rgba(6, 24, 40, 0.66), rgba(6, 24, 40, 0.74));
+	/* Static map images under their caption (MapLink, 20 Oct handoff: 80% scrim) */
+	--color-overlay-map: rgba(6, 24, 40, 0.8);
 	--color-lightbox-backdrop: rgba(4, 14, 24, 0.94);
 	--color-overlay-tile: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.55) 100%); /* photo tiles */
 	--color-tile-fallback: linear-gradient(160deg, var(--palette-blue-500) 0%, var(--palette-blue-900) 100%); /* tiles without a photo */

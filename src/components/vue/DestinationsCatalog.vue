@@ -49,9 +49,10 @@ const label = computed(() => DESTINATION_FILTERS.find((f) => f.id === category.v
 		color: var(--color-text-tertiary);
 	}
 
+	/* 20 Oct handoff: 3 columns, 2 from 1024px, 1 from 640px. */
 	.dest-results__grid {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: var(--space-5);
 		margin: 0 0 28px;
 		padding: 0;
@@ -68,6 +69,12 @@ const label = computed(() => DESTINATION_FILTERS.find((f) => f.id === category.v
 
 	.dest-results__empty {
 		padding: 2.5rem;
+	}
+
+	@media (max-width: 1024px) {
+		.dest-results__grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 	}
 
 	@media (max-width: 640px) {

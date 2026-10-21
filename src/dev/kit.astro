@@ -111,9 +111,9 @@ const fee = feeLabel(blueCave);
 				<Badge tone="tip" icon="sun">Sunniest island in Croatia</Badge>
 			</div>
 
-			<SectionHeader title="Tour cards" sub="One link per card. Default, slider (no hover effects) and see-all." />
+			<SectionHeader title="Tour cards" sub="One link per card. Default and see-all." />
 			<div class="kit__grid">
-				{tourCards.map((tour, i) => <TourCard tour={tour} variant={i === 1 ? 'slider' : 'default'} />)}
+				{tourCards.map((tour) => <TourCard tour={tour} />)}
 				<TourCard variant="see-all" href="/tours/" />
 			</div>
 

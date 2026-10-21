@@ -2,19 +2,27 @@
 import Marquee from '../ui/Marquee.astro';
 import type { TrustItem } from '../../data/marketing';
 
-type Props = { items: TrustItem[]; id?: string };
+type Props = {
+	items: TrustItem[];
+	id?: string;
+	/** Accessible name of the band. */
+	label?: string;
+};
 
-const { items, id = 'trust' } = Astro.props;
+const { items, id = 'trust', label = 'Why book with us' } = Astro.props;
 const shown = items.filter((item) => item.confirmed);
+// Two items don't fill a marquee loop (an empty strip shows before it jumps
+// back) or a 1040px row: they sit centred and wrap instead.
+const still = shown.length <= 2;
 ---
 
 <!--
 	Spec §6.1.3. One row on wide screens; a slow marquee from 1040px down,
 	which wraps into a 2×2 grid under reduced motion. The marquee copy has no
 	links (its screen-reader list is visually hidden); the cancellation policy
-	is in the footer too.
+	is in the footer too. Two items or fewer: one centred row at every width.
 -->
-<section class="trust-band" id={id} aria-label="Why book with us">
+<section class:list={['trust-band', still && 'trust-band--still']} id={id} aria-label={label}>
 	<ul class="trust-band__row" role="list">
 		{
 			shown.map((item) => (
@@ -33,18 +41,20 @@ const shown = items.filter((item) => item.confirmed);
 			))
 		}
 	</ul>
-	<Marquee label="Why book with us" duration={40} class="trust-band__marquee">
-		{
-			shown.map((item) => (
-				<li class="trust-band__item">
-					<i class={`ti ti-${item.icon}`} aria-hidden="true" />
-					<span>
-						<strong>{item.strong}</strong> {item.text}
-					</span>
-				</li>
-			))
-		}
-	</Marquee>
+	{
+		!still && (
+			<Marquee label={label} duration={40} class="trust-band__marquee">
+				{shown.map((item) => (
+					<li class="trust-band__item">
+						<i class={`ti ti-${item.icon}`} aria-hidden="true" />
+						<span>
+							<strong>{item.strong}</strong> {item.text}
+						</span>
+					</li>
+				))}
+			</Marquee>
+		)
+	}
 </section>
 
 <style>
@@ -63,6 +73,12 @@ const shown = items.filter((item) => item.confirmed);
 			margin: 0 auto;
 			padding: var(--space-5) var(--space-6);
 			list-style: none;
+		}
+
+		.trust-band--still .trust-band__row {
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: var(--space-3) var(--space-8);
 		}
 
 		.trust-band__item {
@@ -104,7 +120,7 @@ const shown = items.filter((item) => item.confirmed);
 		   ~1034px, so the row is wider than the 960 column and the marquee
 		   starts at 1040px instead of 1024px. */
 		@media (max-width: 1040px) {
-			.trust-band__row {
+			.trust-band:not(.trust-band--still) .trust-band__row {
 				display: none;
 			}
 
@@ -115,7 +131,8 @@ const shown = items.filter((item) => item.confirmed);
 
 		/* Still (reduced motion, no JavaScript): a 2×2 grid instead of a moving strip. */
 		@media (max-width: 1040px) and (prefers-reduced-motion: reduce), (max-width: 1040px) and (scripting: none) {
-			.trust-band :global(.marquee__set) {
+			/* Not the loop's second copy: Marquee hides it here, and display: grid would bring it back. */
+			.trust-band :global(.marquee__set:not(.marquee__copy)) {
 				display: grid;
 				grid-template-columns: repeat(2, minmax(0, 1fr));
 				gap: var(--space-3) var(--space-4);
@@ -138,6 +155,14 @@ const shown = items.filter((item) => item.confirmed);
 
 			.trust-band__item {
 				font-size: var(--font-size-sm);
+			}
+
+			.trust-band--still .trust-band__row {
+				padding: var(--space-4) var(--page-gutter);
+			}
+
+			.trust-band--still .trust-band__item {
+				white-space: normal;
 			}
 		}
 	}

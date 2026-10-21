@@ -1,9 +1,11 @@
 <script setup lang="ts">
 /*
- * Homepage hero carousel (spec §6.1.2). Three photo slides with display
- * titles; rotates every 6s, but never under reduced motion, never while the
+ * Homepage hero carousel (spec §6.1.2). A fixed h1 overline, then three photo
+ * slides with display titles, then the same two CTAs for every slide (handoff
+ * H1, H4: rendered once, outside the slide loop). Rotates every 6s, but never under reduced motion, never while the
  * pointer is on the text or controls, never while keyboard focus is inside,
- * and never after Pause. The pause button is the first control in the DOM.
+ * and never after Pause. The pause button is the first control in the DOM
+ * (WAI-ARIA carousel pattern), though it shows next to the dots below the CTAs.
  *
  * Without JavaScript, slide 1 shows on its own. Slides 2 and 3 get their
  * image source only after hydration, so they don't compete with the LCP.
@@ -15,16 +17,26 @@ export type HeroSlideView = {
 	id: string;
 	titleLines: string[];
 	sub: string;
-	ctaLabel: string;
-	ctaHref: string;
 	position: string;
 	image: { src: string; srcset: string; alt: string };
 };
 
-const props = withDefaults(defineProps<{ slides: HeroSlideView[]; intervalMs?: number; scrollTarget?: string }>(), {
-	intervalMs: 6000,
-	scrollTarget: 'trust',
-});
+export type HeroCta = { label: string; href: string };
+
+const props = withDefaults(
+	defineProps<{
+		slides: HeroSlideView[];
+		/** The page's h1, fixed above the slides. */
+		heading: string;
+		ctas: { primary: HeroCta; secondary: HeroCta };
+		intervalMs?: number;
+		scrollTarget?: string;
+	}>(),
+	{
+		intervalMs: 6000,
+		scrollTarget: 'trust',
+	},
+);
 
 const TEXT_SWAP_MS = 450;
 
@@ -39,6 +51,8 @@ const leaving = ref(false);
 const animated = ref(false);
 const loaded = ref<Set<number>>(new Set([0]));
 const reducedMotion = ref(false);
+// Pause only renders once hydrated: without JavaScript nothing rotates, so it would do nothing.
+const hydrated = ref(false);
 const userPaused = ref(false);
 const hovering = ref(false);
 const focusWithin = ref(false);
@@ -131,6 +145,7 @@ function explore() {
 
 onMounted(() => {
 	reducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	hydrated.value = true;
 	// Slide 2's photo loads once the page has finished loading (it shows after
 	// 6s at the earliest); each later photo loads when the slide before it shows.
 	// Anything earlier competes with the first paint on slow connections.
@@ -174,47 +189,26 @@ onBeforeUnmount(() => {
 			/>
 		</div>
 
-		<!-- Controls first in the DOM, so Pause is the first thing a keyboard reaches (§11.3); it shows only on keyboard focus. -->
-		<div
-			v-if="count > 1"
-			class="home-hero__controls"
-			:class="{ 'is-paused': !rotating, 'no-rotate': reducedMotion }"
-			@pointerenter="onPointerEnter"
-			@pointerleave="onPointerLeave"
-		>
+		<div class="home-hero__content">
+			<h1 class="home-hero__overline">{{ heading }}</h1>
+
+			<!--
+				Pause comes first in the DOM, so it's the first thing a keyboard reaches (§11.3, WAI-ARIA carousel
+				pattern); the grid shows it next to the dots, below the CTAs (handoff H5). The label says what it
+				does and changes with the state, so no aria-pressed (a pressed "Play" would contradict itself).
+			-->
 			<button
-				v-if="!reducedMotion"
+				v-if="count > 1 && hydrated && !reducedMotion"
 				type="button"
 				class="home-hero__pause"
-				:aria-pressed="userPaused"
 				:aria-label="userPaused ? 'Play slideshow' : 'Pause slideshow'"
 				@click="togglePause"
+				@pointerenter="onPointerEnter"
+				@pointerleave="onPointerLeave"
 			>
 				<i :class="['ti', userPaused ? 'ti-player-play' : 'ti-player-pause']" aria-hidden="true"></i>
 			</button>
-			<div class="home-hero__dots" role="group" aria-label="Slides">
-				<button
-					v-for="(slide, i) in slides"
-					:key="`dot-${slide.id}`"
-					type="button"
-					class="home-hero__dot"
-					:class="{ 'is-active': i === index }"
-					:aria-label="`Show slide ${i + 1} of ${count}`"
-					:aria-current="i === index ? 'true' : undefined"
-					@click="i === index ? togglePause() : show(i)"
-				></button>
-			</div>
-		</div>
-		<template v-if="count > 1">
-			<button type="button" class="home-hero__arrow home-hero__arrow--prev" aria-label="Previous slide" @click="show(index - 1)">
-				<i class="ti ti-chevron-left" aria-hidden="true"></i>
-			</button>
-			<button type="button" class="home-hero__arrow home-hero__arrow--next" aria-label="Next slide" @click="show(index + 1)">
-				<i class="ti ti-chevron-right" aria-hidden="true"></i>
-			</button>
-		</template>
 
-		<div class="home-hero__content">
 			<div class="home-hero__slides" :class="{ 'is-animated': animated }" :aria-live="rotating ? 'off' : 'polite'">
 				<div
 					v-for="(slide, i) in slides"
@@ -235,12 +229,45 @@ onBeforeUnmount(() => {
 						</template>
 					</p>
 					<p class="home-hero__sub">{{ slide.sub }}</p>
-					<Button class="home-hero__cta" variant="on-image" size="lg" icon-end="arrow-right" :href="slide.ctaHref">
-						{{ slide.ctaLabel }}
-					</Button>
 				</div>
 			</div>
+
+			<div class="home-hero__ctas" @pointerenter="onPointerEnter" @pointerleave="onPointerLeave">
+				<Button variant="on-image" size="lg" icon-end="arrow-right" :href="ctas.primary.href">{{ ctas.primary.label }}</Button>
+				<Button variant="on-image-ghost" size="lg" :href="ctas.secondary.href">{{ ctas.secondary.label }}</Button>
+			</div>
+
+			<!-- After the CTAs, as they look. Each dot only shows its slide: pausing is Pause's job. -->
+			<div
+				v-if="count > 1"
+				class="home-hero__dots"
+				:class="{ 'is-paused': !rotating, 'no-rotate': reducedMotion }"
+				role="group"
+				aria-label="Slides"
+				@pointerenter="onPointerEnter"
+				@pointerleave="onPointerLeave"
+			>
+				<button
+					v-for="(slide, i) in slides"
+					:key="`dot-${slide.id}`"
+					type="button"
+					class="home-hero__dot"
+					:class="{ 'is-active': i === index }"
+					:aria-label="`Show slide ${i + 1} of ${count}`"
+					:aria-current="i === index ? 'true' : undefined"
+					@click="i !== index && show(i)"
+				></button>
+			</div>
 		</div>
+
+		<template v-if="count > 1">
+			<button type="button" class="home-hero__arrow home-hero__arrow--prev" aria-label="Previous slide" @click="show(index - 1)">
+				<i class="ti ti-chevron-left" aria-hidden="true"></i>
+			</button>
+			<button type="button" class="home-hero__arrow home-hero__arrow--next" aria-label="Next slide" @click="show(index + 1)">
+				<i class="ti ti-chevron-right" aria-hidden="true"></i>
+			</button>
+		</template>
 
 		<button type="button" class="home-hero__explore" @click="explore">
 			<i class="ti ti-chevron-down" aria-hidden="true"></i>
@@ -253,6 +280,11 @@ onBeforeUnmount(() => {
 <style scoped>
 @layer components {
 	.home-hero {
+		/* The handoff's rhythm (H6). 28px and 14px aren't on the --space scale, so they stay local. */
+		--hero-gap-overline: 28px; /* h1 → headline */
+		--hero-gap-sub: 20px; /* headline → subtitle */
+		--hero-gap-ctas: 28px; /* subtitle → CTAs */
+		--hero-gap-dots: 28px; /* CTAs → dots */
 		position: relative;
 		height: 100vh;
 		height: 100svh;
@@ -293,17 +325,37 @@ onBeforeUnmount(() => {
 		opacity: 1;
 	}
 
+	/* A grid, so Pause (first in the DOM) can sit beside the dots (last). */
 	.home-hero__content {
 		position: relative;
 		z-index: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		justify-content: center;
+		display: grid;
+		grid-template:
+			'overline overline' auto
+			'slides slides' auto
+			'ctas ctas' auto
+			'dots pause' auto / auto 1fr;
+		align-content: center;
+		justify-items: start;
 		height: 100%;
 		max-width: var(--content-max);
 		margin: 0 auto;
 		padding: 0 var(--space-6);
+	}
+
+	.home-hero__overline {
+		grid-area: overline;
+		margin: 0 0 var(--hero-gap-overline);
+		font-size: var(--font-size-xs);
+		font-weight: var(--font-weight-semibold);
+		line-height: var(--line-height-normal);
+		text-transform: uppercase;
+		letter-spacing: var(--letter-spacing-eyebrow);
+		color: var(--color-text-on-image);
+	}
+
+	.home-hero__slides {
+		grid-area: slides;
 	}
 
 	.home-hero__panel {
@@ -313,7 +365,7 @@ onBeforeUnmount(() => {
 	}
 
 	.home-hero__title {
-		margin: 0 0 var(--space-4);
+		margin: 0;
 		font-size: var(--font-size-display-xl);
 		line-height: var(--line-height-display-hero);
 		letter-spacing: var(--letter-spacing-display-hero);
@@ -321,8 +373,8 @@ onBeforeUnmount(() => {
 	}
 
 	.home-hero__sub {
-		max-width: 375px;
-		margin: 0 0 var(--space-6);
+		max-width: 480px;
+		margin: var(--hero-gap-sub) 0 0;
 		font-size: var(--font-size-base);
 		line-height: var(--line-height-relaxed);
 		color: var(--color-text-on-image-muted);
@@ -336,10 +388,6 @@ onBeforeUnmount(() => {
 		animation: hero-fade-in 0.6s ease 0.25s both;
 	}
 
-	.is-animated .home-hero__cta {
-		animation: hero-fade-in 0.6s ease 0.4s both;
-	}
-
 	.is-leaving .home-hero__title {
 		opacity: 0;
 		transform: translateY(28px);
@@ -349,8 +397,7 @@ onBeforeUnmount(() => {
 			transform 0.45s cubic-bezier(0.5, 0, 0.8, 0.4);
 	}
 
-	.is-leaving .home-hero__sub,
-	.is-leaving .home-hero__cta {
+	.is-leaving .home-hero__sub {
 		opacity: 0;
 		animation: none;
 		transition: opacity 0.3s ease;
@@ -369,20 +416,29 @@ onBeforeUnmount(() => {
 		}
 	}
 
-	/* Dots, pause and arrows */
-	.home-hero__controls {
-		position: absolute;
-		bottom: 80px;
-		left: 50%;
-		z-index: 2;
+	/* The CTAs don't change with the slide, so they don't animate with it. */
+	.home-hero__ctas {
+		grid-area: ctas;
 		display: flex;
-		align-items: center;
-		transform: translateX(-50%);
+		flex-wrap: wrap;
+		gap: var(--space-3);
+		margin-top: var(--hero-gap-ctas);
 	}
 
+	/* Dots, pause and arrows */
+
+	/*
+	 * Below the CTAs, left-aligned (H5), in a 32px row that Pause shares (so
+	 * nothing moves when it appears). Each dot sits 8px inside its 24px hit
+	 * area, so the margins pull the hit areas out by 8px: the visible dots then
+	 * start at the text edge, 28px below the CTAs.
+	 */
 	.home-hero__dots {
+		grid-area: dots;
 		display: flex;
 		align-items: center;
+		height: 32px;
+		margin: calc(var(--hero-gap-dots) - 12px) 0 0 -8px;
 	}
 
 	/* 8px dots with a 24px hit area (WCAG 2.5.8). */
@@ -477,26 +533,31 @@ onBeforeUnmount(() => {
 		background: var(--color-glass-dark-hover);
 	}
 
-	/*
-	 * As on the board, the dots alone are centred and a click on the active dot
-	 * pauses. Pause stays first in the DOM for keyboard users (WCAG 2.2.2) but
-	 * only shows while it has keyboard focus, to the right of the dots.
-	 */
+	/* To the right of the dots, 32px (WCAG 2.2.2, 2.5.8). */
 	.home-hero__pause {
-		position: absolute;
-		top: 50%;
-		left: calc(100% + var(--space-3));
+		grid-area: pause;
 		width: 32px;
 		height: 32px;
+		margin: calc(var(--hero-gap-dots) - 12px) 0 0 var(--space-2);
 		font-size: 16px;
-		opacity: 0;
-		pointer-events: none;
-		transform: translateY(-50%);
 	}
 
-	.home-hero__pause:focus-visible {
-		opacity: 1;
-		pointer-events: auto;
+	/*
+	 * With a mouse on a wide screen the dots show alone, as on the board, and
+	 * Pause appears like the arrows: on hover and on keyboard focus. Touch
+	 * screens and phones always show it, as they have no hover.
+	 */
+	@media (min-width: 769px) and (hover: hover) {
+		.home-hero__pause {
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		.home-hero:hover .home-hero__pause,
+		.home-hero:focus-within .home-hero__pause {
+			opacity: 1;
+			pointer-events: auto;
+		}
 	}
 
 	/* 20px from the edges; shown on hover and whenever a control has keyboard focus. */
@@ -563,6 +624,7 @@ onBeforeUnmount(() => {
 	}
 
 	@media (max-width: 1024px) {
+		.home-hero__overline,
 		.home-hero__title {
 			text-shadow: var(--text-shadow-hero);
 		}
@@ -573,6 +635,13 @@ onBeforeUnmount(() => {
 	}
 
 	@media (max-width: 768px) {
+		.home-hero {
+			--hero-gap-overline: 20px;
+			--hero-gap-sub: 14px;
+			--hero-gap-ctas: 20px;
+			--hero-gap-dots: 20px;
+		}
+
 		.home-hero__photo {
 			object-position: 70% center;
 		}
@@ -582,17 +651,16 @@ onBeforeUnmount(() => {
 			background: var(--color-overlay-header), var(--color-overlay-hero-home-phone);
 		}
 
+		/* Clear of Explore at the bottom. */
 		.home-hero__content {
-			justify-content: flex-end;
-			padding: 0 var(--space-4) 168px;
+			align-content: end;
+			padding: 0 var(--space-4) 64px;
 		}
 
-		.home-hero__sub {
-			margin-bottom: var(--space-5);
-		}
-
-		.home-hero__controls {
-			bottom: 70px;
+		/* Full width and stacked (H4). */
+		.home-hero__ctas {
+			flex-direction: column;
+			justify-self: stretch;
 		}
 
 		.home-hero__arrow {
@@ -604,12 +672,6 @@ onBeforeUnmount(() => {
 		}
 	}
 
-	@media (max-width: 480px) {
-		.home-hero__panel {
-			width: 100%;
-			max-width: 375px;
-		}
-	}
 
 	/* Short viewports: the hero takes the height it needs (§11.14). */
 	@media (max-height: 480px) {
@@ -620,11 +682,7 @@ onBeforeUnmount(() => {
 
 		.home-hero__content {
 			padding-top: calc(var(--site-header-height) + var(--space-6));
-			padding-bottom: calc(var(--space-7) + 70px);
-		}
-
-		.home-hero__controls {
-			bottom: var(--space-7);
+			padding-bottom: var(--space-6);
 		}
 
 		.home-hero__explore {

@@ -2,6 +2,9 @@
 /*
  * Tour card (spec §6.2.2). The whole card is one link, so it's one tab stop
  * and a big target; "View tour" is a styled span, not a second control.
+ * Hover (border, shadow, photo zoom, blue CTA) only runs where the primary
+ * input can hover; on phones and touch screens the CTA is always blue, so it
+ * reads as the action without a hover that never comes (handoff G4).
  * Rendered statically from Astro pages (no client: directive) and inside
  * ToursCatalog.vue.
  */
@@ -15,8 +18,8 @@ import SeasonPrice from '../ui/SeasonPrice.vue';
 const props = withDefaults(
 	defineProps<{
 		tour?: TourCardDTO;
-		/** `slider`: no hover effects, so dragging doesn't flash them. `see-all`: the slider's last card. */
-		variant?: 'default' | 'slider' | 'see-all';
+		/** `see-all`: the slider's last card, a link to the full list. */
+		variant?: 'default' | 'see-all';
 		/** see-all only. */
 		href?: string;
 		/** The first visible card on a page can load eagerly. */
@@ -205,21 +208,38 @@ const requestLabel = computed(() => (props.tour ? formatFromPrice(null, props.to
 			color var(--duration-fast) ease;
 	}
 
-	/* The ring goes round the whole card: it's the link. */
-	.tour-card-ui:focus-visible .tour-card-ui__cta,
-	.tour-card-ui--default:hover .tour-card-ui__cta {
+	/* The ring goes round the whole card: it's the link. Keyboard focus turns
+	   the CTA blue on every device; hover only where the pointer can hover. */
+	.tour-card-ui:focus-visible .tour-card-ui__cta {
 		border-color: var(--color-border-highlight);
 		background: var(--color-background-highlight);
 		color: var(--color-text-on-image);
 	}
 
-	.tour-card-ui--default:hover {
-		border-color: var(--color-border-primary);
-		box-shadow: var(--shadow-card-hover);
+	@media (hover: hover) {
+		.tour-card-ui--default:hover .tour-card-ui__cta {
+			border-color: var(--color-border-highlight);
+			background: var(--color-background-highlight);
+			color: var(--color-text-on-image);
+		}
+
+		.tour-card-ui--default:hover {
+			border-color: var(--color-border-primary);
+			box-shadow: var(--shadow-card-hover);
+		}
+
+		.tour-card-ui--default:hover .tour-card-ui__img img {
+			transform: scale(1.04);
+		}
 	}
 
-	.tour-card-ui--default:hover .tour-card-ui__img img {
-		transform: scale(1.04);
+	/* Phones and touch screens: always the active blue (handoff G4). */
+	@media (max-width: 768px), (hover: none) {
+		.tour-card-ui__cta {
+			border-color: var(--color-border-highlight);
+			background: var(--color-background-highlight);
+			color: var(--color-text-on-image);
+		}
 	}
 
 	/* See all (board 01 .tc-all). */
@@ -234,9 +254,18 @@ const requestLabel = computed(() => (props.tour ? formatFromPrice(null, props.to
 		text-align: center;
 	}
 
-	.tour-card-ui--see-all:hover {
-		border-color: var(--color-border-primary);
-		background: var(--color-background-hover);
+	@media (hover: hover) {
+		.tour-card-ui--see-all:hover {
+			border-color: var(--color-border-primary);
+			background: var(--color-background-hover);
+		}
+
+		.tour-card-ui--see-all:hover .tour-card-ui__all-icon {
+			border-color: var(--color-border-highlight);
+			background: var(--color-background-highlight);
+			color: var(--color-text-on-image);
+			transform: translateX(3px);
+		}
 	}
 
 	.tour-card-ui__all-icon {
@@ -255,7 +284,6 @@ const requestLabel = computed(() => (props.tour ? formatFromPrice(null, props.to
 			transform var(--duration-fast) ease;
 	}
 
-	.tour-card-ui--see-all:hover .tour-card-ui__all-icon,
 	.tour-card-ui--see-all:focus-visible .tour-card-ui__all-icon {
 		border-color: var(--color-border-highlight);
 		background: var(--color-background-highlight);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getDestinationBySlug } from './destinations';
-import { DEFAULT_OG_IMAGE, breadcrumbJsonLd, destinationJsonLd, socialImageFor, tourJsonLd } from './seo';
+import { DEFAULT_OG_IMAGE, breadcrumbJsonLd, destinationJsonLd, socialImageFor, tourJsonLd, touristType } from './seo';
 import { getTourBySlug } from './tours';
 
 const SITE = 'https://hello-blue-cave.netlify.app';
@@ -45,5 +45,16 @@ describe('tourJsonLd', () => {
 			availability: 'https://schema.org/InStock',
 		});
 		expect(tourJsonLd(getTourBySlug('dubrovnik-one-way')!, `${SITE}/`).offers).toBeUndefined();
+	});
+
+	it('lists both tourist types when a tour runs as a group and a private tour, one otherwise', () => {
+		expect(touristType({ types: ['group', 'private'] })).toEqual(['Group tour', 'Private tour']);
+		expect(touristType({ types: ['group'] })).toBe('Group tour');
+		expect(touristType({ types: ['private'] })).toBe('Private tour');
+		// Quote-only tours with both types still get both, and still no offer (prices: null).
+		const redRocks = tourJsonLd(getTourBySlug('hvar-red-rocks-pakleni')!, `${SITE}/`);
+		expect(redRocks.touristType).toEqual(['Group tour', 'Private tour']);
+		expect(redRocks.offers).toBeUndefined();
+		expect(tourJsonLd(getTourBySlug('create-perfect-day-private')!, `${SITE}/`).touristType).toBe('Private tour');
 	});
 });

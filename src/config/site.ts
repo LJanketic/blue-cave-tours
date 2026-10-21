@@ -62,7 +62,7 @@ export const FAVICON_PATH = '/favicon.svg';
 export const APPLE_TOUCH_ICON_PATH = '/apple-touch-icon.png';
 
 /** Default HTML `<title>` for the home page */
-export const HOME_PAGE_TITLE = `${SITE_NAME} — Split boat tours & private charters`;
+export const HOME_PAGE_TITLE = `Boat Tours from Split — Blue Cave & Island Hopping | ${SITE_NAME}`;
 
 /**
  * Page titles: `"Segment — Hello Blue Cave"` (use for inner pages).

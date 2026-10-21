@@ -1,0 +1,88 @@
+---
+/**
+ * The private-experience crown (handoff G8), for Button's `icon` slot:
+ * `<CrownIcon slot="icon" />`. A dark outline by default; when its button is
+ * hovered or keyboard-focused it fills orange inside a white circle. It
+ * always sits in a fixed 30×30 box, so the label never moves.
+ * Drawn for this site on a 24px grid (sharp joins, 1.5 stroke); swap the path
+ * for the canvas export's when it's available.
+ */
+---
+
+<span class="crown-icon" aria-hidden="true">
+	<svg viewBox="0 0 24 24" width="20" height="20" focusable="false">
+		<path class="crown-icon__body" d="M4 17 3 7.5l5.5 4L12 4.5l3.5 7 5.5-4L20 17Z" />
+		<path d="M5 20.25h14" />
+	</svg>
+</span>
+
+<style>
+	@layer components {
+		.crown-icon {
+			display: inline-grid;
+			flex-shrink: 0;
+			place-items: center;
+			width: 30px;
+			height: 30px;
+			/* Keeps the button as tall as with a text-sized icon. */
+			margin-block: -6px;
+			border-radius: 50%;
+			background: transparent;
+			color: currentColor;
+			transition:
+				background-color var(--duration-fast) ease,
+				color var(--duration-fast) ease;
+		}
+
+		.crown-icon svg {
+			fill: none;
+			stroke: currentColor;
+			stroke-width: 1.5;
+			stroke-linejoin: miter;
+			stroke-linecap: square;
+		}
+
+		.crown-icon__body {
+			fill: transparent;
+			transition: fill var(--duration-fast) ease;
+		}
+
+		/* Keyboard focus on every device; hover only where the pointer can hover. */
+		:global(.button:focus-visible) .crown-icon {
+			background: var(--color-background-primary);
+			color: var(--color-crown-hover);
+		}
+
+		:global(.button:focus-visible) .crown-icon__body {
+			fill: currentColor;
+		}
+
+		@media (hover: hover) {
+			:global(.button:hover) .crown-icon {
+				background: var(--color-background-primary);
+				color: var(--color-crown-hover);
+			}
+
+			:global(.button:hover) .crown-icon__body {
+				fill: currentColor;
+			}
+		}
+
+		/* Windows high contrast: the crown follows the text colour (currentColor); the
+		   white disc would become a Canvas-coloured blob on the button, so drop it. */
+		@media (forced-colors: active) {
+			.crown-icon,
+			:global(.button:hover) .crown-icon,
+			:global(.button:focus-visible) .crown-icon {
+				background: transparent;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.crown-icon,
+			.crown-icon__body {
+				transition: none;
+			}
+		}
+	}
+</style>

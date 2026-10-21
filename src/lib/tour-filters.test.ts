@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { tours } from '../data/tour-catalog';
 import { toTourCardDTO } from './cards';
-import { catalogQueryString, filterCatalog, parseCatalogQuery } from './tour-filters';
-import { getDestinationsForTour } from './destinations';
+import { catalogQueryString, filterCatalog, parseCatalogQuery, TOUR_DESTINATION_OPTIONS } from './tour-filters';
+import { getDestinationBySlug, getDestinationsForTour } from './destinations';
 
 const cards = tours.map((t) => toTourCardDTO(t, getDestinationsForTour(t.slug).map((d) => d.slug), null));
 
@@ -55,5 +55,29 @@ describe('tours catalog filtering', () => {
 		expect(parseCatalogQuery(catalogQueryString(query))).toEqual(query);
 		expect(parseCatalogQuery('?filter=private&search=lagoon')).toMatchObject({ filters: ['private'], q: 'lagoon' });
 		expect(catalogQueryString(parseCatalogQuery(''))).toBe('');
+	});
+
+	it('groups Blue Cave & Vis in one destination option', () => {
+		const slugs = (search: string) => filterCatalog(cards, parseCatalogQuery(search)).map((t) => t.slug);
+		const grouped = slugs('?destination=blue-cave');
+		expect(grouped.length).toBeGreaterThan(0);
+		const visitsEither = cards.filter((t) => t.destinationSlugs.includes('blue-cave') || t.destinationSlugs.includes('vis'));
+		expect(new Set(grouped)).toEqual(new Set(visitsEither.map((t) => t.slug)));
+	});
+
+	it('maps a legacy ?destination=<slug> link to the option that contains it', () => {
+		expect(parseCatalogQuery('?destination=vis').destination).toBe('blue-cave');
+		expect(parseCatalogQuery('?destination=zlatni-rat').destination).toBe('zlatni-rat');
+		expect(catalogQueryString(parseCatalogQuery('?destination=vis'))).toBe('?destination=blue-cave');
+		// Split is the departure hub, not an option: the whole list shows.
+		expect(parseCatalogQuery('?destination=split').destination).toBe('');
+		expect(parseCatalogQuery('?destination=nowhere').destination).toBe('');
+	});
+
+	it('offers only real destinations, and each one has a tour', () => {
+		for (const option of TOUR_DESTINATION_OPTIONS) {
+			for (const slug of option.slugs) expect(getDestinationBySlug(slug), slug).toBeDefined();
+			expect(filterCatalog(cards, parseCatalogQuery(`?destination=${option.id}`)).length, option.label).toBeGreaterThan(0);
+		}
 	});
 });

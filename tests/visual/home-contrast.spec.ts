@@ -3,15 +3,26 @@ import { photoTextContrast } from './contrast';
 
 /*
  * Homepage text on photos (spec §6.1.2): display titles ≥ 3:1, other text
- * ≥ 4.5:1, against the lightest pixel behind them, for every hero slide and
- * the CTA band, at 390, 768, 1280 and 1920px.
+ * (subtitles, the h1 overline) ≥ 4.5:1, against the lightest pixel behind
+ * them, for every hero slide (the Blue Cave first, handoff H2) and the CTA
+ * band, at 390, 768, 1280 and 1920px, and on short phones (375×667, 360×640:
+ * the 580px minimum hero height, where the text block fills most of it).
  *   pnpm test:visual home-contrast --project=chromium
  */
 test.describe.configure({ mode: 'serial' });
 
-for (const width of [390, 768, 1280, 1920]) {
-	test(`home text on photos is readable at ${width}px`, async ({ page }) => {
-		await page.setViewportSize({ width, height: width < 800 ? 844 : 900 });
+const viewports = [
+	{ width: 360, height: 640 },
+	{ width: 375, height: 667 },
+	{ width: 390, height: 844 },
+	{ width: 768, height: 844 },
+	{ width: 1280, height: 900 },
+	{ width: 1920, height: 900 },
+];
+
+for (const { width, height } of viewports) {
+	test(`home text on photos is readable at ${width}×${height}`, async ({ page }) => {
+		await page.setViewportSize({ width, height });
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.goto('/');
 
@@ -29,8 +40,11 @@ for (const width of [390, 768, 1280, 1920]) {
 			await page.waitForTimeout(1300);
 			const title = await photoTextContrast(panel.locator('.home-hero__title'));
 			const sub = await photoTextContrast(panel.locator('.home-hero__sub'), 0.88);
+			// The h1 overline stays put while the photos change: small text, so 4.5:1 on every one.
+			const overline = await photoTextContrast(page.locator('.home-hero__overline'));
 			expect.soft(title, `slide ${slide + 1} title`).toBeGreaterThanOrEqual(3);
 			expect.soft(sub, `slide ${slide + 1} sub`).toBeGreaterThanOrEqual(4.5);
+			expect.soft(overline, `slide ${slide + 1} overline`).toBeGreaterThanOrEqual(4.5);
 		}
 
 		const band = page.locator('.cta-band--photo');

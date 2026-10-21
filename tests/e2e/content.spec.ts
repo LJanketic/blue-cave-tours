@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-/** Content pages (spec §7): contact (with and without JavaScript), FAQ, legal, 404. */
+/** Content pages (spec §7): contact (with and without JavaScript), FAQ, about, legal, 404. */
 
 /** Islands react only once hydrated: Astro drops the `ssr` attribute then. */
 async function hydrated(page: import('@playwright/test').Page) {
@@ -51,6 +51,55 @@ test('the tour and booking-reference fields follow the subject', async ({ page }
 
 	await page.goto('/contact/?tour=blue-lagoon-morning');
 	await expect(page.locator('#tourSlug')).toHaveValue('blue-lagoon-morning');
+});
+
+test('contact: tour pages preselect the subject with ?topic=, unknown values are ignored', async ({ page }) => {
+	await page.goto('/contact/?tour=hvar-red-rocks-pakleni&topic=group');
+	await expect(page.locator('#topic')).toHaveValue('group');
+	await expect(page.locator('#tourSlug')).toHaveValue('hvar-red-rocks-pakleni');
+	await expect(page.locator('#tourSlug')).toBeVisible();
+
+	await page.goto('/contact/?tour=dubrovnik-one-way&topic=charter');
+	await expect(page.locator('#topic')).toHaveValue('charter');
+
+	await page.goto('/contact/?topic=nonsense');
+	await expect(page.locator('#topic')).toHaveValue('general');
+});
+
+test('contact: the map block opens the meeting point in Google Maps', async ({ page }) => {
+	await page.goto('/contact/');
+	const map = page.locator('a.map-link');
+	await expect(map).toHaveAttribute('href', /google\.com\/maps\/search\/.*43\.5072282/);
+	await expect(map).toHaveAttribute('target', '_blank');
+	await expect(map).toHaveAccessibleName('Riva promenade, stand 14, Split — open in Google Maps (new tab)');
+});
+
+test('contact: the tour list follows the private route order, custom day last', async ({ page }) => {
+	await page.goto('/contact/');
+	const values = await page.locator('#tourSlug option').evaluateAll((options) => options.map((o) => (o as HTMLOptionElement).value));
+	expect(values).toEqual([
+		'',
+		'blue-cave-hvar-5-islands',
+		'golden-horn-brac-hvar',
+		'blue-lagoon-morning',
+		'blue-lagoon-afternoon',
+		'hvar-red-rocks-pakleni',
+		'dubrovnik-one-way',
+		'create-perfect-day-private',
+	]);
+});
+
+test('about: one H1 and the three section H2s in order, no crew', async ({ page }) => {
+	await page.goto('/about/');
+	await expect(page.locator('h1')).toHaveCount(1);
+	await expect(page.locator('h1')).toHaveText('About us');
+	await expect(page.locator('main h2:not(.sr-only)')).toHaveText([
+		'Small-group boat tours from Split, by design',
+		/^Our story — \d+ years on the Adriatic$/,
+		'How we run our boat tours',
+		'Come sailing with us',
+	]);
+	await expect(page.getByText('Meet the crew')).toHaveCount(0);
 });
 
 test('contact form works without JavaScript', async ({ browser }) => {

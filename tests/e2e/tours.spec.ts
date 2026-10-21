@@ -16,14 +16,43 @@ test('filters narrow the list, update the URL and can be cleared', async ({ page
 	await expect(page).toHaveURL(/\/tours\/$/);
 });
 
-test('a destination link shows a removable chip and only tours that go there', async ({ page }) => {
+test('the destination dropdown filters the list and its first option clears it', async ({ page }) => {
+	await page.goto('/tours/');
+	const count = page.locator('.tours-results__count');
+	const total = Number(await count.locator('strong').innerText());
+	const select = page.getByLabel('Destination');
+	await select.selectOption({ label: 'Korčula' });
+	await expect(page).toHaveURL(/\?destination=korcula$/);
+	await expect(count).toContainText(/match(es)? your filters/); // "1 tour matches" / "2 tours match"
+	expect(Number(await count.locator('strong').innerText())).toBeLessThan(total);
+	await select.selectOption({ label: 'All destinations' });
+	await expect(count).toHaveText(`${total} tours`);
+	await expect(page).toHaveURL(/\/tours\/$/);
+});
+
+test('a destination page link (?destination=vis) selects its grouped option', async ({ page }) => {
 	await page.goto('/tours/?destination=vis');
-	const chip = page.getByRole('button', { name: /Vis island.*remove this filter/ });
-	await expect(chip).toBeVisible();
+	await expect(page.getByLabel('Destination')).toHaveValue('blue-cave');
+	await expect(page.getByLabel('Destination').locator('option:checked')).toHaveText('Blue Cave & Vis');
 	const shown = await page.locator('.tours-results__grid > li').count();
-	await chip.click();
+	await page.getByRole('button', { name: 'Clear filters' }).first().click();
+	await expect(page.getByLabel('Destination')).toHaveValue('');
 	await expect(page).toHaveURL(/\/tours\/$/);
 	expect(await page.locator('.tours-results__grid > li').count()).toBeGreaterThan(shown);
+});
+
+test('a click anywhere on a dropdown pill lands on its select', async ({ page }) => {
+	await page.goto('/tours/');
+	for (const name of ['Destination', 'Sort tours']) {
+		const select = page.getByLabel(name);
+		const pill = select.locator('xpath=..');
+		const box = (await pill.boundingBox())!;
+		// The icon end and the chevron end of the pill both hit the select, not the icons.
+		for (const x of [box.x + 12, box.x + box.width - 12]) {
+			const hit = await page.evaluate(([px, py]) => document.elementFromPoint(px, py)?.tagName, [x, box.y + box.height / 2]);
+			expect(hit, name).toBe('SELECT');
+		}
+	}
 });
 
 test('sort by price puts the cheapest first and quote-only tours last', async ({ page }) => {
@@ -52,6 +81,51 @@ test('every tour page opens its gallery on a real photo and has no Highlights se
 		await expect(page.locator('.gallery-ui__hero img'), href).toHaveAttribute('src', /.+/);
 		await expect(page.getByRole('heading', { name: 'Highlights' }), href).toHaveCount(0);
 	}
+});
+
+test('Read more: the whole intro is in the HTML, collapsed to a preview until the button opens it', async ({ page, request }) => {
+	const html = await (await request.get('/tours/blue-cave-hvar-5-islands/')).text();
+	expect(html).toContain('before cruising back to Split as the sun dips over the islands');
+	await page.goto('/tours/blue-cave-hvar-5-islands/');
+	const intro = page.locator('#intro-body');
+	const button = page.locator('.tour__more');
+	await expect(button).toBeVisible();
+	await expect(button).toHaveAttribute('aria-expanded', 'false');
+	await expect(button).toHaveAttribute('aria-controls', 'intro-body');
+	await expect(intro).toHaveAttribute('data-collapsed', '');
+	await button.click();
+	await expect(button).toHaveAttribute('aria-expanded', 'true');
+	await expect(button).toHaveText(/Show less/);
+	await expect(intro).not.toHaveAttribute('data-collapsed', '');
+	await button.click();
+	await expect(button).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('Read more: without JavaScript the full intro shows and there is no button', async ({ browser }) => {
+	const context = await browser.newContext({ javaScriptEnabled: false });
+	const page = await context.newPage();
+	await page.goto('/tours/blue-cave-hvar-5-islands/');
+	await expect(page.locator('#intro-body')).not.toHaveAttribute('data-collapsed', '');
+	await expect(page.locator('.tour__more')).toBeHidden();
+	await context.close();
+});
+
+test('tour pages have search-worded section headings', async ({ page }) => {
+	await page.goto('/tours/blue-cave-hvar-5-islands/');
+	await expect(page.getByRole('heading', { level: 2, name: 'About the Blue Cave, Hvar & 5 islands tour' })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 2, name: /^Tour itinerary — from Split to the Blue Cave/ })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 2, name: "What's included in the tour" })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 2, name: 'Good to know before you go' })).toBeVisible();
+});
+
+test('booking a tour with one fixed departure: no time line under the calendar, the summary has it with the check-in', async ({ page }) => {
+	await page.goto('/book/blue-cave-hvar-5-islands/group/');
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
+	const departure = page.locator('.flow__departure');
+	await expect(departure).not.toContainText('07:20');
+	await expect(departure).toContainText('Online booking closes');
+	await expect(page.getByRole('radiogroup', { name: 'Departure time' })).toHaveCount(0);
+	await expect(page.locator('.summary-card-ui__row').filter({ hasText: 'Departure' })).toContainText('07:20 (check-in 07:05)');
 });
 
 test.describe('phone', () => {

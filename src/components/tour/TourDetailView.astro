@@ -11,10 +11,10 @@ import { CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT, CANCELLATION_SHO
 import { seasonLabel } from '../../config/season';
 import { formatFromPrice } from '../../lib/price';
 import { feeLabel } from '../../lib/cards';
-import { meetingPointLines, showsBestseller, tourCtas } from '../../lib/tour-display';
+import { meetingPointLines, showsBestseller, tourBreadcrumbs, tourCtas, tourHeadings } from '../../lib/tour-display';
 import { WHY_GO_PRIVATE, WHY_GO_PRIVATE_TOURS } from '../../data/private-tours';
 import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
-import { getPrimaryDestinationForTour } from '../../lib/destinations';
+import { getDestinationsForTour } from '../../lib/destinations';
 import ImageGallery, { type GalleryTag } from '../vue/ImageGallery.vue';
 import Breadcrumb from '../ui/Breadcrumb.astro';
 import SectionHeader from '../ui/SectionHeader.astro';
@@ -24,6 +24,7 @@ import InfoTileGrid from '../ui/InfoTileGrid.astro';
 import Notice from '../ui/Notice.astro';
 import StickyAside from '../ui/StickyAside.astro';
 import Button from '../ui/Button.astro';
+import CrownIcon from '../ui/CrownIcon.astro';
 import MobileActionBar from '../ui/MobileActionBar.astro';
 import SeasonPrice from '../ui/SeasonPrice.vue';
 
@@ -32,7 +33,7 @@ type Props = { tour: TourDetail };
 const { tour } = Astro.props;
 const isGroup = isGroupTour(tour);
 const isPrivateToo = isGroup && tour.types.includes('private');
-const { primary, secondary } = tourCtas(tour, { book: (s) => groupBookHref({ slug: s }), contact: (s) => contactHrefForTour({ slug: s }), charter: charterUrl });
+const { primary, secondary } = tourCtas(tour, { book: (s) => groupBookHref({ slug: s }), contact: (s, topic) => contactHrefForTour({ slug: s }, topic), charter: charterUrl });
 
 // Order as on board 03: private first, then group.
 const heroTags: GalleryTag[] = [];
@@ -45,12 +46,7 @@ const galleryPhotos = await Promise.all(
 	[tour.image, ...tour.gallery].map((photo) => toGalleryView(photo, 'sailboat', GALLERY_PHOTO_SIZE)),
 );
 
-const primaryDestination = getPrimaryDestinationForTour(tour);
-const crumbs = [
-	{ label: 'Tours', href: '/tours/' },
-	...(primaryDestination ? [{ label: primaryDestination.name, href: `/destinations/${primaryDestination.slug}/` }] : []),
-	{ label: tour.title },
-];
+const crumbs = tourBreadcrumbs(tour);
 
 // Prerendered: both seasons' prices go in the HTML and SeasonPrice shows today's (BaseLayout).
 const prices = tour.prices;
@@ -64,6 +60,7 @@ const nextDeparture =
 const duration = tour.duration.replace(/^Approx\.\s*/, '≈ ');
 const showWhyPrivate = WHY_GO_PRIVATE_TOURS.has(tour.slug);
 const meetingPoint = meetingPointLines(tour);
+const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 ---
 
 <article class="tour">
@@ -81,11 +78,27 @@ const meetingPoint = meetingPointLines(tour);
 					{isGroup ? `Small group, max ${MAX_GUESTS} persons` : 'Private charter'}
 				</span>
 			</p>
-			<!-- [DEVIATE, content] The operator's full description, not the card blurb: it's the only overview the page has. -->
-			<p class="tour__intro">{tour.overviewHighlights}</p>
+			<section class="tour__section" aria-labelledby="about-heading">
+				<SectionHeader variant="plain" title={headings.about} id="about-heading" />
+				<!-- [DEVIATE, content] The operator's full description, not the card blurb: it's the only overview the page has. -->
+				<div class="tour__intro" id="intro-body">
+					<p>{tour.overviewHighlights}</p>
+					{tour.introMore?.map((paragraph) => <p>{paragraph}</p>)}
+				</div>
+				{
+					/* Read more (handoff D5): the script collapses the text and shows the button only when the
+					   text overflows the clamp. Without JavaScript the full text shows and the button stays hidden. */
+					tour.introCollapsible && (
+						<button type="button" class="tour__more" aria-expanded="true" aria-controls="intro-body" data-intro-toggle hidden>
+							<span class="tour__more-label">Show less</span>
+							<i class="ti ti-chevron-down" aria-hidden="true" />
+						</button>
+					)
+				}
+			</section>
 
 			<section class="tour__section" aria-labelledby="itinerary-heading">
-				<SectionHeader variant="plain" title={tour.itineraryLabel} id="itinerary-heading" />
+				<SectionHeader variant="plain" title={headings.itinerary} id="itinerary-heading" />
 				<Timeline variant="itinerary" items={tour.itinerary} />
 			</section>
 
@@ -106,7 +119,7 @@ const meetingPoint = meetingPointLines(tour);
 			}
 
 			<section class="tour__section" aria-labelledby="included-heading">
-				<SectionHeader variant="plain" title="What's included" id="included-heading" />
+				<SectionHeader variant="plain" title={headings.included} id="included-heading" />
 				<ul class="tour__list" role="list">
 					{
 						tour.included.map((item) => (
@@ -120,7 +133,7 @@ const meetingPoint = meetingPointLines(tour);
 			</section>
 
 			<section class="tour__section" aria-labelledby="excluded-heading">
-				<SectionHeader variant="plain" title="What's not included" id="excluded-heading" />
+				<SectionHeader variant="plain" title={headings.notIncluded} id="excluded-heading" />
 				<ul class="tour__list" role="list">
 					{
 						mandatoryFees.map((fee) => (
@@ -143,7 +156,7 @@ const meetingPoint = meetingPointLines(tour);
 			</section>
 
 			<section class="tour__section" aria-labelledby="know-heading">
-				<SectionHeader variant="plain" title="Good to know" id="know-heading" />
+				<SectionHeader variant="plain" title={headings.goodToKnow} id="know-heading" />
 				<InfoTileGrid>
 					<InfoTile label="Departure">{tour.departure}</InfoTile>
 					<InfoTile label="Return">{tour.returnTime}</InfoTile>
@@ -223,7 +236,14 @@ const meetingPoint = meetingPointLines(tour);
 			<!-- [DEVIATE, legal] §6.3.4: seasonal prices are disclosed in the booking flow and the FAQ (operator, Oct 2026), not here. -->
 			<hr class="tour__divider" />
 			<Button href={primary.href} block iconEnd="arrow-right" class="tour__cta">{primary.label}</Button>
-			{secondary && <Button href={secondary.href} variant="secondary" block icon="crown" class="tour__cta tour__cta--secondary">{secondary.label}</Button>}
+			{
+				secondary && (
+					<Button href={secondary.href} variant="secondary" block class="tour__cta tour__cta--secondary">
+						<CrownIcon slot="icon" />
+						{secondary.label}
+					</Button>
+				)
+			}
 			{/* The 48h rule is the group tours'; private charters have their own terms (legal/cancellation §3). */}
 			{isGroup && <p class="tour__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {isPrivateToo ? `Group tours: ${CANCELLATION_SHORT.toLowerCase()}` : CANCELLATION_SHORT}</p>}
 			{tour.types.includes('private') && (
@@ -288,11 +308,77 @@ const meetingPoint = meetingPointLines(tour);
 			font-size: 13px;
 		}
 
+		/* Section titles worded for search (handoff D1) read a step larger here than SectionHeader's plain default. */
+		.tour__section :global(.section-head-plain) {
+			font-size: var(--font-size-xl);
+			font-weight: var(--font-weight-semibold);
+		}
+
 		.tour__intro {
-			margin: 0 0 var(--detail-gap);
 			font-size: var(--font-size-body-md);
 			line-height: var(--line-height-body-md);
 			color: var(--color-text-secondary);
+		}
+
+		.tour__intro p {
+			margin: 0;
+		}
+
+		.tour__intro p + p {
+			margin-top: var(--space-3);
+		}
+
+		/* Read more, collapsed: 4 lines, the last 3 fading out. The text stays in the DOM for search. */
+		.tour__intro[data-collapsed] {
+			max-height: calc(4em * 1.6); /* 4 lines at --line-height-body-md, where lh isn't supported */
+			max-height: 4lh;
+			overflow: hidden;
+			-webkit-mask-image: linear-gradient(to bottom, black 25%, transparent);
+			mask-image: linear-gradient(to bottom, black 25%, transparent);
+		}
+
+		/* A blue text link, centred over the faded last line; below the text once expanded. */
+		.tour__more {
+			position: relative;
+			display: flex;
+			align-items: center;
+			gap: 4px;
+			min-height: 32px;
+			margin: var(--space-2) auto 0;
+			padding: 4px var(--space-2);
+			border: 0;
+			border-radius: var(--radius-pill);
+			/* The page colour, so the label stays clear of the faded line under it. */
+			background: var(--color-background-primary);
+			color: var(--color-text-info);
+			font: inherit;
+			font-size: var(--font-size-body-sm);
+			font-weight: var(--font-weight-medium);
+			cursor: pointer;
+		}
+
+		.tour__intro[data-collapsed] + .tour__more {
+			margin-top: calc(-1 * var(--space-6));
+		}
+
+		.tour__more:hover .tour__more-label {
+			text-decoration: underline;
+			text-underline-offset: 2px;
+		}
+
+		.tour__more .ti {
+			font-size: 16px;
+			transition: transform 0.2s ease;
+		}
+
+		.tour__more[aria-expanded='true'] .ti {
+			transform: rotate(180deg);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.tour__more .ti {
+				transition: none;
+			}
 		}
 
 		.tour__section {
@@ -519,3 +605,41 @@ const meetingPoint = meetingPointLines(tour);
 		}
 	}
 </style>
+
+<script>
+	// Read more (handoff D5). Collapses the intro to its clamp, and offers the
+	// button only when that clamp actually hides text; re-checked on resize.
+	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-intro-toggle]')) {
+		const body = document.getElementById(button.getAttribute('aria-controls') ?? '');
+		const label = button.querySelector('.tour__more-label');
+		if (!body || !label) continue;
+		let expanded = false;
+
+		const render = () => {
+			button.setAttribute('aria-expanded', String(expanded));
+			label.textContent = expanded ? 'Show less' : 'Read more';
+		};
+
+		const check = () => {
+			if (expanded) return;
+			body.setAttribute('data-collapsed', '');
+			const overflows = body.scrollHeight > body.clientHeight + 1;
+			body.toggleAttribute('data-collapsed', overflows);
+			button.hidden = !overflows;
+		};
+
+		button.addEventListener('click', () => {
+			expanded = !expanded;
+			body.toggleAttribute('data-collapsed', !expanded);
+			// Re-measure on collapse: a wider window may have made the text fit since it opened.
+			if (!expanded) check();
+			render();
+			// Collapsing a long text can leave the button above the screen.
+			if (!expanded) button.scrollIntoView({ block: 'nearest' });
+		});
+
+		render();
+		check();
+		new ResizeObserver(check).observe(body);
+	}
+</script>

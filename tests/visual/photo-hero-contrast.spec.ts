@@ -7,7 +7,7 @@ import { photoTextContrast } from './contrast';
  * pixel behind them, at 390, 768, 1280 and 1920px.
  *   pnpm test:visual photo-hero-contrast --project=chromium
  */
-const PAGES = ['/tours/', '/destinations/'];
+const PAGES = ['/tours/', '/destinations/', '/about/'];
 
 for (const path of PAGES) {
 	for (const width of [390, 768, 1280, 1920]) {

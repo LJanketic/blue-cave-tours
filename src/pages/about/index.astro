@@ -2,114 +2,90 @@
 export const prerender = true;
 
 /**
- * About (spec §7.4, board 13). Content from src/data/about.ts; only
- * confirmed stats show, and no guest quotes or press until they're backed
- * (D-5, C-4).
+ * About (spec §7.4, board 13; 20 Oct handoff): photo hero like Tours and
+ * Destinations, the stats band, three sections and the photo CTA band.
+ * Content from src/data/about.ts; only confirmed stats show, and no guest
+ * quotes or press until they're backed (D-5, C-4).
  */
-import { Image } from 'astro:assets';
-import { pageTitle } from '../../config/site';
+import { FOUNDING_YEAR, pageTitle } from '../../config/site';
 import { charterUrl } from '../../config/routes';
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import PhotoHero from '../../components/ui/PhotoHero.astro';
+import TrustBand from '../../components/home/TrustBand.astro';
 import SectionHeader from '../../components/ui/SectionHeader.astro';
 import Timeline from '../../components/ui/Timeline.astro';
 import CtaBand from '../../components/ui/CtaBand.astro';
 import Button from '../../components/ui/Button.astro';
 import { ABOUT } from '../../data/about';
+import type { TrustItem } from '../../data/marketing';
 import { MAX_GUESTS } from '../../lib/booking';
 import { HERO_IMAGE } from '../../data/hero-image';
+import { firstPhotoForDestination } from '../../data/destination-photos';
 
-const stats = ABOUT.trustStats.filter((stat) => stat.confirmed);
+// The band takes the homepage's TrustItem shape; the About stats keep theirs.
+const trustItems: TrustItem[] = ABOUT.trustStats
+	.filter((stat) => stat.confirmed)
+	.map((stat) => ({ icon: stat.icon, strong: stat.value, text: stat.label, confirmed: true }));
+
+// The hero keeps the page's boat aerial (dark water behind the text); the CTA
+// band gets its own photo rather than repeating the homepage's lagoon.
+const ctaPhoto = firstPhotoForDestination('pakleni', 6);
+if (!ctaPhoto?.src) throw new Error('About CTA photo missing');
 ---
 
 <SiteLayout
 	title={pageTitle('About us: Split locals running boat tours')}
 	description="Split locals running small-group boat tours and private charters: Blue Cave, islands, and routes that follow the weather."
-	footerGap="32px"
+	solidNav={false}
+	fontPreload
+	footerGap="48px"
 >
-	<main id="main" class="about">
-		<Image
-			src={HERO_IMAGE.src}
-			alt={HERO_IMAGE.alt}
-			widths={[640, 960, 1280, 1824]}
-			sizes="(max-width: 1008px) 100vw, 912px"
-			quality={70}
-			format="webp"
-			loading="eager"
-			class="about__hero"
-		/>
+	<main id="main">
+		<PhotoHero image={HERO_IMAGE.src} imagePosition="70% center" eyebrow={`Since ${FOUNDING_YEAR} · Split`} title="About us" lead={ABOUT.headline} />
 
-		<div class="about__intro">
-			<div>
-				<h1 class="about__title">{ABOUT.headline}</h1>
+		{/* A single item reads as a stray line, not a band: shown from two. */}
+		{trustItems.length >= 2 && <TrustBand items={trustItems} id="about-stats" label="Hello Blue Cave in numbers" />}
+
+		<div class="about">
+			<section class="about__section" aria-labelledby="intro-heading">
+				<SectionHeader variant="plain" title={ABOUT.headings.intro} id="intro-heading" />
 				<p class="about__text">{ABOUT.intro}</p>
-			</div>
-			{
-				stats.length > 0 && (
-					<dl class="about__stats">
-						{stats.map((stat) => (
-							<div class="about__stat">
-								<i class={`ti ti-${stat.icon}`} aria-hidden="true" />
-								<dt>{stat.label}</dt>
-								<dd>{stat.value}</dd>
-							</div>
-						))}
-					</dl>
-				)
-			}
-		</div>
+			</section>
 
-		<section class="about__section" aria-labelledby="history-heading">
-			<SectionHeader variant="plain" title="How we got here" id="history-heading" />
-			<Timeline variant="history" items={ABOUT.foundingTimeline} />
-		</section>
+			<section class="about__section" aria-labelledby="history-heading">
+				<SectionHeader variant="plain" title={ABOUT.headings.story} id="history-heading" />
+				<Timeline variant="history" items={ABOUT.foundingTimeline} />
+			</section>
 
-		<section class="about__section" aria-labelledby="crew-heading">
-			<SectionHeader variant="plain" title="Meet the crew" id="crew-heading" />
-			<div class="about__crew-scroller" data-scroll-region="Our crew">
-				<ul class="about__crew" role="list">
+			<section class="about__section" aria-labelledby="values-heading">
+				<SectionHeader variant="plain" title={ABOUT.headings.values} id="values-heading" />
+				<ul class="about__values" role="list">
 					{
-						ABOUT.crew.map((member) => (
-							<li class="about__member">
-								<span class="about__portrait" aria-hidden="true">
-									<i class="ti ti-user-circle" />
-								</span>
-								<div class="about__member-body">
-									<h3>{member.name}</h3>
-									<p class="about__role">{member.role}</p>
-									<p class="about__bio">{member.bio}</p>
-								</div>
+						ABOUT.values.map((value) => (
+							<li class="about__value">
+								<i class={`ti ti-${value.icon}`} aria-hidden="true" />
+								<h3>{value.title}</h3>
+								<p>{value.description}</p>
 							</li>
 						))
 					}
 				</ul>
-			</div>
-		</section>
+			</section>
 
-		<section class="about__section" aria-labelledby="values-heading">
-			<SectionHeader variant="plain" title="What we believe in" id="values-heading" />
-			<ul class="about__values" role="list">
-				{
-					ABOUT.values.map((value) => (
-						<li class="about__value">
-							<i class={`ti ti-${value.icon}`} aria-hidden="true" />
-							<h3>{value.title}</h3>
-							<p>{value.description}</p>
-						</li>
-					))
-				}
-			</ul>
-		</section>
-
-		<CtaBand heading="Come sailing with us" text={`Group tours depart daily. Private charters for up to ${MAX_GUESTS} persons.`} id="about-cta">
-			<Button href="/tours/">Browse tours</Button>
-			<Button href={charterUrl()} variant="secondary">Plan a private charter</Button>
-		</CtaBand>
+			<CtaBand
+				variant="photo"
+				heading="Come sailing with us"
+				text={`Most group tours depart daily. Private charters for up to ${MAX_GUESTS} persons.`}
+				image={ctaPhoto.src}
+				imagePosition="center 60%"
+				id="about-cta"
+			>
+				<Button variant="on-image" size="md" href="/tours/">Browse tours</Button>
+				<Button variant="on-image-ghost" size="md" href={charterUrl()}>Plan a private charter</Button>
+			</CtaBand>
+		</div>
 	</main>
 </SiteLayout>
-
-<script>
-	import '../../client/scroll-regions';
-</script>
 
 <style>
 	@layer pages {
@@ -117,130 +93,19 @@ const stats = ABOUT.trustStats.filter((stat) => stat.confirmed);
 			width: 100%;
 			max-width: var(--content-max);
 			margin: 0 auto;
-			padding: calc(24px + 1.5rem) var(--page-gutter) 0;
-		}
-
-		.about__hero {
-			display: block;
-			width: 100%;
-			height: 200px; /* board 13 */
-			margin-bottom: var(--space-6);
-			border-radius: var(--radius-lg);
-			object-fit: cover;
-			object-position: 70% center;
-		}
-
-		.about__intro {
-			display: grid;
-			grid-template-columns: minmax(0, 1fr) 280px;
-			gap: var(--space-7);
-			align-items: start;
-			margin-bottom: var(--detail-gap);
-		}
-
-		.about__title {
-			margin: 0 0 var(--space-3);
-			font-size: var(--font-size-hero);
-			font-weight: var(--font-weight-medium);
-			line-height: var(--line-height-tight);
+			padding: var(--section-gap) var(--page-gutter) 0;
 		}
 
 		.about__text {
+			max-width: 680px;
 			margin: 0;
 			font-size: var(--font-size-body-md);
 			line-height: var(--line-height-body-md);
 			color: var(--color-text-secondary);
 		}
 
-		.about__stats {
-			display: grid;
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-			gap: 10px;
-			margin: 0;
-		}
-
-		.about__stat {
-			display: flex;
-			flex-direction: column;
-			gap: 2px;
-			padding: var(--space-3);
-			border-radius: var(--radius-md);
-			background: var(--color-background-secondary);
-		}
-
-		.about__stat .ti {
-			font-size: 16px;
-			color: var(--color-accent);
-		}
-
-		.about__stat dd {
-			order: 1;
-			margin: 0;
-			font-size: var(--font-size-xl);
-			font-weight: var(--font-weight-medium);
-		}
-
-		.about__stat dt {
-			order: 2;
-			font-size: var(--font-size-base);
-			color: var(--color-text-secondary);
-		}
-
 		.about__section {
 			margin-bottom: var(--detail-gap);
-		}
-
-		.about__crew {
-			display: grid;
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-			gap: var(--space-3);
-			margin: 0;
-			padding: 0;
-			list-style: none;
-		}
-
-		.about__member {
-			overflow: hidden;
-			border-radius: var(--radius-lg);
-			background: var(--color-background-secondary);
-		}
-
-		/* The photo band, white with an icon until the crew consents to photos (C-5). */
-		.about__portrait {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			height: 100px; /* board 13 */
-			background: var(--color-background-primary);
-			border: 1px solid var(--color-background-secondary);
-			border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-			font-size: 32px;
-			color: var(--color-border-secondary);
-		}
-
-		.about__member-body {
-			padding: var(--space-3);
-		}
-
-		.about__member h3 {
-			margin: 0 0 2px;
-			font-size: var(--font-size-base);
-			font-weight: var(--font-weight-medium);
-		}
-
-		.about__role {
-			margin: 0 0 6px;
-			font-size: var(--font-size-xs);
-			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			color: var(--color-text-info);
-		}
-
-		.about__bio {
-			margin: 0;
-			font-size: var(--font-size-body-sm);
-			line-height: var(--line-height-body-sm);
-			color: var(--color-text-secondary);
 		}
 
 		.about__values {
@@ -277,35 +142,8 @@ const stats = ABOUT.trustStats.filter((stat) => stat.confirmed);
 		}
 
 		@media (max-width: 768px) {
-			.about__intro,
-			.about__stats,
 			.about__values {
 				grid-template-columns: minmax(0, 1fr);
-			}
-
-			.about__crew-scroller {
-				margin: 0 calc(-1 * var(--page-gutter));
-				overflow-x: auto;
-				scroll-snap-type: x mandatory;
-				scroll-padding-inline: var(--page-gutter);
-				scrollbar-width: none;
-			}
-
-			.about__crew {
-				display: flex;
-				width: max-content;
-				padding: 0 var(--page-gutter) 4px;
-			}
-
-			.about__member {
-				flex: 0 0 40vw;
-				scroll-snap-align: start;
-			}
-		}
-
-		@media (max-width: 480px) {
-			.about__member {
-				flex-basis: 80vw;
 			}
 		}
 	}

@@ -130,7 +130,7 @@ test('marquee stays still under reduced motion', async ({ browser }) => {
 
 test('filter chips toggle aria-pressed', async ({ page }) => {
 	await page.goto('/dev/kit/');
-	const chip = page.getByRole('group', { name: 'Filter tours' }).getByRole('button', { name: 'Private only' });
+	const chip = page.getByRole('group', { name: 'Filter tours' }).getByRole('button', { name: 'Private', exact: true });
 	await expect(chip).toHaveAttribute('aria-pressed', 'false');
 	await chip.click();
 	await expect(chip).toHaveAttribute('aria-pressed', 'true');

@@ -9,7 +9,7 @@
  * Without JavaScript the page shows a plain form instead (group.astro).
  */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { MAX_GUESTS, guestSummaryFromCounts, parseIsoDate } from '../../lib/booking';
+import { MAX_GUESTS, departureLabel as formatDeparture, guestSummaryFromCounts, parseIsoDate } from '../../lib/booking';
 import { bookingClosed, businessDate, dayClosed } from '../../lib/bookings/dates';
 import { computeBookingTotal, seasonPriceLabel, seasonalPriceSummary, seasonalPrices } from '../../lib/price';
 import { seasonFor } from '../../config/season';
@@ -84,11 +84,14 @@ const dateSeason = computed(() => (date.value ? seasonFor(date.value) : null));
 const seasonNote = computed(() => (dateSeason.value ? `${seasonPriceLabel(dateSeason.value)} for your date` : 'Prices depend on the season of your tour date; pick a date to see yours.'));
 const priceSummary = computed(() => (props.prices ? seasonalPriceSummary(props.prices) : ''));
 
+/** The summary is the one place the time shows (handoff B1), and guests need the check-in. */
+const departureLabel = computed(() => formatDeparture(props.departures, slot.value));
+
 const summaryRows = computed(() => {
 	const rows = [
 		{ label: 'Tour', value: props.tourTitle },
 		{ label: 'Date', value: dateLabel.value },
-		{ label: 'Departure', value: slot.value || 'Confirmed at booking' },
+		{ label: 'Departure', value: departureLabel.value },
 		{ label: 'Guests', value: guestSummaryFromCounts(adults.value, children.value, infants.value) },
 	];
 	if (dateSeason.value) rows.push({ label: 'Price', value: seasonPriceLabel(dateSeason.value) });
@@ -245,12 +248,8 @@ onUnmounted(() => clearInterval(clock));
 
 			<div class="flow__departure">
 				<p v-if="departures.length === 0" class="flow__line"><i class="ti ti-clock" aria-hidden="true"></i> Departure time confirmed at booking</p>
-				<p v-else-if="departures.length === 1" class="flow__line">
-					<i class="ti ti-clock" aria-hidden="true"></i>
-					<span v-if="departures[0].checkIn">Check-in {{ departures[0].checkIn }} · departure {{ departures[0].time }}</span>
-					<span v-else>Departure {{ departures[0].time }}</span>
-				</p>
-				<ChoiceCards v-else v-model="slot" name="slot" legend="Departure time" :options="slotOptions" />
+				<!-- One fixed departure: nothing to choose, and the summary shows its time and check-in. -->
+				<ChoiceCards v-else-if="departures.length > 1" v-model="slot" name="slot" legend="Departure time" :options="slotOptions" />
 				<p v-if="departures.length" class="flow__cutoff">{{ BOOKING_CUTOFF_NOTE }}</p>
 			</div>
 		</section>

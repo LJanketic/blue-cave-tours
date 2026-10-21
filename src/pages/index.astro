@@ -17,7 +17,7 @@ import SectionHeader from '../components/ui/SectionHeader.astro';
 import PillLink from '../components/ui/PillLink.astro';
 import CtaBand from '../components/ui/CtaBand.astro';
 import Button from '../components/ui/Button.astro';
-import { getFeaturedTours, getTourCardPhoto, getAllTours } from '../lib/tours';
+import { getSliderTours, getTourCardPhoto, getAllTours } from '../lib/tours';
 import { getAllDestinations, getDestinationPhoto, getDestinationsForTour, getToursForDestination } from '../lib/destinations';
 import { toTourCardDTO } from '../lib/cards';
 import { FAQ_ITEMS } from '../data/faq';
@@ -25,7 +25,7 @@ import { HERO_IMAGE } from '../data/hero-image';
 import { firstPhotoForDestination } from '../data/destination-photos';
 import { GALLERY_CARD_SIZE, toCardPhoto, type PhotoRef } from '../data/tour-photos';
 import { REVIEWS } from '../data/reviews';
-import { CTA_BAND, DESTINATIONS_INTRO, HERO_SLIDES, HOW_IT_WORKS, TRUST_ITEMS, TYPE_CARDS } from '../data/marketing';
+import { CTA_BAND, DESTINATIONS_INTRO, HERO_CTAS, HERO_OVERLINE, HERO_SLIDES, HOW_IT_WORKS, TRUST_ITEMS, TYPE_CARDS } from '../data/marketing';
 import { organizationJsonLd, websiteJsonLd } from '../lib/seo';
 
 const faqPreview = FAQ_ITEMS.slice(0, 4);
@@ -35,17 +35,17 @@ const jsonLd = siteUrl ? [organizationJsonLd(siteUrl), websiteJsonLd(siteUrl)] :
 
 /*
  * Hero photos. The design's own images aren't cleared for use yet (C-17), so
- * the slides use the site's photos: the boat, the Pakleni islands from the
- * air, and the Blue Cave. Picked for contrast behind the text (measured).
+ * the slides use the site's photos: the Blue Cave, the boat, and the Pakleni
+ * islands from the air. Picked for contrast behind the text (measured).
  */
 function requirePhoto(photo: PhotoRef | undefined, label: string): { src: ImageMetadata; alt: string } {
 	if (!photo?.src) throw new Error(`Homepage photo missing: ${label}`);
 	return { src: photo.src, alt: photo.alt };
 }
 const SLIDE_PHOTOS: Record<(typeof HERO_SLIDES)[number]['id'], { src: ImageMetadata; alt: string }> = {
+	'blue-cave': requirePhoto(firstPhotoForDestination('blue-cave', 0), 'blue-cave 01'),
 	group: { src: HERO_IMAGE.src, alt: HERO_IMAGE.alt },
 	charter: requirePhoto(firstPhotoForDestination('pakleni', 4), 'pakleni 05'),
-	'blue-cave': requirePhoto(firstPhotoForDestination('blue-cave', 0), 'blue-cave 01'),
 };
 const CTA_PHOTO = requirePhoto(firstPhotoForDestination('blue-lagoon', 0), 'blue-lagoon 01');
 
@@ -57,10 +57,11 @@ const heroSlides: HeroSlideView[] = await Promise.all(
 		return { ...slide, image: { src: image.src, srcset: image.srcSet.attribute, alt: photo.alt } };
 	}),
 );
+// Slide 1 (the Blue Cave) is the LCP image: the preload follows whichever slide is first.
 const lcp = heroSlides[0].image;
 
 const popularTours = await Promise.all(
-	getFeaturedTours().map(async (tour) =>
+	getSliderTours().map(async (tour) =>
 		toTourCardDTO(
 			tour,
 			getDestinationsForTour(tour.slug).map((d) => d.slug),
@@ -97,18 +98,12 @@ const tourNames = Object.fromEntries(getAllTours().map((t) => [t.slug, t.title])
 		fetchpriority="high"
 	/>
 	<main id="main" class="home">
-		<h1 class="sr-only">Hello Blue Cave: speedboat tours and private charters from Split</h1>
-		<HeroCarousel client:load slides={heroSlides} scrollTarget="trust" />
+		<HeroCarousel client:load heading={HERO_OVERLINE} slides={heroSlides} ctas={HERO_CTAS} scrollTarget="trust" />
 		<TrustBand items={TRUST_ITEMS} id="trust" />
 
 		<PopularTours tours={popularTours} />
 
 		<div class="home__wrap">
-			<section aria-labelledby="types-heading">
-				<SectionHeader title="Group or private?" id="types-heading" />
-				<TypeCards cards={TYPE_CARDS} />
-			</section>
-
 			<section aria-labelledby="destinations-heading">
 				<SectionHeader title="Destinations" sub={DESTINATIONS_INTRO} id="destinations-heading">
 					<PillLink href="/destinations/" slot="actions">All destinations</PillLink>
@@ -130,6 +125,11 @@ const tourNames = Object.fromEntries(getAllTours().map((t) => [t.slug, t.title])
 					}
 				</ul>
 				</div>
+			</section>
+
+			<section aria-labelledby="types-heading">
+				<SectionHeader title="Group or private?" id="types-heading" />
+				<TypeCards cards={TYPE_CARDS} />
 			</section>
 
 			<section aria-labelledby="how-heading">

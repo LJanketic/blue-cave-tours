@@ -4,7 +4,6 @@ import type { Destination } from '../data/destinations';
 import type { FaqItem } from '../data/faq';
 import type { PhotoRef } from '../data/tour-photos';
 import { APPLE_TOUCH_ICON_PATH, SITE_NAME, SITE_EMAIL, SITE_PHONE, SITE_DEFAULT_DESCRIPTION } from '../config/site';
-import { isGroupTour } from './booking';
 
 /** Riva stand 14, the group tours' meeting point (MEETING_POINT_MAP_URL). */
 const MEETING_POINT_GEO = { latitude: 43.5072282, longitude: 16.4391746 };
@@ -85,6 +84,17 @@ export function websiteJsonLd(siteUrl: string) {
 	};
 }
 
+const TOURIST_TYPE: Record<TourDetail['types'][number], string> = { group: 'Group tour', private: 'Private tour' };
+
+/**
+ * schema.org touristType: one value per way the tour can be booked. Text
+ * properties take several values, so a tour with both is an array.
+ */
+export function touristType(tour: Pick<TourDetail, 'types'>): string | string[] {
+	const values = tour.types.map((type) => TOURIST_TYPE[type]);
+	return values.length === 1 ? values[0] : values;
+}
+
 /**
  * Tour pages are prerendered, so the offer doesn't depend on the build date: an
  * AggregateOffer spanning the adult price in both seasons (low and peak).
@@ -99,7 +109,7 @@ export function tourJsonLd(tour: TourDetail, siteUrl: string) {
 		name: tour.title,
 		description: tour.shortDescription,
 		url: tourUrl,
-		touristType: isGroupTour(tour) ? 'Group tour' : 'Private tour',
+		touristType: touristType(tour),
 		...(adultPrices
 			? {
 					offers: {
