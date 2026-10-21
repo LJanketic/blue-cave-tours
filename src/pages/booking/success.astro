@@ -19,6 +19,7 @@ import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
 import { bookings } from '../../lib/bookings/store';
 import { BOOKING_COOKIE } from '../../lib/bookings/session';
+import { durationLabel } from '../../config/charter';
 
 // Only a paid, active booking gets this page; anything else goes to the payment page.
 const id = Astro.url.searchParams.get('id');
@@ -70,11 +71,12 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 		</div>
 
 		<SummaryCard
-			title="Your booking"
+			title={booking.kind === 'private' ? 'Your charter' : 'Your booking'}
 			rows={[
 				{ label: 'Tour', value: booking.tourTitle },
 				{ label: 'Date', value: formatBookingDate(booking.date) },
 				{ label: 'Departure', value: booking.slot || 'Confirmed by email' },
+				...(booking.kind === 'private' && booking.durationHours ? [{ label: 'Duration', value: durationLabel(booking.durationHours) }] : []),
 				{ label: 'Guests', value: guestSummaryFromCounts(booking.adults, booking.children, booking.infants) },
 				{ label: 'Paid with', value: booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card' },
 				...(booking.invoice ? [{ label: 'Invoice (račun)', value: `${booking.invoice.number}${PAYMENTS_ARE_DEMO ? ' (demo)' : ''}` }] : []),

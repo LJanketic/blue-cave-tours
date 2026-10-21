@@ -5,7 +5,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import DepartureCard from '../../components/admin/DepartureCard.astro';
 import { formatBookingDate } from '../../lib/booking';
 import { businessDate, formatShortDate, formatTimestamp } from '../../lib/bookings/dates';
-import { STATUS_LABELS, sweepPersonalData } from '../../lib/bookings/service';
+import { isDeadQuote, STATUS_LABELS, sweepPersonalData } from '../../lib/bookings/service';
 import { bookings, byCreatedDesc, enquiries } from '../../lib/bookings/store';
 import { addDays, isIsoDate, summarizeDay, weekFrom } from '../../lib/admin/schedule';
 import { overbookedDepartures } from '../../lib/admin/manifest';
@@ -99,7 +99,8 @@ if (toWrapUp > 0) {
 	});
 }
 
-const latest = [...all].sort(byCreatedDesc).slice(0, 5);
+// Replaced, withdrawn or expired charter quotes were never bookings.
+const latest = all.filter((b) => !isDeadQuote(b)).sort(byCreatedDesc).slice(0, 5);
 ---
 
 <AdminLayout title="Dashboard" section="today" wide>

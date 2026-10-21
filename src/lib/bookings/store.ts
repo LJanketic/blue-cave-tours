@@ -73,6 +73,14 @@ export type Booking = {
 	history: HistoryEntry[];
 	/** Created by the admin's "Load demo data" button. */
 	sample?: boolean;
+	/** 'group' for older records (normalizeBooking): a seat on a shared boat. 'private' is a quoted charter, the whole boat. */
+	kind?: 'group' | 'private';
+	/** Private charters: the request this quote answers. */
+	enquiryId?: string;
+	/** Private charters: the quote can be paid until this moment (ISO). */
+	quoteExpiresAt?: string;
+	/** Private charters: hours, as quoted. */
+	durationHours?: number;
 };
 
 export type LineItem = { label: string; unit: number; qty: number; amount: number };
@@ -94,17 +102,35 @@ export type Enquiry = {
 	bookingRef?: string;
 	/** False when the daily cap on admin notification emails was reached (S-6): stored, not emailed. */
 	notified?: boolean;
-	/** 'contact' for older records (normalizeEnquiry); 'charter' arrives with PR 8. */
+	/** 'contact' for older records (normalizeEnquiry); 'charter' for the private charter form (§8.2). */
 	kind?: 'contact' | 'charter';
+	/** What the charter form asked for (kind 'charter' only). */
+	charter?: CharterRequestDetails;
+	/** The unpaid or paid booking created by the latest quote. */
+	quoteBookingId?: string;
 	/** Set by the retention sweep (S-13). */
 	personalDataRemovedAt?: string;
 	sample?: boolean;
 };
 
+export type CharterRequestDetails = {
+	/** A route id from src/config/charter.ts. */
+	route: string;
+	date: string;
+	/** Preferred departure, "HH:MM". */
+	time: string;
+	durationHours: number;
+	adults: number;
+	children: number;
+	infants: number;
+	firstName: string;
+	lastName: string;
+};
+
 export type OutboxEmail = {
 	id: string;
 	createdAt: string;
-	kind: 'booking_confirmation' | 'admin_booking' | 'admin_enquiry';
+	kind: 'booking_confirmation' | 'admin_booking' | 'admin_enquiry' | 'charter_quote';
 	to: string;
 	replyTo: string | null;
 	subject: string;
@@ -233,7 +259,7 @@ function blobsCollection<T extends { id: string }>(name: string): Collection<T> 
  * everything" on a preview would wipe them). CONTEXT is Netlify's deploy
  * context, inlined at build time.
  */
-function scopedName(name: string): string {
+export function scopedName(name: string): string {
 	const context = process.env.CONTEXT || import.meta.env.CONTEXT;
 	return context && context !== 'production' ? `${name}--${context}` : name;
 }
@@ -249,7 +275,7 @@ function collection<T extends { id: string }>(name: string): Collection<T> {
  */
 export function normalizeBooking(booking: Booking): Booking {
 	const infants = booking.infants ?? 0;
-	return { ...booking, infants };
+	return { ...booking, infants, kind: booking.kind ?? 'group' };
 }
 
 export function normalizeEnquiry(enquiry: Enquiry): Enquiry {

@@ -12,7 +12,7 @@ type Props = { departure: Departure };
 const { departure: d } = Astro.props;
 
 const left = Math.max(0, d.capacity - d.seatsTaken);
-const fill = Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100));
+const fill = d.capacity ? Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100)) : 0;
 const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 ---
 
@@ -22,16 +22,30 @@ const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 		<div class="dep-info">
 			<p class="dep-line">
 				<span class="dep-time a-tnum">{d.slot || 'Time TBC'}</span>
-				<span class:list={['a-badge', left === 0 ? 'a-badge--full' : left <= 3 ? 'a-badge--busy' : 'a-badge--confirmed']}>
-					{d.overBy > 0 ? `Overbooked by ${d.overBy}` : left === 0 ? 'Full' : `${left} ${left === 1 ? 'seat' : 'seats'} left`}
-				</span>
+				{
+					d.private ? (
+						<span class="a-badge a-badge--private">Private boat</span>
+					) : (
+						<span class:list={['a-badge', left === 0 ? 'a-badge--full' : left <= 3 ? 'a-badge--busy' : 'a-badge--confirmed']}>
+							{d.overBy > 0 ? `Overbooked by ${d.overBy}` : left === 0 ? 'Full' : `${left} ${left === 1 ? 'seat' : 'seats'} left`}
+						</span>
+					)
+				}
 			</p>
 			<h3 class="dep-title">{d.tourTitle}</h3>
-			<p class="dep-seats">
-				<span class:list={['seat-bar', { 'seat-bar--over': d.overBy > 0 }]} aria-hidden="true"><span style={`width:${fill}%`}></span></span>
-				<span class="a-tnum">{d.seatsTaken}/{d.capacity}</span>
-				{d.seatsTaken > 0 && <span class="a-muted">· {guestSummaryFromCounts(d.adults, d.children, d.infants)}</span>}
-			</p>
+			{
+				d.private ? (
+					<p class="dep-seats">
+						<span class="a-muted">{d.seatsTaken > 0 ? `Whole boat · ${guestSummaryFromCounts(d.adults, d.children, d.infants)}` : 'Quote sent, not paid yet'}</span>
+					</p>
+				) : (
+					<p class="dep-seats">
+						<span class:list={['seat-bar', { 'seat-bar--over': d.overBy > 0 }]} aria-hidden="true"><span style={`width:${fill}%`}></span></span>
+						<span class="a-tnum">{d.seatsTaken}/{d.capacity}</span>
+						{d.seatsTaken > 0 && <span class="a-muted">· {guestSummaryFromCounts(d.adults, d.children, d.infants)}</span>}
+					</p>
+				)
+			}
 		</div>
 	</header>
 

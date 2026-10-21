@@ -8,6 +8,12 @@ import { byCreatedDesc, enquiries, type EnquiryStatus } from '../../lib/bookings
 import { whatsappNumber } from '../../lib/admin/manifest';
 import { getTourBySlug } from '../../lib/tours';
 import { topicLabel } from '../../lib/contact-validation';
+import { bookings, type Booking } from '../../lib/bookings/store';
+import { quoteExpired, sendCharterQuote } from '../../lib/bookings/service';
+import { QUOTE_ERRORS, parseQuote, validateQuote } from '../../lib/charter';
+import { CHARTER_DURATIONS, QUOTE_MAX_EUR, QUOTE_NOTE_MAX, QUOTE_VALID_DAYS, durationLabel } from '../../config/charter';
+import { charterRequestRows } from '../../lib/email/templates';
+import { businessDate } from '../../lib/bookings/dates';
 
 const LABELS: Record<EnquiryStatus, string> = { new: 'New', replied: 'Replied', closed: 'Closed' };
 /** The one obvious next step for each state. */
@@ -17,24 +23,60 @@ const NEXT: Record<EnquiryStatus, { status: EnquiryStatus; label: string; icon: 
 	closed: { status: 'new', label: 'Reopen', icon: 'ti-refresh' },
 };
 
+const STAFF = 'Admin';
+const QUOTE_FLASH: Record<string, string> = {
+	quoted: 'Quote sent. The customer has an email with a link to pay (see Emails).',
+	stale: 'Not sent: this request was quoted again meanwhile. Check the latest quote below.',
+	...QUOTE_ERRORS,
+};
+
 if (Astro.request.method === 'POST') {
 	const form = await Astro.request.formData();
 	const id = String(form.get('id') ?? '');
+	const keep = new URLSearchParams(Astro.url.search);
+	keep.delete('done');
+	if (form.get('action') === 'quote' && isRecordId(id)) {
+		const quote = parseQuote(form);
+		const error = validateQuote(quote);
+		const result = error ? null : await sendCharterQuote(id, quote, String(form.get('previous') ?? ''), STAFF, Astro.url.origin);
+		keep.set('done', error ?? (result?.ok ? 'quoted' : (result?.error ?? 'missing')));
+		return Astro.redirect(`/admin/enquiries/?${keep}#enquiry-${id}`, 303);
+	}
 	const status = String(form.get('status') ?? '');
 	if (isRecordId(id) && Object.hasOwn(LABELS, status)) {
 		await enquiries().update(id, (enquiry) => (enquiry.status === status ? null : { ...enquiry, status: status as EnquiryStatus }));
 	}
-	return Astro.redirect(`/admin/enquiries/${Astro.url.search}`, 303);
+	return Astro.redirect(`/admin/enquiries/${keep.size ? `?${keep}` : ''}`, 303);
 }
+
+const flashCode = Astro.url.searchParams.get('done') ?? '';
+const flash = Object.hasOwn(QUOTE_FLASH, flashCode) ? QUOTE_FLASH[flashCode] : '';
+const flashOk = flashCode === 'quoted';
 
 const show = Astro.url.searchParams.get('show') === 'all' ? 'all' : 'open';
 const everything = await enquiries().list();
 const openCount = everything.filter((e) => e.status !== 'closed').length;
 const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').sort(byCreatedDesc);
+// Each charter request's latest quote, by id (a handful of reads, never a scan of all bookings).
+const quotes = new Map<string, Booking>();
+for (const e of rows) {
+	const quote = e.quoteBookingId ? await bookings().get(e.quoteBookingId) : null;
+	if (quote) quotes.set(e.id, quote);
+}
+const tomorrow = businessDate(new Date(), 1);
 ---
 
 <AdminLayout title="Enquiries" section="enquiries">
-	<p class="admin-lede">Messages from the contact form, including private charter requests.</p>
+	<p class="admin-lede">Messages from the contact form and private charter requests. Answer a charter request with a quote: the customer gets a link to pay it.</p>
+
+	{
+		flash && (
+			<div class={flashOk ? 'highlight-box' : 'warn-box'} role="status">
+				<i class={`ti ${flashOk ? 'ti-circle-check' : 'ti-alert-circle'}`} aria-hidden="true" />
+				<p>{flash}</p>
+			</div>
+		)
+	}
 
 	<nav class="filter-bar" aria-label="Show">
 		<a class:list={['filter-chip', { active: show === 'open' }]} href="/admin/enquiries/" aria-current={show === 'open' ? 'page' : undefined}>Open <span class="count">{openCount}</span></a>
@@ -59,8 +101,19 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 			const wa = whatsappNumber(e.phone);
 			const reply = `mailto:${encodeURIComponent(e.email)}?subject=${encodeURIComponent(`Re: ${tour}`)}`;
 			const next = NEXT[e.status];
+			const charter = e.kind === 'charter' ? e.charter : undefined;
+			const quote = quotes.get(e.id);
+			const quotePaid = quote?.paymentStatus === 'paid' || quote?.paymentStatus === 'refunded';
+			const quoteOpen = quote && !quotePaid && quote.status === 'pending_payment' && !quoteExpired(quote);
+			const quoteState = !quote
+				? null
+				: quotePaid
+					? { tone: 'sent', label: `Paid €${quote.total}` }
+					: quoteOpen
+						? { tone: 'outbox', label: `Quote €${quote.total} sent, awaiting payment` }
+						: { tone: 'failed', label: quote.status === 'cancelled' ? 'Quote cancelled' : 'Quote expired' };
 			return (
-				<article class:list={['a-card enquiry', { 'is-new': e.status === 'new' }]}>
+				<article id={`enquiry-${e.id}`} class:list={['a-card enquiry', { 'is-new': e.status === 'new' }]}>
 					<header class="head">
 						<div>
 							<h2 class="name">{e.name}</h2>
@@ -69,7 +122,7 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 									<i class="ti ti-clock" aria-hidden="true" /> {formatTimestamp(e.createdAt)}
 								</span>
 								<span class="meta-item">
-									<i class="ti ti-sailboat" aria-hidden="true" /> {tour}
+									<i class="ti ti-sailboat" aria-hidden="true" /> {charter ? 'Private charter request' : tour}
 								</span>
 								{e.topic && (
 									<span class="meta-item">
@@ -85,7 +138,23 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 						</div>
 						<span class={`a-badge a-badge--${e.status}`}>{LABELS[e.status]}</span>
 					</header>
-					<p class="message">{e.message}</p>
+					{charter && (
+						<dl class="a-rows charter">
+							{charterRequestRows(charter).map(([label, value]) => (
+								<div>
+									<dt>{label}</dt>
+									<dd>{value}</dd>
+								</div>
+							))}
+						</dl>
+					)}
+					{charter ? (
+						<p class="message">
+							<strong>Special requests:</strong> {e.message || 'None'}
+						</p>
+					) : (
+						<p class="message">{e.message}</p>
+					)}
 					{e.topic === 'change' && (
 						<p class="card-meta">
 							Changes and cancellations are confirmed only by email to the address on the booking, never on the
@@ -114,6 +183,66 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 							</li>
 						)}
 					</ul>
+					{quote && quoteState && (
+						<div class="quote-state">
+							<span class={`a-badge a-badge--${quoteState.tone}`}>{quoteState.label}</span>
+							<a href={`/admin/bookings/${quote.id}/`}>
+								{quote.ref}
+								{quoteOpen && quote.quoteExpiresAt && <> · valid until {formatTimestamp(quote.quoteExpiresAt)}</>}
+							</a>
+						</div>
+					)}
+					{charter && !quotePaid && (
+						<details class="quote" open={!quote && e.status !== 'closed'}>
+							<summary class="btn-secondary">
+								<i class="ti ti-receipt" aria-hidden="true" /> {quote ? 'Send a new quote' : 'Send quote'}
+							</summary>
+							<form method="post" class="quote-form">
+								<input type="hidden" name="action" value="quote" />
+								<input type="hidden" name="id" value={e.id} />
+								<input type="hidden" name="previous" value={e.quoteBookingId ?? ''} />
+								<p class="card-meta">
+									Check the boat and skipper are free first: a quote holds nothing until it's paid.
+									{quote && quoteOpen && ' A new quote cancels the one sent before.'}
+								</p>
+								<label>
+									Price for the boat (€, incl. VAT)
+									<input name="price" type="number" inputmode="numeric" min="1" max={QUOTE_MAX_EUR} step="1" required value={quote ? String(quote.total) : ''} />
+								</label>
+								<div class="quote-grid">
+									<label>
+										Date
+										<input name="date" type="date" required min={tomorrow} value={quote?.date ?? charter.date} />
+									</label>
+									<label>
+										Departure
+										<input name="time" type="time" required value={quote?.slot ?? charter.time} />
+									</label>
+									<label>
+										Duration
+										<select name="duration" required>
+											{CHARTER_DURATIONS.map((hours) => (
+												<option value={String(hours)} selected={hours === (quote?.durationHours ?? charter.durationHours)}>
+													{durationLabel(hours)}
+												</option>
+											))}
+										</select>
+									</label>
+									<label>
+										Valid for (days)
+										<input name="validDays" type="number" min={QUOTE_VALID_DAYS.min} max={QUOTE_VALID_DAYS.max} step="1" required value={String(QUOTE_VALID_DAYS.default)} />
+									</label>
+								</div>
+								<label>
+									Note to the customer (optional)
+									<textarea name="note" maxlength={QUOTE_NOTE_MAX} rows="3" placeholder="For example: lunch stop in Hvar town, drinks on board included." />
+								</label>
+								<button class="btn-primary" type="submit">
+									<i class="ti ti-mail" aria-hidden="true" /> Email the quote and payment link
+								</button>
+							</form>
+						</details>
+					)}
 					<div class="actions">
 						{e.status !== 'closed' && (
 							<a class="btn-primary" href={reply}>
@@ -205,5 +334,78 @@ const rows = everything.filter((e) => show === 'all' || e.status !== 'closed').s
 	.actions .btn-primary,
 	.actions .btn-secondary {
 		width: 100%;
+	}
+
+	.charter {
+		margin: 12px 0 0;
+	}
+
+	.quote-state {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 12px;
+		margin: 0 0 12px;
+		font-size: 13px;
+	}
+
+	.quote-state a {
+		color: var(--a-text-info);
+	}
+
+	.quote {
+		margin: 0 0 12px;
+	}
+
+	.quote summary {
+		list-style: none;
+		width: 100%;
+	}
+
+	.quote summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.quote[open] summary {
+		margin-bottom: 12px;
+	}
+
+	.quote-form {
+		display: grid;
+		gap: 12px;
+	}
+
+	.quote-form .card-meta {
+		margin: 0;
+	}
+
+	.quote-form label {
+		display: grid;
+		gap: 4px;
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	.quote-form input,
+	.quote-form select,
+	.quote-form textarea {
+		min-height: var(--a-touch-min);
+		padding: 8px 10px;
+		border: 0.5px solid var(--a-border-secondary);
+		border-radius: var(--a-radius-md);
+		font: inherit;
+		font-size: 14px;
+	}
+
+	.quote-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px;
+	}
+
+	@media (max-width: 560px) {
+		.quote-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>

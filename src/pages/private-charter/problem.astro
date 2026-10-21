@@ -1,0 +1,91 @@
+---
+export const prerender = true;
+
+/**
+ * Where the charter form lands without JavaScript when the request wasn't
+ * sent (§8.2, §3.5). Static: the reason is in ?error=; a small script shows
+ * it when it can. The browser's Back button keeps what was typed.
+ */
+import { pageTitle, SITE_EMAIL, SITE_PHONE, SITE_PHONE_DISPLAY } from '../../config/site';
+import { CHARTER_EARLIEST_TIME, CHARTER_LATEST_TIME } from '../../config/charter';
+import { MAX_GUESTS } from '../../lib/booking';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import Button from '../../components/ui/Button.astro';
+---
+
+<SiteLayout title={pageTitle('Request not sent')} robots="noindex" footerGap="32px">
+	<main id="main" class="contact-result">
+		<span class="contact-result__icon" aria-hidden="true"><i class="ti ti-alert-circle"></i></span>
+		<h1>Your request wasn't sent</h1>
+		<p class="contact-result__reason" data-reason hidden></p>
+		<p>Use your browser's Back button: what you typed is still there. Please check that:</p>
+		<ul>
+			<li>the date is tomorrow or later</li>
+			<li>the departure time is between {CHARTER_EARLIEST_TIME} and {CHARTER_LATEST_TIME}</li>
+			<li>there is at least one adult and no more than {MAX_GUESTS} persons</li>
+			<li>your first and last name, email and phone are filled in</li>
+			<li>the email address is complete, like name@domain.com, and the phone has only digits, spaces and + ( ) - .</li>
+			<li>special requests are at most 500 characters</li>
+		</ul>
+		<p>
+			If it still doesn't work, email <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a> or call
+			<a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>.
+		</p>
+		<div class="contact-result__actions">
+			<Button href="/private-charter/">Start a new request</Button>
+		</div>
+	</main>
+</SiteLayout>
+
+<script>
+	import { CHARTER_ERRORS, isCharterError } from '../../lib/charter';
+
+	const code = new URLSearchParams(window.location.search).get('error');
+	const reason = document.querySelector<HTMLElement>('[data-reason]');
+	if (reason && isCharterError(code)) {
+		reason.textContent = CHARTER_ERRORS[code];
+		reason.hidden = false;
+	}
+</script>
+
+<style>
+	@layer pages {
+		.contact-result {
+			width: 100%;
+			max-width: 560px;
+			margin: 0 auto;
+			padding: calc(24px + 3rem) var(--page-gutter) var(--space-8);
+		}
+
+		.contact-result__icon {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 56px;
+			height: 56px;
+			margin-bottom: var(--space-4);
+			border-radius: 50%;
+			background: var(--color-background-danger);
+			color: var(--color-text-danger);
+			font-size: 28px;
+		}
+
+		h1 {
+			margin: 0 0 var(--space-3);
+			font-size: var(--font-size-hero);
+			font-weight: var(--font-weight-medium);
+			line-height: var(--line-height-tight);
+		}
+
+		p,
+		ul {
+			margin: 0 0 var(--space-4);
+			color: var(--color-text-secondary);
+			line-height: var(--line-height-relaxed);
+		}
+
+		.contact-result__actions {
+			margin-top: var(--space-6);
+		}
+	}
+</style>

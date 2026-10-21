@@ -39,6 +39,7 @@ export default defineConfig({
 		url: `http://localhost:${PORT}/`,
 		reuseExistingServer: false,
 		timeout: 120_000,
-		env: { CONTEXT: 'playwright', RESEND_API_KEY: '', EMAIL_SENDING: '', ADMIN_EMAIL: '', ADMIN_PASSWORD: '' },
+		// Every run sends charter requests into the same store: lift the hourly cap on everyone together for tests.
+		env: { CONTEXT: 'playwright', RESEND_API_KEY: '', EMAIL_SENDING: '', ADMIN_EMAIL: '', ADMIN_PASSWORD: '', CHARTER_HOURLY_CAP: '10000' },
 	},
 });

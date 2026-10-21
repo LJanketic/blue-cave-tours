@@ -13,7 +13,11 @@ import { getTourBySlug } from '../../lib/tours';
 import { feeLabel } from '../../lib/cards';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
-import { finalizePaidBooking, isPayable, recordFailedPayment } from '../../lib/bookings/service';
+import { finalizePaidBooking, isPayable, quoteExpired, recordFailedPayment } from '../../lib/bookings/service';
+import { formatTimestamp } from '../../lib/bookings/dates';
+import { durationLabel } from '../../config/charter';
+import { CANCELLATION_PRIVATE_HREF } from '../../config/cancellation';
+import { TERMS_VERSION } from '../../config/legal';
 import { checkRateLimit, clientIp } from '../../lib/rate-limit';
 import { bookings, type PaymentProvider } from '../../lib/bookings/store';
 
@@ -31,11 +35,17 @@ if (booking.paymentStatus === 'paid' && booking.status !== 'cancelled') {
 	return Astro.redirect(`/booking/success/?id=${booking.id}`, 303);
 }
 const payable = isPayable(booking);
+// A charter quote has no review step: its terms are accepted here (S-4).
+const isPrivate = booking.kind === 'private';
 
 if (Astro.request.method === 'POST' && payable) {
 	const ip = clientIp(Astro.request);
 	if (!(await checkRateLimit('pay', ip, { max: 20, failClosed: true })).ok) return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
 	const form = await Astro.request.formData();
+	// The demo's "simulate a declined payment" needs no terms: nothing is booked.
+	if (isPrivate && form.get('outcome') !== 'decline' && (form.get('terms') !== 'yes' || form.get('termsVersion') !== TERMS_VERSION)) {
+		return Astro.redirect(`/booking/pay/?id=${booking.id}&terms=1`, 303);
+	}
 	const provider: PaymentProvider = form.get('provider') === 'paypal' ? 'paypal' : 'teya';
 	if (form.get('outcome') === 'decline') {
 		await recordFailedPayment(booking.id, provider);
@@ -49,8 +59,15 @@ if (Astro.request.method === 'POST' && payable) {
 // Cancelled, refunded or closed-departure bookings can't be paid: say so instead of offering a button.
 const closedReason =
 	booking.status === 'cancelled' || booking.paymentStatus === 'refunded'
-		? 'This booking was cancelled.'
-		: 'This booking can no longer be paid, because booking for this departure has closed.';
+		? isPrivate && !booking.paidAt
+			? 'This quote was withdrawn or replaced by a newer one. Please use the link in our latest email.'
+			: isPrivate
+				? 'This charter was cancelled.'
+				: 'This booking was cancelled.'
+		: quoteExpired(booking)
+			? 'This quote has expired. Contact us and we will check the date again and send a new one.'
+			: 'This booking can no longer be paid, because booking for this departure has closed.';
+const termsMissing = Astro.url.searchParams.get('terms') === '1';
 
 const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 const tour = getTourBySlug(booking.tourSlug);
@@ -59,7 +76,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
 <SiteLayout title={pageTitle('Payment')} description="Complete your booking payment." checkout robots="noindex, nofollow">
-	<BookingShell step={4} exitHref={`/tours/${booking.tourSlug}/`} heading="Payment" headingVisible>
+	<BookingShell step={isPrivate ? undefined : 4} exitHref={`/tours/${booking.tourSlug}/`} heading={isPrivate ? 'Your private charter quote' : 'Payment'} headingVisible>
 		{
 			PAYMENTS_ARE_DEMO && (
 				<Notice tone="info" icon="info-circle" class="pay__demo">
@@ -74,8 +91,10 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 			rows={[
 				{ label: 'Tour', value: booking.tourTitle },
 				{ label: 'Date', value: `${formatBookingDate(booking.date)}${booking.slot ? `, ${booking.slot}` : ''}` },
+				...(isPrivate && booking.durationHours ? [{ label: 'Duration', value: durationLabel(booking.durationHours) }] : []),
 				{ label: 'Guests', value: guests },
 				{ label: 'Booking ref', value: booking.ref },
+				...(isPrivate && booking.quoteExpiresAt && payable ? [{ label: 'Quote valid until', value: formatTimestamp(booking.quoteExpiresAt) }] : []),
 			]}
 			total={{ label: 'Total (incl. VAT)', value: `€${booking.total}` }}
 			note={fee}
@@ -111,12 +130,31 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 						</label>
 					</fieldset>
 					{fee && <p class="pay__small">{fee}.</p>}
-					<p class="pay__small">
-						A leisure service on a fixed date: the 14-day right of withdrawal doesn't apply; our
-						<a href="/legal/cancellation/">cancellation policy</a> does.
-					</p>
+					{isPrivate ? (
+						<>
+							<input type="hidden" name="termsVersion" value={TERMS_VERSION} />
+							{termsMissing && (
+								<Notice tone="warn" alert>
+									Please accept the terms to book your charter.
+								</Notice>
+							)}
+							<label class="pay__terms">
+								<input type="checkbox" name="terms" value="yes" required />
+								<span>
+									I accept the <a href="/legal/terms/">terms and conditions</a> and the
+									<a href={CANCELLATION_PRIVATE_HREF}>cancellation terms for private charters</a>. A leisure service on a
+									fixed date: the 14-day right of withdrawal doesn't apply.
+								</span>
+							</label>
+						</>
+					) : (
+						<p class="pay__small">
+							A leisure service on a fixed date: the 14-day right of withdrawal doesn't apply; our
+							<a href="/legal/cancellation/">cancellation policy</a> does.
+						</p>
+					)}
 					<Button type="submit" name="outcome" value="success" size="lg" block icon="lock">Pay €{booking.total}</Button>
-					<button class="pay__decline" type="submit" name="outcome" value="decline">Demo: simulate a declined payment</button>
+					<button class="pay__decline" type="submit" name="outcome" value="decline" formnovalidate>Demo: simulate a declined payment</button>
 				</form>
 			)
 		}
@@ -230,6 +268,26 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 			font-size: var(--font-size-sm);
 			text-decoration: underline;
 			cursor: pointer;
+		}
+
+		.pay__terms {
+			display: flex;
+			gap: var(--space-2);
+			align-items: flex-start;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.pay__terms input {
+			flex-shrink: 0;
+			width: 18px;
+			height: 18px;
+			margin: 1px 0 0;
+			accent-color: var(--color-brand);
+		}
+
+		.pay__terms a {
+			color: var(--color-text-info);
 		}
 
 		.pay__closed {

@@ -5,7 +5,8 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { formatBookingDate, guestSummaryFromCounts, seatCount } from '../../../lib/booking';
 import { departureHasLeft, formatTimestamp } from '../../../lib/bookings/dates';
 import { isRecordId } from '../../../lib/bookings/ids';
-import { applyAdminAction, STATUS_LABELS, type AdminAction } from '../../../lib/bookings/service';
+import { applyAdminAction, quoteExpired, STATUS_LABELS, type AdminAction } from '../../../lib/bookings/service';
+import { durationLabel } from '../../../config/charter';
 import { byCreatedDesc, outbox, bookings, type BookingStatus, type OutboxEmail, type PaymentStatus } from '../../../lib/bookings/store';
 import { overbookingsById, whatsappNumber } from '../../../lib/admin/manifest';
 import { DELIVERY_LABELS } from '../../../lib/email/send';
@@ -76,6 +77,10 @@ const askOutcome = paid && booking.status === 'confirmed' && tripStarted;
 const outcomeActions = askOutcome ? visibleStatusActions.filter((a) => a.status !== 'confirmed') : [];
 const otherStatusActions = visibleStatusActions.filter((a) => !outcomeActions.includes(a));
 const awaitingPayment = booking.status === 'pending_payment' && !paid;
+const isPrivate = booking.kind === 'private';
+const expired = isPrivate && awaitingPayment && quoteExpired(booking);
+// While a quote can be paid, its link is shown so staff can send it again (e.g. by WhatsApp) without a new quote.
+const payLink = isPrivate && awaitingPayment && !expired ? `${Astro.url.origin}/booking/pay/?id=${booking.id}` : '';
 const canCancel = booking.status !== 'cancelled';
 const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 ---
@@ -102,12 +107,32 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 	}
 
 	{
-		awaitingPayment && (
+		awaitingPayment && !isPrivate && (
 			<div class="warn-box" role="note">
 				<i class="ti ti-alert-circle" aria-hidden="true" />
 				<p>
 					<strong>Not paid yet.</strong> The seats aren't held until the customer pays. Contact them to finish the booking, or
 					cancel it.
+				</p>
+			</div>
+		)
+	}
+
+	{
+		awaitingPayment && isPrivate && (
+			<div class="warn-box" role="note">
+				<i class="ti ti-alert-circle" aria-hidden="true" />
+				<p>
+					{expired ? (
+						<>
+							<strong>Quote expired, not paid.</strong> The customer can't pay this link any more.
+						</>
+					) : (
+						<>
+							<strong>Quote sent, not paid yet.</strong> Valid until {booking.quoteExpiresAt ? formatTimestamp(booking.quoteExpiresAt) : 'not set'}. The boat
+							isn't held until the customer pays.
+						</>
+					)}
 				</p>
 			</div>
 		)
@@ -158,12 +183,16 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 						<div class="badge-row">
 							<span class={`a-badge a-badge--${booking.status}`}>{STATUS_LABELS[booking.status]}</span>
 							<span class={`a-badge a-badge--${booking.paymentStatus}`}>{PAYMENT_LABELS[booking.paymentStatus]}</span>
+							{isPrivate && <span class="a-badge a-badge--private">Private charter</span>}
 						</div>
 					</div>
 				</div>
 				<dl class="a-rows">
 					<div><dt><i class="ti ti-calendar" aria-hidden="true"></i>Date</dt><dd>{formatBookingDate(booking.date)}</dd></div>
 					<div><dt><i class="ti ti-clock" aria-hidden="true"></i>Departure</dt><dd class="a-tnum">{booking.slot || 'To be confirmed'}</dd></div>
+					{isPrivate && booking.durationHours && <div><dt><i class="ti ti-hourglass" aria-hidden="true"></i>Duration</dt><dd>{durationLabel(booking.durationHours)}</dd></div>}
+					{isPrivate && booking.enquiryId && <div><dt><i class="ti ti-message" aria-hidden="true"></i>Request</dt><dd><a href={`/admin/enquiries/?show=all#enquiry-${booking.enquiryId}`}>Open the customer's request</a></dd></div>}
+					{payLink && <div><dt><i class="ti ti-credit-card" aria-hidden="true"></i>Pay link</dt><dd class="pay-link"><a href={payLink} target="_blank" rel="noopener">{payLink}</a><span class="fees-note">Send it again if the customer lost the email.</span></dd></div>}
 					<div><dt><i class="ti ti-users" aria-hidden="true"></i>Guests</dt><dd>{guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}</dd></div>
 				</dl>
 				{
@@ -404,6 +433,11 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 	.mono {
 		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 		font-size: 12px;
+	}
+
+	.pay-link a {
+		overflow-wrap: anywhere;
+		font-size: 13px;
 	}
 
 	.fees-note {

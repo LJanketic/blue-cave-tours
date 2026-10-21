@@ -14,6 +14,6 @@
 # → overview. src/data/destinations-redirects.test.ts keeps them in sync.
 /destinations/split             /destinations/    301
 
-# No private-charter booking flow: private requests go through the contact form.
+# The old private booking step is now the charter request page (spec §8.2).
 # Netlify matches with or without the trailing slash.
-/book/:slug/private             /contact/?tour=:slug&topic=charter    301
+/book/:slug/private             /private-charter/?tour=:slug    301

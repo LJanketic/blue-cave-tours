@@ -114,7 +114,7 @@ test('the hero has its two CTAs once, the same on every slide', async ({ page })
 		await expect(links.nth(0)).toHaveAccessibleName('Browse group tours');
 		await expect(links.nth(0)).toHaveAttribute('href', '/tours/?type=group');
 		await expect(links.nth(1)).toHaveAccessibleName('Plan a private experience');
-		await expect(links.nth(1)).toHaveAttribute('href', /^\/contact\/\?tour=/);
+		await expect(links.nth(1)).toHaveAttribute('href', /^\/private-charter\/\?tour=/);
 	}
 });
 

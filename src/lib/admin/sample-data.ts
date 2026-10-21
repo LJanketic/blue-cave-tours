@@ -6,6 +6,7 @@ import { computeBookingTotal, lineItemsFor } from '../price';
 import { TERMS_VERSION } from '../../config/legal';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 import { getAllTours } from '../tours';
+import { routeById } from '../../config/charter';
 
 /**
  * "Load demo data" in the admin: a believable spread of bookings around
@@ -107,14 +108,6 @@ function futurePlan(): typeof PLAN {
 
 const ENQUIRIES: Omit<Enquiry, 'id' | 'createdAt' | 'status' | 'notified'>[] = [
 	{
-		name: 'Hannah Weber',
-		email: 'hannah.weber@example.com',
-		phone: '+49 160 9876543',
-		tourSlug: 'create-perfect-day-private',
-		topic: 'charter',
-		message: 'Hi! We are 8 friends visiting in early June and would love a private boat for a full day: Blue Lagoon and Hvar if possible. What would that cost?',
-	},
-	{
 		name: 'Marco Bianchi',
 		email: 'marco.b@example.com',
 		phone: '',
@@ -130,6 +123,89 @@ const ENQUIRIES: Omit<Enquiry, 'id' | 'createdAt' | 'status' | 'notified'>[] = [
 		message: 'Do you offer any discount for a school group of 20 students in May?',
 	},
 ];
+
+/**
+ * Private charter requests (spec §8.2) at the three stages the boss sees: a
+ * new one waiting for a quote, one quoted and waiting for payment, one paid.
+ * Key: [days ahead, route id, time, hours, adults, children, stage, price]. The quoted one sits on a day that
+ * already has bookings and an unpaid one, and the paid one just past the 7-day strip (next week's page), so the
+ * dashboard's first week looks as it did before charters (the frozen admin look in tests/visual).
+ */
+type CharterStage = 'new' | 'quoted' | 'paid';
+const CHARTERS: [first: string, last: string, email: string, phone: string, ahead: number, route: string, time: string, hours: number, adults: number, children: number, stage: CharterStage, price: number, notes: string][] = [
+	['Hannah', 'Weber', 'hannah.weber@example.com', '+49 160 9876543', 12, 'custom', '09:30', 8, 8, 0, 'new', 0, 'We are 8 friends and would love a full day: Blue Lagoon and Hvar if possible, with a long lunch stop.'],
+	['Oliver', 'Jones', 'oliver.jones@example.com', '+44 7700 900789', 9, 'blue-cave-hvar-5-islands', '08:00', 10, 4, 2, 'quoted', 1450, 'Celebrating our 10th anniversary.'],
+	['Giulia', 'Conti', 'giulia.conti@example.com', '+39 340 555 1234', 8, 'blue-lagoon', '10:00', 4, 6, 0, 'paid', 690, ''],
+];
+
+async function loadSampleCharters(now: Date): Promise<number> {
+	for (const [index, [first, last, email, phone, ahead, routeId, time, hours, adults, children, stage, price, notes]] of CHARTERS.entries()) {
+		const route = routeById(routeId);
+		const date = businessDate(now, ahead);
+		const askedAt = new Date(now.getTime() - (index + 1) * 26 * 3_600_000).toISOString();
+		const enquiry: Enquiry = {
+			id: newId(),
+			createdAt: askedAt,
+			status: stage === 'new' ? 'new' : 'replied',
+			kind: 'charter',
+			topic: 'charter',
+			name: `${first} ${last}`,
+			email,
+			phone,
+			tourSlug: route?.tourSlug ?? '',
+			message: notes,
+			charter: { route: routeId, date, time, durationHours: hours, adults, children, infants: 0, firstName: first, lastName: last },
+			sample: true,
+		};
+		if (stage !== 'new') {
+			const quotedAt = new Date(new Date(askedAt).getTime() + 3 * 3_600_000).toISOString();
+			const paid = stage === 'paid';
+			const paidAt = new Date(new Date(quotedAt).getTime() + 5 * 3_600_000).toISOString();
+			const booking: Booking = {
+				id: newId(),
+				ref: newBookingRef(),
+				createdAt: quotedAt,
+				updatedAt: paid ? paidAt : quotedAt,
+				status: paid ? 'confirmed' : 'pending_payment',
+				paymentStatus: paid ? 'paid' : 'unpaid',
+				paymentProvider: paid ? 'teya' : null,
+				paymentRef: paid ? `DEMO-SAMPLE-CH${index}` : null,
+				paidAt: paid ? paidAt : null,
+				kind: 'private',
+				enquiryId: enquiry.id,
+				// Valid for 3 days from loading the demo, so a demo the next day still has an open quote.
+				quoteExpiresAt: new Date(now.getTime() + 3 * 86_400_000).toISOString(),
+				durationHours: hours,
+				tourSlug: route?.tourSlug ?? '',
+				tourTitle: `Private charter: ${route?.label ?? 'Your own route'}`,
+				date,
+				slot: time,
+				adults,
+				children,
+				infants: 0,
+				total: price,
+				lineItems: [{ label: `Private boat with skipper, ${hours} hours`, unit: price, qty: 1, amount: price }],
+				...(paid ? { termsVersion: TERMS_VERSION, termsAcceptedAt: paidAt } : {}),
+				firstName: first,
+				lastName: last,
+				email,
+				phone,
+				customerNotes: notes,
+				invoice: paid ? { number: `${await nextCounterValue('invoice')}/HBC1/1`, jir: newId(), zki: newId().replace(/-/g, ''), issuedAt: paidAt } : null,
+				staffNotes: [],
+				history: [
+					{ at: quotedAt, by: 'demo data', action: `Quote sent: €${price}, valid 3 days` },
+					...(paid ? [{ at: paidAt, by: 'Teya', action: `Paid €${price}` }] : []),
+				],
+				sample: true,
+			};
+			enquiry.quoteBookingId = booking.id;
+			await bookings().put(booking);
+		}
+		await enquiries().put(enquiry);
+	}
+	return CHARTERS.length;
+}
 
 export async function loadSampleData(now: Date = new Date()): Promise<{ bookings: number; enquiries: number }> {
 	const tours = getAllTours().filter(supportsInstantBook);
@@ -193,11 +269,12 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 			...enquiry,
 			id: newId(),
 			createdAt: new Date(now.getTime() - (index + 1) * 5 * 3_600_000).toISOString(),
-			status: index === 2 ? 'replied' : 'new',
+			status: index === 1 ? 'replied' : 'new',
 			sample: true,
 		});
 	}
-	return { bookings: PLAN.length, enquiries: ENQUIRIES.length };
+	const charters = await loadSampleCharters(now);
+	return { bookings: PLAN.length + CHARTERS.filter((c) => c[10] !== 'new').length, enquiries: ENQUIRIES.length + charters };
 }
 
 /** Deletes everything: bookings, enquiries, the outbox and the invoice counter. Showcase only. */

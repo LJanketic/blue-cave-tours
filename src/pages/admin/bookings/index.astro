@@ -4,7 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { formatBookingDate, guestSummaryFromCounts, seatCount } from '../../../lib/booking';
 import { businessDate, formatShortDate } from '../../../lib/bookings/dates';
-import { STATUS_LABELS, takesSeats } from '../../../lib/bookings/service';
+import { isDeadQuote, STATUS_LABELS, takesSeats } from '../../../lib/bookings/service';
 import { bookings, type Booking, type BookingStatus } from '../../../lib/bookings/store';
 import { addDays } from '../../../lib/admin/schedule';
 import { overbookingsById } from '../../../lib/admin/manifest';
@@ -50,11 +50,16 @@ const overbooked = overbookingsById(all);
 const rows = all
 	.filter((b) => inRange(b.date))
 	.filter((b) => !status || b.status === status)
+	// Replaced, withdrawn or expired charter quotes were never bookings: shown only under "Cancelled" or a search.
+	.filter((b) => status === 'cancelled' || needle || !isDeadQuote(b))
 	.filter(matches)
+	// Same day and time: earliest booked first, so the order never depends on how the store lists records.
 	.sort((a, b) =>
-		when === 'past'
+		(when === 'past'
 			? b.date.localeCompare(a.date) || b.slot.localeCompare(a.slot)
-			: a.date.localeCompare(b.date) || a.slot.localeCompare(b.slot),
+			: a.date.localeCompare(b.date) || a.slot.localeCompare(b.slot)) ||
+		a.createdAt.localeCompare(b.createdAt) ||
+		a.id.localeCompare(b.id),
 	);
 
 // Group by day so the date is said once, not on every booking.
@@ -152,6 +157,7 @@ const rangeNote =
 									<span class="line">
 										<span class="a-item-title name">{b.firstName} {b.lastName}</span>
 										<span class={`a-badge a-badge--${b.status}`}>{STATUS_LABELS[b.status]}</span>
+										{b.kind === 'private' && <span class="a-badge a-badge--private">Private</span>}
 										{overbooked.has(b.id) && <span class="a-badge a-badge--full">Overbooked +{overbooked.get(b.id)?.seatsOver}</span>}
 									</span>
 									<span class="line">
