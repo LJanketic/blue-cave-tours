@@ -400,7 +400,7 @@ export async function sendCharterQuote(
 		quoteExpiresAt: new Date(now.getTime() + quote.validDays * 86_400_000).toISOString(),
 		durationHours: quote.durationHours,
 		tourSlug: route?.tourSlug ?? enquiry.tourSlug,
-		tourTitle: `Private charter: ${route?.label ?? 'Your own route'}`,
+		tourTitle: `Private experience: ${route?.label ?? 'Your own route'}`,
 		date: quote.date,
 		slot: quote.time,
 		adults: request.adults,

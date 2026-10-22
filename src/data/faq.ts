@@ -1,4 +1,5 @@
 import { CANCELLATION_FULL, CANCELLATION_WEATHER } from '../config/cancellation';
+import { MAX_GUESTS } from '../lib/booking';
 import { priceSeasonDates } from '../config/season';
 import { CHILD_MAX_AGE, INFANT_MAX_AGE, PRICE_LIST } from './prices';
 
@@ -16,7 +17,7 @@ export function pricingAnswer(): string {
 		`Group tour prices are per person (children up to ${CHILD_MAX_AGE} pay the child price; infants up to ${INFANT_MAX_AGE} travel free) and depend on the season of your tour date, not the day you book.`,
 		`Low season is ${priceSeasonDates('low')}; peak season is ${priceSeasonDates('peak')}.`,
 		...lines,
-		'Private charters are quoted on request.',
+		'Private experiences are quoted on request.',
 		'When you pick a date in the booking flow, you see the price for that date before you pay.',
 	].join(' ');
 }
@@ -47,7 +48,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 	{
 		category: 'booking',
 		question: 'Do I need to book in advance?',
-		answer: 'Yes, especially in high season, when tours are often fully booked days ahead.',
+		answer: `We recommend it, especially in peak season (${priceSeasonDates('peak')}): each departure takes at most ${MAX_GUESTS} persons.`,
 		link: { href: '/tours/', label: 'Browse tours' },
 	},
 	{
@@ -60,7 +61,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 	{
 		category: 'changes',
 		question: 'What’s your cancellation policy?',
-		answer: `Group tours: ${CANCELLATION_FULL} Private charters have their own cancellation terms, set out in the cancellation policy.`,
+		answer: `Group tours: ${CANCELLATION_FULL} Private experiences have their own cancellation terms, set out in the cancellation policy.`,
 		link: { href: '/legal/cancellation/', label: 'Cancellation policy' },
 	},
 	{
@@ -84,7 +85,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'guests',
 		question: 'What about pregnancy, back or neck issues, or mobility needs?',
 		answer:
-			'Because of the boat’s movement at sea, our tours aren’t recommended for pregnant women, guests with back or neck problems, or anyone with a serious medical condition. Some boats can take strollers or wheelchairs. Contact us before booking with any health or mobility concerns, so we can arrange the right boat for your needs.',
+			'Because of the boat’s movement at sea, our tours aren’t recommended for pregnant women, guests with back or neck problems, or anyone with a serious medical condition. Some boats can take pushchairs or wheelchairs. Contact us before booking with any health or mobility concerns, so we can arrange the right boat for your needs.',
 		link: { href: '/contact/', label: 'Contact us' },
 	},
 	{

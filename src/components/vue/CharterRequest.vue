@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * Private charter request (spec §8.2, board 06 as changed by the 20 Oct
+ * Private experience request (spec §8.2, board 06 as changed by the 20 Oct
  * handoff): route, date, preferred time, duration, guests, special requests
  * and contact details. "Send request" posts to /api/charter-request; nothing
  * is charged here. The boss confirms availability and replies with a quote
@@ -192,7 +192,7 @@ onUnmounted(() => clearInterval(clock));
 			usually {{ replyTime }}.
 		</p>
 		<SummaryCard title="Your request" :rows="summaryRows" :level="3" />
-		<p class="charter-done__small">Nothing has been charged. Your charter is booked once you accept and pay the quote.</p>
+		<p class="charter-done__small">Nothing has been charged. Your private experience is booked once you accept and pay the quote.</p>
 		<Button href="/tours/?type=group" variant="secondary" block>Browse group tours</Button>
 	</div>
 
@@ -205,7 +205,7 @@ onUnmounted(() => clearInterval(clock));
 
 		<section class="flow__card" aria-labelledby="when-heading">
 			<h2 id="when-heading" class="flow__title"><i class="ti ti-calendar" aria-hidden="true"></i> When and how long</h2>
-			<p class="flow__sub">Private charters leave when it suits you. We confirm availability in your quote.</p>
+			<p class="flow__sub">Private experiences leave when it suits you. We confirm availability in your quote.</p>
 			<BookingCalendar
 				v-model="date"
 				:rendered-on="renderedOn"
@@ -282,7 +282,7 @@ onUnmounted(() => clearInterval(clock));
 			<p class="flow__privacy">We use these details only to answer your request. See our <a href="/legal/privacy/">privacy policy</a>.</p>
 		</section>
 
-		<SummaryCard title="Your charter" :rows="summaryRows" :total="{ label: 'Price', value: 'We\'ll send you a quote' }">
+		<SummaryCard title="Your private experience" :rows="summaryRows" :total="{ label: 'Price', value: 'We\'ll send you a quote' }">
 			<p class="flow__notes">The final price is in your quote. Nothing is charged now.</p>
 		</SummaryCard>
 
@@ -296,7 +296,7 @@ onUnmounted(() => clearInterval(clock));
 			<p v-if="submitError" class="flow__error" role="alert">{{ submitError }}</p>
 			<p class="flow__policy">
 				<i class="ti ti-shield-check" aria-hidden="true"></i>
-				No payment now. Private charters have <a :href="cancellationHref">their own cancellation terms</a>.
+				No payment now. Private experiences have <a :href="cancellationHref">their own cancellation terms</a>.
 			</p>
 		</div>
 	</form>

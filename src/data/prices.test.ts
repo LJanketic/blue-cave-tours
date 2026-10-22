@@ -35,12 +35,12 @@ describe('FAQ pricing answer', () => {
 		expect(item?.category).toBe('booking');
 		expect(item?.answer).toBe(pricingAnswer());
 		const answer = pricingAnswer();
-		expect(answer).toContain('1 April to 15 May and 1 October to 1 November');
-		expect(answer).toContain('16 May to 30 September and 2 November to 31 March');
+		expect(answer).toContain('1 March to 31 May and 15 September to 31 October');
+		expect(answer).toContain('1 June to 14 September');
 		for (const { prices } of PRICE_LIST) {
 			for (const amount of [prices.low.adult, prices.low.child, prices.peak.adult, prices.peak.child]) expect(answer).toContain(`€${amount}`);
 		}
 		expect(answer).toContain('€149 per adult and €129 per child in low season, €169 and €139 in peak season');
-		expect(answer).toContain('Private charters are quoted on request');
+		expect(answer).toContain('Private experiences are quoted on request');
 	});
 });

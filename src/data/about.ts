@@ -57,7 +57,7 @@ export const ABOUT = {
 		},
 		{
 			year: '2022',
-			title: 'Private charters & cabin boat',
+			title: 'Private experiences & cabin boat',
 			description:
 				'We added flexible private days and a luxury cabin option for families who wanted shade and comfort on longer open-sea legs.',
 		},
@@ -65,7 +65,7 @@ export const ABOUT = {
 			year: '2025',
 			title: 'Seven tours, one harbour',
 			description:
-				'Today we run seven scheduled routes from Split, from half-day lagoon escapes to full-day island-hopping, still with local skippers on every departure.',
+				'Today we run seven tours from Split, from half-day lagoon escapes to full-day island-hopping, still with local skippers on every departure.',
 		},
 	] satisfies TimelineEvent[],
 	values: [
@@ -85,7 +85,7 @@ export const ABOUT = {
 			icon: 'map-pin',
 			title: 'Local knowledge',
 			description:
-				'Split skippers, Split harbour, routes refined over hundreds of seasons, not copied from a generic brochure.',
+				'Split skippers, Split harbour, routes refined season after season, not copied from a generic brochure.',
 		},
 		{
 			icon: 'shield-check',

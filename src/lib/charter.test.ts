@@ -90,6 +90,15 @@ describe('validateCharterRequest', () => {
 		expect(parsed.notes).toHaveLength(600);
 	});
 
+	it('refuses winter dates, when the boats are out of the water, and opens again on 1 March', () => {
+		const october = new Date('2026-10-22T09:00:00Z');
+		const at = (date: string) => validateCharterRequest(request({ date, startedAt: october.getTime() - 60_000 }), october);
+		expect(at('2026-10-31')).toBeNull();
+		expect(at('2026-11-01')).toBe('season');
+		expect(at('2027-02-15')).toBe('season');
+		expect(at('2027-03-01')).toBeNull();
+	});
+
 	it('refuses a date outside the season', async () => {
 		vi.resetModules();
 		vi.doMock('../config/season', async (original) => ({ ...(await original<typeof import('../config/season')>()), isInSeason: () => false }));
@@ -128,6 +137,7 @@ describe('validateQuote', () => {
 		[{ price: 20_001 }, 'price'],
 		[{ price: Number.NaN }, 'price'],
 		[{ date: '2027-06-01' }, 'date'],
+		[{ date: '2027-11-02' }, 'season'],
 		[{ time: '25:00' }, 'time'],
 		[{ durationHours: 5 }, 'duration'],
 		[{ validDays: 0 }, 'valid'],
@@ -197,7 +207,7 @@ describe('charter request → quote → payment', () => {
 			date: '2027-06-10',
 			slot: '08:30',
 			durationHours: 8,
-			tourTitle: 'Private charter: Blue Cave & Hvar 5 Islands',
+			tourTitle: 'Private experience: Blue Cave & Hvar 5 Islands',
 			firstName: 'Jane',
 			adults: 4,
 			children: 1,
@@ -286,7 +296,7 @@ describe('charter request → quote → payment', () => {
 		const first = (await sendCharterQuote(enquiry.id, quote, '', 'Admin', 'http://localhost', NOW)) as { booking: Booking };
 		await sendCharterQuote(enquiry.id, { ...quote, price: 1100 }, first.booking.id, 'Admin', 'http://localhost', NOW);
 		const quotes = (await outbox().list()).filter((m) => m.kind === 'charter_quote');
-		expect(quotes.map((m) => m.subject.startsWith('Your updated private charter quote')).sort()).toEqual([false, true]);
+		expect(quotes.map((m) => m.subject.startsWith('Your updated private experience quote')).sort()).toEqual([false, true]);
 		expect(quotes.find((m) => m.subject.includes('updated'))?.text).toContain('replaces our earlier one');
 	});
 

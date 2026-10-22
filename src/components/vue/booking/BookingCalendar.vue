@@ -92,17 +92,20 @@ function showSelected() {
 }
 defineExpose({ showSelected });
 
-// Once the browser knows the real time: open on Split's today, whatever the visitor's time zone.
+/*
+ * Once the browser knows the real time: open on Split's today, whatever the
+ * visitor's time zone. Before that (server render and hydration) the build
+ * date stands in, so both renders open on the same month.
+ */
 watch(
 	() => props.now !== null,
 	(known) => {
-		if (!known) return;
-		const t = parseIsoDate(today.value);
+		const t = known ? parseIsoDate(today.value) : null;
 		if (t && !selected.value) {
 			viewYear.value = t.getFullYear();
 			viewMonth.value = t.getMonth();
 		}
-		// Out of season this month: open on the first month that has bookable days.
+		// Out of season this month (the boats are out of the water in winter): open on the first month that has bookable days.
 		for (let i = 0; i < 12 && !cells.value.some((c) => c.iso && !c.blocked); i++) move(1);
 	},
 	{ immediate: true },

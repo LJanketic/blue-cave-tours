@@ -12,7 +12,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { MAX_GUESTS, departureLabel as formatDeparture, guestSummaryFromCounts, parseIsoDate } from '../../lib/booking';
 import { bookingClosed, businessDate, dayClosed } from '../../lib/bookings/dates';
 import { computeBookingTotal, seasonPriceLabel, seasonalPriceSummary, seasonalPrices } from '../../lib/price';
-import { seasonFor } from '../../config/season';
+import { isInSeason, seasonFor } from '../../config/season';
 import type { AgeBands, Departure, SeasonalPrices } from '../../types/tour';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 import { BOOKING_CUTOFF_NOTE } from '../../config/booking';
@@ -196,7 +196,7 @@ async function restore() {
 		const d = (await res.json()) as Record<string, string | number> & { tourSlug?: string };
 		if (d.tourSlug !== props.tourSlug) return;
 		const today = businessDate();
-		if (typeof d.date === 'string' && d.date >= today) {
+		if (typeof d.date === 'string' && d.date >= today && isInSeason(d.date)) {
 			date.value = d.date;
 			calendar.value?.showSelected();
 		}
@@ -278,7 +278,7 @@ onUnmounted(() => clearInterval(clock));
 				<FormField id="book-first" v-model="firstName" label="First name" name="firstName" autocomplete="given-name" required :error="fieldErrors.firstName" />
 				<FormField id="book-last" v-model="lastName" label="Last name" name="lastName" autocomplete="family-name" required />
 				<FormField id="book-email" v-model="email" label="Email" name="email" type="email" autocomplete="email" required :error="fieldErrors.email" />
-				<FormField id="book-phone" v-model="phone" label="Phone, so the skipper can reach you on the day" name="phone" type="tel" autocomplete="tel" />
+				<FormField id="book-phone" v-model="phone" label="Phone (optional)" name="phone" type="tel" autocomplete="tel" hint="So the skipper can reach you on the day." />
 				<FormField
 					id="book-notes"
 					v-model="notes"

@@ -45,7 +45,7 @@ const DEST_ALTS: Record<string, Record<string, string>> = {
 	},
 	vis: {
 		'01': 'Stiniva Cove on Vis — cliffs around a narrow pebble beach',
-		'02': 'Stiniva Bay from the cliffs on Vis',
+		'02': 'Stiniva Cove from the cliffs on Vis',
 		'03': 'White pebble beach at Stiniva, Vis',
 		'04': 'The sun setting over the sea, framed by a window in a rock wall',
 		'05': 'Komiža waterfront and fishing boats',

@@ -145,7 +145,7 @@ function bookingTermsLines(booking: Booking, siteOrigin: string): { rows: Row[];
 	}
 	const policy =
 		booking.kind === 'private'
-			? `Private charters follow their own cancellation terms, set out in section 3 of our cancellation policy: ${siteOrigin}${CANCELLATION_PRIVATE_HREF}`
+			? `Private experiences follow their own cancellation terms, set out in section 3 of our cancellation policy: ${siteOrigin}${CANCELLATION_PRIVATE_HREF}`
 			: CANCELLATION_FULL;
 	const paragraphs = [
 		policy,
@@ -184,7 +184,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 	const website = siteOrigin.replace(/^https?:\/\//, '');
 	const groupNote =
 		booking.kind === 'private'
-			? 'The boat and skipper are yours for the day. Please be at the meeting point 15 minutes before departure, so you get every minute of your charter.'
+			? 'The boat and skipper are yours for the day. Please be at the meeting point 15 minutes before departure, so you get every minute of your day.'
 			: "As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.";
 	const weatherNote = CANCELLATION_WEATHER;
 	const terms = bookingTermsLines(booking, siteOrigin);
@@ -329,7 +329,7 @@ export function adminEnquiryEmail(enquiry: Enquiry, to: string, adminUrl: string
 
 /** A private booking's route ("Blue Lagoon & Trogir") without the "Private charter:" prefix of its title. */
 function charterRoute(booking: Booking): string {
-	return booking.tourTitle.replace(/^Private charter: /, '');
+	return booking.tourTitle.replace(/^(?:Private experience|Private charter): /, '');
 }
 
 /** What a charter request asked for, as label/value rows (the admin email and the enquiries page). */
@@ -354,7 +354,7 @@ export function charterQuoteEmail(booking: Booking, note: string, payUrl: string
 	const validUntil = booking.quoteExpiresAt ? formatTimestamp(booking.quoteExpiresAt) : '';
 	const rows: Row[] = [
 		['Quote ref', booking.ref],
-		['Charter', charterRoute(booking)],
+		['Private experience', charterRoute(booking)],
 		['Date', date],
 		['Departure', booking.slot],
 		...(booking.durationHours ? ([['Duration', durationLabel(booking.durationHours)]] as Row[]) : []),
@@ -363,7 +363,7 @@ export function charterQuoteEmail(booking: Booking, note: string, payUrl: string
 		...(validUntil ? ([['Valid until', `${validUntil} (Split time)`]] as Row[]) : []),
 	];
 	const policyUrl = `${siteOrigin}${CANCELLATION_PRIVATE_HREF}`;
-	const subject = `Your ${replacesEarlier ? 'updated ' : ''}private charter quote – ${charterRoute(booking)}, ${date}`;
+	const subject = `Your ${replacesEarlier ? 'updated ' : ''}private experience quote – ${charterRoute(booking)}, ${date}`;
 	const replaces = 'This quote replaces our earlier one, whose payment link no longer works.';
 	const button =
 		`<tr><td style="padding:4px 0 20px"><a href="${escapeHtml(payUrl)}" style="display:inline-block;background:${BRAND_COLOR};color:#ffffff;` +
@@ -371,14 +371,14 @@ export function charterQuoteEmail(booking: Booking, note: string, payUrl: string
 	const html = layout(
 		'',
 		`${PAYMENTS_ARE_DEMO ? `<strong>This is a demo quote. No payment will be taken.</strong><br><br>` : ''}Dear ${escapeHtml(booking.firstName)},<br><br>` +
-			`Thank you for your private charter request. Here is our quote for the date below:`,
+			`Thank you for your private experience request. Here is our quote for the date below:`,
 		(replacesEarlier ? paragraph(`<strong>${escapeHtml(replaces)}</strong>`) : '') +
 			detailsTable(rows) +
 			(note ? paragraph(`<strong>A note from us</strong><br>${escapeHtml(note).replace(/\n/g, '<br>')}`) : '') +
-			paragraph('Your charter is booked once it is paid. Until then we hold nothing, so please pay before the quote expires.') +
+			paragraph('Your private experience is booked once it is paid. Until then we hold nothing, so please pay before the quote expires.') +
 			button +
 			paragraph(`If the button doesn't work, open this link: <a href="${escapeHtml(payUrl)}" style="color:${LINK_COLOR}">${escapeHtml(payUrl)}</a>`) +
-			paragraph(`Private charters follow their own cancellation terms: <a href="${escapeHtml(policyUrl)}" style="color:${LINK_COLOR}">cancellation policy, section 3</a>.`) +
+			paragraph(`Private experiences follow their own cancellation terms: <a href="${escapeHtml(policyUrl)}" style="color:${LINK_COLOR}">cancellation policy, section 3</a>.`) +
 			paragraph(`Questions or changes? Just reply to this email, or call ${escapeHtml(SITE_PHONE_DISPLAY)}.`),
 		{ title: subject },
 	);
@@ -386,17 +386,17 @@ export function charterQuoteEmail(booking: Booking, note: string, payUrl: string
 		...(PAYMENTS_ARE_DEMO ? ['This is a demo quote. No payment will be taken.', ''] : []),
 		`Dear ${booking.firstName},`,
 		'',
-		'Thank you for your private charter request. Here is our quote for the date below:',
+		'Thank you for your private experience request. Here is our quote for the date below:',
 		'',
 		...(replacesEarlier ? [replaces, ''] : []),
 		rowsText(rows),
 		'',
 		...(note ? ['A note from us:', note, ''] : []),
-		'Your charter is booked once it is paid. Until then we hold nothing, so please pay before the quote expires.',
+		'Your private experience is booked once it is paid. Until then we hold nothing, so please pay before the quote expires.',
 		'',
 		`Review and pay: ${payUrl}`,
 		'',
-		`Private charters follow their own cancellation terms: ${policyUrl}`,
+		`Private experiences follow their own cancellation terms: ${policyUrl}`,
 		'',
 		`Questions or changes? Just reply to this email, or call ${SITE_PHONE_DISPLAY}.`,
 		'',

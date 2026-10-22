@@ -56,7 +56,7 @@ describe('tourCtas', () => {
 	});
 
 	it('plans a charter from the charter landing page, without a second charter button', () => {
-		expect(ctas('create-perfect-day-private')).toEqual({ primary: { label: 'Plan your charter', href: '/charter/create-perfect-day-private' }, secondary: null });
+		expect(ctas('create-perfect-day-private')).toEqual({ primary: { label: 'Plan your experience', href: '/charter/create-perfect-day-private' }, secondary: null });
 	});
 });
 

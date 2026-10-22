@@ -1,4 +1,5 @@
 import { PHOTO } from './tour-photos';
+import { seasonLabel } from '../config/season';
 
 export type GeoFact = {
 	label: string;
@@ -76,7 +77,7 @@ export const destinations: Destination[] = [
 		shortDescription:
 			'The famous sea cave on Biševo where sunlight turns the water an unreal electric blue, the headline stop on our cave-focused routes.',
 		intro:
-			'The Blue Cave on Biševo island is the Adriatic’s most photographed natural wonder. On calm mornings, sunlight refracts through an underwater opening and floods the chamber with luminous blue light. We reach it by speedboat from Split, timing the visit around official opening hours and sea conditions, because the cave is worth the planning.',
+			'The Blue Cave on Biševo island is one of the Adriatic’s best-known natural sights. On calm mornings, sunlight refracts through an underwater opening and floods the chamber with luminous blue light. We reach it by speedboat from Split, timing the visit around official opening hours and sea conditions, because the cave is worth the planning.',
 		tags: ['Cave', 'Swimming', 'Must-see'],
 		tipTag: { icon: 'clock', label: 'Best in the morning calm' },
 		attrs: [
@@ -86,13 +87,13 @@ export const destinations: Destination[] = [
 		],
 		highlights: [
 			{ icon: 'droplet', text: 'Iconic blue light inside the cave chamber' },
-			{ icon: 'building-fortress', text: 'Short boat transfer from Vis island' },
+			{ icon: 'building-fortress', text: 'Reached by speedboat straight from Split' },
 			{ icon: 'leaf', text: 'Best experienced in morning calm' },
 			{ icon: 'glass-full', text: 'Part of our flagship island-hopping days' },
 			{ icon: 'beach', text: 'Professional crew handles timing and logistics' },
 			{ icon: 'moon-stars', text: 'Combine with Vis bays on the same tour' },
 		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 0, 0],
 		bestTimeNote:
 			'May through September offers the most reliable calm seas for cave entry. July and August are busiest. Book early for morning slots.',
 		geo: [
@@ -125,25 +126,25 @@ export const destinations: Destination[] = [
 		mapUrl: mapSearchUrl('Vis island, Croatia'),
 		icon: 'building-lighthouse',
 		shortDescription:
-			'Remote, unhurried Vis: gateway to the Blue Cave, home to Stiniva Bay, and one of the Adriatic’s most authentic island atmospheres.',
+			'Remote, unhurried Vis: gateway to the Blue Cave, home to Stiniva Cove, and one of the Adriatic’s most authentic island atmospheres.',
 		intro:
 			'Vis sits further from the mainland than Hvar or Brač, which kept it quieter for decades. Today it’s the anchor for Blue Cave visits and some of the clearest swim stops on our routes. Think Stiniva’s emerald cove, hidden bays, and a town that still feels like a working island rather than a postcard set.',
 		tags: ['Island', 'Swimming', 'Hidden bays'],
-		tipTag: { icon: 'beach', label: 'Home to Stiniva Bay' },
+		tipTag: { icon: 'beach', label: 'Home to Stiniva Cove' },
 		attrs: [
 			{ icon: 'building-lighthouse', label: 'Remote island' },
 			{ icon: 'swimming', label: 'Swim stops' },
 			{ icon: 'droplet', label: 'Blue Cave gateway' },
 		],
 		highlights: [
-			{ icon: 'droplet', text: 'Stiniva Bay, one of Croatia’s most famous beaches' },
+			{ icon: 'droplet', text: 'Stiniva Cove, one of Croatia’s most famous beaches' },
 			{ icon: 'building-fortress', text: 'Crystal-clear water away from mainland crowds' },
 			{ icon: 'leaf', text: 'Authentic Vis town with local restaurants' },
 			{ icon: 'glass-full', text: 'Natural stopover on cave-focused full-day tours' },
 			{ icon: 'beach', text: 'Excellent snorkelling in sheltered coves' },
 			{ icon: 'moon-stars', text: 'Panoramic coastal cruising en route from Split' },
 		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 0, 0],
 		bestTimeNote:
 			'June and September balance warm water with calmer crossings. Peak summer is stunning but plan for longer travel legs on busy days.',
 		geo: [
@@ -192,9 +193,9 @@ export const destinations: Destination[] = [
 			{ icon: 'leaf', text: 'Sunniest island in Croatia, reliable summer weather' },
 			{ icon: 'glass-full', text: 'Gateway to the Pakleni island chain' },
 			{ icon: 'beach', text: 'Excellent local wine and seafood ashore' },
-			{ icon: 'moon-stars', text: 'Iconic stop on our Hvar & Pakleni full-day tour' },
+			{ icon: 'moon-stars', text: 'Iconic stop on our Hvar, Red Rocks & Pakleni tour' },
 		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 0, 0],
 		bestTimeNote:
 			'May, June, and September offer warm seas with fewer crowds than July–August. Lavender fields peak in early summer.',
 		geo: [
@@ -251,13 +252,13 @@ export const destinations: Destination[] = [
 			{ icon: 'beach', text: 'Pine shade and limestone cliffs framing every bay' },
 			{ icon: 'moon-stars', text: 'Less crowded than Hvar’s main harbour beaches' },
 		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 0, 0],
 		bestTimeNote:
 			'Water warms from May onward. Morning visits on peak-season days mean calmer anchorages before afternoon boat traffic builds.',
 		geo: [
-			{ label: 'Distance from Hvar town', value: '~2–5 km' },
-			{ label: 'Travel time by boat', value: '~10–20 min from Hvar' },
-			{ label: 'From Split', value: '~1.5 hours total' },
+			{ label: 'Distance from Split', value: '~40 km by sea' },
+			{ label: 'Travel time from Split', value: '~1.5 hours' },
+			{ label: 'From Hvar town', value: '~2–5 km, 10–20 min by boat' },
 			{ label: 'How we get there', value: 'Short hop from Hvar channel' },
 		],
 		nearby: [
@@ -306,7 +307,7 @@ export const destinations: Destination[] = [
 			{ icon: 'glass-full', text: 'Perfect introduction to Adriatic boat touring' },
 			{ icon: 'moon-stars', text: 'Consistently clear water in summer months' },
 		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 0, 0],
 		bestTimeNote:
 			'June through September is prime lagoon season. Morning tours offer softer light; afternoon slots suit late risers.',
 		geo: [
@@ -350,13 +351,13 @@ export const destinations: Destination[] = [
 			{ icon: 'map-pin', label: 'Brač island' },
 		],
 		highlights: [
-			{ icon: 'droplet', text: 'One of the Adriatic’s most photographed beaches' },
+			{ icon: 'droplet', text: 'One of Croatia’s best-known beaches' },
 			{ icon: 'building-fortress', text: 'Shallow, clear water good for swimming at any age' },
 			{ icon: 'leaf', text: 'Fine white pebbles rather than sand or rock' },
 			{ icon: 'glass-full', text: 'Centrepiece stop on our Golden Horn, Brač and Hvar tour' },
 			{ icon: 'beach', text: 'Roughly two hours ashore before continuing to Pakleni and Hvar' },
 		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 0, 0],
 		bestTimeNote:
 			'May through September offers the warmest, calmest swimming. The beach can get busy in July and August, especially around midday.',
 		geo: [
@@ -404,7 +405,7 @@ export const destinations: Destination[] = [
 			{ icon: 'glass-full', text: 'Easy, compact town, comfortable to explore in an hour' },
 			{ icon: 'beach', text: 'Occasionally swapped for Maslinica on Šolta depending on the day' },
 		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 0, 0],
 		bestTimeNote:
 			'Pleasant to walk year-round; May, June, and September are quieter than peak summer afternoons.',
 		geo: [
@@ -451,7 +452,7 @@ export const destinations: Destination[] = [
 			{ icon: 'glass-full', text: 'Quieter alternative to Dubrovnik’s old town crowds' },
 			{ icon: 'beach', text: 'Scenic approach by sea between Hvar and Dubrovnik' },
 		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 0, 0],
 		bestTimeNote: 'Part of a long one-way day, so timing follows the tour’s overall schedule rather than a season preference.',
 		geo: [
 			{ label: 'Distance from Split', value: '~110 km by sea' },
@@ -498,8 +499,8 @@ export const destinations: Destination[] = [
 			{ icon: 'glass-full', text: 'Arrival by early evening, ready to continue your trip' },
 			{ icon: 'beach', text: 'No return leg, a one-way transfer rather than a round trip' },
 		],
-		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
-		bestTimeNote: 'Runs on request all year round: group dates and times on request, private timing arranged with you.',
+		bestTimeMonths: [0, 0, 1, 2, 3, 3, 3, 3, 3, 2, 0, 0],
+		bestTimeNote: `Runs on request ${seasonLabel()}: group dates and times on request, private timing arranged with you.`,
 		geo: [
 			{ label: 'Distance from Split', value: '~220 km by sea (via Hvar & Korčula)' },
 			{ label: 'Travel time', value: '~10 hours, one-way' },
@@ -511,7 +512,7 @@ export const destinations: Destination[] = [
 			{ slug: 'hvar', name: 'Hvar town', distance: 'earlier on the route', icon: 'building-castle' },
 		],
 		insiderTips: [
-			'This route isn’t booked online: ask us for the group price or a private charter quote.',
+			'This route isn’t booked online: ask us for the group price or a private experience quote.',
 			'Arrange onward accommodation in Dubrovnik in advance. There’s no return leg to Split.',
 			'The full day covers real distance; bring layers for the cooler evening arrival.',
 		],

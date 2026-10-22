@@ -24,7 +24,7 @@ const CHARTER_LANDING = 'create-perfect-day-private';
 /**
  * The tour page's booking actions (spec §6.3.4):
  * - instant-book tours: "Book group tour"
- * - the charter landing page: "Plan your charter"
+ * - the private experience landing page: "Plan your experience"
  * - group tours with no price yet: "Ask about the group tour" (contact form)
  * - private-only tours, quoted on request: "Enquire about this tour"
  * plus "Plan a private experience" on every tour that runs both as a group
@@ -41,7 +41,7 @@ export function tourCtas(
 		isGroup && tour.prices !== null
 			? { label: 'Book group tour', href: links.book(tour.slug) }
 			: tour.slug === CHARTER_LANDING
-				? { label: 'Plan your charter', href: links.charter(tour.slug) }
+				? { label: 'Plan your experience', href: links.charter(tour.slug) }
 				: isGroup
 					? { label: 'Ask about the group tour', href: links.contact(tour.slug, 'group') }
 					: { label: 'Enquire about this tour', href: links.contact(tour.slug) };
@@ -125,7 +125,7 @@ export function tourHeadings(
 	destinations: { slug: string; name: string }[],
 ): TourHeadings {
 	const flexible = tour.itineraryKind === 'flexible';
-	const noun = flexible ? 'charter' : 'tour';
+	const noun = flexible ? 'experience' : 'tour';
 	const place = (d: { slug: string; name: string }) => ITINERARY_PLACES[d.slug] ?? d.name.split('(')[0].trim();
 	const lead = destinations.find((d) => d.slug === tour.primaryDestinationSlug);
 	const others = destinations.filter((d) => d !== lead).map(place);
@@ -138,7 +138,7 @@ export function tourHeadings(
 
 	return {
 		about: tour.seoHeadings?.about ?? `About the ${tourShortName(tour.title)} ${noun}`,
-		itinerary: tour.seoHeadings?.itinerary ?? (route ? `${flexible ? 'Charter' : 'Tour'} itinerary — from Split to ${route}` : `${flexible ? 'Charter' : 'Tour'} itinerary`),
+		itinerary: tour.seoHeadings?.itinerary ?? (route ? `${flexible ? 'Your' : 'Tour'} itinerary — from Split to ${route}` : `${flexible ? 'Your' : 'Tour'} itinerary`),
 		included: `What's included in the ${noun}`,
 		notIncluded: "What's not included",
 		goodToKnow: 'Good to know before you go',

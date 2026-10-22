@@ -25,8 +25,8 @@ export const CHARTER_LIMITS = { firstName: 100, lastName: 100, email: 254, phone
 
 export const CHARTER_ERRORS = {
 	route: 'Choose a route.',
-	date: 'Choose a date for your charter.',
-	past: 'Choose a date from tomorrow on: charters are booked at least a day ahead. For a trip today, please call us.',
+	date: 'Choose a date for your private experience.',
+	past: 'Choose a date from tomorrow on: private experiences are booked at least a day ahead. For a trip today, please call us.',
 	season: `We sail ${seasonLabel()}. Please choose a date in the season.`,
 	time: `Choose a departure time between ${CHARTER_EARLIEST_TIME} and ${CHARTER_LATEST_TIME}.`,
 	duration: 'Choose how long you want the boat.',
@@ -138,6 +138,7 @@ export type QuoteInput = { price: number; date: string; time: string; durationHo
 export const QUOTE_ERRORS = {
 	price: `Enter the price in whole euros, between 1 and ${QUOTE_MAX_EUR}.`,
 	date: 'Enter a date from tomorrow on.',
+	season: `Enter a date in the season (${seasonLabel()}).`,
 	time: 'Enter a departure time like 09:30.',
 	duration: 'Choose one of the durations.',
 	valid: `The quote can be valid for ${QUOTE_VALID_DAYS.min} to ${QUOTE_VALID_DAYS.max} days.`,
@@ -162,6 +163,7 @@ export function parseQuote(form: { get(name: string): unknown }): QuoteInput {
 export function validateQuote(input: QuoteInput, now: Date = new Date()): QuoteError | null {
 	if (!Number.isInteger(input.price) || input.price < 1 || input.price > QUOTE_MAX_EUR) return 'price';
 	if (!parseIsoDate(input.date) || input.date <= businessDate(now)) return 'date';
+	if (!isInSeason(input.date)) return 'season';
 	if (!CHARTER_TIME_RE.test(input.time)) return 'time';
 	if (!(CHARTER_DURATIONS as readonly number[]).includes(input.durationHours)) return 'duration';
 	if (!Number.isInteger(input.validDays) || input.validDays < QUOTE_VALID_DAYS.min || input.validDays > QUOTE_VALID_DAYS.max) return 'valid';

@@ -27,7 +27,7 @@ export const ZENTA_MEETING_POINT_MAP_URL = 'https://www.google.com/maps/search/?
 export const EMAIL_SIGN_OFF = 'The Hello Blue Cave team';
 
 export const SITE_DEFAULT_DESCRIPTION =
-	'Speedboat tours and private charters from Split, Croatia: the Blue Cave, Hvar, Vis, the Pakleni Islands and the Blue Lagoon. Book your day online.';
+	'Speedboat tours and private experiences from Split, Croatia: the Blue Cave, Hvar, Vis, the Pakleni Islands and the Blue Lagoon. Book your day online.';
 
 /** Brand sea blue: the `theme-color` meta tag and the web app manifest. */
 export const SITE_THEME_COLOR = '#1a6fc4';
@@ -45,7 +45,7 @@ export const OFFICE_HOURS: string | null = null;
 export const LICENCE_CONFIRMED = false;
 
 /** The footer's one-line blurb (C-20). */
-export const SITE_BLURB = 'Speedboat tours and private charters from Split.';
+export const SITE_BLURB = 'Speedboat tours and private experiences from Split.';
 
 /** How fast messages get a reply, as shown on the contact page ("We reply {REPLY_TIME}"). */
 export const REPLY_TIME = 'the same day';

@@ -9,13 +9,13 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
 const TOUR = 'blue-lagoon-morning';
 const SLOT = '09:30';
 
-/** A day in the season, a week or more ahead. */
+/** A day in the season (1 March to 31 October), a week or more ahead. */
 function seasonDate(): string {
 	const d = new Date(Date.now() + 7 * 86_400_000);
 	const iso = d.toISOString().slice(0, 10);
 	const md = iso.slice(5);
-	if (md >= '04-01' && md <= '11-30') return iso;
-	return `${md > '11-30' ? d.getUTCFullYear() + 1 : d.getUTCFullYear()}-05-15`;
+	if (md >= '03-01' && md <= '10-31') return iso;
+	return `${md > '10-31' ? d.getUTCFullYear() + 1 : d.getUTCFullYear()}-03-15`;
 }
 
 const details = (overrides: Record<string, string | number> = {}) => ({
@@ -99,9 +99,13 @@ test('the draft endpoint refuses bad input with a code only, and other content t
 	expect(json.status()).toBe(400);
 	expect((await json.json()).errors).toHaveProperty('slot');
 
-	// Tours run all year round: a winter date is bookable.
-	const winter = await startDraft(request, { date: `${new Date().getUTCFullYear() + 1}-01-15` });
-	expect(winter.status()).toBe(200);
+	// The boats are out of the water from 1 November to the end of February: a winter date is refused; March is open.
+	const nextYear = new Date().getUTCFullYear() + 1;
+	const winter = await startDraft(request, { date: `${nextYear}-01-15` });
+	expect(winter.status()).toBe(400);
+	expect((await winter.json()).errors).toHaveProperty('date');
+	const march = await startDraft(request, { date: `${nextYear}-03-15` });
+	expect(march.status()).toBe(200);
 
 	const text = await request.post('/api/bookings/draft', { data: 'hello', headers: { 'Content-Type': 'text/plain', ...ip() } });
 	expect([403, 415]).toContain(text.status());
@@ -141,11 +145,7 @@ test('step 2 in the browser: pick a day, fill in, review', async ({ page }) => {
 	await page.setExtraHTTPHeaders(ip());
 	await page.goto(`/book/${TOUR}/group/`);
 	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
-	// The calendar opens on this month; out of season, step to next April first.
-	const md = new Date().toISOString().slice(5, 10);
-	if (md > '11-25' || md < '04-01') {
-		for (let i = 0; i < 6; i++) await page.getByRole('button', { name: 'Next month' }).click();
-	}
+	// The calendar opens on the first month with a bookable day (March, out of season).
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
 	const slot = page.getByRole('radio', { name: new RegExp(SLOT) });
 	if (await slot.count()) await slot.check();
@@ -174,6 +174,18 @@ test("step 2 closes today's departure 15 minutes before it leaves (Split time)",
 		}
 		await expect(page.locator('.cal__day[aria-label*="14 July 2027"]')).toHaveAttribute('aria-disabled', 'true');
 	}
+});
+
+test('out of season, step 2 opens the calendar on March, the first month with bookable days', async ({ page }) => {
+	// 10 Nov 2026: the boats are out of the water until the end of February.
+	await page.clock.setFixedTime(new Date('2026-11-10T10:00:00Z'));
+	await page.goto(`/book/${TOUR}/group/`);
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
+	await expect(page.getByRole('paragraph').filter({ hasText: 'March 2027' })).toBeVisible();
+	await expect(page.locator('.cal__day:not([aria-disabled])').first()).toHaveAccessibleName(/1 March 2027/);
+	await page.getByRole('button', { name: 'Previous month' }).click();
+	await expect(page.locator('.cal__day[aria-label*="28 February 2027"]')).toHaveAccessibleName(/outside the season/);
+	await expect(page.locator('.cal__day[aria-label*="28 February 2027"]')).toHaveAttribute('aria-disabled', 'true');
 });
 
 test('step 2 without JavaScript: the plain form posts to the draft endpoint', async ({ browser }) => {

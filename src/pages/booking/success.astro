@@ -71,7 +71,7 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 		</div>
 
 		<SummaryCard
-			title={booking.kind === 'private' ? 'Your charter' : 'Your booking'}
+			title={booking.kind === 'private' ? 'Your private experience' : 'Your booking'}
 			rows={[
 				{ label: 'Tour', value: booking.tourTitle },
 				{ label: 'Date', value: formatBookingDate(booking.date) },
