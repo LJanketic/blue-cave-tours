@@ -23,7 +23,7 @@ export const HONEYPOT_FIELD = 'company';
 export const CONTACT_TOPICS = [
 	{ id: 'general', label: 'General enquiry' },
 	{ id: 'group', label: 'Group booking question' },
-	{ id: 'charter', label: 'Private charter enquiry' },
+	{ id: 'charter', label: 'Private experience enquiry' },
 	{ id: 'change', label: 'Cancellation or rescheduling' },
 	{ id: 'feedback', label: 'Feedback or complaint' },
 	{ id: 'press', label: 'Press / media' },

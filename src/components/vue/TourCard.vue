@@ -37,7 +37,7 @@ const requestLabel = computed(() => (props.tour ? formatFromPrice(null, props.to
 	<a v-if="variant === 'see-all'" class="tour-card-ui tour-card-ui--see-all" :href="href">
 		<span class="tour-card-ui__all-icon" aria-hidden="true"><i class="ti ti-arrow-right"></i></span>
 		<component :is="`h${headingLevel}`" class="tour-card-ui__all-title">See all tours</component>
-		<span class="tour-card-ui__all-sub">Group trips and private charters</span>
+		<span class="tour-card-ui__all-sub">Group trips and private experiences</span>
 	</a>
 	<a v-else-if="tour" :class="['tour-card-ui', `tour-card-ui--${variant}`]" :href="`/tours/${tour.slug}/`">
 		<div class="tour-card-ui__img">

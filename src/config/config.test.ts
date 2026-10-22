@@ -5,10 +5,12 @@ import { isInSeason, seasonLabel } from './season';
 import { caveEntryNote, showsBestseller } from '../lib/tour-display';
 
 describe('season', () => {
-	it('runs all year round', () => {
-		expect(isInSeason('2027-01-01')).toBe(true);
-		expect(isInSeason('2027-12-31')).toBe(true);
-		expect(seasonLabel()).toBe('all year round');
+	it('runs from 1 March to 31 October; the boats are out of the water in winter', () => {
+		expect(isInSeason('2027-03-01')).toBe(true);
+		expect(isInSeason('2027-10-31')).toBe(true);
+		expect(isInSeason('2026-11-01')).toBe(false);
+		expect(isInSeason('2027-01-15')).toBe(false);
+		expect(seasonLabel()).toBe('1 March to 31 October');
 	});
 });
 

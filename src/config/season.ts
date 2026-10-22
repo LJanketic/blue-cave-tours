@@ -1,21 +1,25 @@
 /**
  * The sailing season (D-15): tours run daily between these dates, inclusive.
  * MM-DD, so the same rule holds every year. Calendar days outside it are disabled.
- * Since Oct 2026 the operator runs all year round.
+ * Operator, Oct 2026: the boats are out of the water from 1 November to the end
+ * of February, so group bookings and private requests are closed then.
  */
-export const SEASON_START = '01-01';
-export const SEASON_END = '12-31';
+export const SEASON_START = '03-01';
+export const SEASON_END = '10-31';
 
 /**
  * Low season (operator, Oct 2026): low prices apply to tour dates inside these
- * MM-DD ranges, inclusive. Every other day of the year is peak season. The
- * single source of truth for seasonal pricing; the price is chosen by the tour
- * date, not the day of purchase.
+ * MM-DD ranges, inclusive. Together with PEAK_SEASON they cover the sailing
+ * season exactly, day by day. The single source of truth for seasonal pricing;
+ * the price is chosen by the tour date, not the day of purchase.
  */
 export const LOW_SEASON: [string, string][] = [
-	['04-01', '05-15'],
-	['10-01', '11-01'],
+	['03-01', '05-31'],
+	['09-15', '10-31'],
 ];
+
+/** Peak season (operator, Oct 2026): peak prices apply to tour dates inside these MM-DD ranges, inclusive. */
+export const PEAK_SEASON: [string, string][] = [['06-01', '09-14']];
 
 export type Season = 'low' | 'peak';
 
@@ -24,24 +28,20 @@ export type SeasonAmount = { [S in Season]: number };
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-const ALL_YEAR = SEASON_START === '01-01' && SEASON_END === '12-31';
-
 /** True when an ISO date (YYYY-MM-DD) falls inside the season. */
 export function isInSeason(isoDate: string): boolean {
 	const monthDay = isoDate.slice(5, 10);
 	return monthDay >= SEASON_START && monthDay <= SEASON_END;
 }
 
-/** The price season of an ISO date (YYYY-MM-DD): low inside a LOW_SEASON range, peak otherwise. */
+/**
+ * The price season of an ISO date (YYYY-MM-DD): peak inside a PEAK_SEASON range,
+ * low otherwise. Closed winter days count as low, the season of the next open
+ * day (1 March), so the "from" price on prerendered pages stays honest in winter.
+ */
 export function seasonFor(isoDate: string): Season {
 	const monthDay = isoDate.slice(5, 10);
-	return LOW_SEASON.some(([from, to]) => monthDay >= from && monthDay <= to) ? 'low' : 'peak';
-}
-
-/** MM-DD moved by whole days (in a non-leap year; the season rules never touch 29 Feb). */
-function shiftMonthDay(monthDay: string, days: number): string {
-	const [month, day] = monthDay.split('-').map(Number);
-	return new Date(Date.UTC(2001, month - 1, day + days)).toISOString().slice(5, 10);
+	return PEAK_SEASON.some(([from, to]) => monthDay >= from && monthDay <= to) ? 'peak' : 'low';
 }
 
 function dayMonth(monthDay: string, short = false): string {
@@ -50,34 +50,23 @@ function dayMonth(monthDay: string, short = false): string {
 	return `${day} ${short ? name.slice(0, 3) : name}`;
 }
 
-/** "1 April to 30 November", or "all year round". */
+/** "1 March to 31 October". */
 export function seasonLabel(): string {
-	return ALL_YEAR ? 'all year round' : `${dayMonth(SEASON_START)} to ${dayMonth(SEASON_END)}`;
+	return `${dayMonth(SEASON_START)} to ${dayMonth(SEASON_END)}`;
+}
+
+/** "March to October": the season by month, for short copy such as tour availability. */
+export function seasonMonths(): string {
+	const month = (monthDay: string) => MONTHS[Number(monthDay.slice(0, 2)) - 1];
+	return `${month(SEASON_START)} to ${month(SEASON_END)}`;
 }
 
 /**
- * The date ranges of a price season. Peak is the gaps between the low ranges,
- * one of them running over the new year (2 November to 31 March).
- */
-function seasonRanges(season: Season): [string, string][] {
-	const low = [...LOW_SEASON].sort(([a], [b]) => a.localeCompare(b));
-	if (season === 'low') return low;
-	const peak: [string, string][] = [];
-	for (let i = 0; i < low.length; i++) {
-		const from = shiftMonthDay(low[i][1], 1);
-		const to = shiftMonthDay(low[(i + 1) % low.length][0], -1);
-		peak.push([from, to]);
-	}
-	// Start with the range that begins earliest in the calendar year.
-	return peak.sort(([a], [b]) => a.localeCompare(b));
-}
-
-/**
- * The price season's dates: "1 April to 15 May and 1 October to 1 November";
- * with `short`, "1 Apr–15 May, 1 Oct–1 Nov".
+ * The price season's dates: "1 March to 31 May and 15 September to 31 October";
+ * with `short`, "1 Mar–31 May, 15 Sep–31 Oct".
  */
 export function priceSeasonDates(season: Season, short = false): string {
-	const ranges = seasonRanges(season).map(([from, to]) =>
+	const ranges = (season === 'low' ? LOW_SEASON : PEAK_SEASON).map(([from, to]) =>
 		short ? `${dayMonth(from, true)}–${dayMonth(to, true)}` : `${dayMonth(from)} to ${dayMonth(to)}`,
 	);
 	return ranges.join(short ? ', ' : ' and ');
@@ -90,5 +79,5 @@ export function priceSeasonDates(season: Season, short = false): string {
  * rule as seasonFor. If Intl fails, the build season set in the HTML stays.
  */
 export function seasonHeadScript(timeZone: string): string {
-	return `try{var p={};new Intl.DateTimeFormat('en-US',{timeZone:${JSON.stringify(timeZone)},year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){p[x.type]=x.value});var d=p.month+'-'+p.day;if(/^\\d{4}$/.test(p.year)&&/^\\d\\d-\\d\\d$/.test(d))document.documentElement.setAttribute('data-season',${JSON.stringify(LOW_SEASON)}.some(function(r){return d>=r[0]&&d<=r[1]})?'low':'peak')}catch(e){}`;
+	return `try{var p={};new Intl.DateTimeFormat('en-US',{timeZone:${JSON.stringify(timeZone)},year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){p[x.type]=x.value});var d=p.month+'-'+p.day;if(/^\\d{4}$/.test(p.year)&&/^\\d\\d-\\d\\d$/.test(d))document.documentElement.setAttribute('data-season',${JSON.stringify(PEAK_SEASON)}.some(function(r){return d>=r[0]&&d<=r[1]})?'peak':'low')}catch(e){}`;
 }

@@ -53,8 +53,8 @@ export function seasonPriceLabel(season: Season): string {
 
 /**
  * The seasonal breakdown shown in the booking flow, from the season config:
- * "Low season (1 Apr–15 May, 1 Oct–1 Nov): €149 per adult, €129 per child.
- * Peak season (16 May–30 Sep, 2 Nov–31 Mar): €169 per adult, €139 per child."
+ * "Low season (1 Mar–31 May, 15 Sep–31 Oct): €149 per adult, €129 per child.
+ * Peak season (1 Jun–14 Sep): €169 per adult, €139 per child."
  */
 export function seasonalPriceSummary(prices: SeasonalPrices): string {
 	const part = (season: Season, name: string) =>

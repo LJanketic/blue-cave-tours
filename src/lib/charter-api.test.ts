@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { isInSeason } from '../config/season';
 import { businessDate } from './bookings/dates';
 import { enquiries, resetMemoryStore } from './bookings/store';
 
@@ -29,9 +30,16 @@ function post(body: string, type = 'application/json') {
 	return POST({ request } as Parameters<typeof POST>[0]);
 }
 
+/** A week or more ahead and in the season, whatever day the tests run (the boats are closed Nov–Feb). */
+const SEASON_DATE = (() => {
+	let days = 7;
+	while (!isInSeason(businessDate(new Date(), days))) days++;
+	return businessDate(new Date(), days);
+})();
+
 const fields = (overrides: Record<string, unknown> = {}) => ({
 	route: 'blue-lagoon',
-	date: businessDate(new Date(), 7),
+	date: SEASON_DATE,
 	time: '10:00',
 	duration: '4',
 	adults: 3,

@@ -2,7 +2,7 @@
 export const prerender = true;
 
 /**
- * Private charter request (spec §8.2, board 06 as changed by the 20 Oct
+ * Private experience request (spec §8.2, board 06 as changed by the 20 Oct
  * handoff; D-7, D-8, D-23). A request, not a payment: the boss confirms
  * availability and replies with a quote and a payment link. Noindex; the
  * indexable landing page is /tours/create-perfect-day-private/.
@@ -64,8 +64,8 @@ const durations = CHARTER_DURATIONS.map((hours) => ({ value: String(hours), labe
 const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (_, i) => i + min);
 ---
 
-<SiteLayout title={pageTitle('Plan your private charter')} description="Ask for a private boat from Split: choose a route, date and guests, and we'll reply with a quote." checkout robots="noindex, nofollow">
-	<BookingShell exitHref="/tours/" heading="Plan your private charter" headingVisible>
+<SiteLayout title={pageTitle('Plan your private experience')} description="Ask for a private boat from Split: choose a route, date and guests, and we'll reply with a quote." checkout robots="noindex, nofollow">
+	<BookingShell exitHref="/tours/" heading="Plan your private experience" headingVisible>
 		<p class="charter__lead">
 			Tell us what you have in mind. We'll confirm availability and reply with a quote and a secure payment link,
 			usually {REPLY_TIME}. No contract is made and nothing is charged until you accept our quote.
@@ -115,7 +115,7 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 			<label>Email *<input name="email" type="email" required autocomplete="email" /></label>
 			<label>Phone *<input name="phone" type="tel" required autocomplete="tel" /></label>
 			<div class="no-js__trap" aria-hidden="true"><label>Company<input name={HONEYPOT_FIELD} tabindex="-1" autocomplete="off" /></label></div>
-			<p class="no-js__note">Nothing is charged now. Private charters have <a href={CANCELLATION_PRIVATE_HREF}>their own cancellation terms</a>.</p>
+			<p class="no-js__note">Nothing is charged now. Private experiences have <a href={CANCELLATION_PRIVATE_HREF}>their own cancellation terms</a>.</p>
 			<button type="submit">Send request</button>
 		</form>
 	</BookingShell>

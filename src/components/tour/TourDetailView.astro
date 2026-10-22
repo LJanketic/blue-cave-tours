@@ -37,7 +37,7 @@ const { primary, secondary } = tourCtas(tour, { book: (s) => groupBookHref({ slu
 
 // Order as on board 03: private first, then group.
 const heroTags: GalleryTag[] = [];
-if (tour.types.includes('private')) heroTags.push({ icon: 'crown', label: isGroup ? 'Private available' : 'Private charter', tone: 'private' });
+if (tour.types.includes('private')) heroTags.push({ icon: 'crown', label: isGroup ? 'Private available' : 'Private experience', tone: 'private' });
 if (isGroup) heroTags.push({ icon: 'users', label: 'Group tour', tone: 'brand' });
 if (showsBestseller(tour)) heroTags.push({ icon: 'star', label: 'Best seller', tone: 'tip' });
 
@@ -75,7 +75,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 				<span aria-hidden="true">·</span>
 				<span>
 					<i class={`ti ti-${isGroup ? 'users' : 'crown'}`} aria-hidden="true"></i>
-					{isGroup ? `Small group, max ${MAX_GUESTS} persons` : 'Private charter'}
+					{isGroup ? `Small group, max ${MAX_GUESTS} persons` : 'Private experience'}
 				</span>
 			</p>
 			<section class="tour__section" aria-labelledby="about-heading">
@@ -244,7 +244,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 					</Button>
 				)
 			}
-			{/* The 48h rule is the group tours'; private charters have their own terms (legal/cancellation §3). */}
+			{/* The 48h rule is the group tours'; private experiences have their own terms (legal/cancellation §3). */}
 			{isGroup && <p class="tour__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {isPrivateToo ? `Group tours: ${CANCELLATION_SHORT.toLowerCase()}` : CANCELLATION_SHORT}</p>}
 			{tour.types.includes('private') && (
 				<p class="tour__policy tour__policy--private">
@@ -254,7 +254,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 		</StickyAside>
 	</div>
 
-	<MobileActionBar target="book" label={primary.label === 'Book group tour' ? 'Book now' : primary.label === 'Plan your charter' ? 'Plan your charter' : 'Enquire'}>
+	<MobileActionBar target="book" label={primary.label === 'Book group tour' ? 'Book now' : primary.label === 'Plan your experience' ? 'Plan your experience' : 'Enquire'}>
 		<p>
 			{
 				prices ? (

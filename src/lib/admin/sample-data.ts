@@ -177,7 +177,7 @@ async function loadSampleCharters(now: Date): Promise<number> {
 				quoteExpiresAt: new Date(now.getTime() + 3 * 86_400_000).toISOString(),
 				durationHours: hours,
 				tourSlug: route?.tourSlug ?? '',
-				tourTitle: `Private charter: ${route?.label ?? 'Your own route'}`,
+				tourTitle: `Private experience: ${route?.label ?? 'Your own route'}`,
 				date,
 				slot: time,
 				adults,

@@ -15,8 +15,8 @@ export const WEATHER_REFUND_DAYS = 30;
 
 export const CANCELLATION_SHORT = `Free cancellation up to ${CANCELLATION_HOURS}h before departure`;
 
-/** Private charters follow their own terms (legal/cancellation §3), so the 48h line never goes next to them. */
-export const CANCELLATION_PRIVATE_SHORT = 'Private charters have their own cancellation terms';
+/** Private experiences follow their own terms (legal/cancellation §3), so the 48h line never goes next to them. */
+export const CANCELLATION_PRIVATE_SHORT = 'Private experiences have their own cancellation terms';
 export const CANCELLATION_PRIVATE_HREF = '/legal/cancellation/#private';
 
 export const CANCELLATION_WINDOW = `${CANCELLATION_HOURS} hours`;

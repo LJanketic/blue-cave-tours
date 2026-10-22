@@ -35,7 +35,7 @@ if (!ctaPhoto?.src) throw new Error('About CTA photo missing');
 
 <SiteLayout
 	title={pageTitle('About us: Split locals running boat tours')}
-	description="Split locals running small-group boat tours and private charters: Blue Cave, islands, and routes that follow the weather."
+	description="Split locals running small-group boat tours and private experiences: Blue Cave, islands, and routes that follow the weather."
 	solidNav={false}
 	fontPreload
 	footerGap="48px"
@@ -75,13 +75,13 @@ if (!ctaPhoto?.src) throw new Error('About CTA photo missing');
 			<CtaBand
 				variant="photo"
 				heading="Come sailing with us"
-				text={`Most group tours depart daily. Private charters for up to ${MAX_GUESTS} persons.`}
+				text={`Most group tours depart daily. Private experiences for up to ${MAX_GUESTS} persons.`}
 				image={ctaPhoto.src}
 				imagePosition="center 60%"
 				id="about-cta"
 			>
 				<Button variant="on-image" size="md" href="/tours/">Browse tours</Button>
-				<Button variant="on-image-ghost" size="md" href={charterUrl()}>Plan a private charter</Button>
+				<Button variant="on-image-ghost" size="md" href={charterUrl()}>Plan a private experience</Button>
 			</CtaBand>
 		</div>
 	</main>

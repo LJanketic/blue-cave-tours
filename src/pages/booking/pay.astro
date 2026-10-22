@@ -62,7 +62,7 @@ const closedReason =
 		? isPrivate && !booking.paidAt
 			? 'This quote was withdrawn or replaced by a newer one. Please use the link in our latest email.'
 			: isPrivate
-				? 'This charter was cancelled.'
+				? 'This private experience was cancelled.'
 				: 'This booking was cancelled.'
 		: quoteExpired(booking)
 			? 'This quote has expired. Contact us and we will check the date again and send a new one.'
@@ -76,7 +76,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
 <SiteLayout title={pageTitle('Payment')} description="Complete your booking payment." checkout robots="noindex, nofollow">
-	<BookingShell step={isPrivate ? undefined : 4} exitHref={`/tours/${booking.tourSlug}/`} heading={isPrivate ? 'Your private charter quote' : 'Payment'} headingVisible>
+	<BookingShell step={isPrivate ? undefined : 4} exitHref={`/tours/${booking.tourSlug}/`} heading={isPrivate ? 'Your private experience quote' : 'Payment'} headingVisible>
 		{
 			PAYMENTS_ARE_DEMO && (
 				<Notice tone="info" icon="info-circle" class="pay__demo">
@@ -135,14 +135,14 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 							<input type="hidden" name="termsVersion" value={TERMS_VERSION} />
 							{termsMissing && (
 								<Notice tone="warn" alert>
-									Please accept the terms to book your charter.
+									Please accept the terms to book your private experience.
 								</Notice>
 							)}
 							<label class="pay__terms">
 								<input type="checkbox" name="terms" value="yes" required />
 								<span>
 									I accept the <a href="/legal/terms/">terms and conditions</a> and the
-									<a href={CANCELLATION_PRIVATE_HREF}>cancellation terms for private charters</a>. A leisure service on a
+									<a href={CANCELLATION_PRIVATE_HREF}>cancellation terms for private experiences</a>. A leisure service on a
 									fixed date: the 14-day right of withdrawal doesn't apply.
 								</span>
 							</label>

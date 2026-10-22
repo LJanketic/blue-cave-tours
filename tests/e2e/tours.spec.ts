@@ -72,20 +72,24 @@ test('without JavaScript every tour is listed', async ({ browser }) => {
 	await context.close();
 });
 
+// Dubrovnik has no photos of its own places yet (22 Oct feedback: a Hvar photo read as the wrong city).
+const NO_PHOTOS_YET = ['/tours/dubrovnik-one-way/'];
+
 test('every tour page opens its gallery on a real photo and has no Highlights section', async ({ page }) => {
 	await page.goto('/tours/');
 	const links = await page.locator('.tours-results__grid a.tour-card-ui').evaluateAll((as) => as.map((a) => a.getAttribute('href') ?? ''));
 	expect(links.length).toBeGreaterThan(5);
 	for (const href of links) {
 		await page.goto(href);
-		await expect(page.locator('.gallery-ui__hero img'), href).toHaveAttribute('src', /.+/);
+		if (NO_PHOTOS_YET.includes(href)) await expect(page.locator('.gallery-ui__hero--placeholder'), href).toBeVisible();
+		else await expect(page.locator('.gallery-ui__hero img'), href).toHaveAttribute('src', /.+/);
 		await expect(page.getByRole('heading', { name: 'Highlights' }), href).toHaveCount(0);
 	}
 });
 
 test('Read more: the whole intro is in the HTML, collapsed to a preview until the button opens it', async ({ page, request }) => {
 	const html = await (await request.get('/tours/blue-cave-hvar-5-islands/')).text();
-	expect(html).toContain('before cruising back to Split as the sun dips over the islands');
+	expect(html).toContain('before cruising back to Split in the late afternoon');
 	await page.goto('/tours/blue-cave-hvar-5-islands/');
 	const intro = page.locator('#intro-body');
 	const button = page.locator('.tour__more');

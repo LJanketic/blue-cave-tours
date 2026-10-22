@@ -79,6 +79,17 @@ describe('createPendingBooking', () => {
 		expect(await bookings().list()).toHaveLength(0);
 	});
 
+	it('refuses winter dates, when the boats are out of the water, and opens again on 1 March', async () => {
+		// Booked on 22 Oct 2026, the last open week of that season.
+		const october = new Date('2026-10-22T09:00:00Z');
+		expect(await createPendingBooking(tour, { ...input, date: '2026-10-31' }, october)).toMatchObject({ ok: true });
+		expect(await createPendingBooking(tour, { ...input, date: '2026-11-01' }, october)).toEqual({ ok: false, error: 'season' });
+		expect(await createPendingBooking(tour, { ...input, date: '2027-02-15' }, october)).toEqual({ ok: false, error: 'season' });
+		const march = await createPendingBooking(tour, { ...input, date: '2027-03-01' }, october);
+		if (!march.ok) throw new Error(march.error);
+		expect(march.booking.total).toBe(149 * 2 + 129);
+	});
+
 	it("refuses today's departure from 15 minutes before it leaves Split", async () => {
 		// 2027-07-15 in Split (UTC+2): booking for the 07:20 boat closes at 07:05.
 		const today = { ...input, date: '2027-07-15' };

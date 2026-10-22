@@ -130,12 +130,12 @@ export const TYPE_CARDS: TypeCard[] = [
 		kind: 'private',
 		badge: { icon: 'crown', label: 'Just you on board' },
 		icon: 'crown',
-		title: 'Private charter',
+		title: 'Private experience',
 		description:
 			'The whole boat is yours. Choose your route, set your pace, bring your own food and music. Ideal for families, celebrations, and corporate groups.',
 		// "From €X for the boat" only once the charter price table exists (D-8).
 		features: [{ text: 'Quoted per boat and season' }, { text: 'Fully customisable route' }, { text: 'Flexible departure time' }],
-		ctaLabel: 'Plan a private charter',
+		ctaLabel: 'Plan a private experience',
 		ctaHref: charterUrl(),
 	},
 ];
@@ -147,5 +147,5 @@ export const CTA_BAND = {
 	// No "most sell out 3–5 days ahead": an unbacked scarcity claim (UCPD).
 	text: `Most tours run daily from Split, ${seasonLabel()}. Book early in July and August.`,
 	primary: { label: 'Browse all tours', href: '/tours/' },
-	secondary: { label: 'Plan a private charter', href: charterUrl() },
+	secondary: { label: 'Plan a private experience', href: charterUrl() },
 };

@@ -54,9 +54,9 @@ describe('tourHeadings', () => {
 				goodToKnow: 'Good to know before you go',
 			},
 			'create-perfect-day-private': {
-				about: 'About the Perfect Day at Sea charter',
-				itinerary: 'Charter itinerary — from Split to the islands you choose',
-				included: "What's included in the charter",
+				about: 'About the Perfect Day at Sea experience',
+				itinerary: 'Your itinerary — from Split to the islands you choose',
+				included: "What's included in the experience",
 				notIncluded: "What's not included",
 				goodToKnow: 'Good to know before you go',
 			},
