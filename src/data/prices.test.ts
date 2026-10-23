@@ -44,3 +44,21 @@ describe('FAQ pricing answer', () => {
 		expect(answer).toContain('Private experiences are quoted on request');
 	});
 });
+
+describe('LOWEST_GROUP_PRICE', () => {
+	it('is the cheapest group tour’s low-season adult price', async () => {
+		const { LOWEST_GROUP_PRICE } = await import('./marketing');
+		const { tours } = await import('./tour-catalog');
+		const { supportsInstantBook } = await import('../lib/booking');
+		const lows = tours.filter(supportsInstantBook).flatMap((t) => (t.prices ? [t.prices.low.adult] : []));
+		expect(LOWEST_GROUP_PRICE).toBe(Math.min(...lows));
+	});
+});
+
+describe('LOWEST_PRIVATE_PRICE', () => {
+	it('is the lowest low-season boat price of the tours booked privately on the site', async () => {
+		const { LOWEST_PRIVATE_PRICE } = await import('./marketing');
+		const { PRIVATE_TOURS } = await import('../config/private');
+		expect(LOWEST_PRIVATE_PRICE).toBe(Math.min(...Object.values(PRIVATE_TOURS).map((t) => t.boat.low)));
+	});
+});

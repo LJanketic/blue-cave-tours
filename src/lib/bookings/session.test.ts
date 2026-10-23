@@ -34,6 +34,15 @@ describe('booking cookie', () => {
 		expect(openDraft(sealed)).toMatchObject({ firstName: 'Ivan', infants: 1 });
 	});
 
+	it('seals a private draft as version 2, and refuses a version that disagrees with the kind', () => {
+		const privateDraft = draft({ v: 2, kind: 'private', extras: ['champagne'], pickup: 'riva' });
+		expect(openDraft(sealDraft(privateDraft) as string)).toMatchObject({ v: 2, kind: 'private', extras: ['champagne'] });
+		// A private draft sealed as v1 would read as a group booking on a build that doesn't know private ones.
+		expect(openDraft(sealDraft(draft({ kind: 'private' })) as string)).toBeNull();
+		expect(openDraft(sealDraft(draft({ v: 2 })) as string)).toBeNull();
+		expect(openDraft(sealDraft({ ...draft(), v: 3 } as unknown as BookingDraft) as string)).toBeNull();
+	});
+
 	it('stays under 4 KB with the longest notes', () => {
 		expect((sealDraft(draft()) as string).length).toBeLessThan(4096 - 200);
 	});

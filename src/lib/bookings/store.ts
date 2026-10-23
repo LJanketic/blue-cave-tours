@@ -79,9 +79,20 @@ export type Booking = {
 	enquiryId?: string;
 	/** Private charters: the quote can be paid until this moment (ISO). */
 	quoteExpiresAt?: string;
-	/** Private charters: hours, as quoted. */
+	/** Private charters: hours, as quoted (or the tour's, for a private experience paid on the site). */
 	durationHours?: number;
+	/** Private experience paid on the site: the pick-up point, when it isn't the meeting point. */
+	pickup?: string;
 };
+
+/**
+ * A private charter quote: staff priced a request and sent a payment link.
+ * A private experience booked and paid on the site is private but no quote:
+ * it has no request behind it and no expiry.
+ */
+export function isCharterQuote(booking: Pick<Booking, 'enquiryId' | 'quoteExpiresAt'>): boolean {
+	return Boolean(booking.enquiryId || booking.quoteExpiresAt);
+}
 
 export type LineItem = { label: string; unit: number; qty: number; amount: number };
 
@@ -125,6 +136,10 @@ export type CharterRequestDetails = {
 	infants: number;
 	firstName: string;
 	lastName: string;
+	/** Asked for from a private experience booking: a pick-up place off our list, as typed. */
+	pickup?: string;
+	/** The extras chosen on that booking (ids in src/config/private.ts). */
+	extras?: string[];
 };
 
 export type OutboxEmail = {

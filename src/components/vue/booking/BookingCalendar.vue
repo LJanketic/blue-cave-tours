@@ -169,8 +169,9 @@ watch(
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 28px;
-		height: 28px;
+		/* Touch targets: 44px for the month arrows, 40px for the days (WCAG 2.5.5 / 2.5.8). */
+		width: 44px;
+		height: 44px;
 		padding: 0;
 		border: 0.5px solid var(--color-border-secondary);
 		border-radius: var(--radius-md);
@@ -199,7 +200,7 @@ watch(
 	}
 
 	.cal__day {
-		height: 36px;
+		height: 40px;
 		padding: 0;
 		border: 1px solid transparent;
 		border-radius: var(--radius-md);

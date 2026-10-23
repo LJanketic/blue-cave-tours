@@ -71,13 +71,3 @@ export function priceSeasonDates(season: Season, short = false): string {
 	);
 	return ranges.join(short ? ', ' : ' and ');
 }
-
-/**
- * The inline <head> script (BaseLayout) that sets <html data-season> to the
- * season of the visitor's day in `timeZone`, before the first paint, so
- * prerendered SeasonPrice amounts follow the season without a rebuild. Same
- * rule as seasonFor. If Intl fails, the build season set in the HTML stays.
- */
-export function seasonHeadScript(timeZone: string): string {
-	return `try{var p={};new Intl.DateTimeFormat('en-US',{timeZone:${JSON.stringify(timeZone)},year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(function(x){p[x.type]=x.value});var d=p.month+'-'+p.day;if(/^\\d{4}$/.test(p.year)&&/^\\d\\d-\\d\\d$/.test(d))document.documentElement.setAttribute('data-season',${JSON.stringify(PEAK_SEASON)}.some(function(r){return d>=r[0]&&d<=r[1]})?'peak':'low')}catch(e){}`;
-}

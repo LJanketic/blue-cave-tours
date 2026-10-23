@@ -7,7 +7,7 @@ import { departureHasLeft, formatTimestamp } from '../../../lib/bookings/dates';
 import { isRecordId } from '../../../lib/bookings/ids';
 import { applyAdminAction, quoteExpired, STATUS_LABELS, type AdminAction } from '../../../lib/bookings/service';
 import { durationLabel } from '../../../config/charter';
-import { byCreatedDesc, outbox, bookings, type BookingStatus, type OutboxEmail, type PaymentStatus } from '../../../lib/bookings/store';
+import { byCreatedDesc, isCharterQuote, outbox, bookings, type BookingStatus, type OutboxEmail, type PaymentStatus } from '../../../lib/bookings/store';
 import { overbookingsById, whatsappNumber } from '../../../lib/admin/manifest';
 import { DELIVERY_LABELS } from '../../../lib/email/send';
 import TourThumb from '../../../components/admin/TourThumb.astro';
@@ -78,9 +78,13 @@ const outcomeActions = askOutcome ? visibleStatusActions.filter((a) => a.status 
 const otherStatusActions = visibleStatusActions.filter((a) => !outcomeActions.includes(a));
 const awaitingPayment = booking.status === 'pending_payment' && !paid;
 const isPrivate = booking.kind === 'private';
-const expired = isPrivate && awaitingPayment && quoteExpired(booking);
+// A charter quote staff sent, vs a private experience the customer booked on the site.
+const isQuote = isPrivate && isCharterQuote(booking);
+const expired = isQuote && awaitingPayment && quoteExpired(booking);
 // While a quote can be paid, its link is shown so staff can send it again (e.g. by WhatsApp) without a new quote.
-const payLink = isPrivate && awaitingPayment && !expired ? `${Astro.url.origin}/booking/pay/?id=${booking.id}` : '';
+const payLink = isQuote && awaitingPayment && !expired ? `${Astro.url.origin}/booking/pay/?id=${booking.id}` : '';
+// A private experience booked on the site: its boat, extras and pick-up, as charged.
+const charges = isPrivate && !isQuote ? (booking.lineItems ?? []) : [];
 const canCancel = booking.status !== 'cancelled';
 const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 ---
@@ -107,11 +111,11 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 	}
 
 	{
-		awaitingPayment && !isPrivate && (
+		awaitingPayment && !isQuote && (
 			<div class="warn-box" role="note">
 				<i class="ti ti-alert-circle" aria-hidden="true" />
 				<p>
-					<strong>Not paid yet.</strong> The seats aren't held until the customer pays. Contact them to finish the booking, or
+					<strong>Not paid yet.</strong> The {isPrivate ? "boat isn't" : "seats aren't"} held until the customer pays. Contact them to finish the booking, or
 					cancel it.
 				</p>
 			</div>
@@ -119,7 +123,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 	}
 
 	{
-		awaitingPayment && isPrivate && (
+		awaitingPayment && isQuote && (
 			<div class="warn-box" role="note">
 				<i class="ti ti-alert-circle" aria-hidden="true" />
 				<p>
@@ -183,7 +187,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 						<div class="badge-row">
 							<span class={`a-badge a-badge--${booking.status}`}>{STATUS_LABELS[booking.status]}</span>
 							<span class={`a-badge a-badge--${booking.paymentStatus}`}>{PAYMENT_LABELS[booking.paymentStatus]}</span>
-							{isPrivate && <span class="a-badge a-badge--private">Private charter</span>}
+							{isPrivate && <span class="a-badge a-badge--private">{isQuote ? 'Private charter' : 'Private experience'}</span>}
 						</div>
 					</div>
 				</div>
@@ -194,6 +198,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 					{isPrivate && booking.enquiryId && <div><dt><i class="ti ti-message" aria-hidden="true"></i>Request</dt><dd><a href={`/admin/enquiries/?show=all#enquiry-${booking.enquiryId}`}>Open the customer's request</a></dd></div>}
 					{payLink && <div><dt><i class="ti ti-credit-card" aria-hidden="true"></i>Pay link</dt><dd class="pay-link"><a href={payLink} target="_blank" rel="noopener">{payLink}</a><span class="fees-note">Send it again if the customer lost the email.</span></dd></div>}
 					<div><dt><i class="ti ti-users" aria-hidden="true"></i>Guests</dt><dd>{guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}</dd></div>
+					{booking.pickup && <div><dt><i class="ti ti-map-pin" aria-hidden="true"></i>Pick-up</dt><dd>{booking.pickup}</dd></div>}
 				</dl>
 				{
 					booking.personalDataRemovedAt && (
@@ -235,6 +240,18 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 					{booking.paymentRef && <div><dt>Payment ref</dt><dd class="mono">{booking.paymentRef}</dd></div>}
 					{booking.invoice && <div><dt>Invoice (račun)</dt><dd>{booking.invoice.number}<span class="fees-note">Demo, not fiscalized</span></dd></div>}
 				</dl>
+				{
+					charges.length > 0 && (
+						<>
+							<hr class="a-divider" />
+							<dl class="a-rows">
+								{charges.map((item) => (
+									<div><dt>{item.label}</dt><dd class="a-tnum">€{item.amount}</dd></div>
+								))}
+							</dl>
+						</>
+					)
+				}
 				<hr class="a-divider" />
 				<div class="total-row">
 					<span class="total-label">Total</span>

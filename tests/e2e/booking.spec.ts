@@ -71,8 +71,8 @@ test('a full booking: details stay out of every URL, and the cookie goes at the 
 test('submitting twice goes to the same booking', async ({ page }) => {
 	await page.setExtraHTTPHeaders(ip());
 	await startDraft(page.request);
-	const first = await page.request.post('/api/bookings', { form: { termsVersion: await termsVersion(page.request) }, maxRedirects: 0, headers: { Origin: baseOrigin(page.url() || 'http://localhost:4329') } });
-	const second = await page.request.post('/api/bookings', { form: { termsVersion: await termsVersion(page.request) }, maxRedirects: 0, headers: { Origin: baseOrigin('http://localhost:4329') } });
+	const first = await page.request.post('/api/bookings', { form: await reviewForm(page.request), maxRedirects: 0, headers: { Origin: baseOrigin(page.url() || 'http://localhost:4329') } });
+	const second = await page.request.post('/api/bookings', { form: await reviewForm(page.request), maxRedirects: 0, headers: { Origin: baseOrigin('http://localhost:4329') } });
 	expect(first.status()).toBe(303);
 	expect(second.headers().location).toBe(first.headers().location);
 });
@@ -80,9 +80,23 @@ test('submitting twice goes to the same booking', async ({ page }) => {
 test('changed terms send the customer back to review them', async ({ page }) => {
 	await page.setExtraHTTPHeaders(ip());
 	await startDraft(page.request);
-	const res = await page.request.post('/api/bookings', { form: { termsVersion: '1999-01-01' }, maxRedirects: 0, headers: { Origin: 'http://localhost:4329' } });
+	const res = await page.request.post('/api/bookings', { form: { ...(await reviewForm(page.request)), termsVersion: '1999-01-01' }, maxRedirects: 0, headers: { Origin: 'http://localhost:4329' } });
 	expect(res.status()).toBe(303);
 	expect(res.headers().location).toBe(`/book/${TOUR}/review/?error=terms-changed`);
+});
+
+test('a review page for a draft another tab has replaced books nothing, and shows the new one', async ({ page }) => {
+	await page.setExtraHTTPHeaders(ip());
+	await startDraft(page.request);
+	const stale = await reviewForm(page.request);
+	// Another tab starts again (a new draft, a new stamp) before this one confirms.
+	await new Promise((resolve) => setTimeout(resolve, 5));
+	await startDraft(page.request, { adults: 3 });
+	const res = await page.request.post('/api/bookings', { form: stale, maxRedirects: 0, headers: { Origin: 'http://localhost:4329' } });
+	expect(res.status()).toBe(303);
+	expect(res.headers().location).toBe(`/book/${TOUR}/review/?error=draft-changed`);
+	const fresh = await page.request.post('/api/bookings', { form: await reviewForm(page.request), maxRedirects: 0, headers: { Origin: 'http://localhost:4329' } });
+	expect(fresh.headers().location).toMatch(/^\/booking\/pay\/\?id=/);
 });
 
 test('the draft endpoint refuses bad input with a code only, and other content types with 415', async ({ request }) => {
@@ -132,9 +146,13 @@ test('the booking cookie prefills step 2 when coming back to edit', async ({ pag
 	await expect(page.locator('#book-email')).toHaveValue('guest@example.com');
 });
 
-async function termsVersion(request: APIRequestContext): Promise<string> {
+/** What the review page's form posts: the terms version and the stamp of the draft it shows. */
+async function reviewForm(request: APIRequestContext): Promise<{ termsVersion: string; draftAt: string }> {
 	const html = await (await request.get(`/book/${TOUR}/review/`)).text();
-	return html.match(/name="termsVersion" value="([^"]+)"/)?.[1] ?? '';
+	return {
+		termsVersion: html.match(/name="termsVersion" value="([^"]+)"/)?.[1] ?? '',
+		draftAt: html.match(/name="draftAt" value="([^"]+)"/)?.[1] ?? '',
+	};
 }
 
 function baseOrigin(url: string): string {

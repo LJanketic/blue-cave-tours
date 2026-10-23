@@ -53,7 +53,7 @@ test('a tour breadcrumb is Tours › the tour, in the page and in the JSON-LD', 
 test('the private experience button carries the inline crown, and hover fills it without moving the label', async ({ page }) => {
 	await page.setViewportSize({ width: 1280, height: 900 });
 	await page.goto('/tours/blue-cave-hvar-5-islands/');
-	const button = page.getByRole('link', { name: 'Plan a private experience' });
+	const button = page.getByRole('link', { name: 'Book private experience' });
 	await expect(button).toBeVisible();
 	const crown = button.locator('.crown-icon');
 	await expect(crown.locator('svg')).toHaveCount(1);

@@ -228,6 +228,8 @@ describe('csv', () => {
 		expect(csv.startsWith('﻿"Ref"')).toBe(true);
 		expect(csv.trim().split('\r\n')).toHaveLength(2);
 		expect(csv).toContain('"Kovačević"');
+		expect(csv.split('\r\n')[0].endsWith('"Type","Pick-up"')).toBe(true);
+		expect(bookingsCsv([booking({ kind: 'private', pickup: 'Villa Sunce, Podstrana' })])).toContain('"Private experience","Villa Sunce, Podstrana"');
 	});
 });
 

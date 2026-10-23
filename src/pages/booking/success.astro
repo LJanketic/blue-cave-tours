@@ -85,24 +85,40 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 		/>
 
 		<section class="done__card" aria-labelledby="meet-heading">
-			<h2 id="meet-heading"><i class="ti ti-map-pin" aria-hidden="true"></i> Where to meet us</h2>
+			{/* A private experience with a pick-up starts there, not at the stand: no meeting point, map or check-in. */}
+			<h2 id="meet-heading"><i class="ti ti-map-pin" aria-hidden="true"></i> {booking.pickup ? 'Where we pick you up' : 'Where to meet us'}</h2>
 			<dl class="done__meet">
-				<div><dt>Location</dt><dd>{MEETING_POINT_LABEL}</dd></div>
-				<div><dt>Arrive by</dt><dd>{arriveBy}</dd></div>
+				{
+					booking.pickup ? (
+						<>
+							<div><dt>Pick-up</dt><dd>{booking.pickup}</dd></div>
+							<div><dt>Pick-up time</dt><dd>We confirm it with you by email, in time for your {booking.slot} departure</dd></div>
+						</>
+					) : (
+						<>
+							<div><dt>Location</dt><dd>{MEETING_POINT_LABEL}</dd></div>
+							<div><dt>Arrive by</dt><dd>{arriveBy}</dd></div>
+						</>
+					)
+				}
 				<div><dt>What to bring</dt><dd>{bring}</dd></div>
-				<div><dt>On the day</dt><dd>Our crew will meet you at the stand</dd></div>
+				{!booking.pickup && <div><dt>On the day</dt><dd>Our crew will meet you at the stand</dd></div>}
 			</dl>
-			<a class="done__map" href={MEETING_POINT_MAP_URL} target="_blank" rel="noopener">
-				<i class="ti ti-map-2" aria-hidden="true"></i> Open the meeting point on the map<span class="sr-only"> (opens in a new tab)</span>
-			</a>
+			{
+				!booking.pickup && (
+					<a class="done__map" href={MEETING_POINT_MAP_URL} target="_blank" rel="noopener">
+						<i class="ti ti-map-2" aria-hidden="true" /> Open the meeting point on the map<span class="sr-only"> (opens in a new tab)</span>
+					</a>
+				)
+			}
 		</section>
 
 		<section class="done__card" aria-labelledby="next-heading">
 			<h2 id="next-heading"><i class="ti ti-list-check" aria-hidden="true"></i> What happens next</h2>
 			<ol class="done__next" role="list">
-				<li><i class="ti ti-mail" aria-hidden="true"></i><span><strong>Check your email.</strong> Your booking details, meeting point and what to bring.</span></li>
+				<li><i class="ti ti-mail" aria-hidden="true"></i><span><strong>Check your email.</strong> Your booking details, {booking.pickup ? 'pick-up' : 'meeting point'} and what to bring.</span></li>
 				<li><i class="ti ti-cloud-storm" aria-hidden="true"></i><span><strong>Weather.</strong> {CANCELLATION_WEATHER}</span></li>
-				<li><i class="ti ti-anchor" aria-hidden="true"></i><span><strong>Show up and sail.</strong> Be at the stand by {arriveBy}.</span></li>
+				<li><i class="ti ti-anchor" aria-hidden="true"></i><span><strong>Show up and sail.</strong> {booking.pickup ? 'Be ready at your pick-up point at the time we confirm.' : `Be at the stand by ${arriveBy}.`}</span></li>
 			</ol>
 		</section>
 

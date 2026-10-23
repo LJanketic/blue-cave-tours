@@ -260,7 +260,7 @@ onUnmounted(() => clearInterval(clock));
 				name="notes"
 				as="textarea"
 				:maxlength="NOTES_MAX"
-				hint="Please tell us about health matters (allergies, mobility) by phone, not here."
+				hint="For example, a birthday surprise or a preferred stop."
 				:error="fieldErrors.notes"
 			/>
 		</section>

@@ -12,7 +12,8 @@ export const prerender = false;
 /**
  * The review page's "Continue to payment" form posts here (spec §8.1.6). The
  * booking details come from the sealed cookie, never from the form; the form
- * only confirms the terms version the customer saw. Stores an unpaid booking
+ * only confirms the terms version the customer saw, and which draft the
+ * review page showed (`draftAt`, its createdAt). Stores an unpaid booking
  * and sends the customer to the payment page with its opaque id. Every
  * redirect carries an id or an error code, never personal data (S-2).
  */
@@ -27,8 +28,13 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
 	const draft = openDraft(cookies.get(BOOKING_COOKIE)?.value);
 	const tour = draft ? getTourBySlug(draft.tourSlug) : undefined;
 	if (!draft || !tour) return see('/tours/');
-	const review = (code: BookingError) => see(`/book/${tour.slug}/review/?error=${code}`);
+	const flow = draft.kind === 'private' ? 'flow=private&' : '';
+	const review = (code: BookingError) => see(`/book/${tour.slug}/review/?${flow}error=${code}`);
 	if (!body.ok) return review('server');
+
+	// The draft the customer reviewed, not one another tab has written since (e.g. a group booking
+	// started after a private one): a mismatch shows them the review of what the cookie holds now.
+	if (String(body.fields.draftAt ?? '') !== String(draft.createdAt)) return review('draft-changed');
 
 	// A second submit (double click, back button) goes to the booking already made.
 	if (draft.bookingId) {
@@ -62,6 +68,7 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
 			email: draft.email,
 			phone: draft.phone,
 			notes: draft.notes,
+			...(draft.kind === 'private' ? { kind: 'private' as const, extras: draft.extras ?? [], pickup: draft.pickup ?? '' } : {}),
 		});
 		if (!result.ok) return review(result.error);
 		const sealed = sealDraft({ ...draft, bookingId: result.booking.id });

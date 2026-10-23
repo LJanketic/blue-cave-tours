@@ -1,5 +1,6 @@
 import type { Departure, TourDetail } from '../types/tour';
 import type { ContactTopic } from './contact-validation';
+import { privateTour } from '../config/private';
 
 /** Guests per departure, enforced both client-side (GroupBookingFlow) and here. */
 export const MAX_GUESTS = 14;
@@ -41,6 +42,19 @@ export function contactHrefForTour(tour: Pick<TourDetail, 'slug'>, topic?: Conta
 
 export function groupBookHref(tour: Pick<TourDetail, 'slug'>): string {
 	return `/book/${encodeURIComponent(tour.slug)}/group/`;
+}
+
+/**
+ * Book the whole boat and pay now (src/config/private.ts): a private tour
+ * with a boat price and a fixed departure to shift from. Others stay on
+ * request (/private-charter/).
+ */
+export function supportsPrivateBook(tour: Pick<TourDetail, 'slug' | 'types' | 'departures'>): boolean {
+	return tour.types.includes('private') && privateTour(tour.slug) !== null && tour.departures.length > 0;
+}
+
+export function privateBookHref(tour: Pick<TourDetail, 'slug'>): string {
+	return `/book/${encodeURIComponent(tour.slug)}/private/`;
 }
 
 export type GroupBookingDetails = {

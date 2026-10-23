@@ -9,7 +9,6 @@ import type { TourCardDTO } from '../../lib/cards';
 import { catalogState } from '../../lib/tours-catalog-state';
 import { filterCatalog, parseCatalogQuery } from '../../lib/tour-filters';
 import { buildYourOwnLast, isBuildYourOwn, withBuildYourOwnBadge } from '../../lib/build-your-own';
-import type { Season } from '../../config/season';
 import TourCard from './TourCard.vue';
 import EmptyState from '../ui/EmptyState.vue';
 import Button from '../ui/Button.vue';
@@ -21,12 +20,8 @@ const props = defineProps<{ tours: TourCardDTO[] }>();
 // and hydrating straight into a filtered list would mismatch the HTML.
 const mounted = ref(false);
 const query = computed(() => (mounted.value ? catalogState : parseCatalogQuery('')));
-// The cards show today's season's price (SeasonPrice); the price sorts follow
-// the season the page shows (<html data-season>, BaseLayout). Read on mount:
-// the sort is "recommended" until then anyway.
-const season = ref<Season>('low');
 // The custom private day closes the list as the "Build your own" card, whatever the sort.
-const shown = computed(() => buildYourOwnLast(filterCatalog(props.tours, query.value, season.value)).map(withBuildYourOwnBadge));
+const shown = computed(() => buildYourOwnLast(filterCatalog(props.tours, query.value)).map(withBuildYourOwnBadge));
 const filtered = computed(
 	() => query.value.filters.length > 0 || query.value.destination !== '' || query.value.q.trim() !== '',
 );
@@ -39,7 +34,6 @@ onMounted(() => {
 	if (!catalogState.ready) {
 		Object.assign(catalogState, parseCatalogQuery(window.location.search), { ready: true });
 	}
-	season.value = document.documentElement.dataset.season === 'peak' ? 'peak' : 'low';
 	mounted.value = true;
 });
 </script>

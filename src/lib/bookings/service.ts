@@ -3,7 +3,8 @@ import { MAX_GUESTS, parseIsoDate, seatCount, supportsInstantBook } from '../boo
 import { isInSeason, seasonLabel } from '../../config/season';
 import { TERMS_VERSION } from '../../config/legal';
 import { BOOKING_CUTOFF_NOTE } from '../../config/booking';
-import { computeBookingTotal, lineItemsFor } from '../price';
+import { computeBookingTotal, lineItemsFor, lineItemsTotal, privateLineItems } from '../price';
+import { DEFAULT_PICKUP_ID, PRIVATE_LISTS, privateDepartureTimes, privateExtra, privatePickup, privateTour, type PrivateLists } from '../../config/private';
 import { EMAIL_RE, asciiEmail } from '../contact-validation';
 import { adminEmail, sendEmail, type EmailMessage } from '../email/send';
 import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail, charterQuoteEmail } from '../email/templates';
@@ -15,6 +16,7 @@ import { newBookingRef, newId } from './ids';
 import {
 	bookings,
 	enquiries,
+	isCharterQuote,
 	nextCounterValue,
 	outbox,
 	type Booking,
@@ -36,7 +38,14 @@ export type NewBookingInput = {
 	email: string | null;
 	phone: string | null;
 	notes: string | null;
+	/** A private experience: the whole boat, paid now (src/config/private.ts). Group bookings leave these out. */
+	kind?: 'private';
+	extras?: string[];
+	pickup?: string;
 };
+
+/** A private experience booking: the group fields, plus the extras and pick-up. */
+export type PrivateBookingInput = NewBookingInput & { kind: 'private'; extras: string[]; pickup: string };
 
 export const NOTES_MAX = 500;
 
@@ -51,8 +60,12 @@ export const BOOKING_ERRORS = {
 	name: 'Enter your first and last name.',
 	email: 'Enter a valid email address.',
 	notes: `Keep notes to ${NOTES_MAX} characters.`,
+	private: 'This tour can\'t be booked as a private experience online. Please send us a request instead.',
+	extras: 'Choose extras from the list.',
+	pickup: 'Choose a pick-up point from the list, or send us a request for another place.',
 	'session-expired': 'Your booking session expired, or was for another tour. Please fill in your details again.',
 	'terms-changed': 'Our terms changed while you were booking. Please review them and confirm again.',
+	'draft-changed': 'Your booking changed in another tab or window. Please check the details below and confirm again.',
 	busy: 'Too many attempts from your connection. Please wait a few minutes and try again.',
 	server: 'We could not save your booking. Please try again, or call us and we will book it for you.',
 } as const;
@@ -84,6 +97,40 @@ export function validateBookingInput(tour: TourDetail, input: NewBookingInput, n
 	return null;
 }
 
+/**
+ * The private experience's rules (plan P), checked on the server: the tour is
+ * sold privately, the date is open, the time is one the boat can leave at
+ * (never a time the client made up), the cut-off hasn't passed for it, and
+ * every extra and the pick-up are on the lists. 'other' pick-ups are refused
+ * here: they go to /api/charter-request as a request. `lists` is for tests
+ * only (fixtures); the site always checks against the config.
+ */
+export function validatePrivateBookingInput(
+	tour: TourDetail,
+	input: PrivateBookingInput,
+	now: Date = new Date(),
+	lists: PrivateLists = PRIVATE_LISTS,
+): BookingError | null {
+	const config = privateTour(tour.slug, lists);
+	// supportsPrivateBook, against `lists`.
+	if (!config || !tour.types.includes('private') || tour.departures.length === 0) return 'private';
+	const adults = input.adults ?? 0;
+	if (adults < 1 || seatCount({ adults, children: input.children, infants: input.infants ?? 0 }) > MAX_GUESTS) return 'guests';
+	if (!input.date || !parseIsoDate(input.date)) return 'date';
+	if (input.date < businessDate(now)) return 'past';
+	if (!isInSeason(input.date)) return 'season';
+	const slot = input.slot ?? '';
+	if (!privateDepartureTimes(tour.departures[0].time, config.latestDeparture).includes(slot)) return 'slot';
+	if (bookingClosed(input.date, slot, now)) return 'past';
+	const known = new Set(lists.extras.map((extra) => extra.id));
+	if (input.extras.length > known.size || new Set(input.extras).size !== input.extras.length || !input.extras.every((id) => known.has(id))) return 'extras';
+	if (!privatePickup(input.pickup, lists)) return 'pickup';
+	if (!input.firstName || !input.lastName) return 'name';
+	if (!input.email || !EMAIL_RE.test(input.email)) return 'email';
+	if ((input.notes ?? '').length > NOTES_MAX) return 'notes';
+	return null;
+}
+
 export type CreateResult = { ok: true; booking: Booking } | { ok: false; error: BookingError };
 
 /**
@@ -96,7 +143,10 @@ export async function createPendingBooking(
 	tour: TourDetail,
 	input: NewBookingInput,
 	now: Date = new Date(),
+	/** Private only, and for tests only (fixtures): the lists to sell from. */
+	lists: PrivateLists = PRIVATE_LISTS,
 ): Promise<CreateResult> {
+	if (input.kind === 'private') return createPendingPrivateBooking(tour, { ...input, kind: 'private', extras: input.extras ?? [], pickup: input.pickup ?? '' }, now, lists);
 	const error = validateBookingInput(tour, input, now);
 	if (error) return { ok: false, error };
 	const adults = input.adults ?? 0;
@@ -145,6 +195,67 @@ export async function createPendingBooking(
 	return { ok: true, booking };
 }
 
+/**
+ * A private experience paid on the site: the whole boat for the tour's own
+ * length, priced on the server from src/config/private.ts for the date's
+ * season. The terms were accepted on the review page (S-4), so the pay page
+ * doesn't ask again. Unlike a quote it has no request and no expiry.
+ */
+async function createPendingPrivateBooking(tour: TourDetail, input: PrivateBookingInput, now: Date, lists: PrivateLists): Promise<CreateResult> {
+	const error = validatePrivateBookingInput(tour, input, now, lists);
+	if (error) return { ok: false, error };
+	const date = input.date as string;
+	const lineItems = privateLineItems(tour.slug, date, input.extras, input.pickup, lists);
+	if (!lineItems) return { ok: false, error: 'private' };
+	const pickup = input.pickup !== DEFAULT_PICKUP_ID ? privatePickup(input.pickup, lists)?.label : undefined;
+
+	const at = now.toISOString();
+	const booking: Booking = {
+		id: newId(),
+		ref: newBookingRef(),
+		createdAt: at,
+		updatedAt: at,
+		status: 'pending_payment',
+		paymentStatus: 'unpaid',
+		paymentProvider: null,
+		paymentRef: null,
+		paidAt: null,
+		kind: 'private',
+		durationHours: tour.durationHours,
+		tourSlug: tour.slug,
+		tourTitle: `Private experience: ${tour.title}`,
+		date,
+		slot: input.slot as string,
+		adults: input.adults ?? 0,
+		children: input.children,
+		infants: input.infants ?? 0,
+		total: lineItemsTotal(lineItems),
+		lineItems,
+		...(pickup ? { pickup } : {}),
+		termsVersion: TERMS_VERSION,
+		termsAcceptedAt: at,
+		firstName: input.firstName as string,
+		lastName: input.lastName as string,
+		email: asciiEmail(input.email as string),
+		phone: input.phone ?? '',
+		customerNotes: input.notes ?? '',
+		invoice: null,
+		staffNotes: [],
+		history: [{ at, by: 'customer', action: 'Private experience booked, waiting for payment' }],
+	};
+	await bookings().put(booking);
+	return { ok: true, booking };
+}
+
+/**
+ * Whether the pay page must ask for the terms: only a charter quote, which has
+ * no review step. Group bookings and private experiences booked on the site
+ * accepted them on the review page (termsAcceptedAt is set).
+ */
+export function termsDueOnPayment(booking: Pick<Booking, 'kind' | 'termsAcceptedAt'>): boolean {
+	return booking.kind === 'private' && !booking.termsAcceptedAt;
+}
+
 /** Still waiting for payment: never paid, cancelled or refunded. */
 function awaitingPayment(booking: Booking): boolean {
 	return booking.status === 'pending_payment' && (booking.paymentStatus === 'unpaid' || booking.paymentStatus === 'failed');
@@ -160,7 +271,7 @@ export function quoteExpired(booking: Booking, now: Date = new Date()): boolean 
  * or expired. The admin's lists and the day's boats leave these out.
  */
 export function isDeadQuote(booking: Booking, now: Date = new Date()): boolean {
-	return booking.kind === 'private' && neverPaid(booking) && (booking.status === 'cancelled' || quoteExpired(booking, now));
+	return booking.kind === 'private' && isCharterQuote(booking) && neverPaid(booking) && (booking.status === 'cancelled' || quoteExpired(booking, now));
 }
 
 /**
@@ -205,7 +316,8 @@ export async function finalizePaidBooking(
 		// Not isPayable: a charge that started before departure and succeeds after it
 		// (a provider's webhook) must still be recorded. The pay page gates the start.
 		if (!awaitingPayment(booking)) return null;
-		// A charter quote's terms are accepted on the pay page (it has no review step), so they're recorded with the payment.
+		// A charter quote's terms are accepted on the pay page (it has no review step), so they're recorded with the
+		// payment. A private experience booked on the site accepted them on its review page, like a group booking.
 		if (booking.kind === 'private' && !booking.termsAcceptedAt) {
 			booking.termsVersion = TERMS_VERSION;
 			booking.termsAcceptedAt = at;
@@ -414,7 +526,14 @@ export async function sendCharterQuote(
 		phone: enquiry.phone,
 		customerNotes: enquiry.message,
 		invoice: null,
-		staffNotes: quote.note ? [{ at, by, text: `Note sent with the quote: ${quote.note}` }] : [],
+		// Asked for from a private experience booking: where to pick them up, and the extras they wanted.
+		...(request.pickup ? { pickup: request.pickup } : {}),
+		staffNotes: [
+			...(quote.note ? [{ at, by, text: `Note sent with the quote: ${quote.note}` }] : []),
+			...(request.extras?.length
+				? [{ at, by: 'System', text: `Extras asked for: ${request.extras.map((id) => privateExtra(id)?.label ?? id).join(', ')}` }]
+				: []),
+		],
 		history: [{ at, by, action: `Quote sent: €${quote.price}, valid ${quote.validDays} day${quote.validDays === 1 ? '' : 's'}` }],
 		...(enquiry.sample ? { sample: true } : {}),
 	};

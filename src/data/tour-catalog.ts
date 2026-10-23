@@ -8,13 +8,13 @@ import { CHILD_MAX_AGE, INFANT_MAX_AGE, PRICE_BLUE_CAVE, PRICE_BLUE_LAGOON, PRIC
 const MEETING_POINT =
 	'Meet at Split’s Riva promenade, stand number 14. After booking you’ll receive the exact location, map link, and what time to arrive.';
 
-/** Private tours leave from the Riva or Zenta depending on the boat. */
+/** Private tours leave from the Riva; the exact spot is confirmed after booking. */
 const MEETING_POINT_PRIVATE =
-	'Meet at Split’s Riva promenade, stand number 14, or at Zenta, depending on the boat. We confirm the exact spot with you after booking.';
+	'Meet at Split’s Riva promenade, stand number 14. We confirm the exact spot with you after booking.';
 
 /** Create Your Perfect Day: the meeting point is agreed per booking. */
 const MEETING_POINT_FLEXIBLE =
-	'Flexible: we agree the meeting point with you when you book, for example Split’s Riva promenade, stand number 14, or Zenta.';
+	'Flexible: we agree the meeting point with you when you book, for example Split’s Riva promenade, stand number 14.';
 
 const WEATHER_COPY =
 	'We track forecasts and sea state. If conditions are rough or a stop is closed, we adjust the route or timing and communicate the changes.';

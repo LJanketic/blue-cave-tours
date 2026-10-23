@@ -1,7 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTourBySlug } from '../tours';
 import type { TourDetail } from '../../types/tour';
-import { applyAdminAction, createPendingBooking, finalizePaidBooking, isPayable, recordEnquiry, recordFailedPayment } from './service';
+import {
+	applyAdminAction,
+	createPendingBooking,
+	finalizePaidBooking,
+	isDeadQuote,
+	isPayable,
+	recordEnquiry,
+	recordFailedPayment,
+	termsDueOnPayment,
+	validatePrivateBookingInput,
+	type PrivateBookingInput,
+} from './service';
+import { adminBookingEmail, bookingConfirmationEmail } from '../email/templates';
+import type { PrivateLists } from '../../config/private';
 import { businessDate } from './dates';
 import { bookings, outbox, resetMemoryStore } from './store';
 import { newBookingRef } from './ids';
@@ -101,6 +114,119 @@ describe('createPendingBooking', () => {
 	it('refuses quote-only tours', async () => {
 		const quoteOnly = getTourBySlug('create-perfect-day-private') as TourDetail;
 		expect((await createPendingBooking(quoteOnly, input, NOW)).ok).toBe(false);
+	});
+});
+
+describe('private experience (pay now)', () => {
+	// Blue Cave: departs 07:20 (check-in 07:05), no latest departure yet, boat €1,500 low / €2,000 peak.
+	const privateInput: PrivateBookingInput = { ...input, slot: '07:20', kind: 'private', extras: [], pickup: 'riva' };
+	// A made-up list, for tests only: the site has no latest departures, extras or priced pick-ups yet.
+	const lists: PrivateLists = {
+		tours: { 'blue-cave-hvar-5-islands': { boat: { low: 100, peak: 200 }, latestDeparture: '08:30' } },
+		extras: [{ id: 'test-extra', label: 'Test extra', desc: '', price: 10 }],
+		pickups: [{ id: 'riva', label: 'Riva', price: 0 }, { id: 'test-pickup', label: 'Test pick-up', price: 25 }],
+	};
+
+	it('takes only the usual departure, no extras, and only the Riva, as the config stands', () => {
+		const check = (over: Partial<PrivateBookingInput>) => validatePrivateBookingInput(tour, { ...privateInput, ...over }, NOW);
+		expect(check({})).toBeNull();
+		// No latest departure from the operator yet: any other time is refused.
+		expect(check({ slot: '07:35' })).toBe('slot');
+		expect(check({ slot: '08:30' })).toBe('slot');
+		expect(check({ slot: '07:05' })).toBe('slot');
+		expect(check({ slot: null })).toBe('slot');
+		// No extras are offered yet: any id is refused.
+		expect(check({ extras: ['champagne'] })).toBe('extras');
+		expect(check({ pickup: 'other' })).toBe('pickup');
+		expect(check({ pickup: 'moon' })).toBe('pickup');
+		expect(check({ adults: 0 })).toBe('guests');
+		expect(check({ adults: 14, children: 1 })).toBe('guests');
+		expect(check({ date: '2027-11-15' })).toBe('season');
+		expect(check({ date: '2027-05-31' })).toBe('past');
+		expect(check({ email: 'nope' })).toBe('email');
+		expect(check({ lastName: null })).toBe('name');
+	});
+
+	it('checks shifted times, extras and pick-ups against the lists once the operator sets them', () => {
+		const check = (over: Partial<PrivateBookingInput>) => validatePrivateBookingInput(tour, { ...privateInput, ...over }, NOW, lists);
+		expect(check({ slot: '08:05', extras: ['test-extra'], pickup: 'test-pickup' })).toBeNull();
+		expect(check({ slot: '08:30' })).toBeNull();
+		// Off the 15-minute steps, or after the latest.
+		expect(check({ slot: '07:30' })).toBe('slot');
+		expect(check({ slot: '08:45' })).toBe('slot');
+		expect(check({ extras: ['test-extra', 'test-extra'] })).toBe('extras');
+		expect(check({ extras: ['caviar'] })).toBe('extras');
+	});
+
+	it('refuses tours that are not sold privately on the site', () => {
+		for (const slug of ['golden-horn-brac-hvar', 'blue-lagoon-morning', 'dubrovnik-one-way', 'create-perfect-day-private']) {
+			const other = getTourBySlug(slug) as TourDetail;
+			expect(validatePrivateBookingInput(other, { ...privateInput, slot: other.departures[0]?.time ?? '' }, NOW), slug).toBe('private');
+		}
+	});
+
+	it("closes today's private departure 15 minutes before it leaves; a shifted one closes later", async () => {
+		// 2027-07-15 in Split (UTC+2): the 07:20 boat closes at 07:05; a shifted 08:05 one at 07:50.
+		const today = { ...privateInput, date: '2027-07-15' };
+		expect(validatePrivateBookingInput(tour, today, new Date('2027-07-15T05:04:00Z'))).toBeNull();
+		expect(validatePrivateBookingInput(tour, today, new Date('2027-07-15T05:05:00Z'))).toBe('past');
+		expect(validatePrivateBookingInput(tour, { ...today, slot: '08:05' }, new Date('2027-07-15T05:49:00Z'), lists)).toBeNull();
+		expect(validatePrivateBookingInput(tour, { ...today, slot: '08:05' }, new Date('2027-07-15T05:50:00Z'), lists)).toBe('past');
+	});
+
+	it('stores the whole boat at the season price, meeting at the Riva, terms accepted, and no quote', async () => {
+		const result = await createPendingBooking(tour, privateInput, NOW);
+		if (!result.ok) throw new Error(result.error);
+		const booking = result.booking;
+		expect(booking).toMatchObject({
+			kind: 'private',
+			tourTitle: `Private experience: ${tour.title}`,
+			slot: '07:20',
+			durationHours: tour.durationHours,
+			total: 2000,
+			termsAcceptedAt: NOW.toISOString(),
+		});
+		expect(booking.quoteExpiresAt).toBeUndefined();
+		expect(booking.enquiryId).toBeUndefined();
+		expect(booking.pickup).toBeUndefined();
+		expect(booking.lineItems).toEqual([{ label: 'Private boat with skipper', unit: 2000, qty: 1, amount: 2000 }]);
+		expect(isPayable(booking, NOW)).toBe(true);
+		expect(termsDueOnPayment(booking)).toBe(false);
+		// Cancelled before paying, it's still a booking in the admin, not a dead quote.
+		expect(isDeadQuote({ ...booking, status: 'cancelled' }, NOW)).toBe(false);
+	});
+
+	it('charges extras and a priced pick-up from the lists, and keeps the pick-up on the booking', async () => {
+		const result = await createPendingBooking(tour, { ...privateInput, slot: '08:05', extras: ['test-extra'], pickup: 'test-pickup' }, NOW, lists);
+		if (!result.ok) throw new Error(result.error);
+		expect(result.booking).toMatchObject({ slot: '08:05', total: 200 + 10 + 25, pickup: 'Test pick-up' });
+		expect(result.booking.lineItems?.map((i) => i.label)).toEqual(['Private boat with skipper', 'Test extra', 'Pick-up: Test pick-up']);
+		const admin = adminBookingEmail(result.booking, 'boss@example.com', 'https://example.test/admin/');
+		expect(admin.text).toContain('Test extra (1 × €10)');
+	});
+
+	it('emails a private experience, not a quote; a pick-up replaces the meeting point', async () => {
+		const result = await createPendingBooking(tour, privateInput, NOW);
+		if (!result.ok) throw new Error(result.error);
+		const admin = adminBookingEmail(result.booking, 'boss@example.com', 'https://example.test/admin/');
+		expect(admin.subject).toMatch(/^New private experience /);
+		expect(admin.text).not.toMatch(/quote/i);
+		expect(admin.text).toContain('Private boat with skipper (1 × €2000)');
+		expect(bookingConfirmationEmail(result.booking, 'https://example.test').text).toContain('Meeting point:');
+		// Pick-ups come from a quoted "Other location" request today.
+		const pickedUp = { ...result.booking, pickup: 'Villa Sunce, Podstrana' };
+		expect(adminBookingEmail(pickedUp, 'boss@example.com', 'https://example.test/admin/').text).toContain('Pick-up: Villa Sunce, Podstrana');
+		const customer = bookingConfirmationEmail(pickedUp, 'https://example.test');
+		expect(customer.text).toContain('Pick-up: Villa Sunce, Podstrana');
+		expect(customer.text).not.toContain('Meeting point:');
+	});
+
+	it('leaves group bookings as they were: the pay page asks no terms, a quote still does', async () => {
+		const group = await pending();
+		expect(group.kind).toBe('group');
+		expect(group.pickup).toBeUndefined();
+		expect(termsDueOnPayment(group)).toBe(false);
+		expect(termsDueOnPayment({ kind: 'private', termsAcceptedAt: undefined })).toBe(true);
 	});
 });
 

@@ -14,6 +14,14 @@
 # → overview. src/data/destinations-redirects.test.ts keeps them in sync.
 /destinations/split             /destinations/    301
 
-# The old private booking step is now the charter request page (spec §8.2).
-# Netlify matches with or without the trailing slash.
-/book/:slug/private             /private-charter/?tour=:slug    301
+# Tours booked privately only on request (not in PRIVATE_TOURS, src/config/private.ts):
+# their old private booking step goes to the charter request page. The tours sold
+# privately on the site have a real /book/<slug>/private/ page, so they're not listed.
+# src/config/private.test.ts keeps this list in sync. Netlify matches with or without
+# the trailing slash.
+/book/golden-horn-brac-hvar/private         /private-charter/?tour=golden-horn-brac-hvar         301
+/book/blue-lagoon-morning/private           /private-charter/?tour=blue-lagoon-morning           301
+/book/blue-lagoon-afternoon/private         /private-charter/?tour=blue-lagoon-afternoon         301
+/book/hvar-red-rocks-pakleni/private        /private-charter/?tour=hvar-red-rocks-pakleni        301
+/book/dubrovnik-one-way/private             /private-charter/?tour=dubrovnik-one-way             301
+/book/create-perfect-day-private/private    /private-charter/?tour=create-perfect-day-private    301
