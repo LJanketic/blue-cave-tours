@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { isInSeason, LOW_SEASON, PEAK_SEASON, priceSeasonDates, SEASON_END, SEASON_START, seasonFor, seasonHeadScript } from './season';
-import { BUSINESS_TIME_ZONE, businessDate } from '../lib/bookings/dates';
+import { describe, expect, it } from 'vitest';
+import { isInSeason, LOW_SEASON, PEAK_SEASON, priceSeasonDates, SEASON_END, SEASON_START, seasonFor } from './season';
 
 describe('seasonFor', () => {
 	it('low is 1 March to 31 May and 15 September to 31 October; peak is 1 June to 14 September', () => {
@@ -50,31 +49,5 @@ describe('priceSeasonDates', () => {
 		expect(priceSeasonDates('low', true)).toBe('1 Mar–31 May, 15 Sep–31 Oct');
 		expect(priceSeasonDates('peak')).toBe('1 June to 14 September');
 		expect(priceSeasonDates('peak', true)).toBe('1 Jun–14 Sep');
-	});
-});
-
-describe('seasonHeadScript', () => {
-	afterEach(() => {
-		vi.useRealTimers();
-	});
-
-	function runAt(iso: string): string | undefined {
-		vi.setSystemTime(new Date(iso));
-		const attrs: Record<string, string> = {};
-		const document = { documentElement: { setAttribute: (name: string, value: string) => (attrs[name] = value) } };
-		new Function('document', seasonHeadScript(BUSINESS_TIME_ZONE))(document);
-		return attrs['data-season'];
-	}
-
-	it('sets the season of the moment’s day in Split, the same rule as seasonFor', () => {
-		vi.useFakeTimers();
-		// Split is UTC+2 in summer, UTC+1 in winter: 22:00 or 23:00 UTC is already the next day there.
-		const moments = ['2027-05-31T21:59:00Z', '2027-05-31T22:00:00Z', '2027-09-14T21:59:00Z', '2027-09-14T22:00:00Z', '2027-10-31T22:59:00Z', '2027-10-31T23:00:00Z', '2028-02-29T12:00:00Z'];
-		const expected = ['low', 'peak', 'peak', 'low', 'low', 'low', 'low'];
-		moments.forEach((iso, i) => {
-			const season = seasonFor(businessDate(new Date(iso)));
-			expect(season, iso).toBe(expected[i]);
-			expect(runAt(iso), iso).toBe(season);
-		});
 	});
 });

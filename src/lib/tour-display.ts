@@ -1,5 +1,6 @@
-import { BESTSELLER_EVIDENCE, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL, ZENTA_MEETING_POINT_MAP_URL } from '../config/site';
+import { BESTSELLER_EVIDENCE, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL } from '../config/site';
 import type { TourDetail } from '../types/tour';
+import { supportsPrivateBook } from './booking';
 
 /*
  * Display rules for tours. No catalog import, so Vue islands can use these
@@ -27,15 +28,23 @@ const CHARTER_LANDING = 'create-perfect-day-private';
  * - the private experience landing page: "Plan your experience"
  * - group tours with no price yet: "Ask about the group tour" (contact form)
  * - private-only tours, quoted on request: "Enquire about this tour"
- * plus "Plan a private experience" on every tour that runs both as a group
- * and privately, priced or not (handoff ruling: every tour is group +
- * private). A private-only tour's enquiry already is the charter request, so
- * it gets no second button to the same form.
+ * plus, on every tour that runs both as a group and privately (handoff
+ * ruling: every tour is group + private):
+ * - with a private boat price (src/config/private.ts): "Book private
+ *   experience", and a quiet `custom` link to plan something else (plan P)
+ * - otherwise: "Plan a private experience" (the charter request)
+ * A private-only tour's enquiry already is the charter request, so it gets
+ * no second button to the same form.
  */
 export function tourCtas(
-	tour: Pick<TourDetail, 'slug' | 'types' | 'prices'>,
-	links: { book: (slug: string) => string; contact: (slug: string, topic?: 'group') => string; charter: (slug: string) => string },
-): { primary: Cta; secondary: Cta | null } {
+	tour: Pick<TourDetail, 'slug' | 'types' | 'prices'> & Partial<Pick<TourDetail, 'departures'>>,
+	links: {
+		book: (slug: string) => string;
+		contact: (slug: string, topic?: 'group') => string;
+		charter: (slug: string) => string;
+		private: (slug: string) => string;
+	},
+): { primary: Cta; secondary: Cta | null; custom: Cta | null } {
 	const isGroup = tour.types.includes('group');
 	const primary: Cta =
 		isGroup && tour.prices !== null
@@ -46,7 +55,14 @@ export function tourCtas(
 					? { label: 'Ask about the group tour', href: links.contact(tour.slug, 'group') }
 					: { label: 'Enquire about this tour', href: links.contact(tour.slug) };
 	const offersPrivate = isGroup && tour.types.includes('private');
-	return { primary, secondary: offersPrivate ? { label: 'Plan a private experience', href: links.charter(tour.slug) } : null };
+	if (offersPrivate && supportsPrivateBook({ ...tour, departures: tour.departures ?? [] })) {
+		return {
+			primary,
+			secondary: { label: 'Book private experience', href: links.private(tour.slug) },
+			custom: { label: 'Something custom? Plan your own', href: links.charter(tour.slug) },
+		};
+	}
+	return { primary, secondary: offersPrivate ? { label: 'Plan a private experience', href: links.charter(tour.slug) } : null, custom: null };
 }
 
 /**
@@ -65,31 +81,29 @@ export function tourBreadcrumbs(tour: Pick<TourDetail, 'slug' | 'title'>): { lab
 export type TextPart = { text: string; href?: string };
 
 /**
- * The "Meeting point" tile. Group tours leave from the Riva; private tours
- * may leave from the Riva or Zenta, and the exact spot is confirmed with the
- * guest after booking.
+ * The "Meeting point" tile. Every tour leaves from the Riva; for private
+ * tours the exact spot is confirmed with the guest after booking.
  * - flexible itinerary (Create Your Perfect Day), whatever the types: agreed
- *   when booking, with the Riva and Zenta as examples
+ *   when booking, with the Riva as an example
  * - group only: the Riva link
- * - private only: "Riva stand 14 or Zenta", both linked, plus a note
- * - both: the Riva link, then "Private tours: Riva stand 14 or Zenta"
+ * - private only: "Riva stand 14", linked, plus a note
+ * - both: the Riva link
  */
 export function meetingPointLines(
 	tour: Pick<TourDetail, 'types'> & Partial<Pick<TourDetail, 'itineraryKind' | 'departures'>>,
 ): { lines: TextPart[][]; note: string | null } {
 	const riva: TextPart = { text: MEETING_POINT_LABEL, href: MEETING_POINT_MAP_URL };
 	const riva14: TextPart = { text: 'Riva stand 14', href: MEETING_POINT_MAP_URL };
-	const zenta: TextPart = { text: 'Zenta', href: ZENTA_MEETING_POINT_MAP_URL };
 	if (tour.itineraryKind === 'flexible') {
-		return { lines: [[{ text: 'Flexible, agreed when you book' }], [{ text: 'For example ' }, riva14, { text: ' or ' }, zenta]], note: null };
+		return { lines: [[{ text: 'Flexible, agreed when you book' }], [{ text: 'For example ' }, riva14]], note: null };
 	}
 	if (!tour.types.includes('private')) return { lines: [[riva]], note: null };
 	if (!tour.types.includes('group')) {
-		return { lines: [[riva14, { text: ' or ' }, zenta]], note: 'Exact spot confirmed after booking' };
+		return { lines: [[riva14]], note: 'Exact spot confirmed after booking' };
 	}
 	// No scheduled group departure yet (group price on request, D4b): the spot isn't fixed either.
 	const groupScheduled = tour.departures === undefined || tour.departures.length > 0;
-	return { lines: [[riva], [{ text: 'Private tours: Riva stand 14 or ' }, zenta]], note: groupScheduled ? null : 'Exact spot confirmed after booking' };
+	return { lines: [[riva]], note: groupScheduled ? null : 'Exact spot confirmed after booking' };
 }
 
 /** How a destination reads in "from Split to …"; any other slug uses its name up to a bracket. */

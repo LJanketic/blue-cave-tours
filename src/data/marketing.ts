@@ -1,8 +1,9 @@
 import { charterUrl } from '../config/routes';
 import { CANCELLATION_HOURS } from '../config/cancellation';
-import { seasonLabel, type SeasonAmount } from '../config/season';
+import { seasonLabel } from '../config/season';
 import { FOUNDING_YEAR, LICENCE_CONFIRMED } from '../config/site';
-import { MAX_GUESTS, supportsInstantBook } from '../lib/booking';
+import { MAX_GUESTS, supportsInstantBook, supportsPrivateBook } from '../lib/booking';
+import { PRIVATE_TOURS } from '../config/private';
 import { tours } from './tour-catalog';
 
 /**
@@ -92,12 +93,12 @@ export const HOW_IT_WORKS: { title: string; description: string }[] = [
 	{ title: 'Show up and sail', description: 'Meet your skipper at Riva stand 14. We take care of the rest.' },
 ];
 
-/** The cheapest group tour's adult price in each season, so the type card can't drift from the catalog. */
+/** The cheapest group tour's low-season adult price (the "From" price), so the type card can't drift from the catalog. */
 const groupPrices = tours.filter(supportsInstantBook).flatMap((t) => (t.prices ? [t.prices] : []));
-export const LOWEST_GROUP_PRICES: SeasonAmount = {
-	low: Math.min(...groupPrices.map((p) => p.low.adult)),
-	peak: Math.min(...groupPrices.map((p) => p.peak.adult)),
-};
+export const LOWEST_GROUP_PRICE: number = Math.min(...groupPrices.map((p) => p.low.adult));
+
+/** The cheapest private boat's low-season price (src/config/private.ts), for the same "From" line. */
+export const LOWEST_PRIVATE_PRICE: number = Math.min(...tours.filter(supportsPrivateBook).map((t) => PRIVATE_TOURS[t.slug].boat.low));
 
 export type TypeCard = {
 	kind: 'group' | 'private';
@@ -105,8 +106,8 @@ export type TypeCard = {
 	icon: string;
 	title: string;
 	description: string;
-	/** `strong` is shown bold inside the line, e.g. the price; a seasonal price shows today's season's (SeasonPrice). */
-	features: { text: string; strong?: string | SeasonAmount }[];
+	/** `strong` is shown bold inside the line, e.g. the price; a price is a number, shown as euros. */
+	features: { text: string; strong?: string | number }[];
 	ctaLabel: string;
 	ctaHref: string;
 };
@@ -119,7 +120,7 @@ export const TYPE_CARDS: TypeCard[] = [
 		title: 'Group tour',
 		description: `Join a small shared departure, max ${MAX_GUESTS} persons. Great for solo travellers, couples, and anyone who likes meeting people on the water.`,
 		features: [
-			{ text: 'From {strong} per person', strong: LOWEST_GROUP_PRICES },
+			{ text: 'From {strong} per person', strong: LOWEST_GROUP_PRICE },
 			{ text: 'Fixed daily departures on most routes' },
 			...(LICENCE_CONFIRMED ? [{ text: 'Licensed skipper on every route' }] : []),
 		],
@@ -133,8 +134,13 @@ export const TYPE_CARDS: TypeCard[] = [
 		title: 'Private experience',
 		description:
 			'The whole boat is yours. Choose your route, set your pace, bring your own food and music. Ideal for families, celebrations, and corporate groups.',
-		// "From €X for the boat" only once the charter price table exists (D-8).
-		features: [{ text: 'Quoted per boat and season' }, { text: 'Fully customisable route' }, { text: 'Flexible departure time' }],
+		// Priced boats (src/config/private.ts) are booked and paid online, one price for the boat by season (plan P);
+		// every other route, and a custom route or time, is a request answered with a quote.
+		features: [
+			{ text: 'From {strong} for the boat', strong: LOWEST_PRIVATE_PRICE },
+			{ text: 'Book online, or ask us for a quote' },
+			{ text: 'Your own route and time on request' },
+		],
 		ctaLabel: 'Plan a private experience',
 		ctaHref: charterUrl(),
 	},

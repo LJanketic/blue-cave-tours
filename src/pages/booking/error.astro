@@ -8,7 +8,7 @@ import Notice from '../../components/ui/Notice.astro';
 import Button from '../../components/ui/Button.astro';
 import { getTourBySlug } from '../../lib/tours';
 import { isRecordId } from '../../lib/bookings/ids';
-import { bookings } from '../../lib/bookings/store';
+import { bookings, isCharterQuote } from '../../lib/bookings/store';
 import { isPayable } from '../../lib/bookings/service';
 
 // A declined payment returns here with the booking id: retrying goes straight
@@ -50,8 +50,10 @@ const REASONS = [
 
 		<Notice tone="danger" alert>
 			{
-				booking?.kind === 'private'
+				booking?.kind === 'private' && isCharterQuote(booking)
 					? "Your private experience isn't booked until it's paid. You can try again now, while your quote is valid, or call us."
+					: booking?.kind === 'private'
+						? "We don't hold the boat until you pay. You can try again now, or call us and we'll book it for you."
 					: booking
 						? "We don't hold seats until you pay. You can try again now, or call us and we'll book it for you."
 					: 'Something went wrong saving your booking. Please try again, or call us and we\'ll book it for you.'

@@ -12,7 +12,12 @@ export const BOOKING_COOKIE = 'hbc_booking';
 export const BOOKING_COOKIE_MAX_AGE = 7200; // 2 hours
 
 export type BookingDraft = {
-	v: 1;
+	/**
+	 * 1 for a group booking, 2 for a private experience. A build that only
+	 * knows group drafts (a rollback) refuses a private one instead of
+	 * booking it as a group.
+	 */
+	v: 1 | 2;
 	tourSlug: string;
 	date: string;
 	slot: string;
@@ -28,6 +33,12 @@ export type BookingDraft = {
 	createdAt: number;
 	/** Set once /api/bookings has created the booking: a second submit goes to its payment instead. */
 	bookingId?: string;
+	/** A private experience (the whole boat, paid now); a group booking leaves these out. */
+	kind?: 'private';
+	/** Private only: the chosen extras' ids (src/config/private.ts). */
+	extras?: string[];
+	/** Private only: the pick-up point's id. */
+	pickup?: string;
 };
 
 function key(): Buffer | null {
@@ -55,7 +66,9 @@ export function openDraft(token: string | undefined | null, now: number = Date.n
 		decipher.setAuthTag(raw.subarray(12, 28));
 		const text = Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString('utf8');
 		const draft = JSON.parse(text) as BookingDraft;
-		if (draft?.v !== 1 || typeof draft.createdAt !== 'number') return null;
+		if ((draft?.v !== 1 && draft?.v !== 2) || typeof draft.createdAt !== 'number') return null;
+		// The version and the kind must agree: a private draft is always v2, a group one v1.
+		if ((draft.v === 2) !== (draft.kind === 'private')) return null;
 		if (now - draft.createdAt > BOOKING_COOKIE_MAX_AGE * 1000 || draft.createdAt > now + 60_000) return null;
 		return draft;
 	} catch {

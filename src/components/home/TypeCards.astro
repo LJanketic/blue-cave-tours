@@ -1,6 +1,5 @@
 ---
 import Button from '../ui/Button.astro';
-import SeasonPrice from '../ui/SeasonPrice.vue';
 import type { TypeCard } from '../../data/marketing';
 
 type Props = {
@@ -34,12 +33,9 @@ const { cards, withCtas = true } = Astro.props;
 								<i class="ti ti-circle-check" aria-hidden="true" />
 								<span>
 									{before}
-									{feature.strong &&
-										(typeof feature.strong === 'string' ? (
-											<strong>{feature.strong}</strong>
-										) : (
-											<strong><SeasonPrice low={feature.strong.low} peak={feature.strong.peak} /></strong>
-										))}
+									{feature.strong !== undefined && (
+										<strong>{typeof feature.strong === 'number' ? `€${feature.strong.toLocaleString('en-GB')}` : feature.strong}</strong>
+									)}
 									{after}
 								</span>
 							</li>

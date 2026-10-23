@@ -1,0 +1,248 @@
+---
+export const prerender = true;
+
+/**
+ * Private experience, step 2 (plan P): the whole boat, paid on the site. With
+ * JavaScript: the PrivateBookingFlow island. Without it: a plain form with
+ * native inputs that posts to the same endpoint (§3.5); a pick-up off the
+ * list needs the island or the request form, so the plain form links there.
+ * Only tours in src/config/private.ts get this page; others 404 and are
+ * planned through /private-charter/.
+ */
+import { Image } from 'astro:assets';
+import { pageTitle } from '../../../config/site';
+import { SEASON_END, SEASON_START, seasonLabel } from '../../../config/season';
+import { CANCELLATION_PRIVATE_HREF } from '../../../config/cancellation';
+import { CHARTER_ROUTES, closestDuration } from '../../../config/charter';
+import { charterUrl } from '../../../config/routes';
+import { DEFAULT_PICKUP_ID, PRIVATE_EXTRAS, PRIVATE_PICKUPS, PRIVATE_TOURS, privateDepartureTimes } from '../../../config/private';
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import BookingShell from '../../../components/booking/BookingShell.astro';
+import PrivateBookingFlow from '../../../components/vue/PrivateBookingFlow.vue';
+import { getAllTours, getTourCardPhoto } from '../../../lib/tours';
+import { DEFAULT_AGE_BANDS } from '../../../data/tour-catalog';
+import { MAX_GUESTS, departureLabel, meetingPointShort, supportsPrivateBook } from '../../../lib/booking';
+import { businessDate } from '../../../lib/bookings/dates';
+import type { TourDetail } from '../../../types/tour';
+
+export function getStaticPaths() {
+	return getAllTours()
+		.filter((tour) => supportsPrivateBook(tour))
+		.map((tour) => ({ params: { slug: tour.slug }, props: { tour } }));
+}
+
+type Props = { tour: TourDetail };
+const { tour } = Astro.props;
+// Split's date, so the calendar's "today" matches the server's (§8.1.2).
+const renderedOn = businessDate();
+const photo = getTourCardPhoto(tour);
+const ageBands = tour.ageBands ?? DEFAULT_AGE_BANDS;
+const times = privateDepartureTimes(tour.departures[0].time, PRIVATE_TOURS[tour.slug].latestDeparture);
+// A pick-up off the list is asked for as a charter request on this tour's route.
+const charterRoute = CHARTER_ROUTES.find((route) => route.tourSlug === tour.slug || route.aliases?.includes(tour.slug))?.id ?? '';
+// No Turnstile script on this page: the island loads it only for a request, and only with a site key.
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (_, i) => i + min);
+---
+
+<SiteLayout title={pageTitle(`Book privately: ${tour.title}`)} description={`Book ${tour.title} as a private experience: the whole boat, a date, extras and pick-up.`} checkout robots="noindex, nofollow">
+	<BookingShell step={2} exitHref={`/tours/${tour.slug}/`} heading={`Book ${tour.title} as a private experience`}>
+		<div class="snap">
+			{
+				photo.src ? (
+					<Image src={photo.src} alt="" widths={[112, 168]} sizes="56px" quality={70} format="webp" class="snap__img" />
+				) : (
+					<span class="snap__img snap__img--empty" aria-hidden="true">
+						<i class="ti ti-sailboat" />
+					</span>
+				)
+			}
+			<div>
+				<p class="snap__name">{tour.title}</p>
+				<p class="snap__meta">Private experience · {tour.duration} · {meetingPointShort(tour.meetingPoint)}</p>
+			</div>
+		</div>
+
+		<div class="with-js">
+			<PrivateBookingFlow
+				client:load
+				tourSlug={tour.slug}
+				tourTitle={tour.title}
+				times={times}
+				checkIn={tour.departures[0].checkIn}
+				ageBands={ageBands}
+				renderedOn={renderedOn}
+				seasonStart={SEASON_START}
+				seasonEnd={SEASON_END}
+				seasonLabel={seasonLabel()}
+				charterRoute={charterRoute}
+				charterHours={closestDuration(tour.durationHours)}
+				cancellationHref={CANCELLATION_PRIVATE_HREF}
+				turnstileSiteKey={turnstileSiteKey}
+			/>
+		</div>
+
+		<!-- Without JavaScript: native controls, the same endpoint, a plain form post. -->
+		<form class="no-js" method="post" action="/api/bookings/draft">
+			<input type="hidden" name="tourId" value={tour.slug} />
+			<input type="hidden" name="kind" value="private" />
+			<p class="no-js__note">Fields marked * are required. Tours run {seasonLabel()}. The price is for the whole boat.</p>
+			<label>Date *<input type="date" name="date" required min={renderedOn} /></label>
+			{
+				times.length > 1 ? (
+					<label>
+						Departure time
+						<select name="slot">
+							{times.map((time) => <option value={time}>{time}</option>)}
+						</select>
+					</label>
+				) : (
+					<>
+						<input type="hidden" name="slot" value={times[0]} />
+						<p class="no-js__note">Departure {departureLabel(tour.departures, times[0])}</p>
+					</>
+				)
+			}
+			<label>Adults ({ageBands.adult}) *<select name="adults">{counts(MAX_GUESTS, 1).map((n) => <option selected={n === 2}>{n}</option>)}</select></label>
+			<label>Children ({ageBands.child})<select name="children">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
+			<label>Infants (under {ageBands.infantMaxAge + 1})<select name="infants">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
+			<p class="no-js__note">Up to {MAX_GUESTS} persons on the boat, infants included.</p>
+			{
+				PRIVATE_EXTRAS.length > 0 && (
+					<fieldset>
+						<legend>Extras (optional)</legend>
+						{PRIVATE_EXTRAS.map((extra) => <label class="no-js__check"><input type="checkbox" name={`extra_${extra.id}`} value="yes" /> {extra.label} (+ €{extra.price})</label>)}
+					</fieldset>
+				)
+			}
+			<fieldset>
+				<legend>Pick-up</legend>
+				{PRIVATE_PICKUPS.map((p) => <label class="no-js__check"><input type="radio" name="pickup" value={p.id} checked={p.id === DEFAULT_PICKUP_ID} /> {p.label}{p.price ? ` (+ €${p.price})` : ''}</label>)}
+				<p class="no-js__note">Somewhere else? <a href={charterUrl(tour.slug)}>Send us a request</a> and we'll reply with a quote.</p>
+			</fieldset>
+			<label>First name *<input name="firstName" required autocomplete="given-name" /></label>
+			<label>Last name *<input name="lastName" required autocomplete="family-name" /></label>
+			<label>Email *<input name="email" type="email" required autocomplete="email" /></label>
+			<label>Phone (optional)<input name="phone" type="tel" autocomplete="tel" /></label>
+			<label>Anything the crew should know? (optional)<textarea name="notes" maxlength="500"></textarea></label>
+			<button type="submit">Review booking</button>
+		</form>
+	</BookingShell>
+</SiteLayout>
+
+
+<style>
+	@layer pages {
+		.snap {
+			display: flex;
+			align-items: center;
+			gap: var(--space-3);
+			margin-bottom: var(--space-5);
+			padding: var(--space-3) 14px;
+			border-radius: var(--radius-lg);
+			background: var(--color-background-secondary);
+		}
+
+		.snap__img {
+			flex-shrink: 0;
+			width: 56px;
+			height: 56px;
+			border-radius: var(--radius-md);
+			object-fit: cover;
+		}
+
+		.snap__img--empty {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: var(--color-background-primary);
+			color: var(--color-border-secondary);
+			font-size: 24px;
+		}
+
+		.snap__name {
+			margin: 0;
+			font-weight: var(--font-weight-medium);
+		}
+
+		.snap__meta {
+			margin: 0;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+
+		/* One or the other: the island with JavaScript, the plain form without. */
+		.no-js {
+			display: none;
+		}
+
+		@media (scripting: none) {
+			.with-js {
+				display: none;
+			}
+
+			.no-js {
+				display: grid;
+				gap: var(--space-3);
+			}
+		}
+
+		.no-js label {
+			display: grid;
+			gap: 4px;
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.no-js fieldset {
+			display: grid;
+			gap: var(--space-2);
+			margin: 0;
+			padding: 0;
+			border: 0;
+		}
+
+		.no-js legend {
+			margin-bottom: var(--space-2);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-medium);
+		}
+
+		.no-js .no-js__check {
+			display: flex;
+			align-items: center;
+			gap: var(--space-2);
+			font-weight: var(--font-weight-regular);
+		}
+
+		.no-js input:not([type='checkbox'], [type='radio']),
+		.no-js select,
+		.no-js textarea {
+			min-height: 40px;
+			padding: var(--space-2) 10px;
+			border: 1px solid var(--color-border-input);
+			border-radius: var(--radius-md);
+			font: inherit;
+		}
+
+		.no-js button {
+			min-height: 46px;
+			border: 0;
+			border-radius: var(--radius-btn);
+			background: var(--color-background-brand);
+			color: var(--color-text-on-image);
+			font: inherit;
+			font-weight: var(--font-weight-semibold);
+		}
+
+		.no-js__note {
+			margin: 0;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+
+		.no-js__note a {
+			color: inherit;
+		}
+	}
+</style>

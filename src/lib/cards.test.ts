@@ -50,3 +50,13 @@ describe('toTourCardDTO', () => {
 		}
 	});
 });
+
+describe('toTourCardDTO fromPrice', () => {
+	it('is the low-season adult price, and left out for quote-only tours', () => {
+		for (const tour of tours) {
+			const card = toTourCardDTO(tour, [], null);
+			if (tour.prices) expect(card.fromPrice).toBe(tour.prices.low.adult);
+			else expect(card).not.toHaveProperty('fromPrice');
+		}
+	});
+});

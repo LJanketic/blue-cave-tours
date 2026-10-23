@@ -78,6 +78,26 @@ describe('POST /api/charter-request', () => {
 		});
 	});
 
+	it('keeps the pick-up place a private experience booking asked for', async () => {
+		const res = await post(JSON.stringify(fields({ pickup: '  Villa Sunce, Podstrana  ' })));
+		expect(res.status).toBe(200);
+		const [stored] = await enquiries().list();
+		expect(stored.charter).toMatchObject({ pickup: 'Villa Sunce, Podstrana' });
+		expect(stored.charter?.extras).toBeUndefined();
+		const { charterRequestRows } = await import('./email/templates');
+		expect(charterRequestRows(stored.charter!)).toContainEqual(['Pick-up wanted', 'Villa Sunce, Podstrana']);
+	});
+
+	it('refuses extras off the list (all of them, while none is offered), and stores no pick-up from the charter form', async () => {
+		const bad = await post(JSON.stringify(fields({ extras: ['champagne'] })));
+		expect(bad.status).toBe(400);
+		expect((await bad.json()).code).toBe('invalid');
+		await post(JSON.stringify(fields()));
+		const [stored] = await enquiries().list();
+		expect(stored.charter?.pickup).toBeUndefined();
+		expect(stored.charter?.extras).toBeUndefined();
+	});
+
 	it('answers a plain form post with a redirect, and errors carry only a code', async () => {
 		const ok = await post(asForm(), 'application/x-www-form-urlencoded');
 		expect(ok.status).toBe(303);

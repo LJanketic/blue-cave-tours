@@ -16,6 +16,16 @@ test('filters narrow the list, update the URL and can be cleared', async ({ page
 	await expect(page).toHaveURL(/\/tours\/$/);
 });
 
+test('filter chips combine with AND: Half day then Private leaves the 3 half-day private tours', async ({ page }) => {
+	await page.goto('/tours/');
+	const chips = page.getByRole('group', { name: 'Filter tours' });
+	await chips.getByRole('button', { name: 'Half day' }).click();
+	await chips.getByRole('button', { name: 'Private' }).click();
+	await expect(page).toHaveURL(/\?type=short&type=private$/);
+	await expect(page.locator('.tours-results__count strong')).toHaveText('3');
+	await expect(page.locator('.tours-results__grid > li')).toHaveCount(3);
+});
+
 test('the destination dropdown filters the list and its first option clears it', async ({ page }) => {
 	await page.goto('/tours/');
 	const count = page.locator('.tours-results__count');

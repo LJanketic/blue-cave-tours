@@ -13,13 +13,13 @@ import { getTourBySlug } from '../../lib/tours';
 import { feeLabel } from '../../lib/cards';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
-import { finalizePaidBooking, isPayable, quoteExpired, recordFailedPayment } from '../../lib/bookings/service';
+import { finalizePaidBooking, isPayable, quoteExpired, recordFailedPayment, termsDueOnPayment } from '../../lib/bookings/service';
 import { formatTimestamp } from '../../lib/bookings/dates';
 import { durationLabel } from '../../config/charter';
 import { CANCELLATION_PRIVATE_HREF } from '../../config/cancellation';
 import { TERMS_VERSION } from '../../config/legal';
 import { checkRateLimit, clientIp } from '../../lib/rate-limit';
-import { bookings, type PaymentProvider } from '../../lib/bookings/store';
+import { bookings, isCharterQuote, type PaymentProvider } from '../../lib/bookings/store';
 
 /**
  * DEMO checkout. Stands in for Teya Hosted Checkout and the PayPal button
@@ -35,15 +35,19 @@ if (booking.paymentStatus === 'paid' && booking.status !== 'cancelled') {
 	return Astro.redirect(`/booking/success/?id=${booking.id}`, 303);
 }
 const payable = isPayable(booking);
-// A charter quote has no review step: its terms are accepted here (S-4).
 const isPrivate = booking.kind === 'private';
+// A charter quote, unlike a private experience booked on the site, came from staff.
+const isQuote = isPrivate && isCharterQuote(booking);
+// A charter quote has no review step: its terms are accepted here (S-4). Bookings made
+// on the site (group, or a private experience) accepted them on the review page.
+const askTerms = termsDueOnPayment(booking);
 
 if (Astro.request.method === 'POST' && payable) {
 	const ip = clientIp(Astro.request);
 	if (!(await checkRateLimit('pay', ip, { max: 20, failClosed: true })).ok) return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
 	const form = await Astro.request.formData();
 	// The demo's "simulate a declined payment" needs no terms: nothing is booked.
-	if (isPrivate && form.get('outcome') !== 'decline' && (form.get('terms') !== 'yes' || form.get('termsVersion') !== TERMS_VERSION)) {
+	if (askTerms && form.get('outcome') !== 'decline' && (form.get('terms') !== 'yes' || form.get('termsVersion') !== TERMS_VERSION)) {
 		return Astro.redirect(`/booking/pay/?id=${booking.id}&terms=1`, 303);
 	}
 	const provider: PaymentProvider = form.get('provider') === 'paypal' ? 'paypal' : 'teya';
@@ -59,7 +63,7 @@ if (Astro.request.method === 'POST' && payable) {
 // Cancelled, refunded or closed-departure bookings can't be paid: say so instead of offering a button.
 const closedReason =
 	booking.status === 'cancelled' || booking.paymentStatus === 'refunded'
-		? isPrivate && !booking.paidAt
+		? isQuote && !booking.paidAt
 			? 'This quote was withdrawn or replaced by a newer one. Please use the link in our latest email.'
 			: isPrivate
 				? 'This private experience was cancelled.'
@@ -76,7 +80,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
 <SiteLayout title={pageTitle('Payment')} description="Complete your booking payment." checkout robots="noindex, nofollow">
-	<BookingShell step={isPrivate ? undefined : 4} exitHref={`/tours/${booking.tourSlug}/`} heading={isPrivate ? 'Your private experience quote' : 'Payment'} headingVisible>
+	<BookingShell step={isQuote ? undefined : 4} exitHref={`/tours/${booking.tourSlug}/`} heading={isQuote ? 'Your private experience quote' : 'Payment'} headingVisible>
 		{
 			PAYMENTS_ARE_DEMO && (
 				<Notice tone="info" icon="info-circle" class="pay__demo">
@@ -93,6 +97,9 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 				{ label: 'Date', value: `${formatBookingDate(booking.date)}${booking.slot ? `, ${booking.slot}` : ''}` },
 				...(isPrivate && booking.durationHours ? [{ label: 'Duration', value: durationLabel(booking.durationHours) }] : []),
 				{ label: 'Guests', value: guests },
+				...(booking.pickup ? [{ label: 'Pick-up', value: booking.pickup }] : []),
+				// A private experience booked on the site: the boat and each extra, as charged.
+				...(isPrivate && !isQuote ? (booking.lineItems ?? []).map((item) => ({ label: item.label, value: `€${item.amount}` })) : []),
 				{ label: 'Booking ref', value: booking.ref },
 				...(isPrivate && booking.quoteExpiresAt && payable ? [{ label: 'Quote valid until', value: formatTimestamp(booking.quoteExpiresAt) }] : []),
 			]}
@@ -130,7 +137,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 						</label>
 					</fieldset>
 					{fee && <p class="pay__small">{fee}.</p>}
-					{isPrivate ? (
+					{askTerms ? (
 						<>
 							<input type="hidden" name="termsVersion" value={TERMS_VERSION} />
 							{termsMissing && (
@@ -150,7 +157,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 					) : (
 						<p class="pay__small">
 							A leisure service on a fixed date: the 14-day right of withdrawal doesn't apply; our
-							<a href="/legal/cancellation/">cancellation policy</a> does.
+							<a href={isPrivate ? CANCELLATION_PRIVATE_HREF : '/legal/cancellation/'}>cancellation policy</a> does.
 						</p>
 					)}
 					<Button type="submit" name="outcome" value="success" size="lg" block icon="lock">Pay €{booking.total}</Button>

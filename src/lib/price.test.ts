@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { tours } from '../data/tour-catalog';
 import { PRICE_BLUE_CAVE } from '../data/prices';
-import { computeBookingTotal, formatFromPrice, lineItemsFor, seasonalPriceSummary, seasonalPrices } from './price';
+import { computeBookingTotal, formatFromPrice, lineItemsFor, lineItemsTotal, privateLineItems, seasonalPriceSummary, seasonalPrices } from './price';
+import { PRIVATE_TOURS, type PrivateLists } from '../config/private';
 import { supportsInstantBook } from './booking';
 
 const blueCave = { prices: PRICE_BLUE_CAVE };
@@ -63,4 +64,35 @@ describe('catalog prices', () => {
 			}
 		});
 	}
+});
+
+describe('privateLineItems', () => {
+	const boat = PRIVATE_TOURS['blue-cave-hvar-5-islands'].boat;
+	// A made-up list, for tests only: the site has no extras or priced pick-ups yet (src/config/private.ts).
+	const lists: PrivateLists = {
+		tours: { 'test-tour': { boat: { low: 100, peak: 200 } } },
+		extras: [{ id: 'test-extra', label: 'Test extra', desc: '', price: 10 }],
+		pickups: [{ id: 'riva', label: 'Riva', price: 0 }, { id: 'test-pickup', label: 'Test pick-up', price: 25 }],
+	};
+
+	it('prices the Blue Cave boat by the tour date\'s season, at the operator\'s prices', () => {
+		expect(boat).toEqual({ low: 1500, peak: 2000 });
+		expect(privateLineItems('blue-cave-hvar-5-islands', '2027-05-15', [], 'riva')).toEqual([{ label: 'Private boat with skipper', unit: 1500, qty: 1, amount: 1500 }]);
+		expect(privateLineItems('blue-cave-hvar-5-islands', '2027-07-15', [], 'riva')?.[0].amount).toBe(2000);
+	});
+
+	it('adds each extra once and a priced pick-up; the free meeting point is not a line', () => {
+		const items = privateLineItems('test-tour', '2027-07-15', ['test-extra', 'test-extra'], 'test-pickup', lists) ?? [];
+		expect(items.map((i) => i.label)).toEqual(['Private boat with skipper', 'Test extra', 'Pick-up: Test pick-up']);
+		expect(lineItemsTotal(items)).toBe(200 + 10 + 25);
+		expect(privateLineItems('test-tour', '2027-07-15', [], 'riva', lists)).toHaveLength(1);
+	});
+
+	it('refuses tours not sold privately, any extra off the list (all of them, today), and pick-ups off the list', () => {
+		expect(privateLineItems('dubrovnik-one-way', '2027-07-15', [], 'riva')).toBeNull();
+		expect(privateLineItems('golden-horn-brac-hvar', '2027-07-15', [], 'riva')).toBeNull();
+		expect(privateLineItems('blue-cave-hvar-5-islands', '2027-07-15', ['champagne'], 'riva')).toBeNull();
+		expect(privateLineItems('blue-cave-hvar-5-islands', '2027-07-15', [], 'other')).toBeNull();
+		expect(privateLineItems('blue-cave-hvar-5-islands', '2027-07-15', [], '')).toBeNull();
+	});
 });

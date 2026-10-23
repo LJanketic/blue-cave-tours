@@ -1,6 +1,6 @@
 import { EMAIL_SIGN_OFF, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL, SITE_EMAIL, SITE_NAME, SITE_PHONE_DISPLAY } from '../../config/site';
 import { formatBookingDate, guestSummaryFromCounts, meetingPointShort } from '../booking';
-import type { Booking, Enquiry } from '../bookings/store';
+import { isCharterQuote, type Booking, type Enquiry } from '../bookings/store';
 import { topicLabel } from '../contact-validation';
 import { getTourBySlug } from '../tours';
 import type { EmailMessage } from './send';
@@ -9,6 +9,7 @@ import { CANCELLATION_FULL, CANCELLATION_PRIVATE_HREF, CANCELLATION_WEATHER } fr
 import { durationLabel, routeById } from '../../config/charter';
 import { formatTimestamp } from '../bookings/dates';
 import { IMPRINT, TERMS_VERSION } from '../../config/legal';
+import { privateExtra } from '../../config/private';
 
 export function escapeHtml(value: string): string {
 	return value
@@ -94,7 +95,16 @@ function bookingRows(booking: Booking): Row[] {
 	];
 	if (booking.slot) rows.splice(3, 0, ['Departure', booking.slot]);
 	if (booking.kind === 'private' && booking.durationHours) rows.push(['Duration', durationLabel(booking.durationHours)]);
+	if (booking.pickup) rows.push(['Pick-up', booking.pickup]);
 	return rows;
+}
+
+/** The booking's charges as label/value rows: "Champagne welcome (1 × €40)", €40. */
+function lineItemRows(booking: Booking): Row[] {
+	return (booking.lineItems ?? []).map((item) => [
+		item.qty > 1 || item.unit > 0 ? `${item.label} (${item.qty} × €${item.unit})` : item.label,
+		`€${item.amount}`,
+	]);
 }
 
 /** The JIR (fiscal code) goes to the admin only: on a demo račun it would make a customer email look like a real receipt. */
@@ -135,10 +145,7 @@ function detailsTable(rows: Row[]): string {
  */
 function bookingTermsLines(booking: Booking, siteOrigin: string): { rows: Row[]; paragraphs: string[] } {
 	const tour = getTourBySlug(booking.tourSlug);
-	const rows: Row[] = (booking.lineItems ?? []).map((item) => [
-		item.qty > 1 || item.unit > 0 ? `${item.label} (${item.qty} × €${item.unit})` : item.label,
-		`€${item.amount}`,
-	]);
+	const rows: Row[] = lineItemRows(booking);
 	rows.push(['Total (incl. VAT)', `€${booking.total}${PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : ''}`]);
 	for (const fee of tour?.additionalFees ?? []) {
 		rows.push([fee.mandatory ? 'Not included' : 'Extra', fee.amountLabel ? `${fee.shortText} (${fee.amountLabel})` : fee.shortText]);
@@ -182,8 +189,9 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 	const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 	const total = `€${booking.total} — ${PAYMENT_STATUS_TEXT[booking.paymentStatus]}`;
 	const website = siteOrigin.replace(/^https?:\/\//, '');
-	const groupNote =
-		booking.kind === 'private'
+	const groupNote = booking.pickup
+		? `The boat and skipper are yours for the day. We pick you up at ${booking.pickup}, and confirm the pick-up time with you before your departure.`
+		: booking.kind === 'private'
 			? 'The boat and skipper are yours for the day. Please be at the meeting point 15 minutes before departure, so you get every minute of your day.'
 			: "As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.";
 	const weatherNote = CANCELLATION_WEATHER;
@@ -195,7 +203,8 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 		['Date', date],
 		['Departure', departure],
 		...(booking.kind === 'private' && booking.durationHours ? ([['Duration', durationLabel(booking.durationHours)]] as Row[]) : []),
-		['Meeting point', meeting, { href: mapUrl, hint: 'Open in Google Maps' }],
+		// A private experience with a pick-up starts there instead of at the meeting point.
+		booking.pickup ? ['Pick-up', booking.pickup] : ['Meeting point', meeting, { href: mapUrl, hint: 'Open in Google Maps' }],
 	];
 	const partyRows: Row[] = [
 		['Guests', guests],
@@ -229,7 +238,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 		`Date: ${date}`,
 		`Departure: ${departure}`,
 		...(booking.kind === 'private' && booking.durationHours ? [`Duration: ${durationLabel(booking.durationHours)}`] : []),
-		`Meeting point: ${meeting} — ${mapUrl}`,
+		booking.pickup ? `Pick-up: ${booking.pickup}` : `Meeting point: ${meeting} — ${mapUrl}`,
 		'',
 		groupNote,
 		'',
@@ -260,7 +269,18 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 	};
 }
 
+/** What the admin email calls a paid booking: a group booking, a private experience paid on the site, or a paid charter quote. */
+function paidBookingKind(booking: Booking): { noun: string; lede: string } {
+	if (booking.kind !== 'private') return { noun: 'booking', lede: 'A customer booked and paid on the website' };
+	return isCharterQuote(booking)
+		? { noun: 'private charter', lede: 'A customer paid their private charter quote' }
+		: { noun: 'private experience', lede: 'A customer booked and paid a private experience on the website' };
+}
+
 export function adminBookingEmail(booking: Booking, to: string, adminUrl: string): EmailMessage {
+	const paidKind = paidBookingKind(booking);
+	// A private experience booked on the site: what the guest chose (boat, extras, pick-up), so the crew can prepare it.
+	const charges = booking.kind === 'private' && !isCharterQuote(booking) ? lineItemRows(booking) : [];
 	const customerRows: Row[] = [
 		['Name', `${booking.firstName} ${booking.lastName}`],
 		['Email', booking.email],
@@ -268,17 +288,21 @@ export function adminBookingEmail(booking: Booking, to: string, adminUrl: string
 		// Notes can hold health details (GDPR Art. 9): they stay in the admin, never in an email (S-5).
 		['Notes', booking.customerNotes ? 'Has notes, see admin' : 'None'],
 	];
-	const subject = `New ${booking.kind === 'private' ? 'private charter' : 'booking'} ${booking.ref}: ${charterRoute(booking)}, ${formatBookingDate(booking.date)}, ${guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}`;
+	const subject = `New ${paidKind.noun} ${booking.ref}: ${charterRoute(booking)}, ${formatBookingDate(booking.date)}, ${guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}`;
 	const html = layout(
 		'New booking',
-		`${booking.kind === 'private' ? 'A customer paid their private charter quote' : 'A customer booked and paid on the website'}${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}. <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">Open it in the admin</a>.`,
-		section('Booking', bookingRows(booking)) + section('Customer', customerRows) + section('Payment', paymentRows(booking, 'admin')),
+		`${paidKind.lede}${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}. <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">Open it in the admin</a>.`,
+		section('Booking', bookingRows(booking)) +
+			(charges.length ? section('Charges', charges) : '') +
+			section('Customer', customerRows) +
+			section('Payment', paymentRows(booking, 'admin')),
 	);
 	const text = [
-		`${booking.kind === 'private' ? 'A customer paid their private charter quote' : 'A customer booked and paid on the website'}${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}.`,
+		`${paidKind.lede}${PAYMENTS_ARE_DEMO ? ' (demo payment)' : ''}.`,
 		'',
 		rowsText(bookingRows(booking)),
 		'',
+		...(charges.length ? [rowsText(charges), ''] : []),
 		rowsText(customerRows),
 		'',
 		rowsText(paymentRows(booking, 'admin')),
@@ -340,6 +364,8 @@ export function charterRequestRows(request: NonNullable<Enquiry['charter']>): Ro
 		['Preferred departure', request.time],
 		['Duration', durationLabel(request.durationHours)],
 		['Guests', guestSummaryFromCounts(request.adults, request.children, request.infants)],
+		...(request.pickup ? ([['Pick-up wanted', request.pickup]] as Row[]) : []),
+		...(request.extras?.length ? ([['Extras wanted', request.extras.map((id) => privateExtra(id)?.label ?? id).join(', ')]] as Row[]) : []),
 	];
 }
 
@@ -359,6 +385,7 @@ export function charterQuoteEmail(booking: Booking, note: string, payUrl: string
 		['Departure', booking.slot],
 		...(booking.durationHours ? ([['Duration', durationLabel(booking.durationHours)]] as Row[]) : []),
 		['Guests', guestSummaryFromCounts(booking.adults, booking.children, booking.infants)],
+		...(booking.pickup ? ([['Pick-up', booking.pickup]] as Row[]) : []),
 		['Price (incl. VAT)', `€${booking.total}${PAYMENTS_ARE_DEMO ? ' (demo, no money is taken)' : ''}`],
 		...(validUntil ? ([['Valid until', `${validUntil} (Split time)`]] as Row[]) : []),
 	];

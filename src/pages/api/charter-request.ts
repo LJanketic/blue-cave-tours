@@ -96,6 +96,8 @@ export const POST: APIRoute = async ({ request }) => {
 					infants: input.infants,
 					firstName: input.firstName,
 					lastName: input.lastName,
+					...(input.pickup ? { pickup: input.pickup } : {}),
+					...(input.extras ? { extras: input.extras } : {}),
 				},
 			},
 			new URL(request.url).origin,

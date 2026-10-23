@@ -10,6 +10,7 @@ import {
 	QUOTE_VALID_DAYS,
 	routeById,
 } from '../config/charter';
+import { OTHER_PICKUP_MAX, privateExtra } from '../config/private';
 import { EMAIL_RE, PHONE_RE, parseStartedAt, trimField, CONTACT_MAX_FORM_AGE_MS, CONTACT_MIN_SUBMIT_MS } from './contact-validation';
 import { businessDate } from './bookings/dates';
 import type { CharterRequestDetails } from './bookings/store';
@@ -20,7 +21,7 @@ import type { CharterRequestDetails } from './bookings/store';
  * checks the same things for convenience only.
  */
 
-export const CHARTER_LIMITS = { firstName: 100, lastName: 100, email: 254, phone: 30, notes: 500 } as const;
+export const CHARTER_LIMITS = { firstName: 100, lastName: 100, email: 254, phone: 30, notes: 500, pickup: OTHER_PICKUP_MAX } as const;
 
 
 export const CHARTER_ERRORS = {
@@ -93,9 +94,18 @@ export function parseCharterRequest(fields: Record<string, unknown>, honeypotFie
 		email: trimField(fields.email, CHARTER_LIMITS.email),
 		phone: trimField(fields.phone, CHARTER_LIMITS.phone),
 		notes: typeof fields.notes === 'string' ? fields.notes.trim() : '',
+		// From a private experience booking with a pick-up off our list (PrivateBookingFlow).
+		...optionalPickup(fields),
 		honeypot: trimField(fields[honeypotField], 200),
 		startedAt: parseStartedAt(fields._startedAt),
 	};
+}
+
+/** The pick-up place and extras a private experience booking sent along; absent from the charter form. */
+function optionalPickup(fields: Record<string, unknown>): Pick<CharterRequestDetails, 'pickup' | 'extras'> {
+	const pickup = trimField(fields.pickup, CHARTER_LIMITS.pickup);
+	const extras = Array.isArray(fields.extras) ? fields.extras.slice(0, 20).map((id) => String(id).slice(0, 40)) : [];
+	return { ...(pickup ? { pickup } : {}), ...(extras.length ? { extras } : {}) };
 }
 
 /**
@@ -117,6 +127,7 @@ export function validateCharterRequest(input: CharterRequestInput, now: Date = n
 	if (!input.email || !EMAIL_RE.test(input.email)) return 'email';
 	if (!PHONE_RE.test(input.phone)) return 'phone';
 	if (input.notes.length > CHARTER_LIMITS.notes) return 'notes';
+	if (input.extras && (new Set(input.extras).size !== input.extras.length || !input.extras.every((id) => privateExtra(id)))) return 'invalid';
 	return null;
 }
 

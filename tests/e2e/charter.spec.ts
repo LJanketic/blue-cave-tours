@@ -103,20 +103,27 @@ test('the morning Blue Lagoon tour suggests its own departure', async ({ page })
 });
 
 test('every "Plan a private experience" button leads to the charter page', async ({ page }) => {
-	await page.goto('/tours/golden-horn-brac-hvar/');
+	// Red Rocks has no private price yet, so its private option is still the request.
+	await page.goto('/tours/hvar-red-rocks-pakleni/');
 	const link = page.getByRole('link', { name: /Plan a private experience/ }).first();
-	await expect(link).toHaveAttribute('href', '/private-charter/?tour=golden-horn-brac-hvar');
+	await expect(link).toHaveAttribute('href', '/private-charter/?tour=hvar-red-rocks-pakleni');
 	await link.click();
 	await hydrated(page);
-	await expect(page.getByRole('radio', { name: /Golden Horn & Hvar/ })).toBeChecked();
+	await expect(page.getByRole('radio', { name: /Red Rocks & Pakleni/ })).toBeChecked();
 });
 
-test('the old private booking step redirects to the charter page', async ({ request }) => {
+test('a tour booked privately on the site still links to a custom request', async ({ page }) => {
+	await page.goto('/tours/blue-cave-hvar-5-islands/');
+	const link = page.getByRole('link', { name: 'Something custom? Plan your own' });
+	await expect(link).toHaveAttribute('href', '/private-charter/?tour=blue-cave-hvar-5-islands');
+	await link.click();
+	await hydrated(page);
+	await expect(page.getByRole('radio', { name: /Blue Cave & Hvar 5 Islands/ })).toBeChecked();
+});
+
+test('/book/<tour>/private/ is the private booking page now, not a redirect to the charter page', async ({ request }) => {
 	const res = await request.get('/book/blue-cave-hvar-5-islands/private/', { maxRedirects: 0 });
-	// The dev server doesn't read Netlify's _redirects; the rule's target is checked instead.
-	test.skip(res.status() === 404, 'redirects are applied by Netlify, not astro dev');
-	const target = new URL(res.headers().location, 'http://localhost');
-	expect(target.pathname + target.search).toBe('/private-charter/?tour=blue-cave-hvar-5-islands');
+	expect(res.status()).toBe(200);
 });
 
 test('the button says what is missing and sends nothing until then', async ({ page }) => {

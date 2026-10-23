@@ -182,6 +182,16 @@ describe('charter request → quote → payment', () => {
 		expect(mail.text).not.toContain('champagne');
 	});
 
+	it('carries the pick-up place onto the quote, and the extras asked for into a staff note', async () => {
+		const enquiry = await charterEnquiry();
+		await enquiries().update(enquiry.id, (e) => ({ ...e, charter: { ...e.charter!, pickup: 'Villa Sunce, Podstrana', extras: ['champagne'] } }));
+		const { booking } = (await sendCharterQuote(enquiry.id, quote, '', 'Admin', 'http://localhost', NOW)) as { booking: Booking };
+		expect(booking.pickup).toBe('Villa Sunce, Podstrana');
+		expect(booking.staffNotes.map((n) => n.text)).toEqual(['Note sent with the quote: Lunch stop in Hvar town.', 'Extras asked for: champagne']);
+		const mail = (await outbox().list()).find((m) => m.kind === 'charter_quote');
+		expect(mail?.text).toContain('Pick-up: Villa Sunce, Podstrana');
+	});
+
 	it('sells the length the quote offers, not the one asked for', async () => {
 		const enquiry = await charterEnquiry();
 		const { booking } = (await sendCharterQuote(enquiry.id, { ...quote, durationHours: 6 }, '', 'Admin', 'http://localhost', NOW)) as { booking: Booking };

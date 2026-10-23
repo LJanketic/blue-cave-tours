@@ -2,12 +2,20 @@
 /*
  * The island twin of ui/FormField.astro: same classes, same stylesheet.
  * v-model binds the value; extra attributes (type, autocomplete, maxlength…)
- * go to the control, not the wrapper.
+ * go to the control. class and style go to the wrapper, so a layout class
+ * (flow__full) lands on the grid item, as it does in FormField.astro.
  */
-import { computed } from 'vue';
+import { computed, useAttrs } from 'vue';
 import '../../styles/components/form-field.css';
 
 defineOptions({ inheritAttrs: false });
+
+const attrs = useAttrs();
+const wrapperAttrs = computed(() => ({ class: attrs.class, style: attrs.style }));
+const controlAttrs = computed(() => {
+	const { class: _class, style: _style, ...rest } = attrs;
+	return rest;
+});
 
 const props = withDefaults(
 	defineProps<{
@@ -31,7 +39,7 @@ const describedBy = computed(() => [hintId.value, errorId.value].filter(Boolean)
 </script>
 
 <template>
-	<div class="form-field-ui">
+	<div class="form-field-ui" v-bind="wrapperAttrs">
 		<label class="form-field-ui__label" :for="fieldId">
 			{{ label }}<span v-if="required" class="form-field-ui__required" aria-hidden="true">*</span>
 		</label>
@@ -39,7 +47,7 @@ const describedBy = computed(() => [hintId.value, errorId.value].filter(Boolean)
 			v-if="as === 'textarea'"
 			:id="fieldId"
 			v-model="model"
-			v-bind="$attrs"
+			v-bind="controlAttrs"
 			:name="name"
 			:required="required"
 			class="form-field-ui__control"
@@ -50,7 +58,7 @@ const describedBy = computed(() => [hintId.value, errorId.value].filter(Boolean)
 			v-else-if="as === 'select'"
 			:id="fieldId"
 			v-model="model"
-			v-bind="$attrs"
+			v-bind="controlAttrs"
 			:name="name"
 			:required="required"
 			class="form-field-ui__control"
@@ -63,7 +71,7 @@ const describedBy = computed(() => [hintId.value, errorId.value].filter(Boolean)
 			v-else
 			:id="fieldId"
 			v-model="model"
-			v-bind="$attrs"
+			v-bind="controlAttrs"
 			:name="name"
 			:required="required"
 			class="form-field-ui__control"

@@ -5,10 +5,11 @@
  * aside, with a mobile action bar that leads to it.
  */
 import type { TourDetail } from '../../types/tour';
-import { contactHrefForTour, groupBookHref, isGroupTour, MAX_GUESTS } from '../../lib/booking';
+import { contactHrefForTour, groupBookHref, isGroupTour, MAX_GUESTS, privateBookHref } from '../../lib/booking';
 import { charterUrl } from '../../config/routes';
 import { CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT, CANCELLATION_SHORT } from '../../config/cancellation';
 import { seasonLabel } from '../../config/season';
+import { privateTour } from '../../config/private';
 import { formatFromPrice } from '../../lib/price';
 import { feeLabel } from '../../lib/cards';
 import { meetingPointLines, showsBestseller, tourBreadcrumbs, tourCtas, tourHeadings } from '../../lib/tour-display';
@@ -26,14 +27,23 @@ import StickyAside from '../ui/StickyAside.astro';
 import Button from '../ui/Button.astro';
 import CrownIcon from '../ui/CrownIcon.astro';
 import MobileActionBar from '../ui/MobileActionBar.astro';
-import SeasonPrice from '../ui/SeasonPrice.vue';
 
 type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
 const isGroup = isGroupTour(tour);
 const isPrivateToo = isGroup && tour.types.includes('private');
-const { primary, secondary } = tourCtas(tour, { book: (s) => groupBookHref({ slug: s }), contact: (s, topic) => contactHrefForTour({ slug: s }, topic), charter: charterUrl });
+// The whole boat's low-season price, a constant like the "From" price (plan P); only where it's booked on the site.
+const privateBoatFrom = (() => {
+	const low = privateTour(tour.slug)?.boat.low;
+	return low === undefined ? null : `€${low.toLocaleString('en-GB')}`;
+})();
+const { primary, secondary, custom } = tourCtas(tour, {
+	book: (s) => groupBookHref({ slug: s }),
+	contact: (s, topic) => contactHrefForTour({ slug: s }, topic),
+	charter: charterUrl,
+	private: (s) => privateBookHref({ slug: s }),
+});
 
 // Order as on board 03: private first, then group.
 const heroTags: GalleryTag[] = [];
@@ -48,7 +58,7 @@ const galleryPhotos = await Promise.all(
 
 const crumbs = tourBreadcrumbs(tour);
 
-// Prerendered: both seasons' prices go in the HTML and SeasonPrice shows today's (BaseLayout).
+// "From" prices are the low-season prices, whatever today's season.
 const prices = tour.prices;
 const requestLabel = formatFromPrice(null, tour.priceUnit);
 const unit = tour.priceUnit === 'boat' ? '/ boat' : '/ adult';
@@ -211,7 +221,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 					prices ? (
 						<>
 							<span class="tour__from">From</span>{' '}
-							<strong><SeasonPrice low={prices.low.adult} peak={prices.peak.adult} /></strong>{' '}
+							<strong>€{prices.low.adult}</strong>{' '}
 							<span class="tour__unit">{unit}</span>
 						</>
 					) : (
@@ -223,7 +233,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 			{
 				prices && (
 					<p class="tour__child">
-						<i class="ti ti-baby-carriage" aria-hidden="true" /> Children from <SeasonPrice low={prices.low.child} peak={prices.peak.child} />
+						<i class="ti ti-baby-carriage" aria-hidden="true" /> Children from €{prices.low.child}
 					</p>
 				)
 			}
@@ -244,6 +254,8 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 					</Button>
 				)
 			}
+			{custom && privateBoatFrom && <p class="tour__boat">Private boat from {privateBoatFrom}</p>}
+			{custom && <a href={custom.href} class="tour__custom">{custom.label}</a>}
 			{/* The 48h rule is the group tours'; private experiences have their own terms (legal/cancellation §3). */}
 			{isGroup && <p class="tour__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {isPrivateToo ? `Group tours: ${CANCELLATION_SHORT.toLowerCase()}` : CANCELLATION_SHORT}</p>}
 			{tour.types.includes('private') && (
@@ -259,7 +271,8 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 			{
 				prices ? (
 					<>
-						<strong><SeasonPrice low={prices.low.adult} peak={prices.peak.adult} /></strong>{' '}
+						<span class="tour__from">From</span>{' '}
+						<strong>€{prices.low.adult}</strong>{' '}
 						{unit}
 					</>
 				) : (
@@ -556,6 +569,23 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 		.tour :global(.tour__cta--secondary) {
 			margin-top: var(--space-2);
 			padding: 10px;
+		}
+
+		/* Quiet: the charter request, for anything the private booking doesn't cover (plan P). */
+		.tour__boat {
+			margin: 6px 0 0;
+			font-size: var(--font-size-xs);
+			color: var(--color-text-secondary);
+			text-align: center;
+		}
+
+		.tour__custom {
+			display: block;
+			margin-top: var(--space-2);
+			padding-block: 4px;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-info);
+			text-align: center;
 		}
 
 		.tour__policy {

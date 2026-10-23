@@ -14,12 +14,10 @@ describe('"Build your own" card', () => {
 
 	it('comes last whatever the sort, and the rest keep their order', () => {
 		for (const sort of ['recommended', 'price-asc', 'price-desc', 'duration']) {
-			for (const season of ['low', 'peak'] as const) {
-				const sorted = filterCatalog(cards, parseCatalogQuery(`?sort=${sort}`), season);
-				const list = buildYourOwnLast(sorted);
-				expect(list.at(-1)?.slug, `${sort} ${season}`).toBe(BUILD_YOUR_OWN_SLUG);
-				expect(list.slice(0, -1)).toEqual(sorted.filter((t) => t.slug !== BUILD_YOUR_OWN_SLUG));
-			}
+			const sorted = filterCatalog(cards, parseCatalogQuery(`?sort=${sort}`));
+			const list = buildYourOwnLast(sorted);
+			expect(list.at(-1)?.slug, sort).toBe(BUILD_YOUR_OWN_SLUG);
+			expect(list.slice(0, -1)).toEqual(sorted.filter((t) => t.slug !== BUILD_YOUR_OWN_SLUG));
 		}
 	});
 

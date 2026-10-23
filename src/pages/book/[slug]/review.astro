@@ -2,14 +2,15 @@
 export const prerender = false;
 
 /**
- * Group booking, step 3: review (spec §8.1.3). Everything shown comes from
+ * Group booking and private experience, step 3: review (spec §8.1.3, plan P). Everything shown comes from
  * the sealed booking cookie; the price is recomputed here and again on the
  * server when the booking is made. "Continue to payment" posts only the
  * terms version the customer saw.
  */
 import { pageTitle } from '../../../config/site';
 import { TERMS_VERSION } from '../../../config/legal';
-import { CANCELLATION_FULL, CANCELLATION_SHORT } from '../../../config/cancellation';
+import { CANCELLATION_FULL, CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT, CANCELLATION_SHORT } from '../../../config/cancellation';
+import { DEFAULT_PICKUP_ID, privatePickup } from '../../../config/private';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
 import BookingShell from '../../../components/booking/BookingShell.astro';
 import Badge from '../../../components/ui/Badge.astro';
@@ -18,8 +19,17 @@ import Button from '../../../components/ui/Button.astro';
 import { getTourBySlug, getTourCardPhoto } from '../../../lib/tours';
 import { thumbImage } from '../../../data/destination-photos';
 import { feeLabel } from '../../../lib/cards';
-import { contactHrefForTour, departureLabel, formatBookingDate, guestSummaryFromCounts, meetingPointShort, supportsInstantBook } from '../../../lib/booking';
-import { computeBookingTotal, lineItemsFor, seasonPriceLabel, seasonalPriceSummary } from '../../../lib/price';
+import {
+	contactHrefForTour,
+	departureLabel,
+	formatBookingDate,
+	guestSummaryFromCounts,
+	meetingPointShort,
+	privateBookHref,
+	supportsInstantBook,
+	supportsPrivateBook,
+} from '../../../lib/booking';
+import { computeBookingTotal, lineItemsFor, lineItemsTotal, privateLineItems, seasonPriceLabel, seasonalPriceSummary } from '../../../lib/price';
 import { seasonFor } from '../../../config/season';
 import { BOOKING_ERRORS, isBookingError } from '../../../lib/bookings/service';
 import { BOOKING_COOKIE, openDraft } from '../../../lib/bookings/session';
@@ -27,29 +37,41 @@ import { BOOKING_COOKIE, openDraft } from '../../../lib/bookings/session';
 const slug = Astro.params.slug;
 const tour = slug ? getTourBySlug(slug) : undefined;
 if (!tour) return Astro.redirect('/404');
-// Quote-only tours have no instant-book review: they're routed to the contact form.
-if (!supportsInstantBook(tour)) return Astro.redirect(contactHrefForTour(tour, 'group'));
+const instant = supportsInstantBook(tour);
+const privateBook = supportsPrivateBook(tour);
+// Quote-only tours have no review: they're routed to the contact form.
+if (!instant && !privateBook) return Astro.redirect(contactHrefForTour(tour, 'group'));
 
 // From the sealed cookie, never the URL (S-2). No cookie, an expired one, or one for
 // another tour: back to step 2. Old links with details in the query get the same.
 const PERSONAL_PARAMS = ['firstName', 'lastName', 'email', 'phone', 'notes', 'adults', 'date'];
 const draft = openDraft(Astro.cookies.get(BOOKING_COOKIE)?.value);
-if (!draft || draft.tourSlug !== tour.slug || PERSONAL_PARAMS.some((p) => Astro.url.searchParams.has(p))) {
-	return Astro.redirect(`/book/${tour.slug}/group/?error=session-expired`, 303);
+const isPrivate = draft?.kind === 'private';
+// Which step 2 this is: the draft's kind, or, once the cookie for this tour is gone, the
+// `flow` the private flow puts in its review links (nothing personal). Step 2 refills
+// itself from the cookie (WCAG 3.3.7).
+const privateFlow = draft?.tourSlug === tour.slug ? isPrivate : Astro.url.searchParams.get('flow') === 'private';
+const editHref = (privateFlow && privateBook) || !instant ? privateBookHref(tour) : `/book/${tour.slug}/group/`;
+if (!draft || draft.tourSlug !== tour.slug || (isPrivate ? !privateBook : !instant) || PERSONAL_PARAMS.some((p) => Astro.url.searchParams.has(p))) {
+	return Astro.redirect(`${editHref}?error=session-expired`, 303);
 }
 Astro.response.headers.set('Cache-Control', 'no-store');
 
 const errorParam = Astro.url.searchParams.get('error');
 const bookingError = isBookingError(errorParam) ? BOOKING_ERRORS[errorParam] : null;
-// Step 2 refills itself from the cookie (WCAG 3.3.7).
-const editHref = `/book/${tour.slug}/group/`;
 
 // Priced by the tour date's season (not today's), as createPendingBooking charges it.
-const total = computeBookingTotal(tour, draft.date, draft.adults, draft.children);
-const items = lineItemsFor(tour, draft.date, draft.adults, draft.children, draft.infants) ?? [];
+// A private experience: the boat, the extras and the pick-up (src/config/private.ts).
+const priced = isPrivate ? privateLineItems(tour.slug, draft.date, draft.extras ?? [], draft.pickup ?? '') : null;
+// The lists changed since the draft was made (an extra or pick-up withdrawn): choose again, never a €0 total.
+if (isPrivate && !priced) return Astro.redirect(`${editHref}?error=${privatePickup(draft.pickup ?? '') ? 'extras' : 'pickup'}`, 303);
+const privateItems = priced ?? [];
+const total = isPrivate ? lineItemsTotal(privateItems) : computeBookingTotal(tour, draft.date, draft.adults, draft.children);
+const items = isPrivate ? privateItems : (lineItemsFor(tour, draft.date, draft.adults, draft.children, draft.infants) ?? []);
 const seasonNote = seasonPriceLabel(seasonFor(draft.date));
-const seasonSummary = tour.prices ? seasonalPriceSummary(tour.prices) : '';
+const seasonSummary = !isPrivate && tour.prices ? seasonalPriceSummary(tour.prices) : '';
 const fee = feeLabel(tour);
+const pickup = isPrivate && draft.pickup && draft.pickup !== DEFAULT_PICKUP_ID ? privatePickup(draft.pickup)?.label : undefined;
 const thumb = thumbImage(getTourCardPhoto(tour));
 ---
 
@@ -74,14 +96,20 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 				}
 				<div>
 					<p class="review__tour">{tour.title}</p>
-					<Badge tone="brand" icon="users">Group tour</Badge>
+					{isPrivate ? <Badge tone="private" icon="crown">Private experience</Badge> : <Badge tone="brand" icon="users">Group tour</Badge>}
 				</div>
 			</div>
 			<dl class="review__rows">
 				<div><dt><i class="ti ti-calendar" aria-hidden="true"></i> Date</dt><dd>{formatBookingDate(draft.date)}</dd></div>
-				<div><dt><i class="ti ti-clock" aria-hidden="true"></i> Departure</dt><dd>{departureLabel(tour.departures, draft.slot)}</dd></div>
+				<div><dt><i class="ti ti-clock" aria-hidden="true"></i> Departure</dt><dd>{isPrivate ? draft.slot : departureLabel(tour.departures, draft.slot)}</dd></div>
 				<div><dt><i class="ti ti-hourglass" aria-hidden="true"></i> Duration</dt><dd>{tour.duration}</dd></div>
-				<div><dt><i class="ti ti-map-pin" aria-hidden="true"></i> Meeting point</dt><dd>{meetingPointShort(tour.meetingPoint)}</dd></div>
+				{
+					pickup ? (
+						<div><dt><i class="ti ti-map-pin" aria-hidden="true"></i> Pick-up</dt><dd>{pickup}</dd></div>
+					) : (
+						<div><dt><i class="ti ti-map-pin" aria-hidden="true"></i> Meeting point</dt><dd>{meetingPointShort(tour.meetingPoint)}</dd></div>
+					)
+				}
 			</dl>
 		</section>
 
@@ -115,13 +143,14 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 				{
 					items.map((item) => (
 						<div>
-							<dt>{item.amount === 0 && item.unit === 0 ? item.label : `${item.label} (${item.qty} × €${item.unit})`}</dt>
+							<dt>{isPrivate || (item.amount === 0 && item.unit === 0) ? item.label : `${item.label} (${item.qty} × €${item.unit})`}</dt>
 							<dd>€{item.amount}</dd>
 						</div>
 					))
 				}
 			</dl>
 			<p class="review__total"><span>Total (incl. VAT)</span><span>{total !== null ? `€${total}` : 'On request'}</span></p>
+			{isPrivate && <p class="review__fee">The price is for the whole boat with skipper, whatever the number of guests.</p>}
 			{fee && <p class="review__fee">{fee}</p>}
 			{seasonSummary && <p class="review__fee">{seasonSummary}</p>}
 		</section>
@@ -130,18 +159,29 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 			<div class="review__head">
 				<h2 id="policy-heading"><i class="ti ti-shield-check review__ok" aria-hidden="true"></i> Cancellation policy</h2>
 			</div>
-			<p class="review__policy">{CANCELLATION_FULL}</p>
+			{
+				isPrivate ? (
+					<p class="review__policy">
+						{CANCELLATION_PRIVATE_SHORT}: see <a href={CANCELLATION_PRIVATE_HREF}>section 3 of our cancellation policy</a>.
+					</p>
+				) : (
+					<p class="review__policy">{CANCELLATION_FULL}</p>
+				)
+			}
 		</section>
 
 		<form method="post" action="/api/bookings" class="review__form">
-			<!-- Only the terms version: the booking itself comes from the sealed cookie. -->
+			<!-- Only the terms version and the draft stamp: the booking itself comes from the sealed cookie. -->
 			<input type="hidden" name="termsVersion" value={TERMS_VERSION} />
+			<!-- Which draft this page showed: another tab may have replaced the cookie since. -->
+			<input type="hidden" name="draftAt" value={String(draft.createdAt)} />
 			<!-- Pre-contract information (§8.1.3); the lawyer confirms the wording (PR 11). -->
 			<p class="review__legal">
 				This booking is for a leisure service on a fixed date, so the 14-day right of withdrawal for online purchases
-				does not apply. You can still cancel under our <a href="/legal/cancellation/">cancellation policy</a>:
-				{CANCELLATION_SHORT.toLowerCase()}. By continuing you agree to our <a href="/legal/terms/">Terms</a>. How we use
-				your data: <a href="/legal/privacy/">Privacy policy</a>.
+				does not apply. You can still cancel under our <a href={isPrivate ? CANCELLATION_PRIVATE_HREF : '/legal/cancellation/'}>cancellation policy</a>{
+					isPrivate ? ' for private experiences' : `: ${CANCELLATION_SHORT.toLowerCase()}`
+				}. By continuing you agree to our <a href="/legal/terms/">Terms</a>. How we use your data:
+				<a href="/legal/privacy/">Privacy policy</a>.
 			</p>
 			<Button type="submit" size="lg" block iconEnd="arrow-right">Continue to payment</Button>
 		</form>
@@ -283,6 +323,10 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 			margin: 6px 0 0;
 			font-size: var(--font-size-xs);
 			color: var(--color-text-secondary);
+		}
+
+		.review__policy a {
+			color: var(--color-text-info);
 		}
 
 		.review__policy {
