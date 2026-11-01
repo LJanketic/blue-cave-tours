@@ -14,58 +14,52 @@ const ctas = (slug: string) => tourCtas(tours.find((t) => t.slug === slug)!, lin
 describe('tourCtas', () => {
 	const groupAndPrivate = { slug: 'x', types: ['group', 'private'] as ('group' | 'private')[] };
 
-	it('books instant-book tours, and books the boat privately where there is a private price, with a quiet link to plan something custom', () => {
+	it("books instant-book tours, and books the boat privately where there is a private price, showing the boat's low-season price", () => {
 		expect(ctas('blue-cave-hvar-5-islands')).toEqual({
-			primary: { label: 'Book group tour', href: '/book/blue-cave-hvar-5-islands/group/' },
-			secondary: { label: 'Book private experience', href: '/book/blue-cave-hvar-5-islands/private/' },
-			custom: { label: 'Something custom? Plan your own', href: '/charter/blue-cave-hvar-5-islands' },
+			primary: { label: 'Book group tour tickets', href: '/book/blue-cave-hvar-5-islands/group/' },
+			secondary: { label: 'Private experience', href: '/book/blue-cave-hvar-5-islands/private/', price: '€1,500' },
 		});
 	});
 
-	it.each(['golden-horn-brac-hvar', 'blue-lagoon-morning', 'blue-lagoon-afternoon'])('plans a private %s by request while it has no boat price', (slug) => {
-		expect(ctas(slug).secondary).toEqual({ label: 'Plan a private experience', href: `/charter/${slug}` });
-		expect(ctas(slug).custom).toBeNull();
+	it.each(['golden-horn-brac-hvar', 'blue-lagoon-morning', 'blue-lagoon-afternoon'])('opens the private booking step of %s (a quote request), with no price, while it has no boat price', (slug) => {
+		expect(ctas(slug).secondary).toEqual({ label: 'Private experience', href: `/book/${slug}/private/` });
 	});
 
-	it('keeps the private request on a group + private tour with no private price', () => {
+	it('opens the private booking step of a group + private tour with no private price, without a price', () => {
 		expect(tourCtas({ ...groupAndPrivate, prices: null }, links)).toEqual({
 			primary: { label: 'Ask about the group tour', href: '/contact/?tour=x&topic=group' },
-			secondary: { label: 'Plan a private experience', href: '/charter/x' },
-			custom: null,
+			secondary: { label: 'Private experience', href: '/book/x/private/' }
 		});
 	});
 
 	it('asks about an unpriced group-only tour, with no private button', () => {
 		expect(tourCtas({ slug: 'x', types: ['group'], prices: null }, links)).toEqual({
 			primary: { label: 'Ask about the group tour', href: '/contact/?tour=x&topic=group' },
-			secondary: null,
-			custom: null,
+			secondary: null
 		});
 	});
 
-	it('needs a fixed departure before it sells the boat on the site', () => {
+	it('needs a fixed departure before it shows the boat price (without one the step is a quote request)', () => {
 		const blueCave = tours.find((t) => t.slug === 'blue-cave-hvar-5-islands')!;
-		expect(tourCtas({ ...blueCave, departures: [] }, links).secondary).toEqual({ label: 'Plan a private experience', href: '/charter/blue-cave-hvar-5-islands' });
+		expect(tourCtas({ ...blueCave, departures: [] }, links).secondary).toEqual({ label: 'Private experience', href: '/book/blue-cave-hvar-5-islands/private/' });
 	});
 
 	it('sends quote-only private tours to the contact form, with no second button to the same form', () => {
 		expect(tourCtas({ slug: 'x', types: ['private'], prices: null }, links)).toEqual({
 			primary: { label: 'Enquire about this tour', href: '/contact/?tour=x' },
-			secondary: null,
-			custom: null,
+			secondary: null
 		});
 	});
 
-	it.each(['hvar-red-rocks-pakleni', 'dubrovnik-one-way'])('asks about the unpriced group option of %s and keeps its private request', (slug) => {
+	it.each(['hvar-red-rocks-pakleni', 'dubrovnik-one-way'])('asks about the unpriced group option of %s and opens its private booking step', (slug) => {
 		expect(ctas(slug)).toEqual({
 			primary: { label: 'Ask about the group tour', href: `/contact/?tour=${slug}&topic=group` },
-			secondary: { label: 'Plan a private experience', href: `/charter/${slug}` },
-			custom: null,
+			secondary: { label: 'Private experience', href: `/book/${slug}/private/` }
 		});
 	});
 
 	it('plans a charter from the charter landing page, without a second charter button', () => {
-		expect(ctas('create-perfect-day-private')).toEqual({ primary: { label: 'Plan your experience', href: '/charter/create-perfect-day-private' }, secondary: null, custom: null });
+		expect(ctas('create-perfect-day-private')).toEqual({ primary: { label: 'Plan your experience', href: '/charter/create-perfect-day-private' }, secondary: null });
 	});
 });
 

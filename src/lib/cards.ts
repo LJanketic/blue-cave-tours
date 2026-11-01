@@ -72,6 +72,15 @@ export function feeLabel(tour: Pick<TourDetail, 'additionalFees'>): string | und
 }
 
 /**
+ * Only the mandatory part of feeLabel ("+ Blue Cave ticket, paid on site"): the
+ * tour page's aside shows it under the price (consumer law, C-23), while
+ * optional fees stay in the "Additional fees" tile.
+ */
+export function mandatoryFeeLabel(tour: Pick<TourDetail, 'additionalFees'>): string | undefined {
+	return feeLabel({ additionalFees: tour.additionalFees.filter((fee) => fee.mandatory) });
+}
+
+/**
  * The card's data for the islands. Island props are inlined in the page
  * (§6.2.3: ≤ 6 KB for the whole catalog), so empty fields are left out.
  */

@@ -15,14 +15,16 @@ type Props = {
 	/** sr-only page heading (cards carry the visible h2s). */
 	heading: string;
 	headingVisible?: boolean;
+	/** Passed to the step bar: this flow ends in a quote request, not a payment. */
+	quoteOnly?: boolean;
 };
 
-const { step, exitHref, heading, headingVisible = false } = Astro.props;
+const { step, exitHref, heading, headingVisible = false, quoteOnly = false } = Astro.props;
 ---
 
 <main id="main" class="booking-shell">
 	<MiniNav exitHref={exitHref} />
-	{step && <StepBar current={step} />}
+	{step && <StepBar current={step} quoteOnly={quoteOnly} />}
 	<slot name="lead" />
 	<h1 class:list={['booking-shell__title', !headingVisible && 'sr-only']}>{heading}</h1>
 	<slot />

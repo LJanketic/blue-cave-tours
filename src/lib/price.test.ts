@@ -19,8 +19,8 @@ describe('formatFromPrice', () => {
 describe('seasonalPrices', () => {
 	it('picks the tour date’s season', () => {
 		expect(seasonalPrices(blueCave, '2027-05-31')).toEqual({ adult: 149, child: 129 });
-		expect(seasonalPrices(blueCave, '2027-06-01')).toEqual({ adult: 169, child: 139 });
-		expect(seasonalPrices(blueCave, '2027-09-14')).toEqual({ adult: 169, child: 139 });
+		expect(seasonalPrices(blueCave, '2027-06-01')).toEqual({ adult: 159, child: 139 });
+		expect(seasonalPrices(blueCave, '2027-09-14')).toEqual({ adult: 159, child: 139 });
 		expect(seasonalPrices(blueCave, '2027-09-15')).toEqual({ adult: 149, child: 129 });
 		// Closed in winter, but priced as low: the next open day (1 March) is low season.
 		expect(seasonalPrices(blueCave, '2027-11-02')).toEqual({ adult: 149, child: 129 });
@@ -31,14 +31,14 @@ describe('seasonalPrices', () => {
 describe('computeBookingTotal', () => {
 	it('prices by the tour date, not the day of purchase', () => {
 		// Bought on 1 April (low season) for 10 July (peak): the peak price.
-		expect(computeBookingTotal(blueCave, '2027-07-10', 2, 1)).toBe(169 * 2 + 139);
+		expect(computeBookingTotal(blueCave, '2027-07-10', 2, 1)).toBe(159 * 2 + 139);
 		expect(computeBookingTotal(blueCave, '2027-05-10', 2, 1)).toBe(149 * 2 + 129);
 		expect(computeBookingTotal(quote, '2027-07-10', 2, 0)).toBeNull();
 	});
 
 	it('line items use the same season', () => {
 		expect(lineItemsFor(blueCave, '2027-07-10', 2, 1, 1)).toEqual([
-			{ label: 'Adults', unit: 169, qty: 2, amount: 338 },
+			{ label: 'Adults', unit: 159, qty: 2, amount: 318 },
 			{ label: 'Children', unit: 139, qty: 1, amount: 139 },
 			{ label: 'Infants (free)', unit: 0, qty: 1, amount: 0 },
 		]);
@@ -49,7 +49,7 @@ describe('computeBookingTotal', () => {
 describe('seasonalPriceSummary', () => {
 	it('lists both seasons with their dates', () => {
 		expect(seasonalPriceSummary(PRICE_BLUE_CAVE)).toBe(
-			'Low season (1 Mar–31 May, 15 Sep–31 Oct): €149 per adult, €129 per child. Peak season (1 Jun–14 Sep): €169 per adult, €139 per child.',
+			'Low season (1 Mar–31 May, 15 Sep–31 Oct): €149 per adult, €129 per child. Peak season (1 Jun–14 Sep): €159 per adult, €139 per child.',
 		);
 	});
 });

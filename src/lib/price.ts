@@ -15,6 +15,11 @@ export function seasonalPrices(tour: Priced, isoDate: string): PriceTier | null 
 	return tour.prices ? tour.prices[seasonFor(isoDate)] : null;
 }
 
+/** "€1,500": euros with en-GB grouping, as the tour cards show them. */
+export function formatEuro(amount: number): string {
+	return `€${amount.toLocaleString('en-GB')}`;
+}
+
 /** "€169", or the on-request label: "Price on request" for group tours, "On request" for private charters. */
 export function formatFromPrice(adultPrice: number | null, priceUnit: TourDetail['priceUnit']): string {
 	if (adultPrice !== null) return `€${adultPrice}`;
@@ -90,7 +95,7 @@ export function seasonPriceLabel(season: Season): string {
 /**
  * The seasonal breakdown shown in the booking flow, from the season config:
  * "Low season (1 Mar–31 May, 15 Sep–31 Oct): €149 per adult, €129 per child.
- * Peak season (1 Jun–14 Sep): €169 per adult, €139 per child."
+ * Peak season (1 Jun–14 Sep): €159 per adult, €139 per child."
  */
 export function seasonalPriceSummary(prices: SeasonalPrices): string {
 	const part = (season: Season, name: string) =>

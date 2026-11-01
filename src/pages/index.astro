@@ -9,6 +9,8 @@ import HeroCarousel, { type HeroSlideView } from '../components/vue/HeroCarousel
 import FAQAccordion from '../components/vue/FAQAccordion.vue';
 import TrustBand from '../components/home/TrustBand.astro';
 import PopularTours from '../components/home/PopularTours.astro';
+import VideoPreview from '../components/home/VideoPreview.astro';
+import { HOME_VIDEO } from '../config/video';
 import TypeCards from '../components/home/TypeCards.astro';
 import DestinationTile from '../components/home/DestinationTile.astro';
 import HowItWorks from '../components/home/HowItWorks.astro';
@@ -100,6 +102,8 @@ const tourNames = Object.fromEntries(getAllTours().map((t) => [t.slug, t.title])
 	<main id="main" class="home">
 		<HeroCarousel client:load heading={HERO_OVERLINE} slides={heroSlides} ctas={HERO_CTAS} scrollTarget="trust" />
 		<TrustBand items={TRUST_ITEMS} id="trust" />
+		{/* Video preview (§6.1.4): renders nothing until the operator's footage is in src/config/video.ts. */}
+		{HOME_VIDEO && <VideoPreview video={HOME_VIDEO} bandImage={CTA_PHOTO.src} />}
 
 		<PopularTours tours={popularTours} />
 

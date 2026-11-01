@@ -3,7 +3,8 @@ import { expect, test, type Page } from '@playwright/test';
 /**
  * Private experience paid on the site (plan P): the whole boat at a set price
  * per season, through the group pipeline (sealed cookie → review →
- * /api/bookings → pay). Only Blue Cave is sold this way so far, at its usual
+ * /api/bookings → pay). Only Blue Cave is sold this way so far (the other
+ * group + private tours use the same step as a quote request), at its usual
  * departure, with no extras and the Riva as the only listed pick-up (only what
  * the operator's doc states). A pick-up off the list becomes a charter request
  * instead. The server prices everything and checks the time, extras and
@@ -40,13 +41,16 @@ const details = (overrides: Record<string, unknown> = {}) => ({
 	...overrides,
 });
 
-test('tour page: "Book private experience" leads to the private booking, and a quiet link plans something custom', async ({ page }) => {
+test('tour page: "Private experience" leads to the private booking and shows the boat price', async ({ page }) => {
 	await page.goto(`/tours/${TOUR}/`);
-	const book = page.locator('#book').getByRole('link', { name: 'Book private experience' });
+	const book = page.locator('#book').getByRole('link', { name: /^Private experience/ });
 	await expect(book).toHaveAttribute('href', `/book/${TOUR}/private/`);
-	await expect(page.locator('#book').getByRole('link', { name: 'Something custom? Plan your own' })).toHaveAttribute('href', `/private-charter/?tour=${TOUR}`);
 	// The boat's low-season price (operator doc), a constant like the "From" price.
-	await expect(page.locator('#book .tour__boat')).toHaveText('Private boat from €1,500');
+	await expect(book.locator('.tour__cta-price')).toHaveText('€1,500 / boat');
+	// The card is the design's: one cancellation line, no fee line, no custom-request link (C4).
+	await expect(page.locator('#book .tour__policy')).toHaveText('Free cancellation up to 48h before');
+	await expect(page.locator('#book').getByRole('link', { name: /Something custom/ })).toHaveCount(0);
+	await expect(page.locator('#book .tour__fee')).toHaveCount(0);
 	const res = await page.goto(`/book/${TOUR}/private/`);
 	expect(res?.status()).toBe(200);
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(/ as a private experience$/);
@@ -58,19 +62,80 @@ test('an expired session on a private review goes back to the private step, not 
 	expect(res.headers().location).toBe(`/book/${TOUR}/private/?error=session-expired`);
 });
 
-test('tours with no boat price yet keep the request: their CTA plans a private experience, and the old step redirects', async ({ page, request }) => {
+test('tours with no boat price yet get the private step as a quote request: their "Private experience" CTA opens it, with no price', async ({ page, request }) => {
 	await page.goto('/tours/golden-horn-brac-hvar/');
-	await expect(page.locator('#book').getByRole('link', { name: 'Plan a private experience' })).toHaveAttribute('href', '/private-charter/?tour=golden-horn-brac-hvar');
-	await expect(page.locator('#book .tour__boat')).toHaveCount(0);
-	for (const slug of ['golden-horn-brac-hvar', 'blue-lagoon-morning', 'blue-lagoon-afternoon', 'hvar-red-rocks-pakleni', 'dubrovnik-one-way', 'create-perfect-day-private']) {
+	const cta = page.locator('#book').getByRole('link', { name: 'Private experience', exact: true });
+	await expect(cta).toHaveAttribute('href', '/book/golden-horn-brac-hvar/private/');
+	await expect(cta.locator('.tour__cta-price')).toHaveCount(0);
+	for (const slug of ['golden-horn-brac-hvar', 'blue-lagoon-morning', 'blue-lagoon-afternoon', 'hvar-red-rocks-pakleni', 'dubrovnik-one-way']) {
 		const res = await request.get(`/book/${slug}/private/`, { maxRedirects: 0 });
-		// Netlify (and astro dev, from a built dist/_redirects) answers with the 301; without a build there's only the 404.
-		expect([301, 404], slug).toContain(res.status());
-		if (res.status() === 301) {
-			const target = new URL(res.headers().location, 'http://localhost');
-			expect(target.pathname + target.search, slug).toBe(`/private-charter/?tour=${slug}`);
-		}
+		expect(res.status(), slug).toBe(200);
+		expect(await res.text(), slug).toContain('Send request');
 	}
+	// The private-only charter landing has no private step: planned through the charter page.
+	const res = await request.get('/book/create-perfect-day-private/private/', { maxRedirects: 0 });
+	// Netlify (and astro dev, from a built dist/_redirects) answers with the 301; without a build there's only the 404.
+	expect([301, 404]).toContain(res.status());
+	if (res.status() === 301) {
+		const target = new URL(res.headers().location, 'http://localhost');
+		expect(target.pathname + target.search).toBe('/private-charter/?tour=create-perfect-day-private');
+	}
+});
+
+test('a tour with no boat price: the private step sends a quote request at its usual departure', async ({ page }) => {
+	await page.setExtraHTTPHeaders(ip());
+	await page.goto('/book/golden-horn-brac-hvar/private/');
+	await hydrated(page);
+	await expect(page.getByRole('button', { name: /Send request/ })).toBeVisible();
+	await expect(page.getByRole('button', { name: /Review booking/ })).toHaveCount(0);
+	const summary = page.locator('.summary-card-ui');
+	await expect(summary.locator('.summary-card-ui__total')).toContainText("We'll send you a quote");
+	await expect(summary).toContainText('Private boat prices for this tour are quoted per request');
+	// No boat price is made up anywhere on the page.
+	await expect(page.locator('form.flow')).not.toContainText('€');
+	// A request needs a day's notice: today is greyed out.
+	const today = page.locator('.cal__day[aria-current="date"]');
+	if (await today.count()) await expect(today).toHaveAttribute('aria-disabled', 'true');
+	await page.locator('.cal__day:not([aria-disabled])').last().click();
+	await expect(page.locator('.flow__departure')).toContainText('Departure 08:30 (check-in 08:15)');
+	// Meeting at the Riva needs no pick-up place.
+	await expect(page.getByRole('radio', { name: /Riva stand 14/ })).toBeChecked();
+	await expect(page.locator('#private-pickup-place')).toHaveCount(0);
+	const surname = `Quote${Date.now().toString(36)}`;
+	await page.locator('#private-first').fill('Test');
+	await page.locator('#private-last').fill(surname);
+	await page.locator('#private-email').fill('guest@example.com');
+	await page.getByRole('button', { name: /Send request/ }).click({ force: true });
+	await expect(page.locator('#private-hint')).toContainText('your phone number');
+	await page.locator('#private-phone').fill('+385 91 000 0000');
+	await page.waitForTimeout(2100); // the request form refuses anything sent within 2 seconds of loading
+	await page.getByRole('button', { name: /Send request/ }).click();
+	await expect(page).toHaveURL(/\/private-charter\/sent\/$/);
+
+	await page.goto('/admin/login/');
+	await page.locator('#password').fill('demo');
+	await page.getByRole('button', { name: 'Log in' }).click();
+	await expect(page).toHaveURL(/\/admin\/$/);
+	await page.goto('/admin/enquiries/');
+	const card = page.locator('article.enquiry').filter({ hasText: surname });
+	await expect(card).toContainText('Golden Horn & Hvar');
+	await expect(card).toContainText('08:30');
+});
+
+test('a tour with no fixed departure lets the guest pick a start time in the charter window', async ({ page }) => {
+	await page.goto('/book/hvar-red-rocks-pakleni/private/');
+	await hydrated(page);
+	const time = page.locator('#private-time');
+	await expect(time).toHaveAttribute('type', 'time');
+	await expect(time).toHaveAttribute('min', '06:00');
+	await expect(time).toHaveAttribute('max', '20:00');
+	// The hint names the time only once a date is picked.
+	await page.locator('.cal__day:not([aria-disabled])').last().click();
+	await time.fill('21:00');
+	await expect(page.locator('#private-hint')).toContainText('a departure time between 06:00 and 20:00');
+	await time.fill('09:15');
+	await expect(page.locator('.summary-card-ui')).toContainText('09:15');
+	await expect(page.getByRole('button', { name: /Send request/ })).toBeVisible();
 });
 
 test('book the boat at its usual departure, review, pay: the server prices it', async ({ page }) => {
@@ -91,8 +156,9 @@ test('book the boat at its usual departure, review, pay: the server prices it', 
 	const summary = page.locator('.summary-card-ui');
 	await expect(summary).toContainText('07:20');
 	await expect(summary).toContainText('Riva stand 14');
-	const shown = (await summary.locator('.summary-card-ui__total').innerText()).match(/€(\d+)/)?.[1];
-	expect(['1500', '2000']).toContain(shown);
+	// Amounts are grouped en-GB, as on the tour card: "€1,500".
+	const shown = (await summary.locator('.summary-card-ui__total').innerText()).match(/€([\d,]+)/)?.[1] ?? '';
+	expect(['1,500', '2,000']).toContain(shown);
 	await page.getByRole('button', { name: /Review booking/ }).click();
 
 	await expect(page).toHaveURL(new RegExp(`/book/${TOUR}/review/\\?flow=private$`));
@@ -124,8 +190,8 @@ test('"Other location" turns the booking into a request for a quote', async ({ p
 	await page.getByRole('radio', { name: /Other location/ }).check();
 	await expect(page.getByRole('button', { name: /Send request/ })).toBeVisible();
 	await expect(page.locator('.summary-card-ui__total')).toContainText("We'll send you a quote");
-	// A request is priced in the quote and needs a day's notice: no cut-off note, no season price line.
-	await expect(page.locator('.flow__cutoff')).toHaveText("Requests need a day's notice.");
+	// A request is priced in the quote: no cut-off note under the calendar, no season price line.
+	await expect(page.locator('.flow__cutoff')).toHaveCount(0);
 	await expect(page.locator('.summary-card-ui')).not.toContainText('season price');
 	// A request needs a day's notice: today is greyed out.
 	const today = page.locator('.cal__day[aria-current="date"]');

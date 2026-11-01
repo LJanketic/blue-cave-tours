@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { botCheck, parseCharterRequest, validateCharterRequest, validateQuote, type CharterRequestInput } from './charter';
-import { CHARTER_ROUTES, closestDuration } from '../config/charter';
+import { CHARTER_ROUTES, charterTourSlug, closestDuration, routeById } from '../config/charter';
 import { MAX_GUESTS } from './booking';
 import { getTourBySlug } from './tours';
 import { finalizePaidBooking, isDeadQuote, isPayable, recordEnquiry, sendCharterQuote, sweepPersonalData } from './bookings/service';
@@ -49,6 +49,22 @@ describe('charter routes', () => {
 		for (const slug of ['blue-cave-hvar-5-islands', 'golden-horn-brac-hvar', 'blue-lagoon-morning', 'blue-lagoon-afternoon', 'hvar-red-rocks-pakleni', 'dubrovnik-one-way', 'create-perfect-day-private']) {
 			expect(matched.has(slug), slug).toBe(true);
 		}
+	});
+
+	it("file a request under the tour it came from when that's one of the route's tours, else the route's own tour", () => {
+		const lagoon = routeById('blue-lagoon')!;
+		expect(charterTourSlug(lagoon, 'blue-lagoon-afternoon')).toBe('blue-lagoon-afternoon');
+		expect(charterTourSlug(lagoon, 'blue-lagoon-morning')).toBe('blue-lagoon-morning');
+		expect(charterTourSlug(lagoon)).toBe('blue-lagoon-morning');
+		// Another route's tour can't be smuggled in.
+		expect(charterTourSlug(lagoon, 'blue-cave-hvar-5-islands')).toBe('blue-lagoon-morning');
+		expect(charterTourSlug(routeById('golden-horn-brac-hvar')!, 'golden-horn-brac-hvar')).toBe('golden-horn-brac-hvar');
+	});
+
+	it('read the tour a request came from, trimmed, and leave it out when absent', () => {
+		expect(parseCharterRequest({ route: 'blue-lagoon', tourSlug: ' blue-lagoon-afternoon ' }, 'website').tourSlug).toBe('blue-lagoon-afternoon');
+		expect(parseCharterRequest({ route: 'blue-lagoon' }, 'website')).not.toHaveProperty('tourSlug');
+		expect(parseCharterRequest({ route: 'blue-lagoon', tourSlug: 42 }, 'website')).not.toHaveProperty('tourSlug');
 	});
 
 	it('suggest the offered duration closest to the tour', () => {
@@ -190,6 +206,26 @@ describe('charter request → quote → payment', () => {
 		expect(booking.staffNotes.map((n) => n.text)).toEqual(['Note sent with the quote: Lunch stop in Hvar town.', 'Extras asked for: champagne']);
 		const mail = (await outbox().list()).find((m) => m.kind === 'charter_quote');
 		expect(mail?.text).toContain('Pick-up: Villa Sunce, Podstrana');
+	});
+
+	it("puts the quote on the tour the request was filed under (Blue Lagoon afternoon), with the route's label", async () => {
+		const enquiry = await recordEnquiry(
+			{
+				kind: 'charter',
+				topic: 'charter',
+				name: 'Jane Smith',
+				email: 'jane@example.com',
+				phone: '+44 7700 900123',
+				tourSlug: 'blue-lagoon-afternoon',
+				message: '',
+				charter: { route: 'blue-lagoon', date: '2027-06-10', time: '14:30', durationHours: 4, adults: 2, children: 0, infants: 0, firstName: 'Jane', lastName: 'Smith' },
+			},
+			'http://localhost',
+			NOW,
+		);
+		const { booking } = (await sendCharterQuote(enquiry.id, { ...quote, time: '14:30', durationHours: 4 }, '', 'Admin', 'http://localhost', NOW)) as { booking: Booking };
+		expect(booking.tourSlug).toBe('blue-lagoon-afternoon');
+		expect(booking.tourTitle).toBe('Private experience: Blue Lagoon & Trogir');
 	});
 
 	it('sells the length the quote offers, not the one asked for', async () => {

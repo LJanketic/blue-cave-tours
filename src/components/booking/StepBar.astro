@@ -2,10 +2,12 @@
 type Props = {
 	/** The current step: 2 date & guests, 3 review, 4 payment. Step 1 (tour type) is always done. */
 	current: 1 | 2 | 3 | 4;
+	/** A quote request has no review or payment on the site: it ends by sending the request. */
+	quoteOnly?: boolean;
 };
 
-const { current } = Astro.props;
-const STEPS = ['Tour type', 'Date & guests', 'Review', 'Payment'];
+const { current, quoteOnly = false } = Astro.props;
+const STEPS = quoteOnly ? ['Tour type', 'Date & guests', 'Request'] : ['Tour type', 'Date & guests', 'Review', 'Payment'];
 ---
 
 <!-- Spec §8.1.1. Done steps say "completed" to screen readers; the current one has aria-current. -->
@@ -15,7 +17,7 @@ const STEPS = ['Tour type', 'Date & guests', 'Review', 'Payment'];
 			const step = index + 1;
 			const state = step < current ? 'done' : step === current ? 'active' : 'next';
 			return (
-				<li class:list={['step-bar-ui__step', `is-${state}`]} aria-current={state === 'active' ? 'step' : undefined}>
+				<li class:list={['step-bar-ui__step', `is-${state}`]} data-step={step} aria-current={state === 'active' ? 'step' : undefined}>
 					<span class="step-bar-ui__dot" aria-hidden="true">
 						{state === 'done' ? <i class="ti ti-check" /> : step}
 					</span>
@@ -59,6 +61,19 @@ const STEPS = ['Tour type', 'Date & guests', 'Review', 'Payment'];
 			height: 0.5px;
 			margin: 0 var(--space-2);
 			background: var(--color-border-secondary);
+		}
+
+		/* A booking that became a quote request in the browser (src/client/step-bar.ts): step 3 is the last. */
+		.step-bar-ui[data-request] .step-bar-ui__step[data-step='4'] {
+			display: none;
+		}
+
+		.step-bar-ui[data-request] .step-bar-ui__step[data-step='3'] {
+			flex: none;
+		}
+
+		.step-bar-ui[data-request] .step-bar-ui__step[data-step='3']::after {
+			content: none;
 		}
 
 		.step-bar-ui__dot {

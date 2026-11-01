@@ -137,7 +137,8 @@ test('booking a tour with one fixed departure: no time line under the calendar, 
 	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
 	const departure = page.locator('.flow__departure');
 	await expect(departure).not.toContainText('07:20');
-	await expect(departure).toContainText('Online booking closes');
+	// No cut-off note under the calendar (design).
+	await expect(departure).not.toContainText('Online booking closes');
 	await expect(page.getByRole('radiogroup', { name: 'Departure time' })).toHaveCount(0);
 	await expect(page.locator('.summary-card-ui__row').filter({ hasText: 'Departure' })).toContainText('07:20 (check-in 07:05)');
 });

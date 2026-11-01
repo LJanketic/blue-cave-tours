@@ -32,7 +32,6 @@ const props = defineProps<{
 	renderedOn: string;
 	seasonStart: string;
 	seasonEnd: string;
-	seasonLabel: string;
 	earliestTime: string;
 	latestTime: string;
 	replyTime: string;
@@ -56,6 +55,8 @@ const email = ref('');
 const phone = ref('');
 const company = ref('');
 const startedAt = ref(0);
+/** The ?tour= slug, so the request is filed under that tour (the server keeps it only if it fits the route: charterTourSlug). */
+const fromTour = ref('');
 
 /*
  * The calendar greys out today: a charter needs a day's notice, so "today" is
@@ -125,6 +126,7 @@ async function send() {
 			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 			body: JSON.stringify({
 				route: route.value,
+				...(fromTour.value ? { tourSlug: fromTour.value } : {}),
 				date: date.value,
 				time: time.value,
 				duration: duration.value,
@@ -170,6 +172,7 @@ onMounted(() => {
 	const wanted = new URLSearchParams(window.location.search).get('tour') ?? '';
 	const match = props.routes.find((r) => r.matches.includes(wanted));
 	route.value = match?.id ?? props.customRouteId;
+	if (match) fromTour.value = wanted;
 	// The route watcher fills in the route's usual time first; then the tour's own preset (the
 	// Blue Lagoon afternoon leaves at 14:30, not the morning's 09:30) replaces it.
 	void nextTick(() => {
@@ -211,7 +214,6 @@ onUnmounted(() => clearInterval(clock));
 				:rendered-on="renderedOn"
 				:season-start="seasonStart"
 				:season-end="seasonEnd"
-				:season-label="seasonLabel"
 				:now="now"
 				:departures="['00:00']"
 			/>

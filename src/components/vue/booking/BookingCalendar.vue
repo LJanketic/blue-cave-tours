@@ -2,10 +2,14 @@
 /*
  * Date picker for the booking flow (spec §8.1.2). Monday-first; each day is a
  * button with its full date as its name. Days in the past or outside the
- * season (D-15) are aria-disabled and explained by a visible legend. "Today"
+ * season (D-15) are aria-disabled, with the reason in their names. "Today"
  * is Split's today (Europe/Zagreb), worked out in the browser: the page is
  * prerendered, so `renderedOn` is only the build date. Today is blocked too
  * once booking has closed for every departure (dayClosed).
+ *
+ * [DEVIATE, operator ClickUp C2 31 Oct 2026]: the visible legend from spec
+ * §8.1.2 was removed at the operator's request; the reasons stay in each
+ * day's aria-label.
  */
 import { computed, ref, watch } from 'vue';
 import { parseIsoDate, toIsoDate } from '../../../lib/booking';
@@ -17,7 +21,6 @@ const props = defineProps<{
 	/** MM-DD, inclusive. */
 	seasonStart: string;
 	seasonEnd: string;
-	seasonLabel: string;
 	/** The current moment, set by the parent once mounted (null while server-rendering). */
 	now: Date | null;
 	/** Fixed departure times ("HH:MM"); empty when the time isn't fixed. */
@@ -33,7 +36,6 @@ const start = parseIsoDate(props.renderedOn) ?? new Date();
 const viewYear = ref(start.getFullYear());
 const viewMonth = ref(start.getMonth());
 
-const allYear = computed(() => props.seasonStart === '01-01' && props.seasonEnd === '12-31');
 const inSeason = (iso: string) => {
 	const md = iso.slice(5);
 	return md >= props.seasonStart && md <= props.seasonEnd;
@@ -142,11 +144,6 @@ watch(
 				</button>
 			</template>
 		</div>
-		<p class="cal__legend">
-			<span class="cal__swatch" aria-hidden="true"></span>
-			<template v-if="allYear">Greyed-out days are past or closed for booking.</template>
-			<template v-else>Greyed-out days are past, closed for booking or outside the season ({{ seasonLabel }}).</template>
-		</p>
 	</div>
 </template>
 
@@ -233,21 +230,6 @@ watch(
 		color: var(--color-text-tertiary);
 		text-decoration: line-through;
 		cursor: default;
-	}
-
-	.cal__legend {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		margin: var(--space-3) 0 0;
-		font-size: var(--font-size-xs);
-		color: var(--color-text-tertiary);
-	}
-
-	.cal__swatch {
-		width: 14px;
-		height: 2px;
-		background: var(--color-text-tertiary);
 	}
 
 	@media (max-width: 768px) {

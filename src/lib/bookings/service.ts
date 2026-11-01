@@ -8,7 +8,7 @@ import { DEFAULT_PICKUP_ID, PRIVATE_LISTS, privateDepartureTimes, privateExtra, 
 import { EMAIL_RE, asciiEmail } from '../contact-validation';
 import { adminEmail, sendEmail, type EmailMessage } from '../email/send';
 import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail, charterQuoteEmail } from '../email/templates';
-import { durationLabel, routeById } from '../../config/charter';
+import { charterTourSlug, durationLabel, routeById } from '../../config/charter';
 import type { QuoteError, QuoteInput } from '../charter';
 import type { TourDetail } from '../../types/tour';
 import { bookingClosed, businessDate } from './dates';
@@ -511,7 +511,8 @@ export async function sendCharterQuote(
 		enquiryId: enquiry.id,
 		quoteExpiresAt: new Date(now.getTime() + quote.validDays * 86_400_000).toISOString(),
 		durationHours: quote.durationHours,
-		tourSlug: route?.tourSlug ?? enquiry.tourSlug,
+		// The tour the request was filed under, when it's one of the route's (Blue Lagoon afternoon, not morning).
+		tourSlug: route ? charterTourSlug(route, enquiry.tourSlug) : enquiry.tourSlug,
 		tourTitle: `Private experience: ${route?.label ?? 'Your own route'}`,
 		date: quote.date,
 		slot: quote.time,

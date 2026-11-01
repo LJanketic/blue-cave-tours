@@ -7,8 +7,10 @@ import type { SeasonAmount } from './season';
  * so the booking island can use this.
  *
  * Being in PRIVATE_TOURS is what makes a tour "book private and pay now".
- * Only what the operator's doc states is here; every other private tour stays
- * on request (/private-charter/) until the operator gives its boat price.
+ * Only what the operator's doc states is here. Every other group + private
+ * tour uses the same private step (/book/<slug>/private/, offersPrivateFlow in
+ * src/lib/booking.ts) as a quote request until the operator gives its boat
+ * price; private-only tours stay on request at /private-charter/.
  * Adding a tour, an extra or a pick-up point is a change to this file only.
  */
 

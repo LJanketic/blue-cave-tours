@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { tours } from './tour-catalog';
 import { PRICE_LIST } from './prices';
-import { FAQ_ITEMS, pricingAnswer } from './faq';
+import { FAQ_ITEMS, pricingAnswer, privateBoatSentence } from './faq';
+import { PRIVATE_TOURS } from '../config/private';
 import { supportsInstantBook } from '../lib/booking';
 
 describe('price list (FAQ)', () => {
@@ -40,8 +41,24 @@ describe('FAQ pricing answer', () => {
 		for (const { prices } of PRICE_LIST) {
 			for (const amount of [prices.low.adult, prices.low.child, prices.peak.adult, prices.peak.child]) expect(answer).toContain(`€${amount}`);
 		}
-		expect(answer).toContain('€149 per adult and €129 per child in low season, €169 and €139 in peak season');
-		expect(answer).toContain('Private experiences are quoted on request');
+		expect(answer).toContain('€149 per adult and €129 per child in low season, €159 and €139 in peak season');
+		expect(answer).toContain(privateBoatSentence());
+	});
+});
+
+describe('FAQ private boat sentence', () => {
+	it('names every pay-now private tour at its config price, and quotes the rest', () => {
+		const sentence = privateBoatSentence();
+		for (const { boat } of Object.values(PRIVATE_TOURS)) {
+			expect(sentence).toContain(`€${boat.low.toLocaleString('en-GB')} (low season)`);
+			expect(sentence).toContain(`€${boat.peak.toLocaleString('en-GB')} (peak)`);
+		}
+		expect(sentence).toMatch(/other private experiences are quoted on request\.$/);
+	});
+
+	it('falls back to "on request" with no pay-now tour, and refuses a tour it has no name for', () => {
+		expect(privateBoatSentence({})).toBe('Private experiences are quoted on request.');
+		expect(() => privateBoatSentence({ 'no-such-tour': { boat: { low: 1, peak: 2 } } })).toThrow(/no-such-tour/);
 	});
 });
 

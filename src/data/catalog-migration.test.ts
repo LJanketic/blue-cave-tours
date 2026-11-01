@@ -17,14 +17,14 @@ const OLD_CHILD_PRICE: Record<string, number | null> = {
 	'blue-cave-hvar-5-islands': 139,
 	'golden-horn-brac-hvar': 99,
 	'hvar-red-rocks-pakleni': null,
-	'blue-lagoon-morning': 69,
-	'blue-lagoon-afternoon': 69,
+	'blue-lagoon-morning': 65,
+	'blue-lagoon-afternoon': 65,
 	'dubrovnik-one-way': null,
 	'create-perfect-day-private': null,
 };
 
 const OLD_FROM_PRICE: Record<string, string> = {
-	'blue-cave-hvar-5-islands': '€169',
+	'blue-cave-hvar-5-islands': '€159',
 	'golden-horn-brac-hvar': '€139',
 	'hvar-red-rocks-pakleni': 'Price on request',
 	'blue-lagoon-morning': '€75',

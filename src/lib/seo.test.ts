@@ -39,7 +39,7 @@ describe('tourJsonLd', () => {
 			'@type': 'AggregateOffer',
 			priceCurrency: 'EUR',
 			lowPrice: 149,
-			highPrice: 169,
+			highPrice: 159,
 			offerCount: 2,
 			url: `${SITE}/tours/blue-cave-hvar-5-islands/`,
 			availability: 'https://schema.org/InStock',

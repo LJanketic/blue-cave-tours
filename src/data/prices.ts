@@ -1,20 +1,20 @@
 import type { SeasonalPrices } from '../types/tour';
 
 /*
- * Per-person tour prices in euros (operator, Oct 2026); infants travel free. Which
+ * Per-person tour prices in euros (operator price table, ClickUp 31 Oct 2026); infants travel free. Which
  * season applies is decided by the tour date (src/config/season.ts). A light
  * module with no catalog import, so the FAQ island can list prices without
  * pulling the catalog into the browser.
  */
 
-/** Child price up to this age, inclusive; adults are older (D-9). */
-export const CHILD_MAX_AGE = 17;
-/** Infants up to this age, inclusive, travel free but take a seat (D-9). */
-export const INFANT_MAX_AGE = 2;
+/** Child price up to this age, inclusive; adults are older (D-9: child 4–11, adult 12+, operator price table, ClickUp 31 Oct 2026). */
+export const CHILD_MAX_AGE = 11;
+/** Infants up to this age, inclusive, travel free but take a seat (D-9: infant 0–3, operator price table, ClickUp 31 Oct 2026). */
+export const INFANT_MAX_AGE = 3;
 
-export const PRICE_BLUE_CAVE: SeasonalPrices = { low: { adult: 149, child: 129 }, peak: { adult: 169, child: 139 } };
+export const PRICE_BLUE_CAVE: SeasonalPrices = { low: { adult: 149, child: 129 }, peak: { adult: 159, child: 139 } };
 export const PRICE_GOLDEN_HORN: SeasonalPrices = { low: { adult: 129, child: 89 }, peak: { adult: 139, child: 99 } };
-export const PRICE_BLUE_LAGOON: SeasonalPrices = { low: { adult: 65, child: 59 }, peak: { adult: 75, child: 69 } };
+export const PRICE_BLUE_LAGOON: SeasonalPrices = { low: { adult: 70, child: 60 }, peak: { adult: 75, child: 65 } };
 
 /**
  * Every bookable price, as the FAQ lists it. src/data/prices.test.ts checks

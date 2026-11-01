@@ -7,11 +7,10 @@
 import type { TourDetail } from '../../types/tour';
 import { contactHrefForTour, groupBookHref, isGroupTour, MAX_GUESTS, privateBookHref } from '../../lib/booking';
 import { charterUrl } from '../../config/routes';
-import { CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT, CANCELLATION_SHORT } from '../../config/cancellation';
+import { CANCELLATION_CARD, CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT } from '../../config/cancellation';
 import { seasonLabel } from '../../config/season';
-import { privateTour } from '../../config/private';
 import { formatFromPrice } from '../../lib/price';
-import { feeLabel } from '../../lib/cards';
+import { feeLabel, mandatoryFeeLabel } from '../../lib/cards';
 import { meetingPointLines, showsBestseller, tourBreadcrumbs, tourCtas, tourHeadings } from '../../lib/tour-display';
 import { WHY_GO_PRIVATE, WHY_GO_PRIVATE_TOURS } from '../../data/private-tours';
 import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
@@ -32,13 +31,7 @@ type Props = { tour: TourDetail };
 
 const { tour } = Astro.props;
 const isGroup = isGroupTour(tour);
-const isPrivateToo = isGroup && tour.types.includes('private');
-// The whole boat's low-season price, a constant like the "From" price (plan P); only where it's booked on the site.
-const privateBoatFrom = (() => {
-	const low = privateTour(tour.slug)?.boat.low;
-	return low === undefined ? null : `€${low.toLocaleString('en-GB')}`;
-})();
-const { primary, secondary, custom } = tourCtas(tour, {
+const { primary, secondary } = tourCtas(tour, {
 	book: (s) => groupBookHref({ slug: s }),
 	contact: (s, topic) => contactHrefForTour({ slug: s }, topic),
 	charter: charterUrl,
@@ -62,8 +55,11 @@ const crumbs = tourBreadcrumbs(tour);
 const prices = tour.prices;
 const requestLabel = formatFromPrice(null, tour.priceUnit);
 const unit = tour.priceUnit === 'boat' ? '/ boat' : '/ adult';
-// Mandatory fees with a "+", then optional ones (the Blue Cave ticket most guests add).
+// Mandatory fees with a "+", then optional ones (the Blue Cave ticket most guests add). The mobile bar
+// shows it; the aside doesn't (operator, 31 Oct 2026), the "Additional fees" tile has it in full.
 const feeLine = feeLabel(tour);
+// [DEVIATE, operator ClickUp C4 31 Oct 2026]: optional fees left the card; mandatory ones stay (C-23).
+const asideFeeLine = mandatoryFeeLabel(tour);
 const mandatoryFees = tour.additionalFees.filter((fee) => fee.mandatory);
 const nextDeparture =
 	tour.departures.length > 1 ? 'Several departures daily' : (tour.departures[0]?.time ?? 'Time confirmed at booking');
@@ -229,7 +225,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 					)
 				}
 			</p>
-			{feeLine && <p class="tour__fee">{feeLine}</p>}
+			{asideFeeLine && <p class="tour__fee">{asideFeeLine}</p>}
 			{
 				prices && (
 					<p class="tour__child">
@@ -248,25 +244,35 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 			<Button href={primary.href} block iconEnd="arrow-right" class="tour__cta">{primary.label}</Button>
 			{
 				secondary && (
-					<Button href={secondary.href} variant="secondary" block class="tour__cta tour__cta--secondary">
+					<Button
+						href={secondary.href}
+						variant="secondary"
+						block
+						class={`tour__cta tour__cta--secondary${secondary.price ? ' tour__cta--priced' : ''}`}
+					>
 						<CrownIcon slot="icon" />
-						{secondary.label}
+						<span class="tour__cta-label">{secondary.label}</span>
+						{secondary.price && (
+							<span class="tour__cta-price">
+								<strong>{secondary.price}</strong> <span class="tour__cta-unit">/ boat</span>
+							</span>
+						)}
 					</Button>
 				)
 			}
-			{custom && privateBoatFrom && <p class="tour__boat">Private boat from {privateBoatFrom}</p>}
-			{custom && <a href={custom.href} class="tour__custom">{custom.label}</a>}
-			{/* The 48h rule is the group tours'; private experiences have their own terms (legal/cancellation §3). */}
-			{isGroup && <p class="tour__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {isPrivateToo ? `Group tours: ${CANCELLATION_SHORT.toLowerCase()}` : CANCELLATION_SHORT}</p>}
-			{tour.types.includes('private') && (
-				<p class="tour__policy tour__policy--private">
-					<a href={CANCELLATION_PRIVATE_HREF}>{CANCELLATION_PRIVATE_SHORT}</a>
-				</p>
-			)}
+			{/* The group tours' 48h rule, as designed (board 03); private-only tours have their own terms (legal/cancellation §3). */}
+			{isGroup && <p class="tour__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {CANCELLATION_CARD}</p>}
+			{
+				!isGroup && (
+					<p class="tour__policy tour__policy--private">
+						<a href={CANCELLATION_PRIVATE_HREF}>{CANCELLATION_PRIVATE_SHORT}</a>
+					</p>
+				)
+			}
 		</StickyAside>
 	</div>
 
-	<MobileActionBar target="book" label={primary.label === 'Book group tour' ? 'Book now' : primary.label === 'Plan your experience' ? 'Plan your experience' : 'Enquire'}>
+	<MobileActionBar target="book" label={primary.label === 'Book group tour tickets' ? 'Book now' : primary.label === 'Plan your experience' ? 'Plan your experience' : 'Enquire'}>
 		<p>
 			{
 				prices ? (
@@ -571,32 +577,61 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 			padding: 10px;
 		}
 
-		/* Quiet: the charter request, for anything the private booking doesn't cover (plan P). */
-		.tour__boat {
-			margin: 6px 0 0;
-			font-size: var(--font-size-xs);
-			color: var(--color-text-secondary);
-			text-align: center;
+		/* "Private experience" on the left, the boat's price on the right (board 03). */
+		.tour :global(.tour__cta--priced) {
+			justify-content: flex-start;
+			text-align: left;
 		}
 
-		.tour__custom {
-			display: block;
-			margin-top: var(--space-2);
-			padding-block: 4px;
-			font-size: var(--font-size-sm);
+		/* One line, as on the board; it fits the 322px aside with a 4px gap before the price. */
+		.tour__cta-label {
+			min-width: 0;
+			white-space: nowrap;
+		}
+
+		.tour__cta-price {
+			margin-left: auto;
+			padding-left: var(--space-1);
+			white-space: nowrap;
+		}
+
+		/* The narrowest phones can't fit both on one line: the label wraps instead of overflowing. */
+		@media (max-width: 22.5rem) {
+			.tour__cta-label {
+				white-space: normal;
+			}
+		}
+
+		.tour__cta-price strong {
+			font-weight: var(--font-weight-semibold);
+		}
+
+		.tour__cta-unit {
+			font-weight: var(--font-weight-regular);
+			color: var(--color-text-secondary);
+		}
+
+		/* [DEVIATE, operator ClickUp C4 design]: info blue, as on the operator's screenshot; spec §6.3.4 has the success colour. */
+		.tour__policy {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 5px;
+			margin: var(--space-3) 0 0;
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-medium);
 			color: var(--color-text-info);
 			text-align: center;
 		}
 
-		.tour__policy {
-			margin: 10px 0 0;
-			font-size: var(--font-size-xs);
-			color: var(--color-text-success);
-			text-align: center;
+		.tour__policy .ti {
+			flex-shrink: 0;
+			font-size: 1.25em;
 		}
 
+		/* Private-only tours: a quiet link to their own terms instead of the 48h line. */
 		.tour__policy--private {
-			margin-top: 4px;
+			font-weight: var(--font-weight-regular);
 			color: var(--color-text-secondary);
 		}
 

@@ -14,6 +14,8 @@ export const STATIC_ROUTES = [
 	'/private-charter/',
 	'/private-charter/sent/',
 	'/private-charter/problem/?error=email',
+	// A private step in quote mode (no boat price); also reached from its tour page.
+	'/book/golden-horn-brac-hvar/private/',
 	'/not-a-page/',
 	// The component kit (dev server and deploy previews only): new components must be clean.
 	'/dev/kit/',
@@ -35,5 +37,5 @@ export async function publicRoutes(page: Page): Promise<string[]> {
 		await page.goto(tour);
 		groupPages.push(...(await page.locator('a[href^="/book/"]:is([href$="/group/"], [href$="/private/"])').evaluateAll((links) => links.map((a) => a.getAttribute('href') ?? ''))));
 	}
-	return [...STATIC_ROUTES, ...tours, ...destinations, ...new Set([...booking, ...groupPages])];
+	return [...new Set([...STATIC_ROUTES, ...tours, ...destinations, ...booking, ...groupPages])];
 }

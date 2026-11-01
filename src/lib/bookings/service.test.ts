@@ -50,7 +50,7 @@ describe('createPendingBooking', () => {
 		const booking = await pending();
 		expect(booking.status).toBe('pending_payment');
 		expect(booking.paymentStatus).toBe('unpaid');
-		expect(booking.total).toBe(169 * 2 + 139);
+		expect(booking.total).toBe(159 * 2 + 139);
 		expect(booking.ref).toMatch(/^HBC-[A-Z2-9]{6}$/);
 		expect(await bookings().get(booking.id)).toEqual(booking);
 	});
@@ -61,8 +61,8 @@ describe('createPendingBooking', () => {
 		const april = new Date('2027-04-01T09:00:00Z');
 		const peak = await createPendingBooking(tour, { ...input, date: '2027-07-10' }, april);
 		if (!peak.ok) throw new Error(peak.error);
-		expect(peak.booking.total).toBe(169 * 2 + 139);
-		expect(peak.booking.lineItems?.map((i) => i.unit)).toEqual([169, 139]);
+		expect(peak.booking.total).toBe(159 * 2 + 139);
+		expect(peak.booking.lineItems?.map((i) => i.unit)).toEqual([159, 139]);
 		// The same purchase day for a low-season date: low prices.
 		const low = await createPendingBooking(tour, { ...input, date: '2027-10-01' }, april);
 		if (!low.ok) throw new Error(low.error);

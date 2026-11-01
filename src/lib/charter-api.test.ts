@@ -160,3 +160,67 @@ describe('POST /api/charter-request', () => {
 		expect((await post('x', 'text/plain')).status).toBe(415);
 	});
 });
+
+// C5 (ClickUp 31 Oct 2026): the private step of a tour with no boat price posts here with its tour slug.
+describe('POST /api/charter-request: the tour a private step request comes from', () => {
+	beforeEach(() => {
+		rateLimit.ok = true;
+		rateLimit.global = true;
+		turnstile.ok = true;
+		store.fail = false;
+		resetMemoryStore();
+	});
+
+	const stored = async () => (await enquiries().list())[0];
+
+	it.each([
+		['golden-horn-brac-hvar', 'golden-horn-brac-hvar', '08:30', '10'],
+		['blue-lagoon', 'blue-lagoon-morning', '09:30', '4'],
+		['blue-lagoon', 'blue-lagoon-afternoon', '14:30', '4'],
+		['hvar-red-rocks-pakleni', 'hvar-red-rocks-pakleni', '06:00', '8'],
+		['dubrovnik-one-way', 'dubrovnik-one-way', '20:00', '10'],
+	])('route %s from %s at %s is stored under that tour', async (route, tourSlug, time, duration) => {
+		const res = await post(JSON.stringify(fields({ route, tourSlug, time, duration, pickup: '', extras: [] })));
+		expect(res.status, tourSlug).toBe(200);
+		const enquiry = await stored();
+		expect(enquiry.tourSlug).toBe(tourSlug);
+		expect(enquiry.charter).toMatchObject({ route, time });
+		expect(enquiry.charter?.pickup).toBeUndefined();
+	});
+
+	it.each(['05:55', '20:05'])('refuses %s, outside the charter window', async (time) => {
+		const res = await post(JSON.stringify(fields({ route: 'hvar-red-rocks-pakleni', tourSlug: 'hvar-red-rocks-pakleni', time })));
+		expect(res.status).toBe(400);
+		expect((await res.json()).code).toBe('time');
+		expect(await enquiries().list()).toHaveLength(0);
+	});
+
+	it.each([
+		['another route\'s tour', 'blue-cave-hvar-5-islands'],
+		['an unknown tour', 'no-such-tour'],
+		['markup', '<img src=x onerror=alert(1)>'],
+		['a path', '../../admin'],
+		['an over-long slug', `blue-lagoon-afternoon${'x'.repeat(5000)}`],
+		['a number', 42],
+		['an object', { $ne: null }],
+	])('files %s under the route\'s own tour', async (_name, tourSlug) => {
+		const res = await post(JSON.stringify(fields({ route: 'blue-lagoon', tourSlug })));
+		expect(res.status).toBe(200);
+		const enquiry = await stored();
+		expect(enquiry.tourSlug).toBe('blue-lagoon-morning');
+		expect(JSON.stringify(enquiry)).not.toContain('onerror');
+		expect(JSON.stringify(enquiry)).not.toContain('xxxxxxxxxx');
+	});
+
+	it('takes the tour slug from a plain form post too', async () => {
+		const res = await post(asForm({ route: 'blue-lagoon', tourSlug: 'blue-lagoon-afternoon', time: '14:30' }), 'application/x-www-form-urlencoded');
+		expect(res.status).toBe(303);
+		expect((await stored()).tourSlug).toBe('blue-lagoon-afternoon');
+	});
+
+	it('keeps the custom route on the Perfect Day landing, whatever tour is sent', async () => {
+		const res = await post(JSON.stringify(fields({ route: 'custom', tourSlug: 'blue-cave-hvar-5-islands' })));
+		expect(res.status).toBe(200);
+		expect((await stored()).tourSlug).toBe('create-perfect-day-private');
+	});
+});

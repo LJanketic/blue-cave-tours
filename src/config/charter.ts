@@ -61,6 +61,15 @@ export function routeById(id: string): CharterRoute | null {
 	return CHARTER_ROUTES.find((r) => r.id === id) ?? null;
 }
 
+/**
+ * The tour a request on `route` is filed under: the tour the guest came from
+ * when it is one of the route's tours (Blue Lagoon afternoon, not morning),
+ * else the route's own tour.
+ */
+export function charterTourSlug(route: CharterRoute, fromTour?: string): string {
+	return fromTour && (fromTour === route.tourSlug || route.aliases?.includes(fromTour)) ? fromTour : route.tourSlug;
+}
+
 /** The offered duration closest to a tour's length (ties go to the longer one), for the default. */
 export function closestDuration(hours: number): CharterDuration {
 	return CHARTER_DURATIONS.reduce((best, d) => (Math.abs(d - hours) <= Math.abs(best - hours) ? d : best), CHARTER_DURATIONS[0]);

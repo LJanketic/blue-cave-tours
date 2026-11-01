@@ -56,7 +56,7 @@ const DISCLAIMERS = [
 const CAVE_NOTE =
 	'Entering the Blue Cave is optional and the ticket is paid on site. If you’d rather not go in, you can wait at a café nearby. Entry depends on sea conditions and official cave opening hours.';
 
-/** Age bands shown in the booking flow unless a tour sets its own (D-9: infants 0–2 travel free but take a seat). */
+/** Age bands shown in the booking flow unless a tour sets its own (D-9, operator price table, ClickUp 31 Oct 2026: infants 0–3 travel free but take a seat, child 4–11, adult 12+). */
 export const DEFAULT_AGE_BANDS: AgeBands = {
 	adult: `Age ${CHILD_MAX_AGE + 1}+`,
 	child: `Age ${INFANT_MAX_AGE + 1}–${CHILD_MAX_AGE}`,

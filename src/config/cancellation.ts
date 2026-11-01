@@ -15,6 +15,9 @@ export const WEATHER_REFUND_DAYS = 30;
 
 export const CANCELLATION_SHORT = `Free cancellation up to ${CANCELLATION_HOURS}h before departure`;
 
+/** The tour page's booking card (board 03): the short form of CANCELLATION_SHORT. */
+export const CANCELLATION_CARD = `Free cancellation up to ${CANCELLATION_HOURS}h before`;
+
 /** Private experiences follow their own terms (legal/cancellation §3), so the 48h line never goes next to them. */
 export const CANCELLATION_PRIVATE_SHORT = 'Private experiences have their own cancellation terms';
 export const CANCELLATION_PRIVATE_HREF = '/legal/cancellation/#private';

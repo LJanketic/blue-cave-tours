@@ -17,7 +17,7 @@ export type TourTag = 'sunset' | 'swim' | 'snorkel' | 'cave' | 'half-day' | 'fam
  */
 export type AdditionalFee = { text: string; shortText: string; amountLabel?: string; mandatory: boolean; url?: string };
 
-/** One season's per-person prices in euros (children 0–17). */
+/** One season's per-person prices in euros (children 4–11; src/data/prices.ts). */
 export type PriceTier = { adult: number; child: number };
 
 /** Low- and peak-season prices; which applies depends on the tour date (seasonFor). */

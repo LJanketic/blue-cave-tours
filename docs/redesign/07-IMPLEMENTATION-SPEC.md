@@ -105,7 +105,7 @@ The columns are:
 | D-6 | Preview video ("0:22 · A day on the water"): is it our footage, and may we use it? | Hidden until confirmed, and until the credit check in §3.4 passes. | – | owner |
 | D-7 | Private charter flow | A **request with an optional estimate**, not a payment (§8.2). The design takes payment before availability is confirmed, and its "48h free cancellation" contradicts its own 30% deposit rule. | **PR 8** | owner |
 | D-8 | Charter routes and durations (blocking); price table and extras (optional) | The owner supplies Split-accurate routes and the durations offered. Without a price table, no estimate is shown ("We'll send a quote"). Without extras, the extras card is hidden. | **PR 8** (routes and durations only) | owner |
-| D-9 | Age bands and infants | Add an **"Infants (0–2), free"** counter that **counts toward the 12-seat cap** (safety). Adult and child bands come from the catalog. | – | owner |
+| D-9 | Age bands and infants | Add an **"Infants (0–2), free"** counter that **counts toward the 12-seat cap** (safety). Adult and child bands come from the catalog. ClickUp 31 Oct 2026: infants 0–3 free, children 4–11, adults 12+ (operator price table). | – | owner |
 | D-10 | Contact form fields | As designed: **first + last name**, joined into `name` on the client so the API doesn't change; a **Subject** select with the board's 6 options (new optional `topic` field); plus the Tour select, so `?tour=` deep links keep working. | – | owner |
 | D-11 | Destination detail drops "Best time to visit" and "Also nearby" | Follow the design (drop both). "Best season" stays in the aside. | – | owner |
 | D-12 | Tour detail drops Highlights, destination chips and "Please note" | Drop Highlights (also fixes the bug where it repeats `included`) and the chips. **[DEVIATE, legal] Keep "Please note"**: the operator-supplied caveats have legal weight. | – | owner |
@@ -1970,7 +1970,7 @@ Each row has a default that ships if the item isn't answered by the time its PR 
 | C-8 | Contact hours (one statement) | contradicts itself | contradicts itself | no hours, no badge | owner | PR 6 |
 | C-9 | Season | May–Oct | Apr–Nov | Apr–Nov | owner | PR 1b |
 | C-10 | Reply time | "a couple of hours" | same | "the same day" | owner | PR 6 |
-| C-11 | Age bands, infants | 13+ / 3–12 / under 3 free | 18+ / 0–17 | catalog bands + infants 0–2 free | owner | PR 7a |
+| C-11 | Age bands, infants | 13+ / 3–12 / under 3 free | 18+ / 0–17 | catalog bands + infants 0–2 free. ClickUp 31 Oct 2026: infants 0–3 free, children 4–11, adults 12+ (operator price table). | owner | PR 7a |
 | C-12 | Welcome drink, drinks on board | yes | water only | water only | owner | PR 6 |
 | C-13 | Wheelchair access | "accessible" | – | not claimed | owner | PR 6 |
 | C-14 | Pets | private only | – | not claimed | owner | PR 6 |

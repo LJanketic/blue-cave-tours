@@ -1,6 +1,7 @@
 import { BESTSELLER_EVIDENCE, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL } from '../config/site';
 import type { TourDetail } from '../types/tour';
-import { supportsPrivateBook } from './booking';
+import { offersPrivateFlow, supportsPrivateBook } from './booking';
+import { privateTour } from '../config/private';
 
 /*
  * Display rules for tours. No catalog import, so Vue islands can use these
@@ -17,22 +18,24 @@ export function caveEntryNote(tour: Pick<TourDetail, 'additionalFees'>): string 
 	return tour.additionalFees[0]?.text ?? 'This route does not visit the Blue Cave.';
 }
 
-export type Cta = { label: string; href: string };
+/** A booking action; `price` is the amount shown on its right ("€1,500"), with no unit. */
+export type Cta = { label: string; href: string; price?: string };
 
 /** The landing page for private charters (D-23): its primary action is the charter request. */
 const CHARTER_LANDING = 'create-perfect-day-private';
 
 /**
  * The tour page's booking actions (spec §6.3.4):
- * - instant-book tours: "Book group tour"
+ * - instant-book tours: "Book group tour tickets"
  * - the private experience landing page: "Plan your experience"
  * - group tours with no price yet: "Ask about the group tour" (contact form)
  * - private-only tours, quoted on request: "Enquire about this tour"
  * plus, on every tour that runs both as a group and privately (handoff
- * ruling: every tour is group + private):
- * - with a private boat price (src/config/private.ts): "Book private
- *   experience", and a quiet `custom` link to plan something else (plan P)
- * - otherwise: "Plan a private experience" (the charter request)
+ * ruling: every tour is group + private), a "Private experience" button:
+ * always the private booking step (/book/<slug>/private/); with a private
+ * boat price (src/config/private.ts) it shows the boat's low-season price (a
+ * constant, like the "From" price), otherwise no price (the step sends a
+ * quote request).
  * A private-only tour's enquiry already is the charter request, so it gets
  * no second button to the same form.
  */
@@ -44,25 +47,29 @@ export function tourCtas(
 		charter: (slug: string) => string;
 		private: (slug: string) => string;
 	},
-): { primary: Cta; secondary: Cta | null; custom: Cta | null } {
+): { primary: Cta; secondary: Cta | null } {
 	const isGroup = tour.types.includes('group');
 	const primary: Cta =
 		isGroup && tour.prices !== null
-			? { label: 'Book group tour', href: links.book(tour.slug) }
+			? { label: 'Book group tour tickets', href: links.book(tour.slug) }
 			: tour.slug === CHARTER_LANDING
 				? { label: 'Plan your experience', href: links.charter(tour.slug) }
 				: isGroup
 					? { label: 'Ask about the group tour', href: links.contact(tour.slug, 'group') }
 					: { label: 'Enquire about this tour', href: links.contact(tour.slug) };
-	const offersPrivate = isGroup && tour.types.includes('private');
-	if (offersPrivate && supportsPrivateBook({ ...tour, departures: tour.departures ?? [] })) {
-		return {
-			primary,
-			secondary: { label: 'Book private experience', href: links.private(tour.slug) },
-			custom: { label: 'Something custom? Plan your own', href: links.charter(tour.slug) },
-		};
-	}
-	return { primary, secondary: offersPrivate ? { label: 'Plan a private experience', href: links.charter(tour.slug) } : null, custom: null };
+	return { primary, secondary: privateCta(tour, links) };
+}
+
+/** The "Private experience" button of a group + private tour (see tourCtas), or null. */
+function privateCta(
+	tour: Pick<TourDetail, 'slug' | 'types'> & Partial<Pick<TourDetail, 'departures'>>,
+	links: { private: (slug: string) => string },
+): Cta | null {
+	if (!offersPrivateFlow(tour)) return null;
+	const label = 'Private experience';
+	const priced = supportsPrivateBook({ ...tour, departures: tour.departures ?? [] });
+	const low = priced ? privateTour(tour.slug)?.boat.low : undefined;
+	return { label, href: links.private(tour.slug), ...(low !== undefined && { price: `€${low.toLocaleString('en-GB')}` }) };
 }
 
 /**

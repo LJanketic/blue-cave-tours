@@ -46,11 +46,21 @@ export function groupBookHref(tour: Pick<TourDetail, 'slug'>): string {
 
 /**
  * Book the whole boat and pay now (src/config/private.ts): a private tour
- * with a boat price and a fixed departure to shift from. Others stay on
- * request (/private-charter/).
+ * with a boat price and a fixed departure to shift from. The other tours that
+ * have the private booking step (offersPrivateFlow) use it as a quote request.
  */
 export function supportsPrivateBook(tour: Pick<TourDetail, 'slug' | 'types' | 'departures'>): boolean {
 	return tour.types.includes('private') && privateTour(tour.slug) !== null && tour.departures.length > 0;
+}
+
+/**
+ * The private booking step (/book/<slug>/private/) exists for every tour that
+ * runs both as a group and privately: pay now when supportsPrivateBook, else
+ * the same flow sends a quote request. Private-only tours (the charter
+ * landing, Create Your Perfect Day) are planned through /private-charter/.
+ */
+export function offersPrivateFlow(tour: Pick<TourDetail, 'types'>): boolean {
+	return tour.types.includes('group') && tour.types.includes('private');
 }
 
 export function privateBookHref(tour: Pick<TourDetail, 'slug'>): string {

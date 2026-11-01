@@ -11,11 +11,10 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { MAX_GUESTS, departureLabel as formatDeparture, guestSummaryFromCounts, parseIsoDate } from '../../lib/booking';
 import { bookingClosed, businessDate, dayClosed } from '../../lib/bookings/dates';
-import { computeBookingTotal, seasonPriceLabel, seasonalPriceSummary, seasonalPrices } from '../../lib/price';
+import { computeBookingTotal, formatEuro, seasonPriceLabel, seasonalPriceSummary, seasonalPrices } from '../../lib/price';
 import { isInSeason, seasonFor } from '../../config/season';
 import type { AgeBands, Departure, SeasonalPrices } from '../../types/tour';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
-import { BOOKING_CUTOFF_NOTE } from '../../config/booking';
 import BookingCalendar from './booking/BookingCalendar.vue';
 import GuestSteppers from './booking/GuestSteppers.vue';
 import ChoiceCards from './booking/ChoiceCards.vue';
@@ -37,7 +36,6 @@ const props = defineProps<{
 	renderedOn: string;
 	seasonStart: string;
 	seasonEnd: string;
-	seasonLabel: string;
 }>();
 
 const NOTES_MAX = 500;
@@ -239,7 +237,6 @@ onUnmounted(() => clearInterval(clock));
 				:rendered-on="renderedOn"
 				:season-start="seasonStart"
 				:season-end="seasonEnd"
-				:season-label="seasonLabel"
 				:now="now"
 				:departures="departureTimes"
 			/>
@@ -250,7 +247,6 @@ onUnmounted(() => clearInterval(clock));
 				<p v-if="departures.length === 0" class="flow__line"><i class="ti ti-clock" aria-hidden="true"></i> Departure time confirmed at booking</p>
 				<!-- One fixed departure: nothing to choose, and the summary shows its time and check-in. -->
 				<ChoiceCards v-else-if="departures.length > 1" v-model="slot" name="slot" legend="Departure time" :options="slotOptions" />
-				<p v-if="departures.length" class="flow__cutoff">{{ BOOKING_CUTOFF_NOTE }}</p>
 			</div>
 		</section>
 
@@ -273,28 +269,27 @@ onUnmounted(() => clearInterval(clock));
 
 		<section class="flow__card" aria-labelledby="details-heading">
 			<h2 id="details-heading" class="flow__title"><i class="ti ti-user" aria-hidden="true"></i> Your details</h2>
-			<p class="flow__sub">We'll send your confirmation and any updates here. Fields marked * are required.</p>
+			<p class="flow__sub">We'll send your confirmation and any updates here.</p>
 			<div class="flow__fields">
-				<FormField id="book-first" v-model="firstName" label="First name" name="firstName" autocomplete="given-name" required :error="fieldErrors.firstName" />
-				<FormField id="book-last" v-model="lastName" label="Last name" name="lastName" autocomplete="family-name" required />
-				<FormField id="book-email" v-model="email" label="Email" name="email" type="email" autocomplete="email" required :error="fieldErrors.email" />
-				<FormField id="book-phone" v-model="phone" label="Phone (optional)" name="phone" type="tel" autocomplete="tel" hint="So the skipper can reach you on the day." />
+				<FormField id="book-first" v-model="firstName" label="First name" name="firstName" autocomplete="given-name" placeholder="Ivan" required :error="fieldErrors.firstName" />
+				<FormField id="book-last" v-model="lastName" label="Last name" name="lastName" autocomplete="family-name" placeholder="Kovač" required />
+				<FormField id="book-email" v-model="email" label="Email" name="email" type="email" autocomplete="email" placeholder="ivan@example.com" required :error="fieldErrors.email" />
+				<FormField id="book-phone" v-model="phone" label="Phone" name="phone" type="tel" autocomplete="tel" placeholder="+385 91 234 5678" />
 				<FormField
 					id="book-notes"
 					v-model="notes"
 					class="flow__full"
-					label="Anything the crew should know? (optional)"
+					label="Special requests"
 					name="notes"
 					as="textarea"
 					:maxlength="NOTES_MAX"
-					hint="For example, a child seat or a late arrival."
+					placeholder="Accessibility needs, celebrations, anything we should know…"
 					:error="fieldErrors.notes"
 				/>
 			</div>
-			<p class="flow__privacy">We use these details only to run your booking. See our <a href="/legal/privacy/">privacy policy</a>.</p>
 		</section>
 
-		<SummaryCard title="Your booking" :rows="summaryRows" :total="{ label: 'Total (incl. VAT)', value: total !== null ? `€${total}` : 'Price on request' }">
+		<SummaryCard title="Your booking" :rows="summaryRows" :total="{ label: 'Total (incl. VAT)', value: total !== null ? formatEuro(total) : 'Price on request' }">
 			<p v-if="feeLabel" class="flow__fee">{{ feeLabel }}</p>
 			<p class="flow__notes">{{ priceSummary }}</p>
 		</SummaryCard>
@@ -393,6 +388,11 @@ onUnmounted(() => clearInterval(clock));
 		grid-column: 1 / -1;
 	}
 
+	/* [DEVIATE, design ClickUp C3]: no visual required markers; required stays on the controls and the hint under the button lists what's missing. */
+	.flow :deep(.form-field-ui__required) {
+		display: none;
+	}
+
 	.flow__fee,
 	.flow__notes {
 		margin: 6px 0 0;
@@ -436,24 +436,6 @@ onUnmounted(() => clearInterval(clock));
 	/* Empty, it takes no space but stays in the accessibility tree, so screen readers announce what's put in it later. */
 	.flow__status:empty {
 		margin: 0;
-	}
-
-	.flow__cutoff {
-		margin: var(--space-2) 0 0;
-		font-size: var(--font-size-xs);
-		color: var(--color-text-secondary);
-	}
-
-	.flow__privacy {
-		margin: 14px 0 0;
-		font-size: var(--font-size-sm);
-		color: var(--color-text-secondary);
-	}
-
-	.flow__privacy a {
-		color: inherit;
-		text-decoration: underline;
-		text-underline-offset: 3px;
 	}
 
 	.flow__policy {

@@ -234,6 +234,10 @@
 	--color-overlay-header: linear-gradient(180deg, rgba(6, 24, 40, 0.55) 0, rgba(6, 24, 40, 0) 120px);
 	/* [DEVIATE, a11y] the board's .45 → .6 measured 3.1:1 behind the band's text (PR 3) */
 	--color-overlay-band: linear-gradient(rgba(6, 24, 40, 0.66), rgba(6, 24, 40, 0.74));
+	/* Home video preview (spec §6.1.4): the band behind the heading, the fade under the meta, the player's letterbox */
+	--color-overlay-video-band: linear-gradient(180deg, rgba(6, 24, 40, 0.55) 0%, rgba(6, 24, 40, 0.35) 100%);
+	--color-overlay-video-meta: linear-gradient(180deg, rgba(6, 24, 40, 0) 55%, rgba(6, 24, 40, 0.55) 100%);
+	--color-background-media: #000;
 	/* Static map images under their caption (MapLink, 20 Oct handoff: 80% scrim) */
 	--color-overlay-map: rgba(6, 24, 40, 0.8);
 	--color-lightbox-backdrop: rgba(4, 14, 24, 0.94);

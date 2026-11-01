@@ -1,7 +1,32 @@
 import { CANCELLATION_FULL, CANCELLATION_WEATHER } from '../config/cancellation';
 import { MAX_GUESTS } from '../lib/booking';
 import { priceSeasonDates } from '../config/season';
+import { PRIVATE_TOURS } from '../config/private';
 import { CHILD_MAX_AGE, INFANT_MAX_AGE, PRICE_LIST } from './prices';
+
+/**
+ * How the pricing answer names each pay-now private tour (src/config/private.ts
+ * is slug-keyed and has no titles; the catalog stays out of the FAQ island).
+ * A tour added there without a name here fails privateBoatSentence, so the
+ * tests catch it.
+ */
+const PRIVATE_BOAT_NAMES: Record<string, string> = {
+	'blue-cave-hvar-5-islands': 'Blue Cave',
+};
+
+const euros = (amount: number) => `€${amount.toLocaleString('en-GB')}`;
+
+/** "A private Blue Cave boat is €1,500 (low season) or €2,000 (peak); other private experiences are quoted on request." */
+export function privateBoatSentence(tours: typeof PRIVATE_TOURS = PRIVATE_TOURS): string {
+	const priced = Object.entries(tours).map(([slug, { boat }]) => {
+		const name = PRIVATE_BOAT_NAMES[slug];
+		if (!name) throw new Error(`No FAQ name for the private tour ${slug} (src/data/faq.ts PRIVATE_BOAT_NAMES)`);
+		return `a private ${name} boat is ${euros(boat.low)} (low season) or ${euros(boat.peak)} (peak)`;
+	});
+	if (!priced.length) return 'Private experiences are quoted on request.';
+	const list = priced.join('; ');
+	return `${list.charAt(0).toUpperCase()}${list.slice(1)}; other private experiences are quoted on request.`;
+}
 
 /**
  * The pricing answer, generated from the price data and the season dates
@@ -17,7 +42,7 @@ export function pricingAnswer(): string {
 		`Group tour prices are per person (children up to ${CHILD_MAX_AGE} pay the child price; infants up to ${INFANT_MAX_AGE} travel free) and depend on the season of your tour date, not the day you book.`,
 		`Low season is ${priceSeasonDates('low')}; peak season is ${priceSeasonDates('peak')}.`,
 		...lines,
-		'Private experiences are quoted on request.',
+		privateBoatSentence(),
 		'When you pick a date in the booking flow, you see the price for that date before you pay.',
 	].join(' ');
 }
