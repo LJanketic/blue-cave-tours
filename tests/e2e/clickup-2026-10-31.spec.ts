@@ -358,6 +358,19 @@ test('C5 the step bar promises a payment only where there is one', async ({ page
 	await expect(steps.last()).toContainText('Payment');
 });
 
+test('C5 "Other location" on a pay-now tour switches the step bar to a request, and back', async ({ page }) => {
+	const steps = page.getByRole('list', { name: 'Booking progress' }).getByRole('listitem');
+	await page.goto('/book/blue-cave-hvar-5-islands/private/');
+	await hydrated(page);
+	await page.getByRole('radio', { name: /Other location/ }).check();
+	await expect(steps).toHaveCount(3);
+	await expect(steps.last()).toContainText('Request');
+	await page.getByRole('radio', { name: /meeting point/ }).check();
+	await expect(steps).toHaveCount(4);
+	await expect(steps.nth(2)).toContainText('Review');
+	await expect(steps.last()).toContainText('Payment');
+});
+
 test('C5 without JavaScript, Blue Cave keeps its pay-now form', async ({ browser }) => {
 	const context = await browser.newContext({ javaScriptEnabled: false });
 	const page = await context.newPage();

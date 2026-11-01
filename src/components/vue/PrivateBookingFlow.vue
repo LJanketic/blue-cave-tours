@@ -23,6 +23,7 @@ import { isInSeason, seasonFor } from '../../config/season';
 import { CHARTER_DEFAULT_TIME, CHARTER_EARLIEST_TIME, CHARTER_LATEST_TIME, CHARTER_TIME_RE } from '../../config/charter';
 import { DEFAULT_PICKUP_ID, OTHER_PICKUP_ID, OTHER_PICKUP_MAX, PRIVATE_EXTRAS, PRIVATE_PICKUPS, privatePickup } from '../../config/private';
 import { EMAIL_RE, HONEYPOT_FIELD, PHONE_RE } from '../../lib/contact-validation';
+import { setStepBarRequest } from '../../client/step-bar';
 import type { AgeBands } from '../../types/tour';
 import BookingCalendar from './booking/BookingCalendar.vue';
 import GuestSteppers from './booking/GuestSteppers.vue';
@@ -245,6 +246,10 @@ async function syncTurnstile(on: boolean) {
 	turnstileId = api.render(turnstileBox.value, { sitekey: props.turnstileSiteKey, theme: 'light' });
 }
 watch(isRequest, (on) => void syncTurnstile(on));
+// A quote-only tour's bar is already rendered as a request; only a pay-now tour can switch.
+watch(isRequest, (on) => {
+	if (!props.quoteOnly) setStepBarRequest(on);
+});
 
 const turnstileToken = () => (turnstileId !== undefined ? (turnstileApi()?.getResponse(turnstileId) ?? '') : '');
 const resetTurnstile = () => {
