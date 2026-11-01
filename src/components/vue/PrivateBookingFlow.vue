@@ -9,18 +9,20 @@
  *
  * A pick-up off the list can't be priced here, so it becomes a request
  * instead: "Send request" posts to /api/charter-request and staff reply with
- * a quote and a payment link (the existing charter flow).
+ * a quote and a payment link (the existing charter flow). A tour with no boat
+ * price (quoteOnly) is always such a request; one with no fixed departure
+ * lets the guest pick a start time in the charter window.
  *
  * Without JavaScript the page shows a plain form instead (private.astro).
  */
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { MAX_GUESTS, departureLabel as formatDeparture, guestSummaryFromCounts, parseIsoDate } from '../../lib/booking';
 import { bookingClosed, businessDate, dayClosed } from '../../lib/bookings/dates';
-import { lineItemsTotal, privateLineItems, seasonPriceLabel } from '../../lib/price';
+import { formatEuro, lineItemsTotal, privateLineItems, seasonPriceLabel } from '../../lib/price';
 import { isInSeason, seasonFor } from '../../config/season';
+import { CHARTER_DEFAULT_TIME, CHARTER_EARLIEST_TIME, CHARTER_LATEST_TIME, CHARTER_TIME_RE } from '../../config/charter';
 import { DEFAULT_PICKUP_ID, OTHER_PICKUP_ID, OTHER_PICKUP_MAX, PRIVATE_EXTRAS, PRIVATE_PICKUPS, privatePickup } from '../../config/private';
 import { EMAIL_RE, HONEYPOT_FIELD, PHONE_RE } from '../../lib/contact-validation';
-import { BOOKING_CUTOFF_NOTE } from '../../config/booking';
 import type { AgeBands } from '../../types/tour';
 import BookingCalendar from './booking/BookingCalendar.vue';
 import GuestSteppers from './booking/GuestSteppers.vue';
@@ -32,8 +34,14 @@ import Button from '../ui/Button.vue';
 const props = defineProps<{
 	tourSlug: string;
 	tourTitle: string;
-	/** Departure times the boat can leave at, earliest first (privateDepartureTimes). One time: the tour's fixed departure. */
+	/**
+	 * Departure times the boat can leave at, earliest first (privateDepartureTimes).
+	 * One time: the tour's fixed departure. None (a tour with no fixed departure,
+	 * quote only): the guest picks a start time between the charter limits.
+	 */
 	times: string[];
+	/** No boat price for this tour (src/config/private.ts): the whole booking is a quote request. */
+	quoteOnly?: boolean;
 	/** Check-in for the tour's usual departure, shown when that's the only time. */
 	checkIn?: string;
 	ageBands: AgeBands;
@@ -41,7 +49,6 @@ const props = defineProps<{
 	renderedOn: string;
 	seasonStart: string;
 	seasonEnd: string;
-	seasonLabel: string;
 	/** For a pick-up off the list: the charter route of this tour, and the length to ask for. */
 	charterRoute: string;
 	charterHours: number;
@@ -52,7 +59,9 @@ const props = defineProps<{
 const NOTES_MAX = 500;
 
 const date = ref<string | null>(null);
-const slot = ref(props.times[0] ?? '');
+/** No fixed departure: a free start time, as on the charter form. */
+const freeTime = computed(() => props.times.length === 0);
+const slot = ref(props.times[0] ?? CHARTER_DEFAULT_TIME);
 const adults = ref(2);
 const children = ref(0);
 const infants = ref(0);
@@ -67,8 +76,10 @@ const notes = ref('');
 const startedAt = ref(0);
 const calendar = ref<InstanceType<typeof BookingCalendar> | null>(null);
 
-/** A pick-up off the list: a request for a quote, not a booking. */
-const isRequest = computed(() => pickup.value === OTHER_PICKUP_ID);
+/** A pick-up off the list, or a tour with no boat price: a request for a quote, not a booking. */
+const isOtherPickup = computed(() => pickup.value === OTHER_PICKUP_ID);
+const isRequest = computed(() => Boolean(props.quoteOnly) || isOtherPickup.value);
+const freeTimeOk = computed(() => CHARTER_TIME_RE.test(slot.value) && slot.value >= CHARTER_EARLIEST_TIME && slot.value <= CHARTER_LATEST_TIME);
 
 /*
  * The current moment, known only in the browser (the page is prerendered).
@@ -77,7 +88,7 @@ const isRequest = computed(() => pickup.value === OTHER_PICKUP_ID);
  */
 const now = ref<Date | null>(null);
 let clock: ReturnType<typeof setInterval> | undefined;
-const isClosed = (time: string) => now.value !== null && date.value !== null && bookingClosed(date.value, time, now.value);
+const isClosed = (time: string) => !freeTime.value && now.value !== null && date.value !== null && bookingClosed(date.value, time, now.value);
 const today = computed(() => (now.value ? businessDate(now.value) : props.renderedOn));
 /** A request needs a day's notice (validateCharterRequest), so the calendar closes today for it, as the charter form does. */
 const calendarTimes = computed(() => (isRequest.value ? ['00:00'] : props.times));
@@ -92,6 +103,7 @@ const timeOptions = computed(() => props.times.filter((time) => !isClosed(time))
 const latest = computed(() => props.times[props.times.length - 1] ?? '');
 /** No latest departure set (src/config/private.ts): the boat leaves at the tour's usual time, shown, not chosen. */
 const fixedTime = computed(() => props.times.length === 1);
+const freeTimeHint = `Between ${CHARTER_EARLIEST_TIME} and ${CHARTER_LATEST_TIME}`;
 const departureText = computed(() => (slot.value ? formatDeparture([{ time: props.times[0], checkIn: props.checkIn }], slot.value) : 'Not chosen yet'));
 
 /*
@@ -103,14 +115,22 @@ const priceDate = computed(() => date.value ?? today.value);
 const items = computed(() => privateLineItems(props.tourSlug, priceDate.value, extras.value, isRequest.value ? DEFAULT_PICKUP_ID : pickup.value) ?? []);
 const total = computed(() => lineItemsTotal(items.value));
 const dateSeason = computed(() => (date.value ? seasonFor(date.value) : null));
-const boatPrice = computed(() => items.value[0]?.amount ?? 0);
+const boatPrice = computed(() => items.value[0]?.amount ?? null);
 
 const pickupOptions = [
-	...PRIVATE_PICKUPS.map((p) => ({ value: p.id, label: p.label, sub: p.price ? `+ €${p.price}` : 'Included', icon: p.id === DEFAULT_PICKUP_ID ? 'anchor' : 'building' })),
+	...PRIVATE_PICKUPS.map((p) => ({ value: p.id, label: p.label, sub: p.price ? `+ ${formatEuro(p.price)}` : 'Included', icon: p.id === DEFAULT_PICKUP_ID ? 'anchor' : 'building' })),
 	{ value: OTHER_PICKUP_ID, label: 'Other location', sub: "We'll send you a quote", icon: 'map-2' },
 ];
 
-const pickupLabel = computed(() => (isRequest.value ? pickupPlace.value.trim() || 'Other location' : (privatePickup(pickup.value)?.label ?? '')));
+const notesText = computed(() =>
+	props.quoteOnly
+		? 'Private boat prices for this tour are quoted per request. Nothing is charged now.'
+		: isOtherPickup.value
+			? 'A pick-up off our list is priced in your quote. Nothing is charged now.'
+			: 'The price is for the whole boat with skipper, whatever the number of guests.',
+);
+
+const pickupLabel = computed(() => (isOtherPickup.value ? pickupPlace.value.trim() || 'Other location' : (privatePickup(pickup.value)?.label ?? '')));
 
 const summaryRows = computed(() => {
 	const rows = [
@@ -122,8 +142,9 @@ const summaryRows = computed(() => {
 	];
 	// A request is priced in the quote, so no season line for it.
 	if (dateSeason.value && !isRequest.value) rows.push({ label: 'Price', value: seasonPriceLabel(dateSeason.value) });
-	for (const item of items.value) rows.push({ label: item.label, value: `€${item.amount}` });
-	if (isRequest.value) rows.push({ label: 'Pick-up price', value: 'In your quote' });
+	for (const item of items.value) rows.push({ label: item.label, value: formatEuro(item.amount) });
+	// A quote-only tour says "We'll send you a quote" once, in the total.
+	if (isOtherPickup.value && !props.quoteOnly) rows.push({ label: 'Pick-up price', value: 'In your quote' });
 	return rows;
 });
 
@@ -153,8 +174,8 @@ const missing = computed(() => {
 	const out: string[] = [];
 	if (!date.value) out.push('a date');
 	else if (isRequest.value && date.value <= today.value) out.push("a date from tomorrow on (requests need a day's notice)");
-	else if (!slot.value || isClosed(slot.value)) out.push('a departure time that is still open');
-	if (isRequest.value && !pickupPlace.value.trim()) out.push('where to pick you up');
+	else if (freeTime.value ? !freeTimeOk.value : !slot.value || isClosed(slot.value)) out.push(freeTime.value ? `a departure time between ${CHARTER_EARLIEST_TIME} and ${CHARTER_LATEST_TIME}` : 'a departure time that is still open');
+	if (isOtherPickup.value && !pickupPlace.value.trim()) out.push('where to pick you up');
 	if (!firstName.value.trim()) out.push('your first name');
 	if (!lastName.value.trim()) out.push('your last name');
 	if (!email.value.trim()) out.push('your email');
@@ -176,6 +197,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 /** The charter request's field names, as this form calls them. */
 const REQUEST_FIELDS: Record<string, string> = { time: 'slot', route: 'slot', duration: 'slot' };
 const fieldErrors = ref<Record<string, string>>({});
+/** A typed time outside the charter hours marks the field itself, not only the hint by the button. */
+const slotError = computed(() => fieldErrors.value.slot || (freeTime.value && slot.value && !freeTimeOk.value ? `Choose a time between ${CHARTER_EARLIEST_TIME} and ${CHARTER_LATEST_TIME}.` : undefined));
 const submitError = ref('');
 const sending = ref(false);
 
@@ -209,7 +232,7 @@ function loadTurnstile(): Promise<TurnstileApi | undefined> {
 	return turnstileLoad;
 }
 
-watch(isRequest, async (on) => {
+async function syncTurnstile(on: boolean) {
 	if (!props.turnstileSiteKey) return;
 	if (!on) {
 		if (turnstileId !== undefined) turnstileApi()?.remove(turnstileId);
@@ -220,7 +243,8 @@ watch(isRequest, async (on) => {
 	await nextTick();
 	if (!api || !turnstileBox.value || !isRequest.value || turnstileId !== undefined) return;
 	turnstileId = api.render(turnstileBox.value, { sitekey: props.turnstileSiteKey, theme: 'light' });
-});
+}
+watch(isRequest, (on) => void syncTurnstile(on));
 
 const turnstileToken = () => (turnstileId !== undefined ? (turnstileApi()?.getResponse(turnstileId) ?? '') : '');
 const resetTurnstile = () => {
@@ -248,12 +272,13 @@ async function submit() {
 		if (isRequest.value) {
 			const { ok, json } = await post('/api/charter-request', {
 				route: props.charterRoute,
+				tourSlug: props.tourSlug,
 				date: date.value,
 				time: slot.value,
 				duration: props.charterHours,
 				...guests,
 				...contact,
-				pickup: pickupPlace.value,
+				pickup: isOtherPickup.value ? pickupPlace.value : '',
 				extras: extras.value,
 				[HONEYPOT_FIELD]: '',
 				_startedAt: startedAt.value,
@@ -329,6 +354,8 @@ onMounted(() => {
 	clock = setInterval(() => {
 		now.value = new Date();
 	}, 30_000);
+	// A quote-only tour is a request from the start, so the watch above never fires for it.
+	if (isRequest.value) void syncTurnstile(true);
 	void restore();
 });
 
@@ -346,7 +373,6 @@ onUnmounted(() => clearInterval(clock));
 				:rendered-on="renderedOn"
 				:season-start="seasonStart"
 				:season-end="seasonEnd"
-				:season-label="seasonLabel"
 				:now="now"
 				:departures="calendarTimes"
 			/>
@@ -354,7 +380,21 @@ onUnmounted(() => clearInterval(clock));
 			<p class="flow__status" role="status">{{ dateNotice }}</p>
 
 			<div class="flow__departure">
-				<p v-if="fixedTime" class="flow__line"><i class="ti ti-clock" aria-hidden="true"></i> Departure {{ departureText }}</p>
+				<FormField
+					v-if="freeTime"
+					id="private-time"
+					v-model="slot"
+					label="Preferred departure"
+					name="slot"
+					type="time"
+					:min="CHARTER_EARLIEST_TIME"
+					:max="CHARTER_LATEST_TIME"
+					step="300"
+					required
+					:hint="freeTimeHint"
+					:error="slotError"
+				/>
+				<p v-else-if="fixedTime" class="flow__line"><i class="ti ti-clock" aria-hidden="true"></i> Departure {{ departureText }}</p>
 				<FormField
 					v-else
 					id="private-time"
@@ -367,7 +407,6 @@ onUnmounted(() => clearInterval(clock));
 					:hint="`Leave later if you like, up to ${latest}, in 15-minute steps.`"
 					:error="fieldErrors.slot"
 				/>
-				<p class="flow__cutoff">{{ isRequest ? "Requests need a day's notice." : BOOKING_CUTOFF_NOTE }}</p>
 			</div>
 		</section>
 
@@ -385,7 +424,7 @@ onUnmounted(() => clearInterval(clock));
 				cap-unit="on the boat"
 				:infants-free="false"
 			/>
-			<p v-if="dateSeason" class="flow__season"><i class="ti ti-sun" aria-hidden="true"></i> {{ seasonPriceLabel(dateSeason) }} for your date: €{{ boatPrice }} for the boat</p>
+			<p v-if="dateSeason && boatPrice !== null" class="flow__season"><i class="ti ti-sun" aria-hidden="true"></i> {{ seasonPriceLabel(dateSeason) }} for your date: {{ formatEuro(boatPrice) }} for the boat</p>
 			<p v-if="fieldErrors.adults" class="flow__error" role="alert">{{ fieldErrors.adults }}</p>
 		</section>
 
@@ -401,7 +440,7 @@ onUnmounted(() => clearInterval(clock));
 						<span class="extras__label">{{ extra.label }}</span>
 						<span class="extras__sub">{{ extra.desc }}</span>
 					</span>
-					<span class="extras__price">+ €{{ extra.price }}</span>
+					<span class="extras__price">+ {{ formatEuro(extra.price) }}</span>
 				</label>
 			</fieldset>
 			<p v-if="fieldErrors.extras" class="flow__error" role="alert">{{ fieldErrors.extras }}</p>
@@ -411,7 +450,7 @@ onUnmounted(() => clearInterval(clock));
 			<h2 id="pickup-heading" class="flow__title"><i class="ti ti-map-pin" aria-hidden="true"></i> Pick-up</h2>
 			<p class="flow__sub">Meet the boat on the Riva, or we pick you up.</p>
 			<ChoiceCards v-model="pickup" name="pickup" legend="Pick-up" legend-hidden :options="pickupOptions" />
-			<div v-if="isRequest" class="flow__other">
+			<div v-if="isOtherPickup" class="flow__other">
 				<FormField
 					id="private-pickup-place"
 					v-model="pickupPlace"
@@ -427,40 +466,39 @@ onUnmounted(() => clearInterval(clock));
 
 		<section class="flow__card" aria-labelledby="details-heading">
 			<h2 id="details-heading" class="flow__title"><i class="ti ti-user" aria-hidden="true"></i> Your details</h2>
-			<p class="flow__sub">We'll send your confirmation and any updates here. Fields marked * are required.</p>
+			<p class="flow__sub">We'll send your confirmation and any updates here.</p>
 			<div class="flow__fields">
-				<FormField id="private-first" v-model="firstName" label="First name" name="firstName" autocomplete="given-name" required :error="fieldErrors.firstName" />
-				<FormField id="private-last" v-model="lastName" label="Last name" name="lastName" autocomplete="family-name" required :error="fieldErrors.lastName" />
-				<FormField id="private-email" v-model="email" label="Email" name="email" type="email" autocomplete="email" required :error="fieldErrors.email" />
+				<FormField id="private-first" v-model="firstName" label="First name" name="firstName" autocomplete="given-name" placeholder="Ivan" required :error="fieldErrors.firstName" />
+				<FormField id="private-last" v-model="lastName" label="Last name" name="lastName" autocomplete="family-name" placeholder="Kovač" required :error="fieldErrors.lastName" />
+				<FormField id="private-email" v-model="email" label="Email" name="email" type="email" autocomplete="email" placeholder="ivan@example.com" required :error="fieldErrors.email" />
 				<FormField
 					id="private-phone"
 					v-model="phone"
-					:label="isRequest ? 'Phone' : 'Phone (optional)'"
+					label="Phone"
 					name="phone"
 					type="tel"
 					autocomplete="tel"
 					:required="isRequest"
-					hint="So the skipper can reach you on the day."
+					placeholder="+385 91 234 5678"
 					:error="fieldErrors.phone"
 				/>
 				<FormField
 					id="private-notes"
 					v-model="notes"
 					class="flow__full"
-					label="Anything the crew should know? (optional)"
+					label="Special requests"
 					name="notes"
 					as="textarea"
 					:maxlength="NOTES_MAX"
-					hint="For example, a child seat or a late arrival."
+					placeholder="Accessibility needs, celebrations, anything we should know…"
 					:error="fieldErrors.notes"
 				/>
 			</div>
 			<div v-if="turnstileSiteKey && isRequest" ref="turnstileBox" class="flow__turnstile"></div>
-			<p class="flow__privacy">We use these details only to run your booking. See our <a href="/legal/privacy/">privacy policy</a>.</p>
 		</section>
 
-		<SummaryCard title="Your private experience" :rows="summaryRows" :total="{ label: 'Total (incl. VAT)', value: isRequest ? 'We\'ll send you a quote' : `€${total}` }">
-			<p class="flow__notes">{{ isRequest ? 'A pick-up off our list is priced in your quote. Nothing is charged now.' : 'The price is for the whole boat with skipper, whatever the number of guests.' }}</p>
+		<SummaryCard title="Your private experience" :rows="summaryRows" :total="isRequest ? { label: 'Total', value: 'We\'ll send you a quote' } : { label: 'Total (incl. VAT)', value: formatEuro(total) }">
+			<p class="flow__notes">{{ notesText }}</p>
 		</SummaryCard>
 
 		<div class="flow__actions">
@@ -471,6 +509,7 @@ onUnmounted(() => clearInterval(clock));
 				<template v-if="missing.length">To continue, add {{ missing.join(', ') }}.</template>
 			</p>
 			<p v-if="submitError" class="flow__error" role="alert">{{ submitError }}</p>
+			<p v-if="isRequest" class="flow__privacy">We use your details only to answer your request. See our <a href="/legal/privacy/">privacy policy</a>.</p>
 			<Button :href="`/tours/${tourSlug}/`" variant="secondary" block>← Back to tour</Button>
 			<p class="flow__policy">
 				<i class="ti ti-shield-check" aria-hidden="true"></i>
@@ -610,6 +649,11 @@ onUnmounted(() => clearInterval(clock));
 		grid-column: 1 / -1;
 	}
 
+	/* [DEVIATE, design ClickUp C3]: no visual required markers; required stays on the controls and the hint under the button lists what's missing. */
+	.flow :deep(.form-field-ui__required) {
+		display: none;
+	}
+
 	.flow__turnstile {
 		margin-top: var(--space-4);
 	}
@@ -654,15 +698,10 @@ onUnmounted(() => clearInterval(clock));
 		margin: 0;
 	}
 
-	.flow__cutoff {
-		margin: var(--space-2) 0 0;
-		font-size: var(--font-size-xs);
-		color: var(--color-text-secondary);
-	}
-
 	.flow__privacy {
-		margin: 14px 0 0;
+		margin: 0;
 		font-size: var(--font-size-sm);
+		text-align: center;
 		color: var(--color-text-secondary);
 	}
 

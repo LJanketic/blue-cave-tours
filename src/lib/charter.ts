@@ -66,6 +66,8 @@ export const CHARTER_ERROR_FIELDS: Partial<Record<CharterError, string>> = {
 };
 
 export type CharterRequestInput = CharterRequestDetails & {
+	/** The tour page the request came from (PrivateBookingFlow), checked against the route by charterTourSlug. */
+	tourSlug?: string;
 	email: string;
 	phone: string;
 	notes: string;
@@ -81,6 +83,7 @@ function int(value: unknown, fallback = Number.NaN): number {
 
 /** The posted fields, trimmed and capped. Notes are kept whole so an over-long one is refused, not cut. */
 export function parseCharterRequest(fields: Record<string, unknown>, honeypotField: string): CharterRequestInput {
+	const tourSlug = trimField(fields.tourSlug, 60);
 	return {
 		route: trimField(fields.route, 60),
 		date: trimField(fields.date, 10),
@@ -96,6 +99,7 @@ export function parseCharterRequest(fields: Record<string, unknown>, honeypotFie
 		notes: typeof fields.notes === 'string' ? fields.notes.trim() : '',
 		// From a private experience booking with a pick-up off our list (PrivateBookingFlow).
 		...optionalPickup(fields),
+		...(tourSlug ? { tourSlug } : {}),
 		honeypot: trimField(fields[honeypotField], 200),
 		startedAt: parseStartedAt(fields._startedAt),
 	};

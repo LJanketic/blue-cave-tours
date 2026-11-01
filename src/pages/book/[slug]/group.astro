@@ -66,15 +66,14 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 				renderedOn={renderedOn}
 				seasonStart={SEASON_START}
 				seasonEnd={SEASON_END}
-				seasonLabel={seasonLabel()}
 			/>
 		</div>
 
 		<!-- Without JavaScript: native controls, the same endpoint, a plain form post. -->
 		<form class="no-js" method="post" action="/api/bookings/draft">
 			<input type="hidden" name="tourId" value={tour.slug} />
-			<p class="no-js__note">Fields marked * are required. Tours run {seasonLabel()}.</p>
-			<label>Date *<input type="date" name="date" required min={renderedOn} /></label>
+			<p class="no-js__note">Tours run {seasonLabel()}.</p>
+			<label>Date<input type="date" name="date" required min={renderedOn} /></label>
 			{
 				tour.departures.length > 1 ? (
 					<label>
@@ -89,15 +88,15 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 					<input type="hidden" name="slot" value={tour.departures[0]?.time ?? ''} />
 				)
 			}
-			<label>Adults ({ageBands.adult}) *<select name="adults">{counts(MAX_GUESTS, 1).map((n) => <option selected={n === 2}>{n}</option>)}</select></label>
+			<label>Adults ({ageBands.adult})<select name="adults">{counts(MAX_GUESTS, 1).map((n) => <option selected={n === 2}>{n}</option>)}</select></label>
 			<label>Children ({ageBands.child})<select name="children">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
 			<label>Infants (under {ageBands.infantMaxAge + 1}, free)<select name="infants">{counts(MAX_GUESTS - 1).map((n) => <option>{n}</option>)}</select></label>
 			<p class="no-js__note">Up to {MAX_GUESTS} persons in total, infants included.</p>
-			<label>First name *<input name="firstName" required autocomplete="given-name" /></label>
-			<label>Last name *<input name="lastName" required autocomplete="family-name" /></label>
-			<label>Email *<input name="email" type="email" required autocomplete="email" /></label>
-			<label>Phone (optional)<input name="phone" type="tel" autocomplete="tel" /></label>
-			<label>Anything the crew should know? (optional)<textarea name="notes" maxlength="500"></textarea></label>
+			<label>First name<input name="firstName" required autocomplete="given-name" placeholder="Ivan" /></label>
+			<label>Last name<input name="lastName" required autocomplete="family-name" placeholder="Kovač" /></label>
+			<label>Email<input name="email" type="email" required autocomplete="email" placeholder="ivan@example.com" /></label>
+			<label>Phone<input name="phone" type="tel" autocomplete="tel" placeholder="+385 91 234 5678" /></label>
+			<label>Special requests<textarea name="notes" maxlength="500" placeholder="Accessibility needs, celebrations, anything we should know…"></textarea></label>
 			<button type="submit">Review booking</button>
 		</form>
 	</BookingShell>

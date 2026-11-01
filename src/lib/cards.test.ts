@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { tours } from '../data/tour-catalog';
-import { feeLabel, tourCardBadge, toTourCardDTO } from './cards';
+import { feeLabel, mandatoryFeeLabel, tourCardBadge, toTourCardDTO } from './cards';
 
 describe('tourCardBadge', () => {
 	it('shows at most one badge, by priority', () => {
@@ -32,6 +32,19 @@ describe('feeLabel', () => {
 	it('puts mandatory fees first, and is empty without fees', () => {
 		expect(feeLabel({ additionalFees: [fee('Optional extra', false), fee('Park ticket', true)] })).toBe('+ Park ticket · Optional extra');
 		expect(feeLabel({ additionalFees: [] })).toBeUndefined();
+	});
+});
+
+describe('mandatoryFeeLabel', () => {
+	const fee = (shortText: string, mandatory: boolean) => ({ text: 'x', shortText, mandatory });
+
+	it('keeps only the mandatory fees, with the "+"', () => {
+		expect(mandatoryFeeLabel({ additionalFees: [fee('Optional extra', false), fee('Park ticket', true)] })).toBe('+ Park ticket');
+	});
+
+	it('is empty when every fee is optional (the aside then shows no fee line)', () => {
+		expect(mandatoryFeeLabel({ additionalFees: [fee('Blue Cave entry optional, ticket paid on site', false)] })).toBeUndefined();
+		expect(mandatoryFeeLabel({ additionalFees: [] })).toBeUndefined();
 	});
 });
 

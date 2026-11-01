@@ -74,8 +74,8 @@ describe('booking endpoints', () => {
 		expect(res.status).toBe(303);
 		const id = new URL(res.headers.get('location') as string, 'http://localhost').searchParams.get('id') as string;
 		const booking = await bookings().get(id);
-		// 2 adults × €65, the low-season adult price.
-		expect(booking?.total).toBe(130);
+		// 2 adults × €70, the low-season adult price.
+		expect(booking?.total).toBe(140);
 	});
 
 	it('refuses a guest count above the limit with the guests error, not as a missing count', async () => {
@@ -184,5 +184,22 @@ describe('private experience endpoints', () => {
 			expect(res.status, tourId).toBe(400);
 			expect((await res.json()).code, tourId).toBe('private');
 		}
+	});
+
+	// C5 (ClickUp 31 Oct 2026): every group + private tour now has a private step, but only Blue Cave has a boat price.
+	it.each([
+		['golden-horn-brac-hvar', '08:30'],
+		['blue-lagoon-morning', '09:30'],
+		['blue-lagoon-afternoon', '14:30'],
+		['hvar-red-rocks-pakleni', '10:00'],
+		['dubrovnik-one-way', '10:00'],
+	])('refuses a pay-now private draft of %s at %s (its step only sends a quote request), JSON and plain form', async (tourId, slot) => {
+		const res = await call(postDraft, '/api/bookings/draft', privateBody({ tourId, slot }), 'application/json', fakeCookies());
+		expect(res.status).toBe(400);
+		expect((await res.json()).code).toBe('private');
+		const form = { ...JSON.parse(privateBody({ tourId, slot })), extras: '', adults: '2', children: '0', infants: '0' };
+		const plain = await call(postDraft, '/api/bookings/draft', new URLSearchParams(form).toString(), 'application/x-www-form-urlencoded', fakeCookies());
+		expect(plain.status).toBe(303);
+		expect(plain.headers.get('location')).toBe(`/book/${tourId}/private/?error=private`);
 	});
 });

@@ -102,23 +102,20 @@ test('the morning Blue Lagoon tour suggests its own departure', async ({ page })
 	await expect(page.locator('#charter-time')).toHaveValue('09:30');
 });
 
-test('every "Plan a private experience" button leads to the charter page', async ({ page }) => {
-	// Red Rocks has no private price yet, so its private option is still the request.
+test('a tour\'s "Private experience" button leads to its private step (a quote request) while it has no boat price', async ({ page }) => {
+	// Red Rocks has no private price yet, so its private step asks for a quote.
 	await page.goto('/tours/hvar-red-rocks-pakleni/');
-	const link = page.getByRole('link', { name: /Plan a private experience/ }).first();
-	await expect(link).toHaveAttribute('href', '/private-charter/?tour=hvar-red-rocks-pakleni');
+	const link = page.locator('#book').getByRole('link', { name: 'Private experience', exact: true });
+	await expect(link).toHaveAttribute('href', '/book/hvar-red-rocks-pakleni/private/');
 	await link.click();
 	await hydrated(page);
-	await expect(page.getByRole('radio', { name: /Red Rocks & Pakleni/ })).toBeChecked();
+	await expect(page).toHaveURL(/\/book\/hvar-red-rocks-pakleni\/private\/$/);
+	await expect(page.getByRole('button', { name: /Send request/ })).toBeVisible();
 });
 
-test('a tour booked privately on the site still links to a custom request', async ({ page }) => {
+test('a tour booked privately on the site has no custom-request link on its card (C4)', async ({ page }) => {
 	await page.goto('/tours/blue-cave-hvar-5-islands/');
-	const link = page.getByRole('link', { name: 'Something custom? Plan your own' });
-	await expect(link).toHaveAttribute('href', '/private-charter/?tour=blue-cave-hvar-5-islands');
-	await link.click();
-	await hydrated(page);
-	await expect(page.getByRole('radio', { name: /Blue Cave & Hvar 5 Islands/ })).toBeChecked();
+	await expect(page.locator('#book a[href^="/private-charter/"]')).toHaveCount(0);
 });
 
 test('/book/<tour>/private/ is the private booking page now, not a redirect to the charter page', async ({ request }) => {

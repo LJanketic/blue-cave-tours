@@ -21,7 +21,9 @@ test('Red Rocks offers a group option on request and a private option', async ({
 	// No group price yet (D4b): the group option is an enquiry, not the booking flow.
 	await expect(ctas.filter({ hasText: /group/i })).toHaveAttribute('href', '/contact/?tour=hvar-red-rocks-pakleni&topic=group');
 	await expect(ctas.filter({ hasText: /private/i })).toBeVisible();
-	await expect(page.locator('#book a[href*="/book/"]')).toHaveCount(0);
+	// The private option is the private step (a quote request); there's no group booking step.
+	await expect(ctas.filter({ hasText: /private/i })).toHaveAttribute('href', '/book/hvar-red-rocks-pakleni/private/');
+	await expect(page.locator('#book a[href*="/group/"]')).toHaveCount(0);
 });
 
 test('a group tour on request has no group booking page', async ({ page }) => {
@@ -34,7 +36,7 @@ test('a group tour on request has no group booking page', async ({ page }) => {
 test('the Blue Lagoon morning tour books as a group and offers a private option', async ({ page }) => {
 	await page.goto('/tours/blue-lagoon-morning/');
 	const ctas = page.locator('#book a.tour__cta');
-	await expect(ctas.filter({ hasText: 'Book group tour' })).toHaveAttribute('href', '/book/blue-lagoon-morning/group/');
+	await expect(ctas.filter({ hasText: 'Book group tour tickets' })).toHaveAttribute('href', '/book/blue-lagoon-morning/group/');
 	await expect(ctas.filter({ hasText: /private/i })).toBeVisible();
 });
 

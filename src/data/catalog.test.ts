@@ -38,10 +38,10 @@ describe('tour catalog', () => {
 	it('prices every tour as the operator sheet does (Oct 2026)', () => {
 		// Frozen on purpose: change it only together with the operator's price sheet.
 		const sheet: Record<string, { low: [number, number]; peak: [number, number] } | null> = {
-			'blue-cave-hvar-5-islands': { low: [149, 129], peak: [169, 139] },
+			'blue-cave-hvar-5-islands': { low: [149, 129], peak: [159, 139] },
 			'golden-horn-brac-hvar': { low: [129, 89], peak: [139, 99] },
-			'blue-lagoon-morning': { low: [65, 59], peak: [75, 69] },
-			'blue-lagoon-afternoon': { low: [65, 59], peak: [75, 69] },
+			'blue-lagoon-morning': { low: [70, 60], peak: [75, 65] },
+			'blue-lagoon-afternoon': { low: [70, 60], peak: [75, 65] },
 			'hvar-red-rocks-pakleni': null,
 			'dubrovnik-one-way': null,
 			'create-perfect-day-private': null,

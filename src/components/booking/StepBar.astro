@@ -2,10 +2,12 @@
 type Props = {
 	/** The current step: 2 date & guests, 3 review, 4 payment. Step 1 (tour type) is always done. */
 	current: 1 | 2 | 3 | 4;
+	/** A quote request has no review or payment on the site: it ends by sending the request. */
+	quoteOnly?: boolean;
 };
 
-const { current } = Astro.props;
-const STEPS = ['Tour type', 'Date & guests', 'Review', 'Payment'];
+const { current, quoteOnly = false } = Astro.props;
+const STEPS = quoteOnly ? ['Tour type', 'Date & guests', 'Request'] : ['Tour type', 'Date & guests', 'Review', 'Payment'];
 ---
 
 <!-- Spec §8.1.1. Done steps say "completed" to screen readers; the current one has aria-current. -->

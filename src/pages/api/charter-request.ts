@@ -8,7 +8,7 @@ import {
 	validateCharterRequest,
 	type CharterError,
 } from '../../lib/charter';
-import { routeById } from '../../config/charter';
+import { charterTourSlug, routeById } from '../../config/charter';
 import { jsonResponse } from '../../lib/json-response';
 import { readFormOrJson } from '../../lib/request-body';
 import { checkGlobalLimit, checkRateLimit, clientIp as getClientIp } from '../../lib/rate-limit';
@@ -84,7 +84,7 @@ export const POST: APIRoute = async ({ request }) => {
 				name: joinName(input.firstName, input.lastName),
 				email: asciiEmail(input.email),
 				phone: input.phone,
-				tourSlug: route?.tourSlug ?? '',
+				tourSlug: route ? charterTourSlug(route, input.tourSlug) : '',
 				message: input.notes,
 				charter: {
 					route: input.route,

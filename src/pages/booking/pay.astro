@@ -11,6 +11,7 @@ import Button from '../../components/ui/Button.astro';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 import { getTourBySlug } from '../../lib/tours';
 import { feeLabel } from '../../lib/cards';
+import { formatEuro } from '../../lib/price';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
 import { finalizePaidBooking, isPayable, quoteExpired, recordFailedPayment, termsDueOnPayment } from '../../lib/bookings/service';
@@ -99,11 +100,11 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 				{ label: 'Guests', value: guests },
 				...(booking.pickup ? [{ label: 'Pick-up', value: booking.pickup }] : []),
 				// A private experience booked on the site: the boat and each extra, as charged.
-				...(isPrivate && !isQuote ? (booking.lineItems ?? []).map((item) => ({ label: item.label, value: `€${item.amount}` })) : []),
+				...(isPrivate && !isQuote ? (booking.lineItems ?? []).map((item) => ({ label: item.label, value: formatEuro(item.amount) })) : []),
 				{ label: 'Booking ref', value: booking.ref },
 				...(isPrivate && booking.quoteExpiresAt && payable ? [{ label: 'Quote valid until', value: formatTimestamp(booking.quoteExpiresAt) }] : []),
 			]}
-			total={{ label: 'Total (incl. VAT)', value: `€${booking.total}` }}
+			total={{ label: 'Total (incl. VAT)', value: formatEuro(booking.total) }}
 			note={fee}
 		/>
 
@@ -160,7 +161,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 							<a href={isPrivate ? CANCELLATION_PRIVATE_HREF : '/legal/cancellation/'}>cancellation policy</a> does.
 						</p>
 					)}
-					<Button type="submit" name="outcome" value="success" size="lg" block icon="lock">Pay €{booking.total}</Button>
+					<Button type="submit" name="outcome" value="success" size="lg" block icon="lock">Pay {formatEuro(booking.total)}</Button>
 					<button class="pay__decline" type="submit" name="outcome" value="decline" formnovalidate>Demo: simulate a declined payment</button>
 				</form>
 			)

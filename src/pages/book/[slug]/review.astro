@@ -29,7 +29,7 @@ import {
 	supportsInstantBook,
 	supportsPrivateBook,
 } from '../../../lib/booking';
-import { computeBookingTotal, lineItemsFor, lineItemsTotal, privateLineItems, seasonPriceLabel, seasonalPriceSummary } from '../../../lib/price';
+import { computeBookingTotal, formatEuro, lineItemsFor, lineItemsTotal, privateLineItems, seasonPriceLabel, seasonalPriceSummary } from '../../../lib/price';
 import { seasonFor } from '../../../config/season';
 import { BOOKING_ERRORS, isBookingError } from '../../../lib/bookings/service';
 import { BOOKING_COOKIE, openDraft } from '../../../lib/bookings/session';
@@ -143,13 +143,13 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 				{
 					items.map((item) => (
 						<div>
-							<dt>{isPrivate || (item.amount === 0 && item.unit === 0) ? item.label : `${item.label} (${item.qty} × €${item.unit})`}</dt>
-							<dd>€{item.amount}</dd>
+							<dt>{isPrivate || (item.amount === 0 && item.unit === 0) ? item.label : `${item.label} (${item.qty} × ${formatEuro(item.unit)})`}</dt>
+							<dd>{formatEuro(item.amount)}</dd>
 						</div>
 					))
 				}
 			</dl>
-			<p class="review__total"><span>Total (incl. VAT)</span><span>{total !== null ? `€${total}` : 'On request'}</span></p>
+			<p class="review__total"><span>Total (incl. VAT)</span><span>{total !== null ? formatEuro(total) : 'On request'}</span></p>
 			{isPrivate && <p class="review__fee">The price is for the whole boat with skipper, whatever the number of guests.</p>}
 			{fee && <p class="review__fee">{fee}</p>}
 			{seasonSummary && <p class="review__fee">{seasonSummary}</p>}

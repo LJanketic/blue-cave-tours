@@ -4,7 +4,7 @@ import { tours } from '../data/tour-catalog';
 import { DEFAULT_PICKUP_ID, OTHER_PICKUP_ID, PRIVATE_EXTRAS, PRIVATE_PICKUPS, PRIVATE_TOURS, privateDepartureTimes, privatePickup, privateTour } from './private';
 import { CHARTER_ROUTES } from './charter';
 import { charterUrl } from './routes';
-import { supportsPrivateBook } from '../lib/booking';
+import { offersPrivateFlow, supportsPrivateBook } from '../lib/booking';
 
 describe('privateDepartureTimes', () => {
 	it('is just the tour departure while no latest departure is set', () => {
@@ -51,12 +51,34 @@ describe('PRIVATE_TOURS', () => {
 		expect(PRIVATE_TOURS).toEqual({ 'blue-cave-hvar-5-islands': { boat: { low: 1500, peak: 2000 } } });
 	});
 
-	it('leaves the tours without an operator boat price on request', () => {
+	it('leaves the tours without an operator boat price on request (a quote, not pay now)', () => {
 		for (const slug of ['golden-horn-brac-hvar', 'blue-lagoon-morning', 'blue-lagoon-afternoon', 'hvar-red-rocks-pakleni', 'dubrovnik-one-way', 'create-perfect-day-private']) {
 			expect(privateTour(slug), slug).toBeNull();
 		}
 		// Not fooled by Object.prototype.
 		expect(privateTour('constructor')).toBeNull();
+	});
+});
+
+describe('the private booking step', () => {
+	it('is offered on every group + private tour, paid now only where there is a boat price', () => {
+		const offered = tours.filter(offersPrivateFlow).map((t) => t.slug).sort();
+		expect(offered).toEqual(['blue-cave-hvar-5-islands', 'blue-lagoon-afternoon', 'blue-lagoon-morning', 'dubrovnik-one-way', 'golden-horn-brac-hvar', 'hvar-red-rocks-pakleni']);
+		expect(tours.filter(supportsPrivateBook).map((t) => t.slug)).toEqual(['blue-cave-hvar-5-islands']);
+		// Pay now is a subset of the step.
+		for (const tour of tours.filter(supportsPrivateBook)) expect(offersPrivateFlow(tour), tour.slug).toBe(true);
+	});
+
+	it('is not offered on private-only or group-only tours', () => {
+		expect(offersPrivateFlow({ types: ['private'] })).toBe(false);
+		expect(offersPrivateFlow({ types: ['group'] })).toBe(false);
+		expect(offersPrivateFlow(tours.find((t) => t.slug === 'create-perfect-day-private')!)).toBe(false);
+	});
+
+	it('can send a quote request on every tour that offers it: each has a charter route', () => {
+		for (const tour of tours.filter(offersPrivateFlow)) {
+			expect(CHARTER_ROUTES.some((r) => r.tourSlug === tour.slug || r.aliases?.includes(tour.slug)), tour.slug).toBe(true);
+		}
 	});
 });
 
@@ -80,9 +102,9 @@ describe('extras and pick-ups', () => {
 	});
 });
 
-// /book/<slug>/private/ is a real page for the tours sold privately on the site. The
-// other private tours redirect it to the charter request; a rule for a tour that
-// has the page would never fire (Netlify serves the page), so the two lists are kept apart.
+// /book/<slug>/private/ is a real page for every group + private tour (pay now or a
+// quote request). Private-only tours redirect it to the charter request; a rule for a
+// tour that has the page would never fire (Netlify serves the page), so the two lists are kept apart.
 describe('public/_redirects: private booking steps', () => {
 	const rules = readFileSync(new URL('../../public/_redirects', import.meta.url), 'utf8')
 		.split('\n')
@@ -93,14 +115,15 @@ describe('public/_redirects: private booking steps', () => {
 		return slug ? [[slug, { to, status }] as const] : [];
 	}));
 
-	it('redirects exactly the private tours that are only booked on request, to their charter request', () => {
-		const onRequest = tours.filter((t) => t.types.includes('private') && !supportsPrivateBook(t)).map((t) => t.slug).sort();
+	it('redirects exactly the private tours with no private booking step, to their charter request', () => {
+		const onRequest = tours.filter((t) => t.types.includes('private') && !offersPrivateFlow(t)).map((t) => t.slug).sort();
 		expect([...redirected.keys()].sort()).toEqual(onRequest);
 		for (const [slug, rule] of redirected) expect(rule, slug).toEqual({ to: charterUrl(slug), status: '301' });
 	});
 
-	it('never redirects a tour sold privately on the site, and has no catch-all rule', () => {
+	it('never redirects a tour with a private booking step, and has no catch-all rule', () => {
 		for (const slug of Object.keys(PRIVATE_TOURS)) expect(redirected.has(slug), slug).toBe(false);
+		for (const tour of tours.filter(offersPrivateFlow)) expect(redirected.has(tour.slug), tour.slug).toBe(false);
 		expect(rules.some(([from]) => from.startsWith('/book/:'))).toBe(false);
 	});
 });
