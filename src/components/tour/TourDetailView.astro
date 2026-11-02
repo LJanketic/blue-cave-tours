@@ -10,7 +10,7 @@ import { charterUrl } from '../../config/routes';
 import { CANCELLATION_CARD, CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT } from '../../config/cancellation';
 import { seasonLabel } from '../../config/season';
 import { formatFromPrice } from '../../lib/price';
-import { feeLabel, mandatoryFeeLabel } from '../../lib/cards';
+import { mandatoryFeeLabel } from '../../lib/cards';
 import { meetingPointLines, showsBestseller, tourBreadcrumbs, tourCtas, tourHeadings } from '../../lib/tour-display';
 import { WHY_GO_PRIVATE, WHY_GO_PRIVATE_TOURS } from '../../data/private-tours';
 import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
@@ -55,12 +55,12 @@ const crumbs = tourBreadcrumbs(tour);
 const prices = tour.prices;
 const requestLabel = formatFromPrice(null, tour.priceUnit);
 const unit = tour.priceUnit === 'boat' ? '/ boat' : '/ adult';
-// Mandatory fees with a "+", then optional ones (the Blue Cave ticket most guests add). The mobile bar
-// shows it; the aside doesn't (operator, 31 Oct 2026), the "Additional fees" tile has it in full.
-const feeLine = feeLabel(tour);
-// [DEVIATE, operator ClickUp C4 31 Oct 2026]: optional fees left the card; mandatory ones stay (C-23).
+// [DEVIATE, operator ClickUp C4 31 Oct 2026]: optional fees left the card and the mobile bar; mandatory ones
+// stay (C-23). The "Additional fees" tile has them all in full.
 const asideFeeLine = mandatoryFeeLabel(tour);
 const mandatoryFees = tour.additionalFees.filter((fee) => fee.mandatory);
+// One fixed departure: the page is prerendered, so the script below adds the date in the browser (board 03).
+const fixedTime = tour.departures.length === 1 && /^\d{2}:\d{2}$/.test(tour.departures[0].time) ? tour.departures[0].time : null;
 const nextDeparture =
 	tour.departures.length > 1 ? 'Several departures daily' : (tour.departures[0]?.time ?? 'Time confirmed at booking');
 const duration = tour.duration.replace(/^Approx\.\s*/, '≈ ');
@@ -235,8 +235,8 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 			}
 			<dl class="tour__rows">
 				<div>
-					<dt><i class="ti ti-calendar" aria-hidden="true"></i> Next departure</dt>
-					<dd>{nextDeparture}</dd>
+					<dt><i class="ti ti-calendar" aria-hidden="true"></i> {fixedTime ? 'Next available' : 'Next departure'}</dt>
+					<dd data-next-time={fixedTime}>{nextDeparture}</dd>
 				</div>
 			</dl>
 			<!-- [DEVIATE, legal] §6.3.4: seasonal prices are disclosed in the booking flow and the FAQ (operator, Oct 2026), not here. -->
@@ -286,7 +286,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 				)
 			}
 		</p>
-		{feeLine && <p>{feeLine}</p>}
+		{asideFeeLine && <p>{asideFeeLine}</p>}
 	</MobileActionBar>
 </article>
 
@@ -672,6 +672,13 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 </style>
 
 <script>
+	import { nextAvailableLabel } from '../../lib/next-available';
+
+	for (const value of document.querySelectorAll<HTMLElement>('[data-next-time]')) {
+		const label = nextAvailableLabel(value.dataset.nextTime ?? '');
+		if (label) value.textContent = label;
+	}
+
 	// Read more (handoff D5). Collapses the intro to its clamp, and offers the
 	// button only when that clamp actually hides text; re-checked on resize.
 	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-intro-toggle]')) {

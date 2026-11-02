@@ -211,7 +211,7 @@ describe('private experience (pay now)', () => {
 		const admin = adminBookingEmail(result.booking, 'boss@example.com', 'https://example.test/admin/');
 		expect(admin.subject).toMatch(/^New private experience /);
 		expect(admin.text).not.toMatch(/quote/i);
-		expect(admin.text).toContain('Private boat with skipper (1 × €2000)');
+		expect(admin.text).toContain('Private boat with skipper (1 × €2,000)');
 		expect(bookingConfirmationEmail(result.booking, 'https://example.test').text).toContain('Meeting point:');
 		// Pick-ups come from a quoted "Other location" request today.
 		const pickedUp = { ...result.booking, pickup: 'Villa Sunce, Podstrana' };

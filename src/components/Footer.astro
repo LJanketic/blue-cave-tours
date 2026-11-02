@@ -1,7 +1,7 @@
 ---
 import { IMPRINT } from '../config/legal';
 import { charterUrl } from '../config/routes';
-import { LICENCE_CONFIRMED, SITE_BLURB, SITE_NAME } from '../config/site';
+import { LICENCE_CONFIRMED, SITE_BLURB, SITE_EMAIL, SITE_NAME } from '../config/site';
 
 type Props = { /** Space above the footer, e.g. 'var(--section-gap)'. */ gap?: string };
 
@@ -63,7 +63,14 @@ const COLUMNS = [
 	</div>
 	<div class="site-footer__bottom">
 		<span>&copy; {new Date().getFullYear()} {SITE_NAME}</span>
-		{IMPRINT && <span>{IMPRINT.legalName} · {IMPRINT.address} · OIB {IMPRINT.oib}</span>}
+		{
+			IMPRINT && (
+				<span>
+					{IMPRINT.legalName} · {IMPRINT.address} · OIB {IMPRINT.oib} · MB {IMPRINT.mb} · Djelatnost {IMPRINT.activity} ·{' '}
+					<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>
+				</span>
+			)
+		}
 		{LICENCE_CONFIRMED && <span>Licensed maritime operator · Croatia</span>}
 	</div>
 </footer>
@@ -118,6 +125,10 @@ const COLUMNS = [
 			text-transform: uppercase;
 			letter-spacing: var(--letter-spacing-label);
 			color: var(--color-text-tertiary);
+		}
+
+		.site-footer__bottom a {
+			color: inherit;
 		}
 
 		.site-footer__col ul {
