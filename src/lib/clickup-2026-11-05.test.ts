@@ -47,10 +47,10 @@ describe('Tour sheet, 4 Nov 2026', () => {
 		expect(tour('blue-cave-hvar-5-islands').departures).toEqual([{ time: '07:20' }]);
 		expect(tour('golden-horn-brac-hvar').departures).toEqual([{ time: '09:00', checkIn: '08:45' }]);
 		expect(tour('golden-horn-brac-hvar').durationHours).toBe(8);
-		expect(tour('blue-lagoon-morning').departures).toEqual([{ time: '09:00', checkIn: '08:45' }]);
-		expect(tour('blue-lagoon-morning').returnTime).toBe('13:30');
-		expect(tour('blue-lagoon-afternoon').departures).toEqual([{ time: '14:00', checkIn: '13:45' }]);
-		expect(tour('blue-lagoon-afternoon').returnTime).toBe('18:30');
+		expect(tour('blue-lagoon-morning').departures).toEqual([{ time: '09:30', checkIn: '09:15' }]);
+		expect(tour('blue-lagoon-morning').returnTime).toBe('14:00');
+		expect(tour('blue-lagoon-afternoon').departures).toEqual([{ time: '14:30', checkIn: '14:15' }]);
+		expect(tour('blue-lagoon-afternoon').returnTime).toBe('19:00');
 		expect(tour('hvar-red-rocks-pakleni').durationHours).toBe(9);
 		expect(tour('dubrovnik-one-way').durationHours).toBe(9);
 	});

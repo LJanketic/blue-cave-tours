@@ -101,12 +101,12 @@ const FAQ_NO_FEES = {
 const CAVE_TICKET_PRICES_URL = 'https://bluecave-bisevo.com/wp-content/uploads/2025/04/Cjenik-usluga-Modra-spilja-2025.pdf';
 
 const BLUE_LAGOON_INTRO =
-	'This half-day speedboat tour runs as a morning or an afternoon trip. It takes you to Duga Bay on Čiovo Island, then on to swim in the turquoise waters of the Blue Lagoon near Drvenik, before strolling through the historic streets of Trogir Old Town or the village of Maslinica on Šolta. Along the way there’s time to cool off with a swim, try some snorkelling, or simply unwind on the beach — and you’re back in Split by 13:30 on the morning trip, or by 18:30 on the afternoon one.';
+	'This half-day speedboat tour runs as a morning or an afternoon trip. It takes you to Duga Bay on Čiovo Island, then on to swim in the turquoise waters of the Blue Lagoon near Drvenik, before strolling through the historic streets of Trogir Old Town or the village of Maslinica on Šolta. Along the way there’s time to cool off with a swim, try some snorkelling, or simply unwind on the beach — and you’re back in Split by 14:00 on the morning trip, or by 19:00 on the afternoon one.';
 
 const BLUE_LAGOON_FAQS = [
 	{
 		question: 'Should I pick the morning or the afternoon trip?',
-		answer: 'The morning trip runs 09:00–13:30 and the afternoon trip 14:00–18:30. Mornings are usually calmer and less crowded.',
+		answer: 'The morning trip runs 09:30–14:00 and the afternoon trip 14:30–19:00. Mornings are usually calmer and less crowded.',
 	},
 	{ question: 'Is snorkelling gear included?', answer: 'Yes, snorkelling gear is on board. Bring your own mask if you prefer.' },
 	{
@@ -368,16 +368,16 @@ export const tours: TourDetail[] = [
 		shortDescription:
 			'A relaxed half-day to Duga Bay on Čiovo and the turquoise Blue Lagoon near Drvenik, with a stop in Trogir Old Town or Maslinica.',
 		availability: `Every day, ${seasonMonths()}`,
-		scheduleLabel: 'Half day: 09:00 – 13:30',
-		departure: '08:45 check-in · 09:00 departure',
-		departures: [{ time: '09:00', checkIn: '08:45' }],
+		scheduleLabel: 'Half day: 09:30 – 14:00',
+		departure: '09:15 check-in · 09:30 departure',
+		departures: [{ time: '09:30', checkIn: '09:15' }],
 		duration: 'Approx. 4.5 hours',
 		durationShort: '4.5 h',
 		durationHours: 4.5,
-		returnTime: '13:30',
+		returnTime: '14:00',
 		itineraryKind: 'morning',
 		itineraryLabel: 'Morning itinerary',
-		itinerary: blueLagoonItinerary('09:00', '13:30'),
+		itinerary: blueLagoonItinerary('09:30', '14:00'),
 		overviewHighlights: BLUE_LAGOON_INTRO,
 		introMore: [smallGroup('Your skipper handles the route on the day.')],
 		introCollapsible: true,
@@ -410,16 +410,16 @@ export const tours: TourDetail[] = [
 		shortDescription:
 			'An afternoon half-day to Duga Bay on Čiovo and the turquoise Blue Lagoon near Drvenik, with a stop in Trogir Old Town or Maslinica as the day winds down.',
 		availability: `Every day, ${seasonMonths()}`,
-		scheduleLabel: 'Half day: 14:00 – 18:30',
-		departure: '13:45 check-in · 14:00 departure',
-		departures: [{ time: '14:00', checkIn: '13:45' }],
+		scheduleLabel: 'Half day: 14:30 – 19:00',
+		departure: '14:15 check-in · 14:30 departure',
+		departures: [{ time: '14:30', checkIn: '14:15' }],
 		duration: 'Approx. 4.5 hours',
 		durationShort: '4.5 h',
 		durationHours: 4.5,
-		returnTime: '18:30',
+		returnTime: '19:00',
 		itineraryKind: 'afternoon',
 		itineraryLabel: 'Afternoon itinerary',
-		itinerary: blueLagoonItinerary('14:00', '18:30'),
+		itinerary: blueLagoonItinerary('14:30', '19:00'),
 		overviewHighlights: BLUE_LAGOON_INTRO,
 		introMore: [smallGroup('Your skipper handles the route on the day.')],
 		introCollapsible: true,

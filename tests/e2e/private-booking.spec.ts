@@ -236,7 +236,7 @@ test('the server refuses a tampered time, any extra, a pick-up off the list or a
 		expect(res.status(), JSON.stringify(overrides)).toBe(400);
 		expect((await res.json()).errors, JSON.stringify(overrides)).toHaveProperty(field);
 	}
-	const ineligible = await post({ tourId: 'blue-lagoon-morning', slot: '09:00' });
+	const ineligible = await post({ tourId: 'blue-lagoon-morning', slot: '09:30' });
 	expect(ineligible.status()).toBe(400);
 	expect((await ineligible.json()).code).toBe('private');
 	const ok = await post({ total: 1 });

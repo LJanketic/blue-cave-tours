@@ -39,7 +39,7 @@ const ASIDES: Record<string, Aside> = {
 	'blue-lagoon-morning': {
 		price: 'From €70 / adult',
 		child: 'Children from €60',
-		next: '09:00',
+		next: '09:30',
 		primary: { label: 'Book group tour tickets', href: '/book/blue-lagoon-morning/group/' },
 		secondary: { label: 'Private experience', href: '/book/blue-lagoon-morning/private/', price: null },
 		policy: 'group',
@@ -47,7 +47,7 @@ const ASIDES: Record<string, Aside> = {
 	'blue-lagoon-afternoon': {
 		price: 'From €70 / adult',
 		child: 'Children from €60',
-		next: '14:00',
+		next: '14:30',
 		primary: { label: 'Book group tour tickets', href: '/book/blue-lagoon-afternoon/group/' },
 		secondary: { label: 'Private experience', href: '/book/blue-lagoon-afternoon/private/', price: null },
 		policy: 'group',
@@ -264,15 +264,15 @@ test('C3 the no-JS fallback forms match the islands: labels, placeholders, no as
 	await context.close();
 });
 
-test('C5 Blue Lagoon afternoon private step: a quote request at 14:00', async ({ page }) => {
+test('C5 Blue Lagoon afternoon private step: a quote request at 14:30', async ({ page }) => {
 	await page.goto('/book/blue-lagoon-afternoon/private/');
 	await hydrated(page);
 	await expect(page.getByRole('button', { name: /Send request/ })).toBeVisible();
 	await expect(page.getByRole('button', { name: /Review booking/ })).toHaveCount(0);
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
-	await expect(page.locator('.flow__departure')).toContainText('14:00');
+	await expect(page.locator('.flow__departure')).toContainText('14:30');
 	const summary = page.locator('.summary-card-ui');
-	await expect(summary.locator('.summary-card-ui__row').filter({ hasText: 'Departure' })).toContainText('14:00');
+	await expect(summary.locator('.summary-card-ui__row').filter({ hasText: 'Departure' })).toContainText('14:30');
 	// The quote is said once, in the total, which has no "(incl. VAT)" for a quote.
 	await expect(summary.locator('.summary-card-ui__row').filter({ hasText: /^Price/ })).toHaveCount(0);
 	await expect(summary.locator('.summary-card-ui__total')).toContainText("We'll send you a quote");

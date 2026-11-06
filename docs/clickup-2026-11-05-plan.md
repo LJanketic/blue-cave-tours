@@ -29,6 +29,17 @@ Nothing is committed.
 | FAQs update Issues / FAQ – general ones / Hero Banner texts | In design, Ivan | Deposit vs full payment, private refunds, weather wording, hero texts | Not dev yet: Ivan and Mare are still deciding |
 | To do (Vedro, Mare) | To do | Guest limit 12 vs 14, season start, Red Rocks, sunset, latest departures, custom destinations | Questions for the operator, no dev |
 
+## Update, 6 Nov
+
+Mare's new task "Blue Lagoon vrijeme polaska" (6 Nov, In design) sets the
+Blue Lagoon times to depart 09:30 / 14:30 and return 14:00 / 19:00. That is
+newer than the sheet, so it replaces the sheet's 09:00–13:30 / 14:00–18:30.
+The task names no check-in time, so the usual 15 minutes before applies
+(09:15 / 14:15), and the duration stays 4.5 h. The other two new tasks,
+"Pick up point za private" (10 points, no prices) and "Extras for private"
+(SUP +€35, Seabob +€150, keep champagne, no champagne price), are still in
+design and not built.
+
 ## Decisions taken while implementing
 
 1. **The sheet wins on content.** The user's rule is that ClickUp tasks override
