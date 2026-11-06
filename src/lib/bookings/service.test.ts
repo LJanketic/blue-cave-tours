@@ -246,7 +246,7 @@ describe('finalizePaidBooking', () => {
 
 		// The owner's wording (2026-10-12), with the meeting point as a link to the stand 14 pin.
 		const customer = emails.find((e) => e.kind === 'booking_confirmation');
-		expect(customer?.subject).toBe('Your Hello Blue Cave booking confirmation – Blue Cave, Hvar & 5 islands, Thursday, 15 Jul 2027');
+		expect(customer?.subject).toBe('Your Hello Blue Cave booking confirmation – Blue Cave, Vis & Hvar — Five Islands Tour, Thursday, 15 Jul 2027');
 		expect(customer?.html).toContain(`<a href="${MEETING_POINT_MAP_URL.replace(/&/g, '&amp;')}"`);
 		expect(customer?.html).toContain('Open in Google Maps');
 		const text = customer?.text ?? '';
@@ -263,7 +263,7 @@ describe('finalizePaidBooking', () => {
 			"If we cancel for safety reasons, we'll let you know at least 4 hours before departure.",
 			'See you aboard!',
 			'The Hello Blue Cave team · Hello Blue Cave · Split, Croatia',
-			'example.test · +385 91 988 88 38 · info@hellobluecave.com',
+			'example.test · +385 98 702 250 · info@hellobluecave.com',
 		]) {
 			expect(text).toContain(line);
 		}

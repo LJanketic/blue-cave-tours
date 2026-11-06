@@ -4,8 +4,33 @@ export const SITE_NAME = 'Hello Blue Cave';
 
 export const SITE_EMAIL = 'info@hellobluecave.com';
 
-export const SITE_PHONE = '+385919888838';
-export const SITE_PHONE_DISPLAY = '+385 91 988 88 38';
+/**
+ * The site-wide number (footer, emails, "call us" links, structured data).
+ * ClickUp "Contact Details mobile and whatsapp" (5 Nov 2026): Mare chose
+ * +385 98 702 250 for the footer; the old +385 91 988 88 38 is gone.
+ */
+export const SITE_PHONE = '+38598702250';
+export const SITE_PHONE_DISPLAY = '+385 98 702 250';
+
+export type ContactNumber = { tel: string; display: string; /** Shows the "Fastest response" tag. */ fastest?: boolean };
+
+/**
+ * The three mobile numbers on the contact page, each one for calls and
+ * WhatsApp (operator: "all 3 used for mobile and whatsapp"). Order and the
+ * "Fastest response" tag follow Ivan's contact page design (board 11).
+ */
+export const CONTACT_NUMBERS: readonly ContactNumber[] = [
+	{ tel: '+385994720697', display: '+385 99 472 0697', fastest: true },
+	{ tel: '+38598702250', display: '+385 98 702 250' },
+	{ tel: '+385993899994', display: '+385 99 389 9994' },
+];
+
+/** wa.me link for a number in E.164 form. */
+export const whatsappLink = (tel: string) => `https://wa.me/${tel.replace(/\D/g, '')}`;
+
+/** Instagram (ClickUp "Instagram", 4 Nov 2026: footer and contact page). */
+export const INSTAGRAM_HANDLE = 'hellobluecave';
+export const INSTAGRAM_URL = `https://www.instagram.com/${INSTAGRAM_HANDLE}/`;
 
 /** Where every tour starts. One place for the website and the emails. */
 export const MEETING_POINT_LABEL = 'Riva promenade, stand 14, Split';

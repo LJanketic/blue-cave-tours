@@ -7,7 +7,7 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
  */
 
 const TOUR = 'blue-lagoon-morning';
-const SLOT = '09:30';
+const SLOT = '09:00';
 
 /** A day in the season (1 March to 31 October), a week or more ahead. */
 function seasonDate(): string {
@@ -176,8 +176,8 @@ test('step 2 in the browser: pick a day, fill in, review', async ({ page }) => {
 });
 
 test("step 2 closes today's departure 15 minutes before it leaves (Split time)", async ({ page }) => {
-	// 15 Jul 2027 in Split (UTC+2): booking for the 09:30 boat closes at 09:15.
-	for (const [utc, closed] of [['2027-07-15T07:14:00Z', false], ['2027-07-15T07:15:00Z', true]] as const) {
+	// 15 Jul 2027 in Split (UTC+2): booking for the 09:00 boat closes at 08:45.
+	for (const [utc, closed] of [['2027-07-15T06:44:00Z', false], ['2027-07-15T06:45:00Z', true]] as const) {
 		await page.clock.setFixedTime(new Date(utc));
 		await page.goto(`/book/${TOUR}/group/`);
 		await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);

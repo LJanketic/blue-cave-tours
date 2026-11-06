@@ -19,10 +19,11 @@ describe('tour catalog', () => {
 		for (const tour of tours.filter((t) => t.types.includes('group'))) expect(tour.priceUnit, tour.slug).toBe('person');
 	});
 
-	it('offers every tour as a group and a private tour, except the custom private day (user ruling, 20 Oct 2026)', () => {
-		// Create Your Perfect Day is the "Build your own" private card: no group departure (D4c).
+	it('offers group and private on the scheduled tours; the custom day, Red Rocks and Dubrovnik are private only', () => {
+		// User ruling 20 Oct 2026, then the operator's tour sheet of 4 Nov 2026: Red Rocks and Dubrovnik "Group available: N".
+		const privateOnly = new Set(['create-perfect-day-private', 'hvar-red-rocks-pakleni', 'dubrovnik-one-way']);
 		for (const tour of tours) {
-			expect(tour.types, tour.slug).toEqual(tour.slug === 'create-perfect-day-private' ? ['private'] : ['group', 'private']);
+			expect(tour.types, tour.slug).toEqual(privateOnly.has(tour.slug) ? ['private'] : ['group', 'private']);
 		}
 	});
 

@@ -1,5 +1,5 @@
 ---
-type ItineraryItem = { time?: string; label: string; description?: string; icon: string };
+type ItineraryItem = { time?: string; timeLabel?: string; label: string; description?: string; icon: string };
 type HistoryItem = { year: string; title: string; description: string };
 
 type Props =
@@ -24,7 +24,7 @@ function stopLabel(item: ItineraryItem): string {
 						<i class={`ti ti-${item.icon}`} />
 					</span>
 					<div>
-						{item.time && <p class="timeline-ui__time">{item.time}</p>}
+						{(item.timeLabel ?? item.time) && <p class="timeline-ui__time">{item.timeLabel ?? item.time}</p>}
 						<p class="timeline-ui__label">{stopLabel(item)}</p>
 						{item.description && <p class="timeline-ui__desc">{item.description}</p>}
 					</div>

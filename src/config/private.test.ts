@@ -61,7 +61,7 @@ describe('PRIVATE_TOURS', () => {
 });
 
 describe('the private booking step', () => {
-	it('is offered on every group + private tour, paid now only where there is a boat price', () => {
+	it('is offered on every tour with a fixed private route, paid now only where there is a boat price', () => {
 		const offered = tours.filter(offersPrivateFlow).map((t) => t.slug).sort();
 		expect(offered).toEqual(['blue-cave-hvar-5-islands', 'blue-lagoon-afternoon', 'blue-lagoon-morning', 'dubrovnik-one-way', 'golden-horn-brac-hvar', 'hvar-red-rocks-pakleni']);
 		expect(tours.filter(supportsPrivateBook).map((t) => t.slug)).toEqual(['blue-cave-hvar-5-islands']);
@@ -69,9 +69,8 @@ describe('the private booking step', () => {
 		for (const tour of tours.filter(supportsPrivateBook)) expect(offersPrivateFlow(tour), tour.slug).toBe(true);
 	});
 
-	it('is not offered on private-only or group-only tours', () => {
-		expect(offersPrivateFlow({ types: ['private'] })).toBe(false);
-		expect(offersPrivateFlow({ types: ['group'] })).toBe(false);
+	it('is not offered on group-only tours or the custom day', () => {
+		expect(offersPrivateFlow({ slug: 'x', types: ['group'] })).toBe(false);
 		expect(offersPrivateFlow(tours.find((t) => t.slug === 'create-perfect-day-private')!)).toBe(false);
 	});
 

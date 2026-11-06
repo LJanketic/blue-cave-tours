@@ -35,7 +35,7 @@ test('request, quote, pay: a private experience from start to finish', async ({ 
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Plan your private experience');
 	await expect(page.getByRole('radio', { name: /Blue Lagoon & Trogir/ })).toBeChecked();
 	// The afternoon tour's own departure, not the morning's (the route's usual one).
-	await expect(page.locator('#charter-time')).toHaveValue('14:30');
+	await expect(page.locator('#charter-time')).toHaveValue('14:00');
 	await expect(page.locator('#charter-duration')).toHaveValue('4');
 	// A charter needs a day's notice: today is greyed out (out of season the calendar opens on March, without today).
 	const today = page.locator('.cal__day[aria-current="date"]');
@@ -99,13 +99,13 @@ test('the morning Blue Lagoon tour suggests its own departure', async ({ page })
 	await page.goto('/private-charter/?tour=blue-lagoon-morning');
 	await hydrated(page);
 	await expect(page.getByRole('radio', { name: /Blue Lagoon & Trogir/ })).toBeChecked();
-	await expect(page.locator('#charter-time')).toHaveValue('09:30');
+	await expect(page.locator('#charter-time')).toHaveValue('09:00');
 });
 
-test('a tour\'s "Private experience" button leads to its private step (a quote request) while it has no boat price', async ({ page }) => {
+test('a private tour\'s button leads to its private step (a quote request) while it has no boat price', async ({ page }) => {
 	// Red Rocks has no private price yet, so its private step asks for a quote.
 	await page.goto('/tours/hvar-red-rocks-pakleni/');
-	const link = page.locator('#book').getByRole('link', { name: 'Private experience', exact: true });
+	const link = page.locator('#book').getByRole('link', { name: 'Plan your private tour', exact: true });
 	await expect(link).toHaveAttribute('href', '/book/hvar-red-rocks-pakleni/private/');
 	await link.click();
 	await hydrated(page);

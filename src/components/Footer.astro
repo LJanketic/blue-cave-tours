@@ -1,11 +1,30 @@
 ---
 import { IMPRINT } from '../config/legal';
 import { charterUrl } from '../config/routes';
-import { LICENCE_CONFIRMED, SITE_BLURB, SITE_EMAIL, SITE_NAME } from '../config/site';
+import {
+	INSTAGRAM_HANDLE,
+	INSTAGRAM_URL,
+	LICENCE_CONFIRMED,
+	SITE_BLURB,
+	SITE_EMAIL,
+	SITE_NAME,
+	SITE_PHONE,
+	SITE_PHONE_DISPLAY,
+	whatsappLink,
+} from '../config/site';
 
 type Props = { /** Space above the footer, e.g. 'var(--section-gap)'. */ gap?: string };
 
 const { gap } = Astro.props;
+
+// Board 11 footer (ClickUp "Instagram" and "Contact Details", 4–5 Nov 2026):
+// Instagram, WhatsApp and the mobile number under the blurb. The footer number
+// is the one the operator picked for it (+385 98 702 250).
+const CONTACTS = [
+	{ icon: 'brand-instagram', label: `@${INSTAGRAM_HANDLE}`, href: INSTAGRAM_URL, external: true, sr: 'Instagram' },
+	{ icon: 'brand-whatsapp', label: SITE_PHONE_DISPLAY, href: whatsappLink(SITE_PHONE), external: true, sr: 'WhatsApp' },
+	{ icon: 'device-mobile', label: SITE_PHONE_DISPLAY, href: `tel:${SITE_PHONE}`, external: false, sr: 'Phone' },
+];
 
 // Spec §5.2 and decision D-19 (no "Sunset cruises": there's no such product).
 const COLUMNS = [
@@ -45,6 +64,20 @@ const COLUMNS = [
 				{SITE_NAME}
 			</a>
 			<p>{SITE_BLURB}</p>
+			<ul class="site-footer__contacts" role="list">
+				{
+					CONTACTS.map((c) => (
+						<li>
+							<a href={c.href} {...(c.external ? { target: '_blank', rel: 'noopener' } : {})}>
+								<i class={`ti ti-${c.icon}`} aria-hidden="true" />
+								<span class="sr-only">{c.sr}: </span>
+								{c.label}
+								{c.external && <span class="sr-only"> (opens in a new tab)</span>}
+							</a>
+						</li>
+					))
+				}
+			</ul>
 		</div>
 		{
 			COLUMNS.map((column) => (
@@ -62,11 +95,13 @@ const COLUMNS = [
 		}
 	</div>
 	<div class="site-footer__bottom">
-		<span>&copy; {new Date().getFullYear()} {SITE_NAME}</span>
+		<span>
+			&copy; {new Date().getFullYear()} {SITE_NAME}{IMPRINT && ` · ${IMPRINT.legalName}, ${IMPRINT.address}`}
+		</span>
 		{
 			IMPRINT && (
 				<span>
-					{IMPRINT.legalName} · {IMPRINT.address} · OIB {IMPRINT.oib} · MB {IMPRINT.mb} · Djelatnost {IMPRINT.activity} ·{' '}
+					OIB {IMPRINT.oib}{IMPRINT.mb && ` · MB ${IMPRINT.mb}`}{IMPRINT.activity && ` · Djelatnost ${IMPRINT.activity}`} ·{' '}
 					<a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>
 				</span>
 			)
@@ -115,6 +150,33 @@ const COLUMNS = [
 			font-size: var(--font-size-body-sm);
 			line-height: var(--line-height-body-sm);
 			color: var(--color-text-secondary);
+		}
+
+		.site-footer__contacts {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			margin: var(--space-3) 0 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.site-footer__contacts a {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			font-size: var(--font-size-body-sm);
+			line-height: var(--line-height-body-sm);
+			color: var(--color-text-secondary);
+			text-decoration: none;
+		}
+
+		.site-footer__contacts a:hover {
+			color: var(--color-text-primary);
+		}
+
+		.site-footer__contacts .ti {
+			font-size: var(--font-size-md);
 		}
 
 		/* h2 for a correct outline; styled as the board's small uppercase label. */

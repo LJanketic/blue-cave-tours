@@ -14,9 +14,9 @@
 # → overview. src/data/destinations-redirects.test.ts keeps them in sync.
 /destinations/split             /destinations/    301
 
-# Private-only tours (no group departure, so no /book/<slug>/private/ step; see
+# Private tours with no /book/<slug>/private/ step (only the custom day; see
 # offersPrivateFlow in src/lib/booking.ts): their old private booking step goes to
-# the charter request page. Every group + private tour has a real private step
-# (pay now, or a quote request), so it's not listed. src/config/private.test.ts
+# the charter request page. Every tour with a fixed private route has a real
+# private step (pay now, or a quote request), so it's not listed. src/config/private.test.ts
 # keeps this list in sync. Netlify matches with or without the trailing slash.
 /book/create-perfect-day-private/private    /private-charter/?tour=create-perfect-day-private    301

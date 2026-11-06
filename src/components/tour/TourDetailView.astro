@@ -26,6 +26,8 @@ import StickyAside from '../ui/StickyAside.astro';
 import Button from '../ui/Button.astro';
 import CrownIcon from '../ui/CrownIcon.astro';
 import MobileActionBar from '../ui/MobileActionBar.astro';
+import FAQAccordion from '../vue/FAQAccordion.vue';
+import type { FaqItem } from '../../data/faq';
 
 type Props = { tour: TourDetail };
 
@@ -67,6 +69,9 @@ const duration = tour.duration.replace(/^Approx\.\s*/, '≈ ');
 const showWhyPrivate = WHY_GO_PRIVATE_TOURS.has(tour.slug);
 const meetingPoint = meetingPointLines(tour);
 const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
+// "Questions about the … tour" (operator tour sheet, 4 Nov 2026): the accordion the FAQ page uses.
+const tourFaqs: FaqItem[] = (tour.faqs ?? []).map((faq) => ({ category: 'booking', ...faq }));
+const faqHeading = tour.seoHeadings?.faq ?? `Questions about the ${tour.title}`;
 ---
 
 <article class="tour">
@@ -186,13 +191,47 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 						{meetingPoint.note && <span class="tour__line tour__line--note">{meetingPoint.note}</span>}
 					</InfoTile>
 					<InfoTile label="Season">{seasonLabel()}</InfoTile>
-					{tour.additionalFees.length > 0 && <InfoTile label="Additional fees">{tour.additionalFees.map((fee) => fee.text).join(' ')}</InfoTile>}
+					{
+						tour.additionalFees.length > 0 && (
+							<InfoTile label="Additional fees">
+								{tour.additionalFees.map((fee) => (
+									<span class="tour__line">
+										{fee.text}
+										{fee.url && (
+											<>
+												{' '}
+												<a href={fee.url} target="_blank" rel="noopener">
+													Ticket prices<i class="ti ti-arrow-up-right" aria-hidden="true" />
+													<span class="sr-only"> (opens in a new tab)</span>
+												</a>
+											</>
+										)}
+									</span>
+								))}
+							</InfoTile>
+						)
+					}
+					{tour.preSeasonRoute && <InfoTile label="Pre-season route">{tour.preSeasonRoute}</InfoTile>}
+					{tour.oneWayNote && <InfoTile label="One-way">{tour.oneWayNote}</InfoTile>}
 					{tour.languages && tour.languages.length > 0 && <InfoTile label="Languages">{tour.languages.join(', ')}</InfoTile>}
 					<InfoTile label="What to bring">{tour.whatToBring.join(', ')}</InfoTile>
 					<InfoTile label="Weather">{tour.weather}</InfoTile>
-					<InfoTile label="On board">{tour.importantInfo}</InfoTile>
+					<InfoTile label="Safety">{tour.importantInfo}</InfoTile>
+					{tour.accessibility && <InfoTile label="Accessibility">{tour.accessibility}</InfoTile>}
 				</InfoTileGrid>
 			</section>
+
+			{
+				tourFaqs.length > 0 && (
+					<section class="tour__section" aria-labelledby="tour-faq-heading">
+						<SectionHeader variant="plain" title={faqHeading} id="tour-faq-heading" />
+						<FAQAccordion client:load items={tourFaqs} idPrefix="tour-faq" />
+						<p class="tour__faq-more">
+							<a href="/faq/">More questions? See all FAQs<i class="ti ti-arrow-right" aria-hidden="true" /></a>
+						</p>
+					</section>
+				)
+			}
 
 			{
 				tour.disclaimers.length > 0 && (
@@ -272,7 +311,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 		</StickyAside>
 	</div>
 
-	<MobileActionBar target="book" label={primary.label === 'Book group tour tickets' ? 'Book now' : primary.label === 'Plan your experience' ? 'Plan your experience' : 'Enquire'}>
+	<MobileActionBar target="book" label={primary.label === 'Book group tour tickets' ? 'Book now' : primary.label === 'Plan your experience' || primary.label === 'Plan your private tour' ? primary.label : 'Enquire'}>
 		<p>
 			{
 				prices ? (
@@ -452,6 +491,23 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 		/* Keep the new-tab arrow with its place name. */
 		.tour__line a {
 			white-space: nowrap;
+		}
+
+		.tour__faq-more {
+			margin: var(--space-3) 0 0;
+			font-size: var(--font-size-body-sm);
+		}
+
+		.tour__faq-more a {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			color: var(--color-text-info);
+			text-decoration: none;
+		}
+
+		.tour__faq-more a:hover {
+			text-decoration: underline;
 		}
 
 		.tour__line--note {

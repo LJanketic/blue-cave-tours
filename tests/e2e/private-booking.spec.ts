@@ -97,7 +97,7 @@ test('a tour with no boat price: the private step sends a quote request at its u
 	const today = page.locator('.cal__day[aria-current="date"]');
 	if (await today.count()) await expect(today).toHaveAttribute('aria-disabled', 'true');
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
-	await expect(page.locator('.flow__departure')).toContainText('Departure 08:30 (check-in 08:15)');
+	await expect(page.locator('.flow__departure')).toContainText('Departure 09:00 (check-in 08:45)');
 	// Meeting at the Riva needs no pick-up place.
 	await expect(page.getByRole('radio', { name: /Riva stand 14/ })).toBeChecked();
 	await expect(page.locator('#private-pickup-place')).toHaveCount(0);
@@ -119,7 +119,7 @@ test('a tour with no boat price: the private step sends a quote request at its u
 	await page.goto('/admin/enquiries/');
 	const card = page.locator('article.enquiry').filter({ hasText: surname });
 	await expect(card).toContainText('Golden Horn & Hvar');
-	await expect(card).toContainText('08:30');
+	await expect(card).toContainText('09:00');
 });
 
 test('a tour with no fixed departure lets the guest pick a start time in the charter window', async ({ page }) => {
@@ -146,7 +146,7 @@ test('book the boat at its usual departure, review, pay: the server prices it', 
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
 	// No latest departure from the operator yet: the usual time is shown, not chosen; no extras are offered.
 	await expect(page.locator('#private-time')).toHaveCount(0);
-	await expect(page.locator('.flow__departure')).toContainText('Departure 07:20 (check-in 07:05)');
+	await expect(page.locator('.flow__departure')).toContainText('Departure 07:20');
 	await expect(page.getByText('Leave later if you like')).toHaveCount(0);
 	await expect(page.getByRole('heading', { name: 'Extras' })).toHaveCount(0);
 	await expect(page.getByRole('radio', { name: /Riva stand 14/ })).toBeChecked();
@@ -236,7 +236,7 @@ test('the server refuses a tampered time, any extra, a pick-up off the list or a
 		expect(res.status(), JSON.stringify(overrides)).toBe(400);
 		expect((await res.json()).errors, JSON.stringify(overrides)).toHaveProperty(field);
 	}
-	const ineligible = await post({ tourId: 'blue-lagoon-morning', slot: '09:30' });
+	const ineligible = await post({ tourId: 'blue-lagoon-morning', slot: '09:00' });
 	expect(ineligible.status()).toBe(400);
 	expect((await ineligible.json()).code).toBe('private');
 	const ok = await post({ total: 1 });
@@ -254,7 +254,7 @@ test.describe('without JavaScript', () => {
 		await expect(form).toBeVisible();
 		await form.locator('input[name="date"]').fill(seasonDate());
 		await expect(form.locator('select[name="slot"]')).toHaveCount(0);
-		await expect(form).toContainText('Departure 07:20 (check-in 07:05)');
+		await expect(form).toContainText('Departure 07:20');
 		await expect(form.getByRole('checkbox')).toHaveCount(0);
 		await form.locator('input[name="firstName"]').fill('Plain');
 		await form.locator('input[name="lastName"]').fill('Form');

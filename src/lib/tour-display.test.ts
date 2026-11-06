@@ -44,17 +44,18 @@ describe('tourCtas', () => {
 		expect(tourCtas({ ...blueCave, departures: [] }, links).secondary).toEqual({ label: 'Private experience', href: '/book/blue-cave-hvar-5-islands/private/' });
 	});
 
-	it('sends quote-only private tours to the contact form, with no second button to the same form', () => {
+	it('sends a private-only tour with a fixed route to its private booking step, with no second button', () => {
 		expect(tourCtas({ slug: 'x', types: ['private'], prices: null }, links)).toEqual({
-			primary: { label: 'Enquire about this tour', href: '/contact/?tour=x' },
+			primary: { label: 'Plan your private tour', href: '/book/x/private/' },
 			secondary: null
 		});
 	});
 
-	it.each(['hvar-red-rocks-pakleni', 'dubrovnik-one-way'])('asks about the unpriced group option of %s and opens its private booking step', (slug) => {
+	// Tour sheet 4 Nov 2026: private only ("Plan your private tour" on the AFTER pages).
+	it.each(['hvar-red-rocks-pakleni', 'dubrovnik-one-way'])('plans %s as a private tour through its private booking step', (slug) => {
 		expect(ctas(slug)).toEqual({
-			primary: { label: 'Ask about the group tour', href: `/contact/?tour=${slug}&topic=group` },
-			secondary: { label: 'Private experience', href: `/book/${slug}/private/` }
+			primary: { label: 'Plan your private tour', href: `/book/${slug}/private/` },
+			secondary: null
 		});
 	});
 

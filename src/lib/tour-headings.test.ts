@@ -12,35 +12,35 @@ describe('tourHeadings', () => {
 	it('words every tour page for search', () => {
 		expect(Object.fromEntries(tours.map((t) => [t.slug, headings(t.slug)]))).toEqual({
 			'blue-cave-hvar-5-islands': {
-				about: 'About the Blue Cave, Hvar & 5 islands tour',
+				about: 'About the Blue Cave & Hvar tour',
 				itinerary: 'Tour itinerary — from Split to the Blue Cave, Vis, Hvar and the Pakleni islands',
 				included: "What's included in the tour",
 				notIncluded: "What's not included",
 				goodToKnow: 'Good to know before you go',
 			},
 			'golden-horn-brac-hvar': {
-				about: 'About the Golden Horn, Brač and Hvar tour',
+				about: 'About the Golden Horn & Hvar tour',
 				itinerary: 'Tour itinerary — from Split to Zlatni Rat on Brač, Hvar and the Pakleni islands',
 				included: "What's included in the tour",
 				notIncluded: "What's not included",
 				goodToKnow: 'Good to know before you go',
 			},
 			'hvar-red-rocks-pakleni': {
-				about: 'About the Hvar, Red Rocks & Pakleni islands tour',
+				about: 'About the Red Rocks & Pakleni Islands tour',
 				itinerary: 'Tour itinerary — from Split to Hvar and the Pakleni islands',
 				included: "What's included in the tour",
 				notIncluded: "What's not included",
 				goodToKnow: 'Good to know before you go',
 			},
 			'blue-lagoon-morning': {
-				about: 'About the Blue Lagoon Morning tour',
+				about: 'About the Blue Lagoon morning tour',
 				itinerary: 'Tour itinerary — from Split to the Blue Lagoon and Trogir',
 				included: "What's included in the tour",
 				notIncluded: "What's not included",
 				goodToKnow: 'Good to know before you go',
 			},
 			'blue-lagoon-afternoon': {
-				about: 'About the Blue Lagoon Afternoon tour',
+				about: 'About the Blue Lagoon afternoon tour',
 				itinerary: 'Tour itinerary — from Split to the Blue Lagoon and Trogir',
 				included: "What's included in the tour",
 				notIncluded: "What's not included",

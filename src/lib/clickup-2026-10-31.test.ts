@@ -60,9 +60,9 @@ describe('C1: prices (operator table)', () => {
 
 	it('the FAQ pricing answer has the new prices and age limits, word for word', () => {
 		const answer = pricingAnswer();
-		expect(answer).toContain('Blue Cave, Hvar & 5 islands: €149 per adult and €129 per child in low season, €159 and €139 in peak season.');
-		expect(answer).toContain('Golden Horn, Brač and Hvar: €129 per adult and €89 per child in low season, €139 and €99 in peak season.');
-		expect(answer).toContain('Blue Lagoon (morning or afternoon): €70 per adult and €60 per child in low season, €75 and €65 in peak season.');
+		expect(answer).toContain('Blue Cave, Vis & Hvar — Five Islands: €149 per adult and €129 per child in low season, €159 and €139 in peak season.');
+		expect(answer).toContain('Golden Horn, Brač & Hvar: €129 per adult and €89 per child in low season, €139 and €99 in peak season.');
+		expect(answer).toContain('Blue Lagoon, Drvenik (morning or afternoon): €70 per adult and €60 per child in low season, €75 and €65 in peak season.');
 		expect(answer).toContain('children up to 11 pay the child price; infants up to 3 travel free');
 		// The private Blue Cave boat is paid on the site now, at the operator's price; the rest are quoted.
 		expect(answer).toContain(
@@ -149,8 +149,8 @@ describe('C4/C5: tourCtas for every tour in the catalog, with the site links', (
 			secondary: { label: 'Private experience', href: '/book/golden-horn-brac-hvar/private/' },
 		},
 		'hvar-red-rocks-pakleni': {
-			primary: { label: 'Ask about the group tour', href: '/contact/?tour=hvar-red-rocks-pakleni&topic=group' },
-			secondary: { label: 'Private experience', href: '/book/hvar-red-rocks-pakleni/private/' },
+			primary: { label: 'Plan your private tour', href: '/book/hvar-red-rocks-pakleni/private/' },
+			secondary: null,
 		},
 		'blue-lagoon-morning': {
 			primary: { label: 'Book group tour tickets', href: '/book/blue-lagoon-morning/group/' },
@@ -161,8 +161,8 @@ describe('C4/C5: tourCtas for every tour in the catalog, with the site links', (
 			secondary: { label: 'Private experience', href: '/book/blue-lagoon-afternoon/private/' },
 		},
 		'dubrovnik-one-way': {
-			primary: { label: 'Ask about the group tour', href: '/contact/?tour=dubrovnik-one-way&topic=group' },
-			secondary: { label: 'Private experience', href: '/book/dubrovnik-one-way/private/' },
+			primary: { label: 'Plan your private tour', href: '/book/dubrovnik-one-way/private/' },
+			secondary: null,
 		},
 		'create-perfect-day-private': {
 			primary: { label: 'Plan your experience', href: '/private-charter/?tour=create-perfect-day-private' },
@@ -198,11 +198,13 @@ describe('C5: which tours get the private step, and which pay now', () => {
 
 	it('truth table on synthetic tours', () => {
 		const dep = [{ time: '07:20' }];
-		expect(offersPrivateFlow({ types: ['group', 'private'] })).toBe(true);
-		expect(offersPrivateFlow({ types: ['private', 'group'] })).toBe(true);
-		expect(offersPrivateFlow({ types: ['group'] })).toBe(false);
-		expect(offersPrivateFlow({ types: ['private'] })).toBe(false);
-		expect(offersPrivateFlow({ types: [] })).toBe(false);
+		expect(offersPrivateFlow({ slug: 'x', types: ['group', 'private'] })).toBe(true);
+		expect(offersPrivateFlow({ slug: 'x', types: ['private', 'group'] })).toBe(true);
+		expect(offersPrivateFlow({ slug: 'x', types: ['group'] })).toBe(false);
+		// Since the 4 Nov tour sheet a private-only tour with a fixed route has the step too; only the custom day doesn't.
+		expect(offersPrivateFlow({ slug: 'x', types: ['private'] })).toBe(true);
+		expect(offersPrivateFlow({ slug: 'create-perfect-day-private', types: ['private'] })).toBe(false);
+		expect(offersPrivateFlow({ slug: 'x', types: [] })).toBe(false);
 		// Pay now needs private, a boat price and a fixed departure.
 		expect(supportsPrivateBook({ slug: 'blue-cave-hvar-5-islands', types: ['group', 'private'], departures: dep })).toBe(true);
 		expect(supportsPrivateBook({ slug: 'blue-cave-hvar-5-islands', types: ['group'], departures: dep })).toBe(false);

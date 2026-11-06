@@ -15,14 +15,13 @@ async function hydrated(page: import('@playwright/test').Page) {
 
 const PERFECT_DAY = '/tours/create-perfect-day-private/';
 
-test('Red Rocks offers a group option on request and a private option', async ({ page }) => {
+test('Red Rocks is private only: one "Plan your private tour" button to its private step', async ({ page }) => {
+	// Operator tour sheet, 4 Nov 2026: Group available N.
 	await page.goto('/tours/hvar-red-rocks-pakleni/');
 	const ctas = page.locator('#book a.tour__cta');
-	// No group price yet (D4b): the group option is an enquiry, not the booking flow.
-	await expect(ctas.filter({ hasText: /group/i })).toHaveAttribute('href', '/contact/?tour=hvar-red-rocks-pakleni&topic=group');
-	await expect(ctas.filter({ hasText: /private/i })).toBeVisible();
-	// The private option is the private step (a quote request); there's no group booking step.
-	await expect(ctas.filter({ hasText: /private/i })).toHaveAttribute('href', '/book/hvar-red-rocks-pakleni/private/');
+	await expect(ctas).toHaveCount(1);
+	await expect(ctas).toHaveText('Plan your private tour');
+	await expect(ctas).toHaveAttribute('href', '/book/hvar-red-rocks-pakleni/private/');
 	await expect(page.locator('#book a[href*="/group/"]')).toHaveCount(0);
 });
 

@@ -40,7 +40,7 @@ const draftBody = (overrides: Record<string, unknown> = {}) =>
 	JSON.stringify({
 		tourId: 'blue-lagoon-morning',
 		date: '2027-05-15', // low season
-		slot: '09:30',
+		slot: '09:00',
 		adults: 2,
 		children: 0,
 		infants: 0,
@@ -188,9 +188,9 @@ describe('private experience endpoints', () => {
 
 	// C5 (ClickUp 31 Oct 2026): every group + private tour now has a private step, but only Blue Cave has a boat price.
 	it.each([
-		['golden-horn-brac-hvar', '08:30'],
-		['blue-lagoon-morning', '09:30'],
-		['blue-lagoon-afternoon', '14:30'],
+		['golden-horn-brac-hvar', '09:00'],
+		['blue-lagoon-morning', '09:00'],
+		['blue-lagoon-afternoon', '14:00'],
 		['hvar-red-rocks-pakleni', '10:00'],
 		['dubrovnik-one-way', '10:00'],
 	])('refuses a pay-now private draft of %s at %s (its step only sends a quote request), JSON and plain form', async (tourId, slot) => {

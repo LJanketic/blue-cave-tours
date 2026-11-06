@@ -21,7 +21,7 @@ export const PRICE_BLUE_LAGOON: SeasonalPrices = { low: { adult: 70, child: 60 }
  * that it names exactly the prices the instant-book tours use.
  */
 export const PRICE_LIST: { label: string; prices: SeasonalPrices }[] = [
-	{ label: 'Blue Cave, Hvar & 5 islands', prices: PRICE_BLUE_CAVE },
-	{ label: 'Golden Horn, Brač and Hvar', prices: PRICE_GOLDEN_HORN },
-	{ label: 'Blue Lagoon (morning or afternoon)', prices: PRICE_BLUE_LAGOON },
+	{ label: 'Blue Cave, Vis & Hvar — Five Islands', prices: PRICE_BLUE_CAVE },
+	{ label: 'Golden Horn, Brač & Hvar', prices: PRICE_GOLDEN_HORN },
+	{ label: 'Blue Lagoon, Drvenik (morning or afternoon)', prices: PRICE_BLUE_LAGOON },
 ];
