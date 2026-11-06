@@ -51,9 +51,9 @@ describe('tourJsonLd', () => {
 		expect(touristType({ types: ['group', 'private'] })).toEqual(['Group tour', 'Private tour']);
 		expect(touristType({ types: ['group'] })).toBe('Group tour');
 		expect(touristType({ types: ['private'] })).toBe('Private tour');
-		// Quote-only tours with both types still get both, and still no offer (prices: null).
+		// Quote-only tours get no offer (prices: null); Red Rocks is private only since the 4 Nov 2026 tour sheet.
 		const redRocks = tourJsonLd(getTourBySlug('hvar-red-rocks-pakleni')!, `${SITE}/`);
-		expect(redRocks.touristType).toEqual(['Group tour', 'Private tour']);
+		expect(redRocks.touristType).toBe('Private tour');
 		expect(redRocks.offers).toBeUndefined();
 		expect(tourJsonLd(getTourBySlug('create-perfect-day-private')!, `${SITE}/`).touristType).toBe('Private tour');
 	});

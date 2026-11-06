@@ -119,7 +119,7 @@ const dateSeason = computed(() => (date.value ? seasonFor(date.value) : null));
 const boatPrice = computed(() => items.value[0]?.amount ?? null);
 
 const pickupOptions = [
-	...PRIVATE_PICKUPS.map((p) => ({ value: p.id, label: p.label, sub: p.price ? `+ ${formatEuro(p.price)}` : 'Included', icon: p.id === DEFAULT_PICKUP_ID ? 'anchor' : 'building' })),
+	...PRIVATE_PICKUPS.map((p) => ({ value: p.id, label: p.label, sub: [p.desc, p.price ? `+ ${formatEuro(p.price)}` : 'Included'].filter(Boolean).join(' · '), icon: p.icon ?? (p.id === DEFAULT_PICKUP_ID ? 'anchor' : 'building') })),
 	{ value: OTHER_PICKUP_ID, label: 'Other location', sub: "We'll send you a quote", icon: 'map-2' },
 ];
 
@@ -283,7 +283,8 @@ async function submit() {
 				duration: props.charterHours,
 				...guests,
 				...contact,
-				pickup: isOtherPickup.value ? pickupPlace.value : '',
+				// A listed spot other than the Riva goes by name, so the quote can include it.
+				pickup: isOtherPickup.value ? pickupPlace.value : pickup.value === DEFAULT_PICKUP_ID ? '' : (privatePickup(pickup.value)?.label ?? ''),
 				extras: extras.value,
 				[HONEYPOT_FIELD]: '',
 				_startedAt: startedAt.value,

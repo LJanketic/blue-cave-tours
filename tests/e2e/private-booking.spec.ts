@@ -5,8 +5,8 @@ import { expect, test, type Page } from '@playwright/test';
  * per season, through the group pipeline (sealed cookie → review →
  * /api/bookings → pay). Only Blue Cave is sold this way so far (the other
  * group + private tours use the same step as a quote request), at its usual
- * departure, with no extras and the Riva as the only listed pick-up (only what
- * the operator's doc states). A pick-up off the list becomes a charter request
+ * departure, with the extras and pick-up points of ClickUp 6 Nov 2026 (prices
+ * from Ivan's design). A pick-up off the list becomes a charter request
  * instead. The server prices everything and checks the time, extras and
  * pick-up against its own lists. Email stays in the outbox (the dev server
  * runs with sending off).
@@ -91,13 +91,13 @@ test('a tour with no boat price: the private step sends a quote request at its u
 	const summary = page.locator('.summary-card-ui');
 	await expect(summary.locator('.summary-card-ui__total')).toContainText("We'll send you a quote");
 	await expect(summary).toContainText('Private boat prices for this tour are quoted per request');
-	// No boat price is made up anywhere on the page.
-	await expect(page.locator('form.flow')).not.toContainText('€');
+	// No boat price is made up anywhere: with no extra or paid pick-up chosen, the summary has no amount.
+	await expect(summary).not.toContainText('€');
 	// A request needs a day's notice: today is greyed out.
 	const today = page.locator('.cal__day[aria-current="date"]');
 	if (await today.count()) await expect(today).toHaveAttribute('aria-disabled', 'true');
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
-	await expect(page.locator('.flow__departure')).toContainText('Departure 08:30 (check-in 08:15)');
+	await expect(page.locator('.flow__departure')).toContainText('Departure 09:00 (check-in 08:45)');
 	// Meeting at the Riva needs no pick-up place.
 	await expect(page.getByRole('radio', { name: /Riva stand 14/ })).toBeChecked();
 	await expect(page.locator('#private-pickup-place')).toHaveCount(0);
@@ -119,7 +119,7 @@ test('a tour with no boat price: the private step sends a quote request at its u
 	await page.goto('/admin/enquiries/');
 	const card = page.locator('article.enquiry').filter({ hasText: surname });
 	await expect(card).toContainText('Golden Horn & Hvar');
-	await expect(card).toContainText('08:30');
+	await expect(card).toContainText('09:00');
 });
 
 test('a tour with no fixed departure lets the guest pick a start time in the charter window', async ({ page }) => {
@@ -144,11 +144,11 @@ test('book the boat at its usual departure, review, pay: the server prices it', 
 	await hydrated(page);
 	// A future day (the 07:20 boat closes at 07:05 today).
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
-	// No latest departure from the operator yet: the usual time is shown, not chosen; no extras are offered.
+	// No latest departure from the operator yet: the usual time is shown, not chosen. Extras are optional.
 	await expect(page.locator('#private-time')).toHaveCount(0);
-	await expect(page.locator('.flow__departure')).toContainText('Departure 07:20 (check-in 07:05)');
+	await expect(page.locator('.flow__departure')).toContainText('Departure 07:20');
 	await expect(page.getByText('Leave later if you like')).toHaveCount(0);
-	await expect(page.getByRole('heading', { name: 'Extras' })).toHaveCount(0);
+	await expect(page.getByRole('heading', { name: 'Extras' })).toBeVisible();
 	await expect(page.getByRole('radio', { name: /Riva stand 14/ })).toBeChecked();
 	await page.locator('#private-first').fill('Test');
 	await page.locator('#private-last').fill('Guest');
@@ -223,12 +223,13 @@ test('"Other location" turns the booking into a request for a quote', async ({ p
 	await expect(card).toContainText('07:20');
 });
 
-test('the server refuses a tampered time, any extra, a pick-up off the list or an ineligible tour, and prices nothing from the client', async ({ request }) => {
+test('the server refuses a tampered time, an unknown extra, a pick-up off the list or an ineligible tour, and prices nothing from the client', async ({ request }) => {
 	const post = (overrides: Record<string, unknown>) => request.post('/api/bookings/draft', { data: details(overrides), headers: { Accept: 'application/json', ...ip() } });
 	for (const [overrides, field] of [
 		[{ slot: '07:35' }, 'slot'],
 		[{ slot: '08:30' }, 'slot'],
-		[{ extras: ['champagne'] }, 'extras'],
+		[{ extras: ['helicopter'] }, 'extras'],
+		[{ extras: ['champagne', 'champagne'] }, 'extras'],
 		[{ pickup: 'other' }, 'pickup'],
 		[{ pickup: 'helipad' }, 'pickup'],
 	] as const) {
@@ -254,8 +255,9 @@ test.describe('without JavaScript', () => {
 		await expect(form).toBeVisible();
 		await form.locator('input[name="date"]').fill(seasonDate());
 		await expect(form.locator('select[name="slot"]')).toHaveCount(0);
-		await expect(form).toContainText('Departure 07:20 (check-in 07:05)');
-		await expect(form.getByRole('checkbox')).toHaveCount(0);
+		await expect(form).toContainText('Departure 07:20');
+		// The extras are offered, unticked: the boat alone is booked.
+		await expect(form.getByRole('checkbox')).toHaveCount(3);
 		await form.locator('input[name="firstName"]').fill('Plain');
 		await form.locator('input[name="lastName"]').fill('Form');
 		await form.locator('input[name="email"]').fill('plain@example.com');

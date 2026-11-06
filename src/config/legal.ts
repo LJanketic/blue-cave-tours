@@ -12,8 +12,11 @@ export const LEGAL_UPDATED = '19 October 2026';
  * controller (C-6, D-18): legal name, address, OIB, register. Supplied by the
  * owner in the 19 October 2026 terms. Set it to null to hide them everywhere.
  */
-export const IMPRINT: { legalName: string; address: string; oib: string; register?: string } | null = {
+export const IMPRINT: { legalName: string; address: string; oib: string; register?: string; mb?: string; activity?: string } | null = {
 	legalName: 'Misericordia d.o.o.',
 	address: 'Vukovarska 123, Split, Croatia',
 	oib: '14927048054',
+	// Operator's company details for the footer (ClickUp "Company details (footer)"), wording as supplied.
+	mb: '04213815',
+	activity: '79110, Djelatnosti putničkih agencija',
 };

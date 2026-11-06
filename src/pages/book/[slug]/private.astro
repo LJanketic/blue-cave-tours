@@ -127,7 +127,7 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 			{
 				PRIVATE_EXTRAS.length > 0 && (
 					<fieldset>
-						<legend>Extras (optional)</legend>
+						<legend>Extras</legend>
 						{PRIVATE_EXTRAS.map((extra) => <label class="no-js__check"><input type="checkbox" name={`extra_${extra.id}`} value="yes" /> {extra.label} (+ {formatEuro(extra.price)})</label>)}
 					</fieldset>
 				)

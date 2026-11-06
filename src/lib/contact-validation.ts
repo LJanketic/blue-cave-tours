@@ -22,7 +22,7 @@ export const HONEYPOT_FIELD = 'company';
 /** The Subject select (D-10), with the board's wording; `topic` is what's stored. */
 export const CONTACT_TOPICS = [
 	{ id: 'general', label: 'General enquiry' },
-	{ id: 'group', label: 'Group booking question' },
+	{ id: 'group', label: 'Group Tour enquiry' },
 	{ id: 'charter', label: 'Private experience enquiry' },
 	{ id: 'change', label: 'Cancellation or rescheduling' },
 	{ id: 'feedback', label: 'Feedback or complaint' },

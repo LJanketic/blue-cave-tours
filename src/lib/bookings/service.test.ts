@@ -127,7 +127,7 @@ describe('private experience (pay now)', () => {
 		pickups: [{ id: 'riva', label: 'Riva', price: 0 }, { id: 'test-pickup', label: 'Test pick-up', price: 25 }],
 	};
 
-	it('takes only the usual departure, no extras, and only the Riva, as the config stands', () => {
+	it('takes only the usual departure, and only listed extras and pick-ups, as the config stands', () => {
 		const check = (over: Partial<PrivateBookingInput>) => validatePrivateBookingInput(tour, { ...privateInput, ...over }, NOW);
 		expect(check({})).toBeNull();
 		// No latest departure from the operator yet: any other time is refused.
@@ -135,8 +135,10 @@ describe('private experience (pay now)', () => {
 		expect(check({ slot: '08:30' })).toBe('slot');
 		expect(check({ slot: '07:05' })).toBe('slot');
 		expect(check({ slot: null })).toBe('slot');
-		// No extras are offered yet: any id is refused.
-		expect(check({ extras: ['champagne'] })).toBe('extras');
+		// Extras and pick-ups from the lists (ClickUp 6 Nov 2026); anything else is refused.
+		expect(check({ extras: ['champagne', 'sup', 'seabob'], pickup: 'trogir' })).toBeNull();
+		expect(check({ extras: ['helicopter'] })).toBe('extras');
+		expect(check({ extras: ['sup', 'sup'] })).toBe('extras');
 		expect(check({ pickup: 'other' })).toBe('pickup');
 		expect(check({ pickup: 'moon' })).toBe('pickup');
 		expect(check({ adults: 0 })).toBe('guests');
@@ -211,7 +213,7 @@ describe('private experience (pay now)', () => {
 		const admin = adminBookingEmail(result.booking, 'boss@example.com', 'https://example.test/admin/');
 		expect(admin.subject).toMatch(/^New private experience /);
 		expect(admin.text).not.toMatch(/quote/i);
-		expect(admin.text).toContain('Private boat with skipper (1 × €2000)');
+		expect(admin.text).toContain('Private boat with skipper (1 × €2,000)');
 		expect(bookingConfirmationEmail(result.booking, 'https://example.test').text).toContain('Meeting point:');
 		// Pick-ups come from a quoted "Other location" request today.
 		const pickedUp = { ...result.booking, pickup: 'Villa Sunce, Podstrana' };
@@ -246,7 +248,7 @@ describe('finalizePaidBooking', () => {
 
 		// The owner's wording (2026-10-12), with the meeting point as a link to the stand 14 pin.
 		const customer = emails.find((e) => e.kind === 'booking_confirmation');
-		expect(customer?.subject).toBe('Your Hello Blue Cave booking confirmation – Blue Cave, Hvar & 5 islands, Thursday, 15 Jul 2027');
+		expect(customer?.subject).toBe('Your Hello Blue Cave booking confirmation – Blue Cave, Vis & Hvar — Five Islands Tour, Thursday, 15 Jul 2027');
 		expect(customer?.html).toContain(`<a href="${MEETING_POINT_MAP_URL.replace(/&/g, '&amp;')}"`);
 		expect(customer?.html).toContain('Open in Google Maps');
 		const text = customer?.text ?? '';
@@ -263,7 +265,7 @@ describe('finalizePaidBooking', () => {
 			"If we cancel for safety reasons, we'll let you know at least 4 hours before departure.",
 			'See you aboard!',
 			'The Hello Blue Cave team · Hello Blue Cave · Split, Croatia',
-			'example.test · +385 91 988 88 38 · info@hellobluecave.com',
+			'example.test · +385 98 702 250 · info@hellobluecave.com',
 		]) {
 			expect(text).toContain(line);
 		}

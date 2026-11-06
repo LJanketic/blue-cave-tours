@@ -13,9 +13,9 @@ describe('price list (FAQ)', () => {
 
 	it('ties each label to the tours it prices, and together they are the instant-book tours', () => {
 		const slugsByLabel: Record<string, string[]> = {
-			'Blue Cave, Hvar & 5 islands': ['blue-cave-hvar-5-islands'],
-			'Golden Horn, Brač and Hvar': ['golden-horn-brac-hvar'],
-			'Blue Lagoon (morning or afternoon)': ['blue-lagoon-morning', 'blue-lagoon-afternoon'],
+			'Blue Cave, Vis & Hvar — Five Islands': ['blue-cave-hvar-5-islands'],
+			'Golden Horn, Brač & Hvar': ['golden-horn-brac-hvar'],
+			'Blue Lagoon, Drvenik (morning or afternoon)': ['blue-lagoon-morning', 'blue-lagoon-afternoon'],
 		};
 		expect(PRICE_LIST.map((p) => p.label).sort()).toEqual(Object.keys(slugsByLabel).sort());
 		for (const { label, prices } of PRICE_LIST) {

@@ -45,7 +45,8 @@ function parseDurationHours(duration: string): number | null {
 
 /** The booking flow's old slot parser: only "HH:MM check-in · HH:MM departure" counted as a fixed time. */
 function parseDepartureTime(departure: string): string | null {
-	return departure.match(/\d{2}:\d{2}\s+check-in.*?(\d{2}:\d{2})\s+departure/i)?.[1] ?? null;
+	// A departure with no check-in (Blue Cave since 5 Nov 2026: "07:20 departure, please be there on time") starts with its time.
+	return departure.match(/\d{2}:\d{2}\s+check-in.*?(\d{2}:\d{2})\s+departure/i)?.[1] ?? departure.match(/^(\d{2}:\d{2})\s+departure/i)?.[1] ?? null;
 }
 
 function oldIsShortTour(tour: (typeof tours)[number]): boolean {
@@ -82,9 +83,11 @@ describe('catalog migration (PR 1b)', () => {
 				expect(tour.tags.includes('sunset')).toBe(oldIsSunsetTour(tour));
 			});
 
-			it('itinerary times are the ones written at the start of each step', () => {
+			it('itinerary labels no longer repeat the time the stop shows', () => {
+				// Since the 4 Nov 2026 tour sheet the time (or timeLabel) is its own field.
 				for (const step of tour.itinerary) {
-					expect(step.time ?? null).toBe(step.label.match(/^(\d{2}:\d{2}) /)?.[1] ?? null);
+					const shown = step.timeLabel ?? step.time;
+					if (shown) expect(step.label.startsWith(shown), step.label).toBe(false);
 				}
 			});
 		});

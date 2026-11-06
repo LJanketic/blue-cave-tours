@@ -10,6 +10,7 @@ import { durationLabel, routeById } from '../../config/charter';
 import { formatTimestamp } from '../bookings/dates';
 import { IMPRINT, TERMS_VERSION } from '../../config/legal';
 import { privateExtra } from '../../config/private';
+import { formatEuro } from '../price';
 
 export function escapeHtml(value: string): string {
 	return value
@@ -102,8 +103,8 @@ function bookingRows(booking: Booking): Row[] {
 /** The booking's charges as label/value rows: "Champagne welcome (1 × €40)", €40. */
 function lineItemRows(booking: Booking): Row[] {
 	return (booking.lineItems ?? []).map((item) => [
-		item.qty > 1 || item.unit > 0 ? `${item.label} (${item.qty} × €${item.unit})` : item.label,
-		`€${item.amount}`,
+		item.qty > 1 || item.unit > 0 ? `${item.label} (${item.qty} × ${formatEuro(item.unit)})` : item.label,
+		formatEuro(item.amount),
 	]);
 }
 
@@ -111,7 +112,7 @@ function lineItemRows(booking: Booking): Row[] {
 function paymentRows(booking: Booking, audience: 'customer' | 'admin'): Row[] {
 	const demo = PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : '';
 	const rows: Row[] = [
-		['Total paid (incl. VAT)', `€${booking.total}${demo}`],
+		['Total paid (incl. VAT)', `${formatEuro(booking.total)}${demo}`],
 		['Paid with', booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card'],
 	];
 	if (booking.invoice) {
@@ -146,7 +147,7 @@ function detailsTable(rows: Row[]): string {
 function bookingTermsLines(booking: Booking, siteOrigin: string): { rows: Row[]; paragraphs: string[] } {
 	const tour = getTourBySlug(booking.tourSlug);
 	const rows: Row[] = lineItemRows(booking);
-	rows.push(['Total (incl. VAT)', `€${booking.total}${PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : ''}`]);
+	rows.push(['Total (incl. VAT)', `${formatEuro(booking.total)}${PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : ''}`]);
 	for (const fee of tour?.additionalFees ?? []) {
 		rows.push([fee.mandatory ? 'Not included' : 'Extra', fee.amountLabel ? `${fee.shortText} (${fee.amountLabel})` : fee.shortText]);
 	}
@@ -187,7 +188,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 	const date = formatBookingDate(booking.date);
 	const departure = booking.slot || 'To be confirmed';
 	const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
-	const total = `€${booking.total} — ${PAYMENT_STATUS_TEXT[booking.paymentStatus]}`;
+	const total = `${formatEuro(booking.total)} — ${PAYMENT_STATUS_TEXT[booking.paymentStatus]}`;
 	const website = siteOrigin.replace(/^https?:\/\//, '');
 	const groupNote = booking.pickup
 		? `The boat and skipper are yours for the day. We pick you up at ${booking.pickup}, and confirm the pick-up time with you before your departure.`
@@ -386,7 +387,7 @@ export function charterQuoteEmail(booking: Booking, note: string, payUrl: string
 		...(booking.durationHours ? ([['Duration', durationLabel(booking.durationHours)]] as Row[]) : []),
 		['Guests', guestSummaryFromCounts(booking.adults, booking.children, booking.infants)],
 		...(booking.pickup ? ([['Pick-up', booking.pickup]] as Row[]) : []),
-		['Price (incl. VAT)', `€${booking.total}${PAYMENTS_ARE_DEMO ? ' (demo, no money is taken)' : ''}`],
+		['Price (incl. VAT)', `${formatEuro(booking.total)}${PAYMENTS_ARE_DEMO ? ' (demo, no money is taken)' : ''}`],
 		...(validUntil ? ([['Valid until', `${validUntil} (Split time)`]] as Row[]) : []),
 	];
 	const policyUrl = `${siteOrigin}${CANCELLATION_PRIVATE_HREF}`;
@@ -394,7 +395,7 @@ export function charterQuoteEmail(booking: Booking, note: string, payUrl: string
 	const replaces = 'This quote replaces our earlier one, whose payment link no longer works.';
 	const button =
 		`<tr><td style="padding:4px 0 20px"><a href="${escapeHtml(payUrl)}" style="display:inline-block;background:${BRAND_COLOR};color:#ffffff;` +
-		`font-size:15px;font-weight:600;text-decoration:none;padding:12px 22px;border-radius:8px">Review and pay €${booking.total}</a></td></tr>`;
+		`font-size:15px;font-weight:600;text-decoration:none;padding:12px 22px;border-radius:8px">Review and pay ${formatEuro(booking.total)}</a></td></tr>`;
 	const html = layout(
 		'',
 		`${PAYMENTS_ARE_DEMO ? `<strong>This is a demo quote. No payment will be taken.</strong><br><br>` : ''}Dear ${escapeHtml(booking.firstName)},<br><br>` +

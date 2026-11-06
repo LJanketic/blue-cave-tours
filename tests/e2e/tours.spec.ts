@@ -99,7 +99,7 @@ test('every tour page opens its gallery on a real photo and has no Highlights se
 
 test('Read more: the whole intro is in the HTML, collapsed to a preview until the button opens it', async ({ page, request }) => {
 	const html = await (await request.get('/tours/blue-cave-hvar-5-islands/')).text();
-	expect(html).toContain('before cruising back to Split in the late afternoon');
+	expect(html).toContain('before cruising back to Split as the sun dips over the islands');
 	await page.goto('/tours/blue-cave-hvar-5-islands/');
 	const intro = page.locator('#intro-body');
 	const button = page.locator('.tour__more');
@@ -126,7 +126,7 @@ test('Read more: without JavaScript the full intro shows and there is no button'
 
 test('tour pages have search-worded section headings', async ({ page }) => {
 	await page.goto('/tours/blue-cave-hvar-5-islands/');
-	await expect(page.getByRole('heading', { level: 2, name: 'About the Blue Cave, Hvar & 5 islands tour' })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 2, name: 'About the Blue Cave & Hvar tour' })).toBeVisible();
 	await expect(page.getByRole('heading', { level: 2, name: /^Tour itinerary — from Split to the Blue Cave/ })).toBeVisible();
 	await expect(page.getByRole('heading', { level: 2, name: "What's included in the tour" })).toBeVisible();
 	await expect(page.getByRole('heading', { level: 2, name: 'Good to know before you go' })).toBeVisible();
@@ -140,7 +140,7 @@ test('booking a tour with one fixed departure: no time line under the calendar, 
 	// No cut-off note under the calendar (design).
 	await expect(departure).not.toContainText('Online booking closes');
 	await expect(page.getByRole('radiogroup', { name: 'Departure time' })).toHaveCount(0);
-	await expect(page.locator('.summary-card-ui__row').filter({ hasText: 'Departure' })).toContainText('07:20 (check-in 07:05)');
+	await expect(page.locator('.summary-card-ui__row').filter({ hasText: 'Departure' })).toContainText('07:20');
 });
 
 test.describe('phone', () => {

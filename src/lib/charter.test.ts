@@ -203,7 +203,7 @@ describe('charter request → quote → payment', () => {
 		await enquiries().update(enquiry.id, (e) => ({ ...e, charter: { ...e.charter!, pickup: 'Villa Sunce, Podstrana', extras: ['champagne'] } }));
 		const { booking } = (await sendCharterQuote(enquiry.id, quote, '', 'Admin', 'http://localhost', NOW)) as { booking: Booking };
 		expect(booking.pickup).toBe('Villa Sunce, Podstrana');
-		expect(booking.staffNotes.map((n) => n.text)).toEqual(['Note sent with the quote: Lunch stop in Hvar town.', 'Extras asked for: champagne']);
+		expect(booking.staffNotes.map((n) => n.text)).toEqual(['Note sent with the quote: Lunch stop in Hvar town.', 'Extras asked for: Champagne welcome']);
 		const mail = (await outbox().list()).find((m) => m.kind === 'charter_quote');
 		expect(mail?.text).toContain('Pick-up: Villa Sunce, Podstrana');
 	});

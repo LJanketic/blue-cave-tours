@@ -31,7 +31,7 @@ const ASIDES: Record<string, Aside> = {
 	'golden-horn-brac-hvar': {
 		price: 'From €129 / adult',
 		child: 'Children from €89',
-		next: '08:30',
+		next: '09:00',
 		primary: { label: 'Book group tour tickets', href: '/book/golden-horn-brac-hvar/group/' },
 		secondary: { label: 'Private experience', href: '/book/golden-horn-brac-hvar/private/', price: null },
 		policy: 'group',
@@ -53,20 +53,22 @@ const ASIDES: Record<string, Aside> = {
 		policy: 'group',
 	},
 	'hvar-red-rocks-pakleni': {
-		price: 'Price on request',
+		// Private only since the operator's tour sheet of 4 Nov 2026.
+		price: 'On request',
 		child: null,
 		next: 'Time confirmed at booking',
-		primary: { label: 'Ask about the group tour', href: '/contact/?tour=hvar-red-rocks-pakleni&topic=group' },
-		secondary: { label: 'Private experience', href: '/book/hvar-red-rocks-pakleni/private/', price: null },
-		policy: 'group',
+		primary: { label: 'Plan your private tour', href: '/book/hvar-red-rocks-pakleni/private/' },
+		secondary: null,
+		policy: 'private',
 	},
 	'dubrovnik-one-way': {
-		price: 'Price on request',
+		// Private only since the operator's tour sheet of 4 Nov 2026.
+		price: 'On request',
 		child: null,
 		next: 'Time confirmed at booking',
-		primary: { label: 'Ask about the group tour', href: '/contact/?tour=dubrovnik-one-way&topic=group' },
-		secondary: { label: 'Private experience', href: '/book/dubrovnik-one-way/private/', price: null },
-		policy: 'group',
+		primary: { label: 'Plan your private tour', href: '/book/dubrovnik-one-way/private/' },
+		secondary: null,
+		policy: 'private',
 	},
 	'create-perfect-day-private': {
 		price: 'On request',
@@ -78,13 +80,18 @@ const ASIDES: Record<string, Aside> = {
 	},
 };
 
+/** A fixed departure gets its date in the browser ("Mon, 1 Mar, 07:20"); the date moves with the clock. */
+function nextValue(a: Aside): string | RegExp {
+	return /^\d{2}:\d{2}$/.test(a.next) ? new RegExp(`^(Today|Tomorrow|\\w{3}, \\d{1,2} \\w{3}), ${a.next}$`) : a.next;
+}
+
 /** The visible lines of the card, top to bottom (the design: price, children, next departure, the buttons, the policy). */
-function expectedLines(a: Aside): string[] {
+function expectedLines(a: Aside, next: string): string[] {
 	return [
 		a.price,
 		...(a.child ? [a.child] : []),
-		'Next departure',
-		a.next,
+		/^\d{2}:\d{2}$/.test(a.next) ? 'Next available' : 'Next departure',
+		next,
 		a.primary.label,
 		...(a.secondary ? [a.secondary.price ? `${a.secondary.label} ${a.secondary.price}` : a.secondary.label] : []),
 		a.policy === 'group' ? 'Free cancellation up to 48h before' : 'Private experiences have their own cancellation terms',
@@ -99,7 +106,7 @@ for (const [slug, aside] of Object.entries(ASIDES)) {
 		await expect(book.locator('.tour__price')).toHaveText(aside.price, { useInnerText: true });
 		if (aside.child) await expect(book.locator('.tour__child')).toHaveText(aside.child);
 		else await expect(book.locator('.tour__child')).toHaveCount(0);
-		await expect(book.locator('.tour__rows dd')).toHaveText(aside.next);
+		await expect(book.locator('.tour__rows dd')).toHaveText(nextValue(aside));
 
 		const primary = book.locator('a.tour__cta:not(.tour__cta--secondary)');
 		await expect(primary).toHaveCount(1);
@@ -142,7 +149,8 @@ for (const [slug, aside] of Object.entries(ASIDES)) {
 		// "Book now" is the visually hidden heading.
 		await expect(book.locator('#book-heading')).toHaveText('Book now');
 		const text = squash((await book.innerText()).replace(/^\s*Book now\s*/, ''));
-		expect(text).toBe(expectedLines(aside).join(' '));
+		const next = await book.locator('.tour__rows dd').innerText();
+		expect(text).toBe(expectedLines(aside, next).join(' '));
 	});
 }
 
@@ -269,7 +277,8 @@ test('C5 Blue Lagoon afternoon private step: a quote request at 14:30', async ({
 	await expect(summary.locator('.summary-card-ui__row').filter({ hasText: /^Price/ })).toHaveCount(0);
 	await expect(summary.locator('.summary-card-ui__total')).toContainText("We'll send you a quote");
 	await expect(summary.locator('.summary-card-ui__total')).not.toContainText('incl. VAT');
-	await expect(page.locator('form.flow')).not.toContainText('€');
+	// No boat price anywhere: with no extra or paid pick-up chosen, the summary has no amount.
+	await expect(summary).not.toContainText('€');
 	// Phone is required for a request, labelled without "(optional)".
 	await expect(page.locator('#private-phone')).toHaveAttribute('required', '');
 	await expect(page.locator('label[for="private-phone"]')).not.toContainText('optional');
@@ -396,4 +405,19 @@ test('C1 the group flow prices a low-season Blue Lagoon day at the new prices', 
 	await expect(flow).toContainText('Age 4–11');
 	await expect(flow).toContainText('Under 4 · free');
 	await expect(flow).not.toContainText('Age 18+');
+});
+
+test('follow-up: phones show no optional fee line in the bottom bar', async ({ page }) => {
+	await page.setViewportSize({ width: 375, height: 812 });
+	await page.goto('/tours/blue-cave-hvar-5-islands/');
+	await expect(page.locator('body')).not.toContainText('Blue Cave entry optional, ticket paid on site');
+});
+
+test('follow-up: the contact subject and the footer use the operator wording', async ({ page }) => {
+	await page.goto('/contact/');
+	await expect(page.locator('#topic option[value="group"]')).toHaveText('Group Tour enquiry');
+	const bottom = page.locator('.site-footer__bottom');
+	await expect(bottom).toContainText('MB 04213815');
+	await expect(bottom).toContainText('Djelatnost 79110, Djelatnosti putničkih agencija');
+	await expect(bottom.getByRole('link', { name: 'info@hellobluecave.com' })).toHaveAttribute('href', 'mailto:info@hellobluecave.com');
 });

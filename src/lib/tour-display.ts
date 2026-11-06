@@ -1,6 +1,6 @@
 import { BESTSELLER_EVIDENCE, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL } from '../config/site';
 import type { TourDetail } from '../types/tour';
-import { offersPrivateFlow, supportsPrivateBook } from './booking';
+import { offersPrivateFlow, PRIVATE_PLANNER_SLUG, supportsPrivateBook } from './booking';
 import { privateTour } from '../config/private';
 
 /*
@@ -22,7 +22,7 @@ export function caveEntryNote(tour: Pick<TourDetail, 'additionalFees'>): string 
 export type Cta = { label: string; href: string; price?: string };
 
 /** The landing page for private charters (D-23): its primary action is the charter request. */
-const CHARTER_LANDING = 'create-perfect-day-private';
+const CHARTER_LANDING = PRIVATE_PLANNER_SLUG;
 
 /**
  * The tour page's booking actions (spec §6.3.4):
@@ -56,7 +56,10 @@ export function tourCtas(
 				? { label: 'Plan your experience', href: links.charter(tour.slug) }
 				: isGroup
 					? { label: 'Ask about the group tour', href: links.contact(tour.slug, 'group') }
-					: { label: 'Enquire about this tour', href: links.contact(tour.slug) };
+					: offersPrivateFlow(tour)
+						? // Private-only tour with a fixed route (board "Tours — before vs after", 4 Nov 2026).
+							{ label: 'Plan your private tour', href: links.private(tour.slug) }
+						: { label: 'Enquire about this tour', href: links.contact(tour.slug) };
 	return { primary, secondary: privateCta(tour, links) };
 }
 
@@ -65,7 +68,7 @@ function privateCta(
 	tour: Pick<TourDetail, 'slug' | 'types'> & Partial<Pick<TourDetail, 'departures'>>,
 	links: { private: (slug: string) => string },
 ): Cta | null {
-	if (!offersPrivateFlow(tour)) return null;
+	if (!tour.types.includes('group') || !offersPrivateFlow(tour)) return null;
 	const label = 'Private experience';
 	const priced = supportsPrivateBook({ ...tour, departures: tour.departures ?? [] });
 	const low = priced ? privateTour(tour.slug)?.boat.low : undefined;

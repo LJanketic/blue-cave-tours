@@ -10,7 +10,7 @@ import { charterUrl } from '../../config/routes';
 import { CANCELLATION_CARD, CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT } from '../../config/cancellation';
 import { seasonLabel } from '../../config/season';
 import { formatFromPrice } from '../../lib/price';
-import { feeLabel, mandatoryFeeLabel } from '../../lib/cards';
+import { mandatoryFeeLabel } from '../../lib/cards';
 import { meetingPointLines, showsBestseller, tourBreadcrumbs, tourCtas, tourHeadings } from '../../lib/tour-display';
 import { WHY_GO_PRIVATE, WHY_GO_PRIVATE_TOURS } from '../../data/private-tours';
 import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
@@ -26,6 +26,8 @@ import StickyAside from '../ui/StickyAside.astro';
 import Button from '../ui/Button.astro';
 import CrownIcon from '../ui/CrownIcon.astro';
 import MobileActionBar from '../ui/MobileActionBar.astro';
+import FAQAccordion from '../vue/FAQAccordion.vue';
+import type { FaqItem } from '../../data/faq';
 
 type Props = { tour: TourDetail };
 
@@ -55,18 +57,21 @@ const crumbs = tourBreadcrumbs(tour);
 const prices = tour.prices;
 const requestLabel = formatFromPrice(null, tour.priceUnit);
 const unit = tour.priceUnit === 'boat' ? '/ boat' : '/ adult';
-// Mandatory fees with a "+", then optional ones (the Blue Cave ticket most guests add). The mobile bar
-// shows it; the aside doesn't (operator, 31 Oct 2026), the "Additional fees" tile has it in full.
-const feeLine = feeLabel(tour);
-// [DEVIATE, operator ClickUp C4 31 Oct 2026]: optional fees left the card; mandatory ones stay (C-23).
+// [DEVIATE, operator ClickUp C4 31 Oct 2026]: optional fees left the card and the mobile bar; mandatory ones
+// stay (C-23). The "Additional fees" tile has them all in full.
 const asideFeeLine = mandatoryFeeLabel(tour);
 const mandatoryFees = tour.additionalFees.filter((fee) => fee.mandatory);
+// One fixed departure: the page is prerendered, so the script below adds the date in the browser (board 03).
+const fixedTime = tour.departures.length === 1 && /^\d{2}:\d{2}$/.test(tour.departures[0].time) ? tour.departures[0].time : null;
 const nextDeparture =
 	tour.departures.length > 1 ? 'Several departures daily' : (tour.departures[0]?.time ?? 'Time confirmed at booking');
 const duration = tour.duration.replace(/^Approx\.\s*/, '≈ ');
 const showWhyPrivate = WHY_GO_PRIVATE_TOURS.has(tour.slug);
 const meetingPoint = meetingPointLines(tour);
 const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
+// "Questions about the … tour" (operator tour sheet, 4 Nov 2026): the accordion the FAQ page uses.
+const tourFaqs: FaqItem[] = (tour.faqs ?? []).map((faq) => ({ category: 'booking', ...faq }));
+const faqHeading = tour.seoHeadings?.faq ?? `Questions about the ${tour.title}`;
 ---
 
 <article class="tour">
@@ -186,13 +191,47 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 						{meetingPoint.note && <span class="tour__line tour__line--note">{meetingPoint.note}</span>}
 					</InfoTile>
 					<InfoTile label="Season">{seasonLabel()}</InfoTile>
-					{tour.additionalFees.length > 0 && <InfoTile label="Additional fees">{tour.additionalFees.map((fee) => fee.text).join(' ')}</InfoTile>}
+					{
+						tour.additionalFees.length > 0 && (
+							<InfoTile label="Additional fees">
+								{tour.additionalFees.map((fee) => (
+									<span class="tour__line">
+										{fee.text}
+										{fee.url && (
+											<>
+												{' '}
+												<a href={fee.url} target="_blank" rel="noopener">
+													Ticket prices<i class="ti ti-arrow-up-right" aria-hidden="true" />
+													<span class="sr-only"> (opens in a new tab)</span>
+												</a>
+											</>
+										)}
+									</span>
+								))}
+							</InfoTile>
+						)
+					}
+					{tour.preSeasonRoute && <InfoTile label="Pre-season route">{tour.preSeasonRoute}</InfoTile>}
+					{tour.oneWayNote && <InfoTile label="One-way">{tour.oneWayNote}</InfoTile>}
 					{tour.languages && tour.languages.length > 0 && <InfoTile label="Languages">{tour.languages.join(', ')}</InfoTile>}
 					<InfoTile label="What to bring">{tour.whatToBring.join(', ')}</InfoTile>
 					<InfoTile label="Weather">{tour.weather}</InfoTile>
-					<InfoTile label="On board">{tour.importantInfo}</InfoTile>
+					<InfoTile label="Safety">{tour.importantInfo}</InfoTile>
+					{tour.accessibility && <InfoTile label="Accessibility">{tour.accessibility}</InfoTile>}
 				</InfoTileGrid>
 			</section>
+
+			{
+				tourFaqs.length > 0 && (
+					<section class="tour__section" aria-labelledby="tour-faq-heading">
+						<SectionHeader variant="plain" title={faqHeading} id="tour-faq-heading" />
+						<FAQAccordion client:load items={tourFaqs} idPrefix="tour-faq" />
+						<p class="tour__faq-more">
+							<a href="/faq/">More questions? See all FAQs<i class="ti ti-arrow-right" aria-hidden="true" /></a>
+						</p>
+					</section>
+				)
+			}
 
 			{
 				tour.disclaimers.length > 0 && (
@@ -235,8 +274,8 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 			}
 			<dl class="tour__rows">
 				<div>
-					<dt><i class="ti ti-calendar" aria-hidden="true"></i> Next departure</dt>
-					<dd>{nextDeparture}</dd>
+					<dt><i class="ti ti-calendar" aria-hidden="true"></i> {fixedTime ? 'Next available' : 'Next departure'}</dt>
+					<dd data-next-time={fixedTime}>{nextDeparture}</dd>
 				</div>
 			</dl>
 			<!-- [DEVIATE, legal] §6.3.4: seasonal prices are disclosed in the booking flow and the FAQ (operator, Oct 2026), not here. -->
@@ -272,7 +311,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 		</StickyAside>
 	</div>
 
-	<MobileActionBar target="book" label={primary.label === 'Book group tour tickets' ? 'Book now' : primary.label === 'Plan your experience' ? 'Plan your experience' : 'Enquire'}>
+	<MobileActionBar target="book" label={primary.label === 'Book group tour tickets' ? 'Book now' : primary.label === 'Plan your experience' || primary.label === 'Plan your private tour' ? primary.label : 'Enquire'}>
 		<p>
 			{
 				prices ? (
@@ -286,7 +325,7 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 				)
 			}
 		</p>
-		{feeLine && <p>{feeLine}</p>}
+		{asideFeeLine && <p>{asideFeeLine}</p>}
 	</MobileActionBar>
 </article>
 
@@ -452,6 +491,23 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 		/* Keep the new-tab arrow with its place name. */
 		.tour__line a {
 			white-space: nowrap;
+		}
+
+		.tour__faq-more {
+			margin: var(--space-3) 0 0;
+			font-size: var(--font-size-body-sm);
+		}
+
+		.tour__faq-more a {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			color: var(--color-text-info);
+			text-decoration: none;
+		}
+
+		.tour__faq-more a:hover {
+			text-decoration: underline;
 		}
 
 		.tour__line--note {
@@ -672,6 +728,13 @@ const headings = tourHeadings(tour, getDestinationsForTour(tour.slug));
 </style>
 
 <script>
+	import { nextAvailableLabel } from '../../lib/next-available';
+
+	for (const value of document.querySelectorAll<HTMLElement>('[data-next-time]')) {
+		const label = nextAvailableLabel(value.dataset.nextTime ?? '');
+		if (label) value.textContent = label;
+	}
+
 	// Read more (handoff D5). Collapses the intro to its clamp, and offers the
 	// button only when that clamp actually hides text; re-checked on resize.
 	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-intro-toggle]')) {

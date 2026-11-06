@@ -53,14 +53,19 @@ export function supportsPrivateBook(tour: Pick<TourDetail, 'slug' | 'types' | 'd
 	return tour.types.includes('private') && privateTour(tour.slug) !== null && tour.departures.length > 0;
 }
 
+/** Create Your Perfect Day: a custom route, planned through /private-charter/ rather than a booking step. */
+export const PRIVATE_PLANNER_SLUG = 'create-perfect-day-private';
+
 /**
- * The private booking step (/book/<slug>/private/) exists for every tour that
- * runs both as a group and privately: pay now when supportsPrivateBook, else
- * the same flow sends a quote request. Private-only tours (the charter
- * landing, Create Your Perfect Day) are planned through /private-charter/.
+ * The private booking step (/book/<slug>/private/) exists for every tour with
+ * a fixed private route: the group + private tours and, since the operator's
+ * tour sheet of 4 Nov 2026 (ClickUp "Tour description and Itinerary"), the
+ * private-only Red Rocks and Dubrovnik tours. Pay now when supportsPrivateBook,
+ * else the same flow sends a quote request. Only the custom day (Create Your
+ * Perfect Day) is planned through /private-charter/.
  */
-export function offersPrivateFlow(tour: Pick<TourDetail, 'types'>): boolean {
-	return tour.types.includes('group') && tour.types.includes('private');
+export function offersPrivateFlow(tour: Pick<TourDetail, 'slug' | 'types'>): boolean {
+	return tour.types.includes('private') && tour.slug !== PRIVATE_PLANNER_SLUG;
 }
 
 export function privateBookHref(tour: Pick<TourDetail, 'slug'>): string {

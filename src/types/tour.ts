@@ -6,7 +6,14 @@ export type ItineraryKind = 'morning' | 'afternoon' | 'full' | 'flexible';
 export type Departure = { time: string; checkIn?: string; label?: string };
 
 /** One itinerary stop. `time` only where the operator gives one (C-19). */
-export type ItineraryStep = { time?: string; label: string; description?: string; icon: string };
+export type ItineraryStep = {
+	time?: string;
+	/** Shown instead of `time` when the operator gives a window or a length of stay ("17:30–18:00", "~1.5–2 h", "+30 min"). */
+	timeLabel?: string;
+	label: string;
+	description?: string;
+	icon: string;
+};
 
 /** Filter tags (spec §9.1); they replace guessing from titles and durations. */
 export type TourTag = 'sunset' | 'swim' | 'snorkel' | 'cave' | 'half-day' | 'family';
@@ -96,9 +103,15 @@ export type TourDetail = {
 	 */
 	primaryDestinationSlug?: string;
 	/** Overrides for the search-worded headings tourHeadings() builds (src/lib/tour-display.ts). */
-	seoHeadings?: { about?: string; itinerary?: string };
+	seoHeadings?: { about?: string; itinerary?: string; faq?: string };
 	/** The intro shows about 4 lines with "Read more" (handoff D5). */
 	introCollapsible?: boolean;
 	/** Further intro paragraphs after `overviewHighlights`, inside the same Read more. */
 	introMore?: string[];
+	/** "Good to know" extras from the operator's tour sheet (4 Nov 2026); unset hides the tile. */
+	preSeasonRoute?: string;
+	accessibility?: string;
+	oneWayNote?: string;
+	/** "Questions about the … tour" accordion (tour sheet, FAQs tab). */
+	faqs?: { question: string; answer: string }[];
 };

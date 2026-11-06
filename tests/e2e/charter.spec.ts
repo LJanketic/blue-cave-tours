@@ -102,10 +102,10 @@ test('the morning Blue Lagoon tour suggests its own departure', async ({ page })
 	await expect(page.locator('#charter-time')).toHaveValue('09:30');
 });
 
-test('a tour\'s "Private experience" button leads to its private step (a quote request) while it has no boat price', async ({ page }) => {
+test('a private tour\'s button leads to its private step (a quote request) while it has no boat price', async ({ page }) => {
 	// Red Rocks has no private price yet, so its private step asks for a quote.
 	await page.goto('/tours/hvar-red-rocks-pakleni/');
-	const link = page.locator('#book').getByRole('link', { name: 'Private experience', exact: true });
+	const link = page.locator('#book').getByRole('link', { name: 'Plan your private tour', exact: true });
 	await expect(link).toHaveAttribute('href', '/book/hvar-red-rocks-pakleni/private/');
 	await link.click();
 	await hydrated(page);

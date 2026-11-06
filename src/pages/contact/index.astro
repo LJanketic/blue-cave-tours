@@ -14,8 +14,10 @@ import {
 	pageTitle,
 	SITE_EMAIL,
 	SITE_NAME,
-	SITE_PHONE,
-	SITE_PHONE_DISPLAY,
+	CONTACT_NUMBERS,
+	INSTAGRAM_HANDLE,
+	INSTAGRAM_URL,
+	whatsappLink,
 } from '../../config/site';
 import { seasonLabel } from '../../config/season';
 import { CONTACT_TOPICS, HONEYPOT_FIELD } from '../../lib/contact-validation';
@@ -39,15 +41,55 @@ const TOUR_ORDER = [
 ];
 const rank = (slug: string) => (TOUR_ORDER.includes(slug) ? TOUR_ORDER.indexOf(slug) : TOUR_ORDER.length);
 const tours = [...getAllTours()].sort((a, b) => rank(a.slug) - rank(b.slug));
-const whatsappUrl = `https://wa.me/${SITE_PHONE.replace(/\D/g, '')}`;
 const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
-const CARDS = [
-	{ type: 'Phone', icon: 'phone', tone: 'brand', value: SITE_PHONE_DISPLAY, sub: 'Call or text us', href: `tel:${SITE_PHONE}` },
-	{ type: 'WhatsApp', icon: 'brand-whatsapp', tone: 'brand', value: SITE_PHONE_DISPLAY, sub: 'Message us on WhatsApp', href: whatsappUrl, external: true },
+type NumberLink = { href: string; display: string; fastest?: boolean };
+type Card = {
+	type: string;
+	icon: string;
+	tone: 'brand' | 'info' | 'warm';
+	sub: string;
+	/** A single-value card is one link. */
+	value?: string;
+	href?: string;
+	external?: boolean;
+	/** A multi-number card (phone, WhatsApp): one link per number. */
+	numbers?: NumberLink[];
+	wide?: boolean;
+};
+
+// Board 11 (Ivan, 5 Nov 2026): all three numbers on both the phone and the
+// WhatsApp card, the first tagged "Fastest response"; Instagram gets its own card.
+const CARDS: Card[] = [
+	{
+		type: 'Phone',
+		icon: 'phone',
+		tone: 'brand',
+		sub: 'Call or text us',
+		numbers: CONTACT_NUMBERS.map((n) => ({ href: `tel:${n.tel}`, display: n.display, fastest: n.fastest })),
+	},
+	{
+		type: 'WhatsApp',
+		icon: 'brand-whatsapp',
+		tone: 'brand',
+		sub: 'Message us on WhatsApp',
+		external: true,
+		numbers: CONTACT_NUMBERS.map((n) => ({ href: whatsappLink(n.tel), display: n.display, fastest: n.fastest })),
+	},
 	{ type: 'Email', icon: 'mail', tone: 'info', value: SITE_EMAIL, sub: 'For bookings, invoices and detailed requests', href: `mailto:${SITE_EMAIL}` },
 	{ type: 'Find us', icon: 'map-pin', tone: 'warm', value: MEETING_POINT_LABEL, sub: 'Where group tours start', href: MEETING_POINT_MAP_URL, external: true },
+	{
+		type: 'Instagram',
+		icon: 'brand-instagram',
+		tone: 'brand',
+		value: `@${INSTAGRAM_HANDLE}`,
+		sub: 'Photos from our trips and what the sea looks like today',
+		href: INSTAGRAM_URL,
+		external: true,
+		wide: true,
+	},
 ];
+const newTab = { target: '_blank', rel: 'noopener' };
 ---
 
 <SiteLayout
@@ -63,21 +105,48 @@ const CARDS = [
 
 		<ul class="contact__cards" role="list">
 			{
-				CARDS.map((card) => (
-					<li>
-						<a class="contact__card" href={card.href} {...(card.external ? { target: '_blank', rel: 'noopener' } : {})}>
-							<span class={`contact__icon contact__icon--${card.tone}`} aria-hidden="true">
-								<i class={`ti ti-${card.icon}`} />
-							</span>
-							<span class="contact__type">{card.type}</span>
-							<span class="contact__value">{card.value}</span>
-							<span class="contact__sub">
-								{card.sub}
-								{card.external && <span class="sr-only"> (opens in a new tab)</span>}
-							</span>
-						</a>
-					</li>
-				))
+				CARDS.map((card) =>
+					card.numbers ? (
+						<li>
+							<div class="contact__card contact__card--numbers">
+								<span class={`contact__icon contact__icon--${card.tone}`} aria-hidden="true">
+									<i class={`ti ti-${card.icon}`} />
+								</span>
+								<span class="contact__type">{card.type}</span>
+								<ul class="contact__numbers" role="list">
+									{card.numbers.map((n) => (
+										<li>
+											<a
+												class:list={['contact__number', { 'contact__number--main': n.fastest }]}
+												href={n.href}
+												{...(card.external ? newTab : {})}
+											>
+												{n.display}
+												{card.external && <span class="sr-only"> ({card.type}, opens in a new tab)</span>}
+											</a>
+											{n.fastest && <span class="contact__tag">Fastest response</span>}
+										</li>
+									))}
+								</ul>
+								<span class="contact__sub">{card.sub}</span>
+							</div>
+						</li>
+					) : (
+						<li class:list={{ contact__wide: card.wide }}>
+							<a class="contact__card" href={card.href} {...(card.external ? newTab : {})}>
+								<span class={`contact__icon contact__icon--${card.tone}`} aria-hidden="true">
+									<i class={`ti ti-${card.icon}`} />
+								</span>
+								<span class="contact__type">{card.type}</span>
+								<span class="contact__value">{card.value}</span>
+								<span class="contact__sub">
+									{card.sub}
+									{card.external && <span class="sr-only"> (opens in a new tab)</span>}
+								</span>
+							</a>
+						</li>
+					),
+				)
 			}
 		</ul>
 
@@ -212,8 +281,58 @@ const CARDS = [
 			transition: background-color var(--duration-fast) ease;
 		}
 
-		.contact__card:hover {
+		a.contact__card:hover {
 			background: var(--color-background-hover);
+		}
+
+		.contact__wide {
+			grid-column: 1 / -1;
+		}
+
+		/* Phone / WhatsApp: the tile holds one link per number. */
+		.contact__card--numbers {
+			grid-template-rows: auto auto auto;
+		}
+
+		.contact__numbers {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+			margin: 2px 0 4px;
+			padding: 0;
+			list-style: none;
+		}
+
+		.contact__numbers li {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: var(--space-2);
+		}
+
+		.contact__number {
+			font-size: var(--font-size-base);
+			color: var(--color-text-secondary);
+			text-decoration: none;
+		}
+
+		.contact__number--main {
+			font-size: var(--font-size-md);
+			font-weight: var(--font-weight-medium);
+			color: var(--color-text-primary);
+		}
+
+		.contact__number:hover {
+			text-decoration: underline;
+		}
+
+		.contact__tag {
+			padding: 2px 8px;
+			border-radius: var(--radius-pill);
+			background: var(--color-background-brand-soft);
+			color: var(--color-text-brand);
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-medium);
 		}
 
 		.contact__icon {

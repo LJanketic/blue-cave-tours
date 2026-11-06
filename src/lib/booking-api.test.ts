@@ -129,7 +129,7 @@ describe('private experience endpoints', () => {
 	it.each([
 		['a time other than the usual departure', { slot: '07:35' }, 'slot', 'slot'],
 		['a later time, with no latest departure set', { slot: '08:30' }, 'slot', 'slot'],
-		['any extra, while none is offered', { extras: ['champagne'] }, 'extras', 'extras'],
+		['an extra off the list', { extras: ['helicopter'] }, 'extras', 'extras'],
 		['an "other" pick-up', { pickup: 'other' }, 'pickup', 'pickup'],
 		['a pick-up off the list', { pickup: 'hotel' }, 'pickup', 'pickup'],
 	])('refuses %s', async (_name, overrides, code, field) => {
@@ -140,7 +140,7 @@ describe('private experience endpoints', () => {
 		expect(Object.keys(json.errors)).toEqual([field]);
 	});
 
-	it('takes the plain form, refuses an extra checkbox, and sends errors back to the private page', async () => {
+	it('takes the plain form, refuses an unknown extra checkbox, and sends errors back to the private page', async () => {
 		const fields = { ...JSON.parse(privateBody()), extras: '', adults: '2', children: '0', infants: '0' };
 		const cookies = fakeCookies();
 		const ok = await call(postDraft, '/api/bookings/draft', new URLSearchParams(fields).toString(), 'application/x-www-form-urlencoded', cookies);
@@ -154,9 +154,12 @@ describe('private experience endpoints', () => {
 		const bad = await call(postDraft, '/api/bookings/draft', new URLSearchParams({ ...fields, slot: '07:21' }).toString(), 'application/x-www-form-urlencoded', fakeCookies());
 		expect(bad.status).toBe(303);
 		expect(bad.headers.get('location')).toBe('/book/blue-cave-hvar-5-islands/private/?error=slot');
-		// A forged checkbox for an extra that isn't offered (the form has none today).
-		const extra = await call(postDraft, '/api/bookings/draft', new URLSearchParams({ ...fields, extra_champagne: 'yes' }).toString(), 'application/x-www-form-urlencoded', fakeCookies());
+		// A forged checkbox for an extra that isn't offered.
+		const extra = await call(postDraft, '/api/bookings/draft', new URLSearchParams({ ...fields, extra_helicopter: 'yes' }).toString(), 'application/x-www-form-urlencoded', fakeCookies());
 		expect(extra.headers.get('location')).toBe('/book/blue-cave-hvar-5-islands/private/?error=extras');
+		// A listed extra and pick-up go through to the review.
+		const priced = await call(postDraft, '/api/bookings/draft', new URLSearchParams({ ...fields, extra_champagne: 'yes', pickup: 'trogir' }).toString(), 'application/x-www-form-urlencoded', fakeCookies());
+		expect(priced.headers.get('location')).toBe('/book/blue-cave-hvar-5-islands/review/?flow=private');
 	});
 
 	it('books nothing when another tab replaced the reviewed draft, and keeps the private flow in the redirect', async () => {
@@ -188,7 +191,7 @@ describe('private experience endpoints', () => {
 
 	// C5 (ClickUp 31 Oct 2026): every group + private tour now has a private step, but only Blue Cave has a boat price.
 	it.each([
-		['golden-horn-brac-hvar', '08:30'],
+		['golden-horn-brac-hvar', '09:00'],
 		['blue-lagoon-morning', '09:30'],
 		['blue-lagoon-afternoon', '14:30'],
 		['hvar-red-rocks-pakleni', '10:00'],
