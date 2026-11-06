@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { tours } from '../data/tour-catalog';
-import { DEFAULT_PICKUP_ID, OTHER_PICKUP_ID, PRIVATE_EXTRAS, PRIVATE_PICKUPS, PRIVATE_TOURS, privateDepartureTimes, privatePickup, privateTour } from './private';
+import { DEFAULT_PICKUP_ID, OTHER_PICKUP_ID, OTHER_PICKUP_MAX, PRIVATE_EXTRAS, PRIVATE_PICKUPS, PRIVATE_TOURS, privateDepartureTimes, privatePickup, privateTour } from './private';
 import { CHARTER_ROUTES } from './charter';
 import { charterUrl } from './routes';
 import { offersPrivateFlow, supportsPrivateBook } from '../lib/booking';
@@ -89,9 +89,30 @@ describe('extras and pick-ups', () => {
 		}
 	});
 
-	it('has no extras until the operator prices one, and only the Riva as a bookable pick-up', () => {
-		expect(PRIVATE_EXTRAS).toEqual([]);
-		expect(PRIVATE_PICKUPS.map((p) => p.id)).toEqual([DEFAULT_PICKUP_ID]);
+	it('sells the extras from ClickUp "Extras for private" (6 Nov 2026) at the design prices', () => {
+		expect(PRIVATE_EXTRAS.map((x) => [x.label, x.price])).toEqual([
+			['Champagne welcome', 40],
+			['SUP', 35],
+			['Seabob', 150],
+		]);
+	});
+
+	it('lists the pick-ups from ClickUp "Pick up point za private" (6 Nov 2026) in order, Riva first and free', () => {
+		expect(PRIVATE_PICKUPS.map((p) => [p.label, p.price])).toEqual([
+			['Riva stand 14 (meeting point)', 0],
+			['Zenta Marina, Split', 30],
+			['Radisson Blu Hotel, Split', 40],
+			['Le Méridien Lav Hotel, Podstrana', 60],
+			['Hotel San Antonio, Podstrana', 60],
+			['Old Town Waterfront, Trogir', 80],
+			['Stomorska Waterfront, Šolta', 100],
+			['Sutivan Waterfront, Brač', 100],
+			['Milna Marina, Brač', 120],
+			['Hvar Town Waterfront', 150],
+		]);
+		expect(PRIVATE_PICKUPS[0].id).toBe(DEFAULT_PICKUP_ID);
+		// A listed spot is sent by name on a quote request, which caps the place at OTHER_PICKUP_MAX.
+		for (const p of PRIVATE_PICKUPS) expect(p.label.length, p.id).toBeLessThanOrEqual(OTHER_PICKUP_MAX);
 	});
 
 	it('meet at the Riva for free by default, and never price the "other" sentinel', () => {

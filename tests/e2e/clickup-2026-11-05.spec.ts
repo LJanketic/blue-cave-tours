@@ -35,3 +35,63 @@ test('tour page: the sheet FAQ, ticket price link and the itinerary time labels'
 	await expect(page.locator('.timeline-ui__time')).toContainText(['07:20', '~1.5–2 h']);
 	await expect(page.getByRole('link', { name: /More questions\? See all FAQs/ })).toHaveAttribute('href', '/faq/');
 });
+
+// ClickUp 6 Nov 2026: "Extras for private" and "Pick up point za private" (prices from Ivan's design).
+
+const privateIp = () => ({ 'x-nf-client-connection-ip': `198.18.2.${Math.floor(Math.random() * 250) + 1}` });
+const euros = (text: string) => Number((text.match(/€([\d,]+)/)?.[1] ?? '').replace(/,/g, ''));
+
+test('private pay-now: extras and a listed pick-up are added to the boat price, and the server charges the same', async ({ page }) => {
+	await page.setExtraHTTPHeaders(privateIp());
+	await page.goto('/book/blue-cave-hvar-5-islands/private/');
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
+	await page.locator('.cal__day:not([aria-disabled])').last().click();
+	const total = page.locator('.summary-card-ui__total');
+	const boat = euros(await total.innerText());
+	expect([1500, 2000]).toContain(boat);
+
+	await expect(page.getByRole('checkbox', { name: /Champagne welcome/ })).toBeVisible();
+	await expect(page.getByRole('checkbox', { name: /Seabob/ })).toBeVisible();
+	await page.getByRole('checkbox', { name: /Champagne welcome/ }).check();
+	await page.getByRole('checkbox', { name: /SUP/ }).check();
+	await page.getByRole('radio', { name: /Old Town Waterfront, Trogir/ }).check();
+	await expect(page.getByRole('radio', { name: /Hvar Town Waterfront/ })).toBeVisible();
+	await expect(total).toContainText(`€${(boat + 40 + 35 + 80).toLocaleString('en-GB')}`);
+
+	await page.locator('#private-first').fill('Test');
+	await page.locator('#private-last').fill('Guest');
+	await page.locator('#private-email').fill('guest@example.com');
+	await page.getByRole('button', { name: /Review booking/ }).click();
+	await expect(page).toHaveURL(/\/book\/blue-cave-hvar-5-islands\/review\/\?flow=private$/);
+	const main = page.locator('main');
+	await expect(main).toContainText('Champagne welcome');
+	await expect(main).toContainText('SUP');
+	await expect(main).toContainText('Old Town Waterfront, Trogir');
+	await expect(page.locator('.review__total')).toContainText(`€${(boat + 155).toLocaleString('en-GB')}`);
+});
+
+test('private quote request: a listed pick-up and the extras reach the enquiry by name', async ({ page }) => {
+	await page.setExtraHTTPHeaders(privateIp());
+	await page.goto('/book/golden-horn-brac-hvar/private/');
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
+	await page.locator('.cal__day:not([aria-disabled])').last().click();
+	await page.getByRole('checkbox', { name: /Seabob/ }).check();
+	await page.getByRole('radio', { name: /Milna Marina, Brač/ }).check();
+	const surname = `Milna${Date.now().toString(36)}`;
+	await page.locator('#private-first').fill('Test');
+	await page.locator('#private-last').fill(surname);
+	await page.locator('#private-email').fill('guest@example.com');
+	await page.locator('#private-phone').fill('+385 91 000 0000');
+	await page.waitForTimeout(2100); // the request form refuses anything sent within 2 seconds of loading
+	await page.getByRole('button', { name: /Send request/ }).click();
+	await expect(page).toHaveURL(/\/private-charter\/sent\/$/);
+
+	await page.goto('/admin/login/');
+	await page.locator('#password').fill('demo');
+	await page.getByRole('button', { name: 'Log in' }).click();
+	await expect(page).toHaveURL(/\/admin\/$/);
+	await page.goto('/admin/enquiries/');
+	const card = page.locator('article.enquiry').filter({ hasText: surname });
+	await expect(card).toContainText('Milna Marina, Brač');
+	await expect(card).toContainText('Seabob');
+});

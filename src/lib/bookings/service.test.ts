@@ -127,7 +127,7 @@ describe('private experience (pay now)', () => {
 		pickups: [{ id: 'riva', label: 'Riva', price: 0 }, { id: 'test-pickup', label: 'Test pick-up', price: 25 }],
 	};
 
-	it('takes only the usual departure, no extras, and only the Riva, as the config stands', () => {
+	it('takes only the usual departure, and only listed extras and pick-ups, as the config stands', () => {
 		const check = (over: Partial<PrivateBookingInput>) => validatePrivateBookingInput(tour, { ...privateInput, ...over }, NOW);
 		expect(check({})).toBeNull();
 		// No latest departure from the operator yet: any other time is refused.
@@ -135,8 +135,10 @@ describe('private experience (pay now)', () => {
 		expect(check({ slot: '08:30' })).toBe('slot');
 		expect(check({ slot: '07:05' })).toBe('slot');
 		expect(check({ slot: null })).toBe('slot');
-		// No extras are offered yet: any id is refused.
-		expect(check({ extras: ['champagne'] })).toBe('extras');
+		// Extras and pick-ups from the lists (ClickUp 6 Nov 2026); anything else is refused.
+		expect(check({ extras: ['champagne', 'sup', 'seabob'], pickup: 'trogir' })).toBeNull();
+		expect(check({ extras: ['helicopter'] })).toBe('extras');
+		expect(check({ extras: ['sup', 'sup'] })).toBe('extras');
 		expect(check({ pickup: 'other' })).toBe('pickup');
 		expect(check({ pickup: 'moon' })).toBe('pickup');
 		expect(check({ adults: 0 })).toBe('guests');

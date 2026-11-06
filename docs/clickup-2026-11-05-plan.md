@@ -35,10 +35,24 @@ Mare's new task "Blue Lagoon vrijeme polaska" (6 Nov, In design) sets the
 Blue Lagoon times to depart 09:30 / 14:30 and return 14:00 / 19:00. That is
 newer than the sheet, so it replaces the sheet's 09:00–13:30 / 14:00–18:30.
 The task names no check-in time, so the usual 15 minutes before applies
-(09:15 / 14:15), and the duration stays 4.5 h. The other two new tasks,
-"Pick up point za private" (10 points, no prices) and "Extras for private"
-(SUP +€35, Seabob +€150, keep champagne, no champagne price), are still in
-design and not built.
+(09:15 / 14:15), and the duration stays 4.5 h. The other two new tasks, "Pick up point za private" and "Extras for
+private", are built from Ivan's design board ("05 Private experience"),
+because the tasks give no pick-up prices and no champagne price. Luka
+approved using the design prices on 6 Nov. Mare should still confirm them,
+since guests pay these amounts.
+
+- Pick-ups, per booking: Riva included, Zenta +€30, Radisson +€40,
+  Le Méridien +€60, San Antonio +€60, Trogir +€80, Stomorska +€100,
+  Sutivan +€100, Milna +€120, Hvar +€150. "Other location" stays a request.
+  Zenta reverses the 23 Oct "no Zenta" decision; the newer task wins.
+- Extras, per booking: Champagne welcome +€40, SUP +€35, Seabob +€150. The
+  design's photo package, picnic lunch and snorkelling gear are left out,
+  as the task says.
+- Pay-now (Blue Cave) adds them to the boat price. On a quote request, the
+  listed pick-up now goes into the enquiry by name. Before this it was sent
+  empty, which went unnoticed while the Riva was the only choice.
+- Layout: the design shows pick-ups as a dropdown. The site keeps its radio
+  cards (11 options, with descriptions), which work without JavaScript.
 
 ## Decisions taken while implementing
 

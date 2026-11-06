@@ -7,7 +7,7 @@ import type { SeasonAmount } from './season';
  * so the booking island can use this.
  *
  * Being in PRIVATE_TOURS is what makes a tour "book private and pay now".
- * Only what the operator's doc states is here. Every other group + private
+ * Boat prices are only what the operator's doc states. Every other group + private
  * tour uses the same private step (/book/<slug>/private/, offersPrivateFlow in
  * src/lib/booking.ts) as a quote request until the operator gives its boat
  * price; private-only tours stay on request at /private-charter/.
@@ -38,13 +38,20 @@ export const PRIVATE_TOURS: Readonly<Record<string, PrivateTour>> = {
 export type PrivateExtra = { id: string; label: string; desc: string; price: number };
 
 /**
- * Extras the guest can add and pay for. None yet: the doc names champagne,
- * which is added here once the operator gives its price. With an empty list
- * the booking flow shows no extras and the server refuses any.
+ * Extras the guest can add and pay for, per booking (not per guest).
+ * ClickUp "Extras for private" (6 Nov 2026): SUP and Seabob with their prices,
+ * keep champagne, drop the rest. The champagne price and all three
+ * descriptions are from Ivan's design ("05 Private experience"), which the
+ * task follows. With an empty list the flow shows no extras and the server
+ * refuses any.
  */
-export const PRIVATE_EXTRAS: readonly PrivateExtra[] = [];
+export const PRIVATE_EXTRAS: readonly PrivateExtra[] = [
+	{ id: 'champagne', label: 'Champagne welcome', desc: 'Chilled on ice, ready when you board', price: 40 },
+	{ id: 'sup', label: 'SUP', desc: 'Stand-up paddleboard, ready to use at any stop', price: 35 },
+	{ id: 'seabob', label: 'Seabob', desc: 'Underwater sea scooter for extra fun at sea', price: 150 },
+];
 
-export type PrivatePickup = { id: string; label: string; price: number };
+export type PrivatePickup = { id: string; label: string; price: number; desc?: string; icon?: string };
 
 /** The meeting point, at no charge: chosen unless the guest picks another. */
 export const DEFAULT_PICKUP_ID = 'riva';
@@ -53,11 +60,24 @@ export const DEFAULT_PICKUP_ID = 'riva';
 export const OTHER_PICKUP_ID = 'other';
 
 /**
- * Pick-up points the guest can book and pay for straight away. Only the Riva
- * for now: anywhere else is a request (OTHER_PICKUP_ID). When the operator
- * gives priced spots, list them here; a priced one becomes a line item.
+ * Pick-up points the guest can book and pay for straight away; anywhere else
+ * is a request (OTHER_PICKUP_ID). A priced one becomes a line item.
+ * ClickUp "Pick up point za private" (6 Nov 2026) lists these ten, in this
+ * order; the prices and descriptions are from Ivan's design ("05 Private
+ * experience"), as the task gives none.
  */
-export const PRIVATE_PICKUPS: readonly PrivatePickup[] = [{ id: DEFAULT_PICKUP_ID, label: 'Riva stand 14 (meeting point)', price: 0 }];
+export const PRIVATE_PICKUPS: readonly PrivatePickup[] = [
+	{ id: DEFAULT_PICKUP_ID, label: 'Riva stand 14 (meeting point)', price: 0, desc: 'Our main meeting point, in front of Diocletian’s Palace', icon: 'anchor' },
+	{ id: 'zenta', label: 'Zenta Marina, Split', price: 30, desc: 'Marina east of the city centre', icon: 'sailboat' },
+	{ id: 'radisson', label: 'Radisson Blu Hotel, Split', price: 40, desc: 'Hotel waterfront, east Split', icon: 'building' },
+	{ id: 'le-meridien', label: 'Le Méridien Lav Hotel, Podstrana', price: 60, desc: 'Hotel waterfront, just south of Split', icon: 'building' },
+	{ id: 'san-antonio', label: 'Hotel San Antonio, Podstrana', price: 60, desc: 'Hotel waterfront, just south of Split', icon: 'building' },
+	{ id: 'trogir', label: 'Old Town Waterfront, Trogir', price: 80, desc: 'Riva promenade, opposite the old town bridge', icon: 'building-castle' },
+	{ id: 'stomorska', label: 'Stomorska Waterfront, Šolta', price: 100, desc: 'Village harbour on Šolta', icon: 'sailboat' },
+	{ id: 'sutivan', label: 'Sutivan Waterfront, Brač', price: 100, desc: 'Village waterfront on Brač’s north coast', icon: 'sailboat' },
+	{ id: 'milna', label: 'Milna Marina, Brač', price: 120, desc: 'Marina on Brač’s west coast', icon: 'sailboat' },
+	{ id: 'hvar', label: 'Hvar Town Waterfront', price: 150, desc: 'Main harbour in Hvar Town', icon: 'anchor' },
+];
 
 /** Longest pick-up location a guest can type for "Other location". */
 export const OTHER_PICKUP_MAX = 120;

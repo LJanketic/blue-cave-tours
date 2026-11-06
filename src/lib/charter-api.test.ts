@@ -88,8 +88,8 @@ describe('POST /api/charter-request', () => {
 		expect(charterRequestRows(stored.charter!)).toContainEqual(['Pick-up wanted', 'Villa Sunce, Podstrana']);
 	});
 
-	it('refuses extras off the list (all of them, while none is offered), and stores no pick-up from the charter form', async () => {
-		const bad = await post(JSON.stringify(fields({ extras: ['champagne'] })));
+	it('refuses extras off the list, and stores no pick-up from the charter form', async () => {
+		const bad = await post(JSON.stringify(fields({ extras: ['helicopter'] })));
 		expect(bad.status).toBe(400);
 		expect((await bad.json()).code).toBe('invalid');
 		await post(JSON.stringify(fields()));

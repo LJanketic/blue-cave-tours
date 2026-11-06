@@ -277,7 +277,8 @@ test('C5 Blue Lagoon afternoon private step: a quote request at 14:30', async ({
 	await expect(summary.locator('.summary-card-ui__row').filter({ hasText: /^Price/ })).toHaveCount(0);
 	await expect(summary.locator('.summary-card-ui__total')).toContainText("We'll send you a quote");
 	await expect(summary.locator('.summary-card-ui__total')).not.toContainText('incl. VAT');
-	await expect(page.locator('form.flow')).not.toContainText('€');
+	// No boat price anywhere: with no extra or paid pick-up chosen, the summary has no amount.
+	await expect(summary).not.toContainText('€');
 	// Phone is required for a request, labelled without "(optional)".
 	await expect(page.locator('#private-phone')).toHaveAttribute('required', '');
 	await expect(page.locator('label[for="private-phone"]')).not.toContainText('optional');
