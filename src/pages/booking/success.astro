@@ -7,7 +7,7 @@ export const prerender = false;
  * and a masked email (S-3). Clears the booking cookie (S-12).
  */
 import { MEETING_POINT_LABEL, MEETING_POINT_MAP_URL, pageTitle, SITE_NAME } from '../../config/site';
-import { CANCELLATION_WEATHER } from '../../config/cancellation';
+import { WEATHER_UPDATE_NOTE } from '../../config/cancellation';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import BookingShell from '../../components/booking/BookingShell.astro';
@@ -117,7 +117,7 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 			<h2 id="next-heading"><i class="ti ti-list-check" aria-hidden="true"></i> What happens next</h2>
 			<ol class="done__next" role="list">
 				<li><i class="ti ti-mail" aria-hidden="true"></i><span><strong>Check your email.</strong> Your booking details, {booking.pickup ? 'pick-up' : 'meeting point'} and what to bring.</span></li>
-				<li><i class="ti ti-cloud-storm" aria-hidden="true"></i><span><strong>Weather.</strong> {CANCELLATION_WEATHER}</span></li>
+				<li><i class="ti ti-cloud-storm" aria-hidden="true"></i><span><strong>Weather update.</strong> {WEATHER_UPDATE_NOTE}</span></li>
 				<li><i class="ti ti-anchor" aria-hidden="true"></i><span><strong>Show up and sail.</strong> {booking.pickup ? 'Be ready at your pick-up point at the time we confirm.' : `Be at the stand by ${arriveBy}.`}</span></li>
 			</ol>
 		</section>

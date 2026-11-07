@@ -29,7 +29,9 @@ export type HeroSlide = {
 	position: string;
 };
 
-// Handoff H2/H3: the designer's copy with this operator's facts. Capacity and
+// ClickUp "Hero Banner texts" (approved 6 Nov 2026, Ivan's 01 Homepage):
+// slide 1 unchanged, slide 2 takes the private-boat line, slide 3 is
+// "Lounge, cruise & relax". Handoff H2/H3: the designer's copy with this operator's facts. Capacity and
 // founding year come from config, never from the handoff's copy (D2, D3), and
 // "licensed" shows only once the licence is confirmed (D11, C-7).
 export const HERO_SLIDES: HeroSlide[] = [
@@ -42,15 +44,15 @@ export const HERO_SLIDES: HeroSlide[] = [
 	{
 		id: 'group',
 		titleLines: ['Escape', 'in style', '& comfort'],
-		sub: `Modern, comfortable speedboats with a ${LICENCE_CONFIRMED ? 'licensed ' : ''}skipper — fast, smooth rides to the islands, max ${MAX_GUESTS} persons on board.`,
+		sub: `Private boat tours from Split for up to ${MAX_GUESTS} people. Your route, your pace — the Blue Cave, Hvar or a quiet bay.`,
 		// Not the board's calc(70% + 180px): when the photo is only as wide as the
 		// screen, that offset uncovers a strip on the left (seen at 1920px).
 		position: 'right center',
 	},
 	{
 		id: 'charter',
-		titleLines: ['All', 'aboard,', 'mateys!'],
-		sub: `Private boat tours from Split for up to ${MAX_GUESTS} persons. Your route, your pace — the Blue Cave, Hvar or a quiet bay.`,
+		titleLines: ['Lounge,', 'cruise', '& relax'],
+		sub: 'Swim in crystal-clear waters, visit hidden bays and enjoy the ultimate island getaway.',
 		position: '70% center',
 	},
 ];

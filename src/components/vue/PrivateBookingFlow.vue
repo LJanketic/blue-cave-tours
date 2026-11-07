@@ -120,7 +120,7 @@ const boatPrice = computed(() => items.value[0]?.amount ?? null);
 
 const pickupOptions = [
 	...PRIVATE_PICKUPS.map((p) => ({ value: p.id, label: p.label, sub: [p.desc, p.price ? `+ ${formatEuro(p.price)}` : 'Included'].filter(Boolean).join(' · '), icon: p.icon ?? (p.id === DEFAULT_PICKUP_ID ? 'anchor' : 'building') })),
-	{ value: OTHER_PICKUP_ID, label: 'Other location', sub: "We'll send you a quote", icon: 'map-2' },
+	{ value: OTHER_PICKUP_ID, label: 'Other pickup location', sub: "Must be arranged with the captain beforehand · We'll send you a quote", icon: 'map-2' },
 ];
 
 const notesText = computed(() =>
@@ -131,7 +131,7 @@ const notesText = computed(() =>
 			: 'The price is for the whole boat with skipper, whatever the number of guests.',
 );
 
-const pickupLabel = computed(() => (isOtherPickup.value ? pickupPlace.value.trim() || 'Other location' : (privatePickup(pickup.value)?.label ?? '')));
+const pickupLabel = computed(() => (isOtherPickup.value ? pickupPlace.value.trim() || 'Other pickup location' : (privatePickup(pickup.value)?.label ?? '')));
 
 const summaryRows = computed(() => {
 	const rows = [
