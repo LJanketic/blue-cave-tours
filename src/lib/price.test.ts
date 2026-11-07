@@ -93,7 +93,7 @@ describe('privateLineItems', () => {
 			['Private boat with skipper', 2000],
 			['Champagne welcome', 40],
 			['Seabob', 150],
-			['Pick-up: Hvar Town Waterfront', 150],
+			['Pick-up: Hvar Town Waterfront, Hvar Island', 150],
 		]);
 	});
 

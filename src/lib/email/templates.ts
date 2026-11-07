@@ -5,7 +5,7 @@ import { topicLabel } from '../contact-validation';
 import { getTourBySlug } from '../tours';
 import type { EmailMessage } from './send';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
-import { CANCELLATION_FULL, CANCELLATION_PRIVATE_HREF, CANCELLATION_WEATHER } from '../../config/cancellation';
+import { CANCELLATION_FULL, CANCELLATION_PRIVATE_HREF, WEATHER_UPDATE_NOTE } from '../../config/cancellation';
 import { durationLabel, routeById } from '../../config/charter';
 import { formatTimestamp } from '../bookings/dates';
 import { IMPRINT, TERMS_VERSION } from '../../config/legal';
@@ -195,7 +195,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 		: booking.kind === 'private'
 			? 'The boat and skipper are yours for the day. Please be at the meeting point 15 minutes before departure, so you get every minute of your day.'
 			: "As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.";
-	const weatherNote = CANCELLATION_WEATHER;
+	const weatherNote = WEATHER_UPDATE_NOTE;
 	const terms = bookingTermsLines(booking, siteOrigin);
 
 	const tripRows: Row[] = [

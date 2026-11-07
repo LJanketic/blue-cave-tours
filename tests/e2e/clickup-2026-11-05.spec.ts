@@ -92,6 +92,6 @@ test('private quote request: a listed pick-up and the extras reach the enquiry b
 	await expect(page).toHaveURL(/\/admin\/$/);
 	await page.goto('/admin/enquiries/');
 	const card = page.locator('article.enquiry').filter({ hasText: surname });
-	await expect(card).toContainText('Milna Marina, Brač');
+	await expect(card).toContainText('Milna Marina, Brač Island');
 	await expect(card).toContainText('Seabob');
 });

@@ -306,7 +306,7 @@ test('C5 Red Rocks private step: a time outside 06:00–20:00 marks the time fie
 test('C3 no visible asterisk on any field of the private flow (pick-up place included)', async ({ page }) => {
 	await page.goto('/book/blue-cave-hvar-5-islands/private/');
 	await hydrated(page);
-	await page.getByRole('radio', { name: /Other location/ }).check();
+	await page.getByRole('radio', { name: /Other pickup location/ }).check();
 	await expect(page.locator('#private-pickup-place')).toHaveAttribute('required', '');
 	const stars = page.locator('form.flow .form-field-ui__required');
 	expect(await stars.count()).toBeGreaterThan(0);
@@ -371,7 +371,7 @@ test('C5 "Other location" on a pay-now tour switches the step bar to a request, 
 	const steps = page.getByRole('list', { name: 'Booking progress' }).getByRole('listitem');
 	await page.goto('/book/blue-cave-hvar-5-islands/private/');
 	await hydrated(page);
-	await page.getByRole('radio', { name: /Other location/ }).check();
+	await page.getByRole('radio', { name: /Other pickup location/ }).check();
 	await expect(steps).toHaveCount(3);
 	await expect(steps.last()).toContainText('Request');
 	await page.getByRole('radio', { name: /meeting point/ }).check();

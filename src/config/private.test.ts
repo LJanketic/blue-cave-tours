@@ -99,16 +99,16 @@ describe('extras and pick-ups', () => {
 
 	it('lists the pick-ups from ClickUp "Pick up point za private" (6 Nov 2026) in order, Riva first and free', () => {
 		expect(PRIVATE_PICKUPS.map((p) => [p.label, p.price])).toEqual([
-			['Riva stand 14 (meeting point)', 0],
+			['Riva Waterfront (Stand 14), Split', 0],
 			['Zenta Marina, Split', 30],
 			['Radisson Blu Hotel, Split', 40],
 			['Le Méridien Lav Hotel, Podstrana', 60],
 			['Hotel San Antonio, Podstrana', 60],
 			['Old Town Waterfront, Trogir', 80],
-			['Stomorska Waterfront, Šolta', 100],
-			['Sutivan Waterfront, Brač', 100],
-			['Milna Marina, Brač', 120],
-			['Hvar Town Waterfront', 150],
+			['Stomorska Waterfront, Šolta Island', 100],
+			['Sutivan Waterfront, Brač Island', 100],
+			['Milna Marina, Brač Island', 120],
+			['Hvar Town Waterfront, Hvar Island', 150],
 		]);
 		expect(PRIVATE_PICKUPS[0].id).toBe(DEFAULT_PICKUP_ID);
 		// A listed spot is sent by name on a quote request, which caps the place at OTHER_PICKUP_MAX.

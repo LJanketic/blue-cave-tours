@@ -63,23 +63,25 @@ export const OTHER_PICKUP_ID = 'other';
  * Pick-up points the guest can book and pay for straight away; anywhere else
  * is a request (OTHER_PICKUP_ID). A priced one becomes a line item.
  * ClickUp "Pick up point za private" (6 Nov 2026) lists these ten, in this
- * order; the prices and descriptions are from Ivan's design ("05 Private
- * experience"), as the task gives none.
+ * order; labels, prices and descriptions are from Ivan's design ("05 Private
+ * experience", his task comment of 6 Nov). Ivan calls the fees placeholders
+ * until the operator confirms them; Luka approved selling them as written.
+ * The "Other pickup location" option lives in PrivateBookingFlow.vue.
  */
 export const PRIVATE_PICKUPS: readonly PrivatePickup[] = [
-	{ id: DEFAULT_PICKUP_ID, label: 'Riva stand 14 (meeting point)', price: 0, desc: 'Our main meeting point, in front of Diocletian’s Palace', icon: 'anchor' },
+	{ id: DEFAULT_PICKUP_ID, label: 'Riva Waterfront (Stand 14), Split', price: 0, desc: 'Our main meeting point, in front of Diocletian’s Palace', icon: 'anchor' },
 	{ id: 'zenta', label: 'Zenta Marina, Split', price: 30, desc: 'Marina east of the city centre', icon: 'sailboat' },
 	{ id: 'radisson', label: 'Radisson Blu Hotel, Split', price: 40, desc: 'Hotel waterfront, east Split', icon: 'building' },
 	{ id: 'le-meridien', label: 'Le Méridien Lav Hotel, Podstrana', price: 60, desc: 'Hotel waterfront, just south of Split', icon: 'building' },
 	{ id: 'san-antonio', label: 'Hotel San Antonio, Podstrana', price: 60, desc: 'Hotel waterfront, just south of Split', icon: 'building' },
 	{ id: 'trogir', label: 'Old Town Waterfront, Trogir', price: 80, desc: 'Riva promenade, opposite the old town bridge', icon: 'building-castle' },
-	{ id: 'stomorska', label: 'Stomorska Waterfront, Šolta', price: 100, desc: 'Village harbour on Šolta', icon: 'sailboat' },
-	{ id: 'sutivan', label: 'Sutivan Waterfront, Brač', price: 100, desc: 'Village waterfront on Brač’s north coast', icon: 'sailboat' },
-	{ id: 'milna', label: 'Milna Marina, Brač', price: 120, desc: 'Marina on Brač’s west coast', icon: 'sailboat' },
-	{ id: 'hvar', label: 'Hvar Town Waterfront', price: 150, desc: 'Main harbour in Hvar Town', icon: 'anchor' },
+	{ id: 'stomorska', label: 'Stomorska Waterfront, Šolta Island', price: 100, desc: 'Village harbour on Šolta', icon: 'sailboat' },
+	{ id: 'sutivan', label: 'Sutivan Waterfront, Brač Island', price: 100, desc: 'Village waterfront on Brač’s north coast', icon: 'sailboat' },
+	{ id: 'milna', label: 'Milna Marina, Brač Island', price: 120, desc: 'Marina on Brač’s west coast', icon: 'sailboat' },
+	{ id: 'hvar', label: 'Hvar Town Waterfront, Hvar Island', price: 150, desc: 'Main harbour in Hvar Town', icon: 'anchor' },
 ];
 
-/** Longest pick-up location a guest can type for "Other location". */
+/** Longest pick-up location a guest can type for "Other pickup location". */
 export const OTHER_PICKUP_MAX = 120;
 
 /** Step between the departure times a guest can choose. */

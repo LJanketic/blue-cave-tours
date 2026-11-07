@@ -33,4 +33,11 @@ export const CANCELLATION_FULL_SUFFIX = ` before departure. Cancellations within
  */
 export const CANCELLATION_FULL = `${CANCELLATION_FULL_PREFIX}${CANCELLATION_WINDOW}${CANCELLATION_FULL_SUFFIX}`;
 
+/**
+ * The guest-facing weather line after booking: the payment success page and the
+ * confirmation email (ClickUp "Weather update", 6 Nov 2026, Mare's sentence).
+ * The figures stay in CANCELLATION_WEATHER and the legal page.
+ */
+export const WEATHER_UPDATE_NOTE = "We'll contact you before departure if conditions change. If cancelled, you get a full refund or free rescheduling.";
+
 export const CANCELLATION_WEATHER = `If we cancel for safety reasons, we'll let you know at least ${WEATHER_NOTICE_HOURS} hours before departure. You choose: move to the next available date, switch to an alternative tour, or take a full refund, paid within ${WEATHER_REFUND_DAYS} days.`;

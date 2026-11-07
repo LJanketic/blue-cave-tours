@@ -86,6 +86,8 @@ test('request, quote, pay: a private experience from start to finish', async ({ 
 	await expect(page).toHaveURL(/\/booking\/success\/\?id=/);
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText("You're booked!");
 	await expect(page.locator('main')).toContainText('Your private experience');
+	// ClickUp "Weather update" (6 Nov): Mare's sentence in "What happens next".
+	await expect(page.locator('main')).toContainText("Weather update. We'll contact you before departure if conditions change. If cancelled, you get a full refund or free rescheduling.");
 
 	// Boss: a paid private experience, and the request shows it.
 	await page.goto(`/admin/bookings/${id}/`);

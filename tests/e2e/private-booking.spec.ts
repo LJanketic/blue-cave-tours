@@ -99,7 +99,7 @@ test('a tour with no boat price: the private step sends a quote request at its u
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
 	await expect(page.locator('.flow__departure')).toContainText('Departure 09:00 (check-in 08:45)');
 	// Meeting at the Riva needs no pick-up place.
-	await expect(page.getByRole('radio', { name: /Riva stand 14/ })).toBeChecked();
+	await expect(page.getByRole('radio', { name: /Riva Waterfront \(Stand 14\)/ })).toBeChecked();
 	await expect(page.locator('#private-pickup-place')).toHaveCount(0);
 	const surname = `Quote${Date.now().toString(36)}`;
 	await page.locator('#private-first').fill('Test');
@@ -149,13 +149,13 @@ test('book the boat at its usual departure, review, pay: the server prices it', 
 	await expect(page.locator('.flow__departure')).toContainText('Departure 07:20');
 	await expect(page.getByText('Leave later if you like')).toHaveCount(0);
 	await expect(page.getByRole('heading', { name: 'Extras' })).toBeVisible();
-	await expect(page.getByRole('radio', { name: /Riva stand 14/ })).toBeChecked();
+	await expect(page.getByRole('radio', { name: /Riva Waterfront \(Stand 14\)/ })).toBeChecked();
 	await page.locator('#private-first').fill('Test');
 	await page.locator('#private-last').fill('Guest');
 	await page.locator('#private-email').fill('guest@example.com');
 	const summary = page.locator('.summary-card-ui');
 	await expect(summary).toContainText('07:20');
-	await expect(summary).toContainText('Riva stand 14');
+	await expect(summary).toContainText('Riva Waterfront (Stand 14), Split');
 	// Amounts are grouped en-GB, as on the tour card: "€1,500".
 	const shown = (await summary.locator('.summary-card-ui__total').innerText()).match(/€([\d,]+)/)?.[1] ?? '';
 	expect(['1,500', '2,000']).toContain(shown);
@@ -187,7 +187,7 @@ test('"Other location" turns the booking into a request for a quote', async ({ p
 	await page.setExtraHTTPHeaders(ip());
 	await page.goto(`/book/${TOUR}/private/`);
 	await hydrated(page);
-	await page.getByRole('radio', { name: /Other location/ }).check();
+	await page.getByRole('radio', { name: /Other pickup location/ }).check();
 	await expect(page.getByRole('button', { name: /Send request/ })).toBeVisible();
 	await expect(page.locator('.summary-card-ui__total')).toContainText("We'll send you a quote");
 	// A request is priced in the quote: no cut-off note under the calendar, no season price line.

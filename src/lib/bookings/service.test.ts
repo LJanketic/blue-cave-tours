@@ -262,7 +262,7 @@ describe('finalizePaidBooking', () => {
 			'Guests: 2 adults, 1 child',
 			`Total (incl. VAT): €${booking.total} — Paid (demo, no money taken)`,
 			'Bring: Swimsuit and towel, Sunscreen and sunglasses, Hat or cap, Cash or card for lunch and extras, Light jacket for cooler sea breezes',
-			"If we cancel for safety reasons, we'll let you know at least 4 hours before departure.",
+			"We'll contact you before departure if conditions change. If cancelled, you get a full refund or free rescheduling.",
 			'See you aboard!',
 			'The Hello Blue Cave team · Hello Blue Cave · Split, Croatia',
 			'example.test · +385 98 702 250 · info@hellobluecave.com',
