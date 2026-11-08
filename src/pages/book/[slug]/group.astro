@@ -18,6 +18,7 @@ import { MAX_GUESTS, meetingPointShort, supportsInstantBook } from '../../../lib
 import { businessDate } from '../../../lib/bookings/dates';
 import { feeLabel } from '../../../lib/cards';
 import type { TourDetail } from '../../../types/tour';
+import { departureChoiceGroup } from '../../../config/departure-choices';
 
 // Quote-only tours have no instant-book price; they're routed to the contact form everywhere.
 export function getStaticPaths() {
@@ -34,10 +35,23 @@ const photo = getTourCardPhoto(tour);
 const ageBands = tour.ageBands ?? DEFAULT_AGE_BANDS;
 const fee = feeLabel(tour);
 const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (_, i) => i + min);
+
+// Same route at another time of day (Blue Lagoon morning / afternoon, board 04b): one step, the guest picks the time.
+const choiceGroup = departureChoiceGroup(tour.slug);
+const timeChoices = (choiceGroup?.choices ?? []).flatMap((c) => {
+	const t = getAllTours().find((x) => x.slug === c.tourSlug);
+	if (!t || !supportsInstantBook(t) || t.departures.length !== 1) return [];
+	// One price on the page: the times must cost the same.
+	if (JSON.stringify(t.prices) !== JSON.stringify(tour.prices)) throw new Error(`${t.slug} and ${tour.slug} are priced differently; they can't share a booking step`);
+	const d = t.departures[0];
+	return [{ tourSlug: t.slug, tourTitle: t.title, time: d.time, checkIn: d.checkIn, label: `${d.time} · ${c.label}`, sub: `Back in Split at ${t.returnTime}`, icon: c.icon }];
+});
+const heading = timeChoices.length > 1 && choiceGroup ? choiceGroup.title : tour.title;
+const otherTimes = timeChoices.filter((c) => c.tourSlug !== tour.slug);
 ---
 
-<SiteLayout title={pageTitle(`Book: ${tour.title}`)} description={`Book ${tour.title}: choose a date, guests and contact details.`} checkout robots="noindex, nofollow">
-	<BookingShell step={2} exitHref={`/tours/${tour.slug}/`} heading={`Book ${tour.title}`}>
+<SiteLayout title={pageTitle(`Book: ${heading}`)} description={`Book ${heading}: choose a date, guests and contact details.`} checkout robots="noindex, nofollow">
+	<BookingShell step={2} exitHref={`/tours/${tour.slug}/`} heading={`Book ${heading}`}>
 		<div class="snap">
 			{
 				photo.src ? (
@@ -49,7 +63,7 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 				)
 			}
 			<div>
-				<p class="snap__name">{tour.title}</p>
+				<p class="snap__name">{heading}</p>
 				<p class="snap__meta">{tour.duration} · {meetingPointShort(tour.meetingPoint)}</p>
 			</div>
 		</div>
@@ -66,6 +80,7 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 				renderedOn={renderedOn}
 				seasonStart={SEASON_START}
 				seasonEnd={SEASON_END}
+				timeChoices={timeChoices}
 			/>
 		</div>
 
@@ -73,6 +88,7 @@ const counts = (max: number, min = 0) => Array.from({ length: max - min + 1 }, (
 		<form class="no-js" method="post" action="/api/bookings/draft">
 			<input type="hidden" name="tourId" value={tour.slug} />
 			<p class="no-js__note">Tours run {seasonLabel()}.</p>
+			{otherTimes.map((c) => <p class="no-js__note">This form books {tour.departures[0]?.time}. For {c.label}, <a href={`/book/${c.tourSlug}/group/`}>book that trip</a>.</p>)}
 			<label>Date<input type="date" name="date" required min={renderedOn} /></label>
 			{
 				tour.departures.length > 1 ? (

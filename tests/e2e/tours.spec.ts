@@ -69,7 +69,9 @@ test('sort by price puts the cheapest first and quote-only tours last', async ({
 	await page.goto('/tours/');
 	await page.getByLabel('Sort tours').selectOption('price-asc');
 	const prices = await page.locator('.tour-card-ui__amount').allInnerTexts();
-	const numbers = prices.map((p) => (p.startsWith('€') ? Number(p.slice(1)) : Infinity));
+	// "€1,200" is grouped en-GB: drop the comma, or Number() gives NaN and the order check passes by luck.
+	const numbers = prices.map((p) => (p.startsWith('€') ? Number(p.slice(1).replace(/,/g, '')) : Infinity));
+	expect(numbers.some(Number.isNaN)).toBe(false);
 	expect(numbers).toEqual([...numbers].sort((a, b) => a - b));
 });
 

@@ -20,7 +20,6 @@ import { formatEuro } from '../../lib/price';
 import { isRecordId } from '../../lib/bookings/ids';
 import { bookings } from '../../lib/bookings/store';
 import { BOOKING_COOKIE } from '../../lib/bookings/session';
-import { durationLabel } from '../../config/charter';
 
 // Only a paid, active booking gets this page; anything else goes to the payment page.
 const id = Astro.url.searchParams.get('id');
@@ -39,18 +38,16 @@ function maskEmail(email: string): string {
 
 const tour = getTourBySlug(booking.tourSlug);
 const departure = tour?.departures.find((d) => d.time === booking.slot);
-// Check-in when the tour has one, the departure itself on Blue Cave (arriveOnTime), otherwise 15 minutes before.
-const arriveBy = departure?.checkIn
-	? departure.checkIn
-	: departure?.arriveOnTime
-		? departure.time
-		: booking.slot
-		? (() => {
-				const [h, m] = booking.slot.split(':').map(Number);
-				const t = h * 60 + m - 15;
-				return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
-			})()
-		: '15 minutes before departure';
+/** "07:05": 15 minutes before a "07:20" departure. */
+function fifteenEarlier(slot: string): string {
+	const [h, m] = slot.split(':').map(Number);
+	const t = h * 60 + m - 15;
+	return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+}
+// Board 07: "07:05 (15 min early)". Blue Cave guests come for the departure itself (arriveOnTime, ClickUp 8 Nov 2026);
+// a tour with a check-in uses it.
+const arriveAt = departure?.arriveOnTime ? departure.time : (departure?.checkIn ?? (booking.slot ? fifteenEarlier(booking.slot) : null));
+const arriveBy = arriveAt === null ? '15 minutes before departure' : departure?.arriveOnTime ? arriveAt : `${arriveAt} (15 min early)`;
 const emailSent = booking.confirmationEmail?.delivery === 'sent';
 const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, sunscreen';
 ---
@@ -60,13 +57,13 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 		<span slot="lead" class="done__icon" aria-hidden="true"><i class="ti ti-check"></i></span>
 		<div class="done__hero">
 			<p>
-				{emailSent ? <>Confirmation sent to <strong>{maskEmail(booking.email)}</strong>. Check your spam folder if it isn't there in a few minutes.</> : <>Your confirmation email is saved in our system{PAYMENTS_ARE_DEMO ? ' (demo: not sent)' : ''}.</>}
+				{emailSent ? <>Confirmation sent to <strong>{maskEmail(booking.email)}</strong>. Check your inbox — including spam just in case.</> : <>Your confirmation email is saved in our system{PAYMENTS_ARE_DEMO ? ' (demo: not sent)' : ''}.</>}
 			</p>
 		</div>
 		{PAYMENTS_ARE_DEMO && <Notice tone="info" icon="info-circle">Demo booking. No payment was taken.</Notice>}
 
 		<div class="done__ref">
-			<span>Booking ref <strong id="booking-ref">{booking.ref}</strong></span>
+			<span>Booking ref: <strong id="booking-ref">{booking.ref}</strong></span>
 			<button type="button" class="done__copy" data-copy="booking-ref" hidden>
 				<i class="ti ti-copy" aria-hidden="true"></i> Copy
 			</button>
@@ -78,13 +75,11 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 			rows={[
 				{ label: 'Tour', value: booking.tourTitle },
 				{ label: 'Date', value: formatBookingDate(booking.date) },
-				{ label: 'Departure', value: booking.slot || 'Confirmed by email' },
-				...(booking.kind === 'private' && booking.durationHours ? [{ label: 'Duration', value: durationLabel(booking.durationHours) }] : []),
+				// Board 07: "07:20 — Split Riva, stand number 14". The invoice number is in the confirmation email.
+				{ label: 'Departure', value: booking.slot ? `${booking.slot} — ${booking.pickup ?? MEETING_POINT_LABEL}` : 'Confirmed by email' },
 				{ label: 'Guests', value: guestSummaryFromCounts(booking.adults, booking.children, booking.infants) },
-				{ label: 'Paid with', value: booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card' },
-				...(booking.invoice ? [{ label: 'Invoice (račun)', value: `${booking.invoice.number}${PAYMENTS_ARE_DEMO ? ' (demo)' : ''}` }] : []),
 			]}
-			total={{ label: 'Total paid (incl. VAT)', value: formatEuro(booking.total) }}
+			total={{ label: 'Total paid', value: formatEuro(booking.total) }}
 		/>
 
 		<section class="done__card" aria-labelledby="meet-heading">
@@ -105,12 +100,12 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 					)
 				}
 				<div><dt>What to bring</dt><dd>{bring}</dd></div>
-				{!booking.pickup && <div><dt>On the day</dt><dd>Our crew will meet you at the stand</dd></div>}
+				{!booking.pickup && <div><dt>Captain</dt><dd>Your captain will meet you at the boat</dd></div>}
 			</dl>
 			{
 				!booking.pickup && (
 					<a class="done__map" href={MEETING_POINT_MAP_URL} target="_blank" rel="noopener">
-						<i class="ti ti-map-2" aria-hidden="true" /> Open the meeting point on the map<span class="sr-only"> (opens in a new tab)</span>
+						<i class="ti ti-map-2" aria-hidden="true" /> View meeting point on map<span class="sr-only"> (opens in a new tab)</span>
 					</a>
 				)
 			}
@@ -119,9 +114,18 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 		<section class="done__card" aria-labelledby="next-heading">
 			<h2 id="next-heading"><i class="ti ti-list-check" aria-hidden="true"></i> What happens next</h2>
 			<ol class="done__next" role="list">
-				<li><i class="ti ti-mail" aria-hidden="true"></i><span><strong>Check your email.</strong> Your booking details, {booking.pickup ? 'pick-up' : 'meeting point'} and what to bring.</span></li>
-				<li><i class="ti ti-cloud-storm" aria-hidden="true"></i><span><strong>Weather update.</strong> {WEATHER_UPDATE_NOTE}</span></li>
-				<li><i class="ti ti-anchor" aria-hidden="true"></i><span><strong>Show up and sail.</strong> {booking.pickup ? 'Be ready at your pick-up point at the time we confirm.' : `Be at the stand by ${arriveBy}.`}</span></li>
+				<li>
+					<i class="ti ti-mail" aria-hidden="true"></i>
+					<span><strong>Check your email</strong> Full booking details, {booking.pickup ? 'pick-up' : 'meeting point'}, and what to bring{emailSent ? <> — sent to {maskEmail(booking.email)} right now.</> : '.'}</span>
+				</li>
+				<li><i class="ti ti-cloud-storm" aria-hidden="true"></i><span><strong>Weather update</strong> {WEATHER_UPDATE_NOTE}</span></li>
+				<li>
+					<i class="ti ti-anchor" aria-hidden="true"></i>
+					<span>
+						<strong>Show up and enjoy</strong>
+						{booking.pickup ? 'Be ready at your pick-up point at the time we confirm.' : `Arrive at the Riva promenade, stand number 14, by ${arriveAt ?? 'your check-in'}.`} Your captain will be waiting — no need to print anything.
+					</span>
+				</li>
 			</ol>
 		</section>
 
@@ -271,19 +275,31 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 			list-style: none;
 		}
 
+		/* Board 07: each step a soft card, its icon in a small tile, the title on its own line. */
 		.done__next li {
 			display: flex;
 			gap: var(--space-3);
+			padding: var(--space-3);
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+			font-size: var(--font-size-sm);
 			color: var(--color-text-secondary);
 		}
 
 		.done__next .ti {
+			display: grid;
 			flex-shrink: 0;
-			margin-top: 3px;
+			place-items: center;
+			width: 28px;
+			height: 28px;
+			border-radius: var(--radius-sm);
+			background: var(--color-background-primary);
 			color: var(--color-accent);
 		}
 
 		.done__next strong {
+			display: block;
+			margin-bottom: 2px;
 			color: var(--color-text-primary);
 			font-weight: var(--font-weight-medium);
 		}

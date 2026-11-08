@@ -46,7 +46,7 @@ export const PRIVATE_TOURS: Readonly<Record<string, PrivateTour>> = {
 	'dubrovnik-one-way': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
 };
 
-export type PrivateExtra = { id: string; label: string; desc: string; price: number };
+export type PrivateExtra = { id: string; label: string; desc: string; price: number; icon?: string };
 
 /**
  * Extras the guest can add and pay for, per booking (not per guest).
@@ -57,9 +57,9 @@ export type PrivateExtra = { id: string; label: string; desc: string; price: num
  * refuses any.
  */
 export const PRIVATE_EXTRAS: readonly PrivateExtra[] = [
-	{ id: 'champagne', label: 'Champagne welcome', desc: 'Chilled on ice, ready when you board', price: 40 },
-	{ id: 'sup', label: 'SUP', desc: 'Stand-up paddleboard, ready to use at any stop', price: 35 },
-	{ id: 'seabob', label: 'Seabob', desc: 'Underwater sea scooter for extra fun at sea', price: 150 },
+	{ id: 'champagne', label: 'Champagne welcome', desc: 'Chilled on ice, ready when you board', price: 40, icon: 'glass-full' },
+	{ id: 'sup', label: 'SUP', desc: 'Stand-up paddleboard, ready to use at any stop', price: 35, icon: 'swimming' },
+	{ id: 'seabob', label: 'Seabob', desc: 'Underwater sea scooter for extra fun at sea', price: 150, icon: 'ripple' },
 ];
 
 export type PrivatePickup = { id: string; label: string; price: number; desc?: string; icon?: string };

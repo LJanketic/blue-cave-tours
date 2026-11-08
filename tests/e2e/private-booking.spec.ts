@@ -126,7 +126,9 @@ test('book the boat at its usual departure, review, pay: the server prices it', 
 	await expect(page.locator('#private-time')).toHaveValue('07:20');
 	await expect(page.getByText('Leave later if you like, up to 11:00')).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'Extras' })).toBeVisible();
-	await expect(page.getByRole('radio', { name: /Riva Waterfront \(Stand 14\)/ })).toBeChecked();
+	// Board 05: the pick-up is a dropdown, the Riva chosen and included.
+	await expect(page.locator('#private-pickup')).toHaveValue('riva');
+	await expect(page.locator('#private-pickup-hint')).toHaveText('Meeting point included in the price.');
 	await page.locator('#private-first').fill('Test');
 	await page.locator('#private-last').fill('Guest');
 	await page.locator('#private-email').fill('guest@example.com');
@@ -164,7 +166,7 @@ test('"Other location" turns the booking into a request for a quote', async ({ p
 	await page.setExtraHTTPHeaders(ip());
 	await page.goto(`/book/${TOUR}/private/`);
 	await hydrated(page);
-	await page.getByRole('radio', { name: /Other pickup location/ }).check();
+	await page.locator('#private-pickup').selectOption('other');
 	await expect(page.getByRole('button', { name: /Send request/ })).toBeVisible();
 	await expect(page.locator('.summary-card-ui__total')).toContainText("We'll send you a quote");
 	// A request is priced in the quote: no cut-off note under the calendar, no season price line.

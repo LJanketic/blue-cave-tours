@@ -27,7 +27,6 @@ import { setStepBarRequest } from '../../client/step-bar';
 import type { AgeBands } from '../../types/tour';
 import BookingCalendar from './booking/BookingCalendar.vue';
 import GuestSteppers from './booking/GuestSteppers.vue';
-import ChoiceCards from './booking/ChoiceCards.vue';
 import FormField from '../ui/FormField.vue';
 import SummaryCard from '../booking/SummaryCard.vue';
 import Button from '../ui/Button.vue';
@@ -118,10 +117,17 @@ const total = computed(() => lineItemsTotal(items.value));
 const dateSeason = computed(() => (date.value ? seasonFor(date.value) : null));
 const boatPrice = computed(() => items.value[0]?.amount ?? null);
 
+/** Board 05: one dropdown, each point with its fee ("Zenta Marina, Split · +€30"). */
 const pickupOptions = [
-	...PRIVATE_PICKUPS.map((p) => ({ value: p.id, label: p.label, sub: [p.desc, p.price ? `+ ${formatEuro(p.price)}` : 'Included'].filter(Boolean).join(' · '), icon: p.icon ?? (p.id === DEFAULT_PICKUP_ID ? 'anchor' : 'building') })),
-	{ value: OTHER_PICKUP_ID, label: 'Other pickup location', sub: "Must be arranged with the captain beforehand · We'll send you a quote", icon: 'map-2' },
+	...PRIVATE_PICKUPS.map((p) => ({ value: p.id, label: `${p.label} · ${p.price ? `+${formatEuro(p.price)}` : 'Included'}` })),
+	{ value: OTHER_PICKUP_ID, label: 'Other pickup location · On request' },
 ];
+/** What the chosen point means for the price, under the dropdown. */
+const pickupNote = computed(() => {
+	if (isOtherPickup.value) return 'Must be arranged with the captain beforehand. We\'ll send you a quote.';
+	const point = privatePickup(pickup.value);
+	return point?.price ? `${point.desc ? `${point.desc}. ` : ''}+${formatEuro(point.price)}, added to your total.` : 'Meeting point included in the price.';
+});
 
 const notesText = computed(() =>
 	props.quoteOnly
@@ -436,26 +442,27 @@ onUnmounted(() => clearInterval(clock));
 
 		<!-- Only once the operator has priced an extra (src/config/private.ts). -->
 		<section v-if="PRIVATE_EXTRAS.length" class="flow__card" aria-labelledby="extras-heading">
-			<h2 id="extras-heading" class="flow__title"><i class="ti ti-glass-full" aria-hidden="true"></i> Extras</h2>
-			<p class="flow__sub">Optional.</p>
+			<h2 id="extras-heading" class="flow__title"><i class="ti ti-star" aria-hidden="true"></i> Add extras <span class="flow__optional">— optional</span></h2>
+			<p class="flow__sub">Per-booking add-ons, all prepared before you arrive.</p>
 			<fieldset class="extras">
 				<legend class="sr-only">Extras</legend>
 				<label v-for="extra in PRIVATE_EXTRAS" :key="extra.id" class="extras__card" :class="{ 'is-on': extras.includes(extra.id) }">
-					<input v-model="extras" type="checkbox" name="extras" :value="extra.id" class="extras__input" />
+					<span v-if="extra.icon" class="extras__icon" aria-hidden="true"><i :class="`ti ti-${extra.icon}`"></i></span>
 					<span class="extras__text">
 						<span class="extras__label">{{ extra.label }}</span>
 						<span class="extras__sub">{{ extra.desc }}</span>
 					</span>
-					<span class="extras__price">+ {{ formatEuro(extra.price) }}</span>
+					<span class="extras__price">+{{ formatEuro(extra.price) }}</span>
+					<input v-model="extras" type="checkbox" name="extras" :value="extra.id" class="extras__input" />
 				</label>
 			</fieldset>
 			<p v-if="fieldErrors.extras" class="flow__error" role="alert">{{ fieldErrors.extras }}</p>
 		</section>
 
 		<section class="flow__card" aria-labelledby="pickup-heading">
-			<h2 id="pickup-heading" class="flow__title"><i class="ti ti-map-pin" aria-hidden="true"></i> Pick-up</h2>
-			<p class="flow__sub">Meet the boat on the Riva, or we pick you up.</p>
-			<ChoiceCards v-model="pickup" name="pickup" legend="Pick-up" legend-hidden :options="pickupOptions" />
+			<h2 id="pickup-heading" class="flow__title"><i class="ti ti-map-pin" aria-hidden="true"></i> Pickup</h2>
+			<p class="flow__sub">Where should we pick you up? Your boat comes to you.</p>
+			<FormField id="private-pickup" v-model="pickup" class="flow__pickup" label="Pickup point" name="pickup" as="select" :options="pickupOptions" :hint="pickupNote" />
 			<div v-if="isOtherPickup" class="flow__other">
 				<FormField
 					id="private-pickup-place"
@@ -584,10 +591,10 @@ onUnmounted(() => clearInterval(clock));
 		color: var(--color-text-secondary);
 	}
 
-	/* Checkbox cards, styled as ChoiceCards' radio cards. */
+	/* Board 05: checkbox cards one under another, the box on the right. */
 	.extras {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: 1fr;
 		gap: 10px;
 		margin: 0;
 		padding: 0;
@@ -622,9 +629,35 @@ onUnmounted(() => clearInterval(clock));
 		accent-color: var(--color-brand);
 	}
 
+	.extras__icon {
+		display: grid;
+		flex-shrink: 0;
+		place-items: center;
+		width: 36px;
+		height: 36px;
+		border-radius: var(--radius-md);
+		background: var(--color-background-secondary);
+		color: var(--color-text-info);
+	}
+
 	.extras__text {
 		flex: 1;
 		min-width: 0;
+	}
+
+	.flow__optional {
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-regular);
+		color: var(--color-text-secondary);
+	}
+
+	.flow :deep(.flow__pickup .form-field-ui__label) {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
 	}
 
 	.extras__label {
@@ -726,7 +759,6 @@ onUnmounted(() => clearInterval(clock));
 	}
 
 	@media (max-width: 768px) {
-		.extras,
 		.flow__fields {
 			grid-template-columns: 1fr;
 		}

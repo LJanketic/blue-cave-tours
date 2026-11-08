@@ -54,8 +54,9 @@ test('private pay-now: extras and a listed pick-up are added to the boat price, 
 	await expect(page.getByRole('checkbox', { name: /Seabob/ })).toBeVisible();
 	await page.getByRole('checkbox', { name: /Champagne welcome/ }).check();
 	await page.getByRole('checkbox', { name: /SUP/ }).check();
-	await page.getByRole('radio', { name: /Old Town Waterfront, Trogir/ }).check();
-	await expect(page.getByRole('radio', { name: /Hvar Town Waterfront/ })).toBeVisible();
+	// Board 05: one dropdown with every point and its fee.
+	await page.locator('#private-pickup').selectOption('trogir');
+	await expect(page.locator('#private-pickup option', { hasText: 'Hvar Town Waterfront, Hvar Island · +€150' })).toHaveCount(1);
 	await expect(total).toContainText(`€${(boat + 40 + 35 + 80).toLocaleString('en-GB')}`);
 
 	await page.locator('#private-first').fill('Test');
@@ -76,7 +77,7 @@ test('Golden Horn private pay-now (Mare, 8 Nov 2026): Seabob and Milna are added
 	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
 	await page.getByRole('checkbox', { name: /Seabob/ }).check();
-	await page.getByRole('radio', { name: /Milna Marina, Brač/ }).check();
+	await page.locator('#private-pickup').selectOption('milna');
 	await expect(page.locator('.summary-card-ui__total')).toContainText('€1,470');
 	await page.locator('#private-first').fill('Test');
 	await page.locator('#private-last').fill('Guest');
