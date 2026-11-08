@@ -63,6 +63,16 @@ export function tourCtas(
 	return { primary, secondary: privateCta(tour, links) };
 }
 
+/**
+ * A private-only tour's "From" price: its boat's low-season price when it is
+ * paid online (src/config/private.ts), else null ("On request"). Group tours
+ * show the adult price instead, and their private price on the second button.
+ */
+export function privateOnlyFromPrice(tour: Pick<TourDetail, 'slug' | 'types' | 'departures'>): number | null {
+	if (tour.types.includes('group') || !supportsPrivateBook(tour)) return null;
+	return privateTour(tour.slug)?.boat.low ?? null;
+}
+
 /** The "Private experience" button of a group + private tour (see tourCtas), or null. */
 function privateCta(
 	tour: Pick<TourDetail, 'slug' | 'types'> & Partial<Pick<TourDetail, 'departures'>>,

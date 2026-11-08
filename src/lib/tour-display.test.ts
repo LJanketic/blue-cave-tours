@@ -17,12 +17,13 @@ describe('tourCtas', () => {
 	it("books instant-book tours, and books the boat privately where there is a private price, showing the boat's low-season price", () => {
 		expect(ctas('blue-cave-hvar-5-islands')).toEqual({
 			primary: { label: 'Book group tour tickets', href: '/book/blue-cave-hvar-5-islands/group/' },
-			secondary: { label: 'Private experience', href: '/book/blue-cave-hvar-5-islands/private/', price: '€1,500' },
+			secondary: { label: 'Private experience', href: '/book/blue-cave-hvar-5-islands/private/', price: '€1,200' },
 		});
 	});
 
-	it.each(['golden-horn-brac-hvar', 'blue-lagoon-morning', 'blue-lagoon-afternoon'])('opens the private booking step of %s (a quote request), with no price, while it has no boat price', (slug) => {
-		expect(ctas(slug).secondary).toEqual({ label: 'Private experience', href: `/book/${slug}/private/` });
+	// Mare, 8 Nov 2026: every private tour is €1,200 a boat.
+	it.each(['golden-horn-brac-hvar', 'blue-lagoon-morning', 'blue-lagoon-afternoon'])('books %s privately at the €1,200 boat price', (slug) => {
+		expect(ctas(slug).secondary).toEqual({ label: 'Private experience', href: `/book/${slug}/private/`, price: '€1,200' });
 	});
 
 	it('opens the private booking step of a group + private tour with no private price, without a price', () => {

@@ -25,7 +25,7 @@ const ASIDES: Record<string, Aside> = {
 		child: 'Children from €129',
 		next: '07:20',
 		primary: { label: 'Book group tour tickets', href: '/book/blue-cave-hvar-5-islands/group/' },
-		secondary: { label: 'Private experience', href: '/book/blue-cave-hvar-5-islands/private/', price: '€1,500 / boat' },
+		secondary: { label: 'Private experience', href: '/book/blue-cave-hvar-5-islands/private/', price: '€1,200 / boat' },
 		policy: 'group',
 	},
 	'golden-horn-brac-hvar': {
@@ -33,7 +33,7 @@ const ASIDES: Record<string, Aside> = {
 		child: 'Children from €89',
 		next: '09:00',
 		primary: { label: 'Book group tour tickets', href: '/book/golden-horn-brac-hvar/group/' },
-		secondary: { label: 'Private experience', href: '/book/golden-horn-brac-hvar/private/', price: null },
+		secondary: { label: 'Private experience', href: '/book/golden-horn-brac-hvar/private/', price: '€1,200 / boat' },
 		policy: 'group',
 	},
 	'blue-lagoon-morning': {
@@ -41,7 +41,7 @@ const ASIDES: Record<string, Aside> = {
 		child: 'Children from €60',
 		next: '09:30',
 		primary: { label: 'Book group tour tickets', href: '/book/blue-lagoon-morning/group/' },
-		secondary: { label: 'Private experience', href: '/book/blue-lagoon-morning/private/', price: null },
+		secondary: { label: 'Private experience', href: '/book/blue-lagoon-morning/private/', price: '€1,200 / boat' },
 		policy: 'group',
 	},
 	'blue-lagoon-afternoon': {
@@ -49,23 +49,23 @@ const ASIDES: Record<string, Aside> = {
 		child: 'Children from €60',
 		next: '14:30',
 		primary: { label: 'Book group tour tickets', href: '/book/blue-lagoon-afternoon/group/' },
-		secondary: { label: 'Private experience', href: '/book/blue-lagoon-afternoon/private/', price: null },
+		secondary: { label: 'Private experience', href: '/book/blue-lagoon-afternoon/private/', price: '€1,200 / boat' },
 		policy: 'group',
 	},
 	'hvar-red-rocks-pakleni': {
-		// Private only since the operator's tour sheet of 4 Nov 2026.
-		price: 'On request',
+		// Private only since the operator's tour sheet of 4 Nov 2026; paid online at €1,200 a boat since 8 Nov.
+		price: 'From €1,200 / boat',
 		child: null,
-		next: 'Time confirmed at booking',
+		next: '09:00',
 		primary: { label: 'Plan your private tour', href: '/book/hvar-red-rocks-pakleni/private/' },
 		secondary: null,
 		policy: 'private',
 	},
 	'dubrovnik-one-way': {
-		// Private only since the operator's tour sheet of 4 Nov 2026.
-		price: 'On request',
+		// Private only since the operator's tour sheet of 4 Nov 2026; paid online at €1,200 a boat since 8 Nov.
+		price: 'From €1,200 / boat',
 		child: null,
-		next: 'Time confirmed at booking',
+		next: '08:00',
 		primary: { label: 'Plan your private tour', href: '/book/dubrovnik-one-way/private/' },
 		secondary: null,
 		policy: 'private',
@@ -264,42 +264,27 @@ test('C3 the no-JS fallback forms match the islands: labels, placeholders, no as
 	await context.close();
 });
 
-test('C5 Blue Lagoon afternoon private step: a quote request at 14:30', async ({ page }) => {
+test('C5 Blue Lagoon afternoon private step: pays now at its own 14:30 (after the 11:00 latest, so no later times)', async ({ page }) => {
 	await page.goto('/book/blue-lagoon-afternoon/private/');
 	await hydrated(page);
-	await expect(page.getByRole('button', { name: /Send request/ })).toBeVisible();
-	await expect(page.getByRole('button', { name: /Review booking/ })).toHaveCount(0);
+	await expect(page.getByRole('button', { name: /Review booking/ })).toBeVisible();
+	await expect(page.getByRole('button', { name: /Send request/ })).toHaveCount(0);
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
-	await expect(page.locator('.flow__departure')).toContainText('14:30');
+	await expect(page.locator('.flow__departure')).toContainText('Departure 14:30');
+	await expect(page.locator('#private-time')).toHaveCount(0);
 	const summary = page.locator('.summary-card-ui');
 	await expect(summary.locator('.summary-card-ui__row').filter({ hasText: 'Departure' })).toContainText('14:30');
-	// The quote is said once, in the total, which has no "(incl. VAT)" for a quote.
-	await expect(summary.locator('.summary-card-ui__row').filter({ hasText: /^Price/ })).toHaveCount(0);
-	await expect(summary.locator('.summary-card-ui__total')).toContainText("We'll send you a quote");
-	await expect(summary.locator('.summary-card-ui__total')).not.toContainText('incl. VAT');
-	// No boat price anywhere: with no extra or paid pick-up chosen, the summary has no amount.
-	await expect(summary).not.toContainText('€');
-	// Phone is required for a request, labelled without "(optional)".
-	await expect(page.locator('#private-phone')).toHaveAttribute('required', '');
-	await expect(page.locator('label[for="private-phone"]')).not.toContainText('optional');
-	// The privacy line moved next to the request button.
-	await expect(page.locator('.flow__actions .flow__privacy a')).toHaveAttribute('href', '/legal/privacy/');
+	await expect(summary.locator('.summary-card-ui__total')).toContainText('€1,200');
+	await expect(summary.locator('.summary-card-ui__total')).toContainText('incl. VAT');
 });
 
-test('C5 Red Rocks private step: a time outside 06:00–20:00 marks the time field itself', async ({ page }) => {
+test('C5 Red Rocks private step: a list of departures from 09:00 to 11:00, not a free time field', async ({ page }) => {
 	await page.goto('/book/hvar-red-rocks-pakleni/private/');
 	await hydrated(page);
-	const time = page.locator('#private-time');
-	await expect(time).toHaveAttribute('type', 'time');
-	await expect(time).not.toHaveAttribute('aria-invalid', 'true');
-	// The hint names the time once a date is chosen.
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
-	await time.fill('21:00');
-	await expect(time).toHaveAttribute('aria-invalid', 'true');
-	await expect(page.locator('#private-time-error')).toContainText('between 06:00 and 20:00');
-	await expect(page.locator('#private-hint')).toContainText('a departure time between 06:00 and 20:00');
-	await time.fill('10:00');
-	await expect(time).not.toHaveAttribute('aria-invalid', 'true');
+	const time = page.locator('#private-time');
+	await expect(time).not.toHaveAttribute('type', 'time');
+	await expect(time.locator('option')).toHaveText(['09:00 (usual departure)', '09:15', '09:30', '09:45', '10:00', '10:15', '10:30', '10:45', '11:00']);
 	await expect(page.locator('#private-time-error')).toHaveCount(0);
 });
 
@@ -313,12 +298,12 @@ test('C3 no visible asterisk on any field of the private flow (pick-up place inc
 	for (const star of await stars.all()) await expect(star).toBeHidden();
 });
 
-test('C1 the Blue Cave private summary groups its amounts like the tour card (€1,500)', async ({ page }) => {
+test('C1 the Blue Cave private summary groups its amounts like the tour card (€1,200)', async ({ page }) => {
 	await page.goto('/book/blue-cave-hvar-5-islands/private/');
 	await hydrated(page);
 	await page.locator('.cal__day:not([aria-disabled])').first().click();
 	const summary = page.locator('.summary-card-ui');
-	await expect(summary.locator('.summary-card-ui__total')).toContainText(/€(1,500|2,000)/);
+	await expect(summary.locator('.summary-card-ui__total')).toContainText('€1,200');
 	await expect(summary).not.toContainText(/€\d{4}/);
 });
 
@@ -341,18 +326,15 @@ test('C5 the charter form files ?tour=blue-lagoon-afternoon under the afternoon 
 	expect(body).toMatchObject({ route: 'blue-lagoon', tourSlug: 'blue-lagoon-afternoon' });
 });
 
-test('C5 without JavaScript, a quote-only private step links to the request form and has no pay-now form', async ({ browser }) => {
+test('C5 without JavaScript, every fixed-route private step has the plain pay-now form', async ({ browser }) => {
 	const context = await browser.newContext({ javaScriptEnabled: false });
 	const page = await context.newPage();
 	for (const slug of ['blue-lagoon-afternoon', 'golden-horn-brac-hvar', 'hvar-red-rocks-pakleni']) {
 		const res = await page.goto(`/book/${slug}/private/`);
 		expect(res?.status(), slug).toBe(200);
-		const link = page.locator('.no-js a[href^="/private-charter/"]');
-		await expect(link, slug).toBeVisible();
-		await expect(link, slug).toHaveAttribute('href', `/private-charter/?tour=${slug}`);
-		// No plain pay-now form (the island's own markup is hidden without JavaScript).
-		await expect(page.locator('form.no-js[action="/api/bookings/draft"]'), slug).toHaveCount(0);
-		await expect(page.locator('form[action="/api/bookings/draft"]:visible'), slug).toHaveCount(0);
+		await expect(page.locator('form.no-js[action="/api/bookings/draft"]'), slug).toBeVisible();
+		// A pick-up off the list is still a request, linked from the form.
+		await expect(page.locator('.no-js a[href^="/private-charter/"]'), slug).toHaveAttribute('href', `/private-charter/?tour=${slug}`);
 	}
 	await context.close();
 });
@@ -360,8 +342,8 @@ test('C5 without JavaScript, a quote-only private step links to the request form
 test('C5 the step bar promises a payment only where there is one', async ({ page }) => {
 	const steps = page.getByRole('list', { name: 'Booking progress' }).getByRole('listitem');
 	await page.goto('/book/golden-horn-brac-hvar/private/');
-	await expect(steps).toHaveCount(3);
-	await expect(steps.last()).toContainText('Request');
+	await expect(steps).toHaveCount(4);
+	await expect(steps.last()).toContainText('Payment');
 	await page.goto('/book/blue-cave-hvar-5-islands/private/');
 	await expect(steps).toHaveCount(4);
 	await expect(steps.last()).toContainText('Payment');

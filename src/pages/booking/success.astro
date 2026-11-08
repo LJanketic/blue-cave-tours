@@ -16,6 +16,7 @@ import Notice from '../../components/ui/Notice.astro';
 import Button from '../../components/ui/Button.astro';
 import { getTourBySlug } from '../../lib/tours';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
+import { formatEuro } from '../../lib/price';
 import { isRecordId } from '../../lib/bookings/ids';
 import { bookings } from '../../lib/bookings/store';
 import { BOOKING_COOKIE } from '../../lib/bookings/session';
@@ -38,10 +39,12 @@ function maskEmail(email: string): string {
 
 const tour = getTourBySlug(booking.tourSlug);
 const departure = tour?.departures.find((d) => d.time === booking.slot);
-// Check-in when the tour has one, otherwise 15 minutes before departure.
+// Check-in when the tour has one, the departure itself on Blue Cave (arriveOnTime), otherwise 15 minutes before.
 const arriveBy = departure?.checkIn
 	? departure.checkIn
-	: booking.slot
+	: departure?.arriveOnTime
+		? departure.time
+		: booking.slot
 		? (() => {
 				const [h, m] = booking.slot.split(':').map(Number);
 				const t = h * 60 + m - 15;
@@ -81,7 +84,7 @@ const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, suns
 				{ label: 'Paid with', value: booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card' },
 				...(booking.invoice ? [{ label: 'Invoice (račun)', value: `${booking.invoice.number}${PAYMENTS_ARE_DEMO ? ' (demo)' : ''}` }] : []),
 			]}
-			total={{ label: 'Total paid (incl. VAT)', value: `€${booking.total}` }}
+			total={{ label: 'Total paid (incl. VAT)', value: formatEuro(booking.total) }}
 		/>
 
 		<section class="done__card" aria-labelledby="meet-heading">

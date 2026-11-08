@@ -2,8 +2,12 @@ import type { PhotoRef } from '../data/tour-photos';
 
 export type ItineraryKind = 'morning' | 'afternoon' | 'full' | 'flexible';
 
-/** A fixed daily departure. `checkIn` is when guests should be at the boat. */
-export type Departure = { time: string; checkIn?: string; label?: string };
+/**
+ * A fixed daily departure. `checkIn` is when guests should be at the boat;
+ * `arriveOnTime` means be there for the departure itself, not 15 minutes
+ * before (Blue Cave, ClickUp "Booking confirmation screen", 8 Nov 2026).
+ */
+export type Departure = { time: string; checkIn?: string; label?: string; arriveOnTime?: true };
 
 /** One itinerary stop. `time` only where the operator gives one (C-19). */
 export type ItineraryStep = {

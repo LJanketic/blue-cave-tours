@@ -9,9 +9,9 @@ import { contactHrefForTour, groupBookHref, isGroupTour, MAX_GUESTS, privateBook
 import { charterUrl } from '../../config/routes';
 import { CANCELLATION_CARD, CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT } from '../../config/cancellation';
 import { seasonLabel } from '../../config/season';
-import { formatFromPrice } from '../../lib/price';
+import { formatEuro, formatFromPrice } from '../../lib/price';
 import { mandatoryFeeLabel } from '../../lib/cards';
-import { meetingPointLines, showsBestseller, tourBreadcrumbs, tourCtas, tourHeadings } from '../../lib/tour-display';
+import { meetingPointLines, privateOnlyFromPrice, showsBestseller, tourBreadcrumbs, tourCtas, tourHeadings } from '../../lib/tour-display';
 import { WHY_GO_PRIVATE, WHY_GO_PRIVATE_TOURS } from '../../data/private-tours';
 import { GALLERY_PHOTO_SIZE, toGalleryView } from '../../data/tour-photos';
 import { getDestinationsForTour } from '../../lib/destinations';
@@ -53,8 +53,10 @@ const galleryPhotos = await Promise.all(
 
 const crumbs = tourBreadcrumbs(tour);
 
-// "From" prices are the low-season prices, whatever today's season.
+// "From" prices are the low-season prices, whatever today's season. A private-only tour paid
+// online shows its boat price instead ("From €1,200 / boat", board "Tours — before vs after").
 const prices = tour.prices;
+const fromAmount = prices ? prices.low.adult : privateOnlyFromPrice(tour);
 const requestLabel = formatFromPrice(null, tour.priceUnit);
 const unit = tour.priceUnit === 'boat' ? '/ boat' : '/ adult';
 // [DEVIATE, operator ClickUp C4 31 Oct 2026]: optional fees left the card and the mobile bar; mandatory ones
@@ -253,10 +255,10 @@ const faqHeading = tour.seoHeadings?.faq ?? `Questions about the ${tour.title}`;
 			<h2 id="book-heading" class="tour__book-heading">Book now</h2>
 			<p class="tour__price">
 				{
-					prices ? (
+					fromAmount !== null ? (
 						<>
 							<span class="tour__from">From</span>{' '}
-							<strong>€{prices.low.adult}</strong>{' '}
+							<strong>{formatEuro(fromAmount)}</strong>{' '}
 							<span class="tour__unit">{unit}</span>
 						</>
 					) : (
@@ -314,10 +316,10 @@ const faqHeading = tour.seoHeadings?.faq ?? `Questions about the ${tour.title}`;
 	<MobileActionBar target="book" label={primary.label === 'Book group tour tickets' ? 'Book now' : primary.label === 'Plan your experience' || primary.label === 'Plan your private tour' ? primary.label : 'Enquire'}>
 		<p>
 			{
-				prices ? (
+				fromAmount !== null ? (
 					<>
 						<span class="tour__from">From</span>{' '}
-						<strong>€{prices.low.adult}</strong>{' '}
+						<strong>{formatEuro(fromAmount)}</strong>{' '}
 						{unit}
 					</>
 				) : (

@@ -1,6 +1,6 @@
 import type { Destination } from '../data/destinations';
 import type { TourDetail } from '../types/tour';
-import { showsBestseller } from './tour-display';
+import { privateOnlyFromPrice, showsBestseller } from './tour-display';
 
 /*
  * What a card island needs, and nothing more (spec §6.2.3): the props of a
@@ -80,6 +80,12 @@ export function mandatoryFeeLabel(tour: Pick<TourDetail, 'additionalFees'>): str
 	return feeLabel({ additionalFees: tour.additionalFees.filter((fee) => fee.mandatory) });
 }
 
+/** The card's "From" price: the adult low-season price, or a private-only tour's boat price. */
+function fromPriceField(tour: TourDetail): { fromPrice?: number } {
+	const price = tour.prices ? tour.prices.low.adult : privateOnlyFromPrice(tour);
+	return price === null ? {} : { fromPrice: price };
+}
+
 /**
  * The card's data for the islands. Island props are inlined in the page
  * (§6.2.3: ≤ 6 KB for the whole catalog), so empty fields are left out.
@@ -90,7 +96,7 @@ export function toTourCardDTO(tour: TourDetail, destinationSlugs: string[], phot
 	return {
 		slug: tour.slug,
 		title: tour.title,
-		...(tour.prices ? { fromPrice: tour.prices.low.adult } : {}),
+		...fromPriceField(tour),
 		priceUnit: tour.priceUnit,
 		durationShort: tour.durationShort,
 		durationHours: tour.durationHours,

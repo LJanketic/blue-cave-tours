@@ -12,19 +12,39 @@ import { CHILD_MAX_AGE, INFANT_MAX_AGE, PRICE_LIST } from './prices';
  */
 const PRIVATE_BOAT_NAMES: Record<string, string> = {
 	'blue-cave-hvar-5-islands': 'Blue Cave',
+	'golden-horn-brac-hvar': 'Golden Horn',
+	'hvar-red-rocks-pakleni': 'Red Rocks',
+	'blue-lagoon-morning': 'Blue Lagoon morning',
+	'blue-lagoon-afternoon': 'Blue Lagoon afternoon',
+	'dubrovnik-one-way': 'Split to Dubrovnik',
 };
 
 const euros = (amount: number) => `€${amount.toLocaleString('en-GB')}`;
 
-/** "A private Blue Cave boat is €1,500 (low season) or €2,000 (peak); other private experiences are quoted on request." */
+/**
+ * "A private boat is €1,200 on every fixed-route tour, in any season; Create
+ * Your Perfect Day is quoted on request." when every tour has one price, or
+ * one clause per tour ("a private Blue Cave boat is €1,500 (low season) or
+ * €2,000 (peak); …") when they differ.
+ */
 export function privateBoatSentence(tours: typeof PRIVATE_TOURS = PRIVATE_TOURS): string {
-	const priced = Object.entries(tours).map(([slug, { boat }]) => {
-		const name = PRIVATE_BOAT_NAMES[slug];
-		if (!name) throw new Error(`No FAQ name for the private tour ${slug} (src/data/faq.ts PRIVATE_BOAT_NAMES)`);
-		return `a private ${name} boat is ${euros(boat.low)} (low season) or ${euros(boat.peak)} (peak)`;
-	});
-	if (!priced.length) return 'Private experiences are quoted on request.';
-	const list = priced.join('; ');
+	const entries = Object.entries(tours);
+	for (const [slug] of entries) {
+		if (!PRIVATE_BOAT_NAMES[slug]) throw new Error(`No FAQ name for the private tour ${slug} (src/data/faq.ts PRIVATE_BOAT_NAMES)`);
+	}
+	if (!entries.length) return 'Private experiences are quoted on request.';
+	const [first] = entries.map(([, { boat }]) => boat);
+	const oneFlatPrice = first.low === first.peak && entries.every(([, { boat }]) => boat.low === first.low && boat.peak === first.peak);
+	if (oneFlatPrice) {
+		return `A private boat is ${euros(first.low)} on every fixed-route tour, in any season; Create Your Perfect Day is quoted on request.`;
+	}
+	const list = entries
+		.map(([slug, { boat }]) =>
+			boat.low === boat.peak
+				? `a private ${PRIVATE_BOAT_NAMES[slug]} boat is ${euros(boat.low)}`
+				: `a private ${PRIVATE_BOAT_NAMES[slug]} boat is ${euros(boat.low)} (low season) or ${euros(boat.peak)} (peak)`,
+		)
+		.join('; ');
 	return `${list.charAt(0).toUpperCase()}${list.slice(1)}; other private experiences are quoted on request.`;
 }
 

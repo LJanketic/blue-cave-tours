@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { formatEuro } from '../../../lib/price';
 import { formatBookingDate, guestSummaryFromCounts, seatCount } from '../../../lib/booking';
 import { businessDate, formatShortDate } from '../../../lib/bookings/dates';
 import { isDeadQuote, STATUS_LABELS, takesSeats } from '../../../lib/bookings/service';
@@ -165,7 +166,7 @@ const rangeNote =
 									</span>
 									<span class="line">
 										<span class="a-item-sub guests">{guestSummaryFromCounts(b.adults, b.children, b.infants)}</span>
-										<span class="total a-tnum">€{b.total}</span>
+										<span class="total a-tnum">{formatEuro(b.total)}</span>
 									</span>
 								</span>
 							</a>

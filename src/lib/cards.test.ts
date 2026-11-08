@@ -65,11 +65,13 @@ describe('toTourCardDTO', () => {
 });
 
 describe('toTourCardDTO fromPrice', () => {
-	it('is the low-season adult price, and left out for quote-only tours', () => {
+	it('is the low-season adult price, the boat price on a paid private-only tour, and left out for the rest', () => {
+		const boatPriced = ['dubrovnik-one-way', 'hvar-red-rocks-pakleni'];
 		for (const tour of tours) {
 			const card = toTourCardDTO(tour, [], null);
-			if (tour.prices) expect(card.fromPrice).toBe(tour.prices.low.adult);
-			else expect(card).not.toHaveProperty('fromPrice');
+			if (tour.prices) expect(card.fromPrice, tour.slug).toBe(tour.prices.low.adult);
+			else if (boatPriced.includes(tour.slug)) expect(card.fromPrice, tour.slug).toBe(1200);
+			else expect(card, tour.slug).not.toHaveProperty('fromPrice');
 		}
 	});
 });

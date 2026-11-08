@@ -26,13 +26,24 @@ export type PrivateTour = {
 };
 
 /**
- * Boat prices from the operator's doc: Blue Cave €1,500 low / €2,000 peak.
- * The doc says the departure may shift in 15-minute steps up to each tour's
- * latest departure, but gives no latest departures yet: pending from the
- * operator (Vedro). Until then Blue Cave leaves at its usual time.
+ * Mare, 8 Nov 2026: every private tour is €1,200 a boat for now, and the
+ * latest departure is 11:00, until Vedro confirms the price list and the
+ * times. This replaces the doc's Blue Cave €1,500 low / €2,000 peak.
+ * The guest may shift the departure in 15-minute steps from the tour's own
+ * time up to the latest. The Blue Lagoon afternoon leaves at 14:30, after
+ * 11:00, so it keeps its usual time only.
  */
+const PRIVATE_BOAT_PRICE = 1200;
+const PRIVATE_LATEST_DEPARTURE = '11:00';
+const boat = { low: PRIVATE_BOAT_PRICE, peak: PRIVATE_BOAT_PRICE };
+
 export const PRIVATE_TOURS: Readonly<Record<string, PrivateTour>> = {
-	'blue-cave-hvar-5-islands': { boat: { low: 1500, peak: 2000 } },
+	'blue-cave-hvar-5-islands': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
+	'golden-horn-brac-hvar': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
+	'hvar-red-rocks-pakleni': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
+	'blue-lagoon-morning': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
+	'blue-lagoon-afternoon': { boat },
+	'dubrovnik-one-way': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
 };
 
 export type PrivateExtra = { id: string; label: string; desc: string; price: number };

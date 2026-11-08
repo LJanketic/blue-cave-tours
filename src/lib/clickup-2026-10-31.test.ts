@@ -29,7 +29,7 @@ const tour = (slug: string) => {
 };
 
 const GROUP_AND_PRIVATE = ['blue-cave-hvar-5-islands', 'golden-horn-brac-hvar', 'hvar-red-rocks-pakleni', 'blue-lagoon-morning', 'blue-lagoon-afternoon', 'dubrovnik-one-way'];
-const QUOTE_ONLY_PRIVATE = GROUP_AND_PRIVATE.filter((s) => s !== 'blue-cave-hvar-5-islands');
+// Mare, 8 Nov 2026: all of them pay now at €1,200; a request is only sent for an "Other pickup location".
 
 describe('C1: age bands (operator table: infant 0–3, child 4–11, adult 12+)', () => {
 	it('sets the age limits the table gives', () => {
@@ -64,9 +64,9 @@ describe('C1: prices (operator table)', () => {
 		expect(answer).toContain('Golden Horn, Brač & Hvar: €129 per adult and €89 per child in low season, €139 and €99 in peak season.');
 		expect(answer).toContain('Blue Lagoon, Drvenik (morning or afternoon): €70 per adult and €60 per child in low season, €75 and €65 in peak season.');
 		expect(answer).toContain('children up to 11 pay the child price; infants up to 3 travel free');
-		// The private Blue Cave boat is paid on the site now, at the operator's price; the rest are quoted.
+		// Every fixed-route private boat is paid on the site at €1,200 (Mare, 8 Nov 2026); the custom day is quoted.
 		expect(answer).toContain(
-			'A private Blue Cave boat is €1,500 (low season) or €2,000 (peak); other private experiences are quoted on request.',
+			'A private boat is €1,200 on every fixed-route tour, in any season; Create Your Perfect Day is quoted on request.',
 		);
 		expect(answer).not.toContain('Private experiences are quoted on request');
 		// The old prices and ages are gone.
@@ -86,10 +86,11 @@ describe('C1: prices (operator table)', () => {
 		expect(toTourCardDTO(tour(slug), [], null).fromPrice).toBe(from);
 	});
 
-	it('the quote-only tours have no "From" price on their card', () => {
-		for (const slug of ['hvar-red-rocks-pakleni', 'dubrovnik-one-way', 'create-perfect-day-private']) {
-			expect(toTourCardDTO(tour(slug), [], null), slug).not.toHaveProperty('fromPrice');
+	it('the private-only tours say "From €1,200" a boat, and the custom day has no "From" price', () => {
+		for (const slug of ['hvar-red-rocks-pakleni', 'dubrovnik-one-way']) {
+			expect(toTourCardDTO(tour(slug), [], null), slug).toMatchObject({ fromPrice: 1200, priceUnit: 'boat' });
 		}
+		expect(toTourCardDTO(tour('create-perfect-day-private'), [], null)).not.toHaveProperty('fromPrice');
 	});
 
 	it.each(['blue-lagoon-morning', 'blue-lagoon-afternoon'])('the %s JSON-LD offers €70 to €75', (slug) => {
@@ -142,11 +143,11 @@ describe('C4/C5: tourCtas for every tour in the catalog, with the site links', (
 	const expected: Record<string, { primary: { label: string; href: string }; secondary: { label: string; href: string; price?: string } | null }> = {
 		'blue-cave-hvar-5-islands': {
 			primary: { label: 'Book group tour tickets', href: '/book/blue-cave-hvar-5-islands/group/' },
-			secondary: { label: 'Private experience', href: '/book/blue-cave-hvar-5-islands/private/', price: '€1,500' },
+			secondary: { label: 'Private experience', href: '/book/blue-cave-hvar-5-islands/private/', price: '€1,200' },
 		},
 		'golden-horn-brac-hvar': {
 			primary: { label: 'Book group tour tickets', href: '/book/golden-horn-brac-hvar/group/' },
-			secondary: { label: 'Private experience', href: '/book/golden-horn-brac-hvar/private/' },
+			secondary: { label: 'Private experience', href: '/book/golden-horn-brac-hvar/private/', price: '€1,200' },
 		},
 		'hvar-red-rocks-pakleni': {
 			primary: { label: 'Plan your private tour', href: '/book/hvar-red-rocks-pakleni/private/' },
@@ -154,11 +155,11 @@ describe('C4/C5: tourCtas for every tour in the catalog, with the site links', (
 		},
 		'blue-lagoon-morning': {
 			primary: { label: 'Book group tour tickets', href: '/book/blue-lagoon-morning/group/' },
-			secondary: { label: 'Private experience', href: '/book/blue-lagoon-morning/private/' },
+			secondary: { label: 'Private experience', href: '/book/blue-lagoon-morning/private/', price: '€1,200' },
 		},
 		'blue-lagoon-afternoon': {
 			primary: { label: 'Book group tour tickets', href: '/book/blue-lagoon-afternoon/group/' },
-			secondary: { label: 'Private experience', href: '/book/blue-lagoon-afternoon/private/' },
+			secondary: { label: 'Private experience', href: '/book/blue-lagoon-afternoon/private/', price: '€1,200' },
 		},
 		'dubrovnik-one-way': {
 			primary: { label: 'Plan your private tour', href: '/book/dubrovnik-one-way/private/' },
@@ -193,7 +194,7 @@ describe('C4/C5: tourCtas for every tour in the catalog, with the site links', (
 describe('C5: which tours get the private step, and which pay now', () => {
 	it.each(tours.map((t) => [t.slug, t] as const))('%s', (slug, t) => {
 		expect(offersPrivateFlow(t), slug).toBe(GROUP_AND_PRIVATE.includes(slug));
-		expect(supportsPrivateBook(t), slug).toBe(slug === 'blue-cave-hvar-5-islands');
+		expect(supportsPrivateBook(t), slug).toBe(GROUP_AND_PRIVATE.includes(slug));
 	});
 
 	it('truth table on synthetic tours', () => {
@@ -209,11 +210,11 @@ describe('C5: which tours get the private step, and which pay now', () => {
 		expect(supportsPrivateBook({ slug: 'blue-cave-hvar-5-islands', types: ['group', 'private'], departures: dep })).toBe(true);
 		expect(supportsPrivateBook({ slug: 'blue-cave-hvar-5-islands', types: ['group'], departures: dep })).toBe(false);
 		expect(supportsPrivateBook({ slug: 'blue-cave-hvar-5-islands', types: ['group', 'private'], departures: [] })).toBe(false);
-		expect(supportsPrivateBook({ slug: 'golden-horn-brac-hvar', types: ['group', 'private'], departures: dep })).toBe(false);
+		expect(supportsPrivateBook({ slug: 'create-perfect-day-private', types: ['private'], departures: dep })).toBe(false);
 	});
 });
 
-describe('C5 (server): no pay-now for a tour without a boat price', () => {
+describe('C5 (server): pay now on every fixed-route private tour', () => {
 	const NOW = new Date('2027-06-01T10:00:00Z');
 	const base: PrivateBookingInput = {
 		kind: 'private',
@@ -231,11 +232,14 @@ describe('C5 (server): no pay-now for a tour without a boat price', () => {
 		notes: null,
 	};
 
-	it.each(QUOTE_ONLY_PRIVATE)('refuses a private draft of %s, even at its own departure time or a charter-window time', (slug) => {
+	it.each(GROUP_AND_PRIVATE)('accepts a private draft of %s at its own departure time', (slug) => {
 		const t = getTourBySlug(slug) as TourDetail;
-		for (const slot of [t.departures[0]?.time ?? '10:00', '10:00']) {
-			expect(validatePrivateBookingInput(t, { ...base, slot }, NOW), `${slug} ${slot}`).toBe('private');
-		}
+		expect(validatePrivateBookingInput(t, { ...base, slot: t.departures[0].time }, NOW), slug).toBeNull();
+	});
+
+	it('refuses the custom day, which has no boat price', () => {
+		const t = getTourBySlug('create-perfect-day-private') as TourDetail;
+		expect(validatePrivateBookingInput(t, { ...base, slot: '10:00' }, NOW)).toBe('private');
 	});
 
 	it('still accepts the Blue Cave boat (control)', () => {
@@ -244,7 +248,7 @@ describe('C5 (server): no pay-now for a tour without a boat price', () => {
 	});
 });
 
-describe('C5 (server): the quote request each private step sends is accepted', () => {
+describe('C5 (server): the "Other pickup location" request each private step sends is accepted', () => {
 	const NOW = new Date('2027-06-01T10:00:00Z');
 	const routeFor = (slug: string) => CHARTER_ROUTES.find((r) => r.tourSlug === slug || r.aliases?.includes(slug))!;
 	/** What PrivateBookingFlow posts (private.astro passes charterRoute and closestDuration(tour.durationHours)). */
@@ -270,14 +274,13 @@ describe('C5 (server): the quote request each private step sends is accepted', (
 			'website',
 		);
 
-	it.each(QUOTE_ONLY_PRIVATE)('%s: at its catalog departure (or the default when it has none), filed under that tour', (slug) => {
+	it.each(GROUP_AND_PRIVATE)('%s: at its catalog departure, filed under that tour', (slug) => {
 		const input = request(slug, tour(slug).departures[0]?.time ?? '10:00');
 		expect(validateCharterRequest(input, NOW), slug).toBeNull();
 		expect(charterTourSlug(routeById(input.route)!, input.tourSlug), slug).toBe(slug);
 	});
 
-	it.each(['hvar-red-rocks-pakleni', 'dubrovnik-one-way'])('%s (no fixed departure): takes the charter window 06:00–20:00, refuses 05:55 and 20:05', (slug) => {
-		expect(tour(slug).departures).toEqual([]);
+	it.each(['hvar-red-rocks-pakleni', 'dubrovnik-one-way'])('%s: the charter request takes its window 06:00–20:00, refuses 05:55 and 20:05', (slug) => {
 		expect(validateCharterRequest(request(slug, '06:00'), NOW)).toBeNull();
 		expect(validateCharterRequest(request(slug, '20:00'), NOW)).toBeNull();
 		expect(validateCharterRequest(request(slug, '05:55'), NOW)).toBe('time');
