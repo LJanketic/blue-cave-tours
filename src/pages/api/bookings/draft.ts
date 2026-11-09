@@ -30,6 +30,7 @@ const ERROR_FIELDS: Partial<Record<BookingError, string>> = {
 	slot: 'slot',
 	name: 'firstName',
 	email: 'email',
+	phone: 'phone',
 	notes: 'notes',
 	extras: 'extras',
 	pickup: 'pickup',

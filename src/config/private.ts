@@ -1,4 +1,5 @@
 import type { SeasonAmount } from './season';
+import { TIME_RE, toMinutes, toTime } from '../lib/time';
 
 /*
  * Private experience, paid on the site (operator doc "Booking tipovi i
@@ -6,11 +7,11 @@ import type { SeasonAmount } from './season';
  * price season, plus priced extras and a pick-up point. No catalog import,
  * so the booking island can use this.
  *
- * Being in PRIVATE_TOURS is what makes a tour "book private and pay now".
- * Boat prices are only what the operator's doc states. Every other group + private
- * tour uses the same private step (/book/<slug>/private/, offersPrivateFlow in
- * src/lib/booking.ts) as a quote request until the operator gives its boat
- * price; private-only tours stay on request at /private-charter/.
+ * Being in PRIVATE_TOURS is what makes a tour "book private and pay now":
+ * since 8 Nov 2026 that is every fixed-route tour (Mare's placeholder price
+ * below). A tour taken out of this list falls back to the same private step
+ * (/book/<slug>/private/, offersPrivateFlow in src/lib/booking.ts) as a quote
+ * request; Create Your Perfect Day is always a request at /private-charter/.
  * Adding a tour, an extra or a pick-up point is a change to this file only.
  */
 
@@ -123,9 +124,6 @@ export function privatePickup(id: string, lists: PrivateLists = PRIVATE_LISTS): 
 	return lists.pickups.find((pickup) => pickup.id === id) ?? null;
 }
 
-const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
-const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
-const hhmm = (total: number) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 
 /**
  * The departure times a private boat can leave at: the tour's own departure,
@@ -138,9 +136,9 @@ export function privateDepartureTimes(defaultSlot: string, latest?: string): str
 	if (!TIME_RE.test(defaultSlot)) return [];
 	if (latest === undefined) return [defaultSlot];
 	if (!TIME_RE.test(latest)) return [];
-	const end = minutes(latest);
+	const end = toMinutes(latest);
 	const times: string[] = [];
-	for (let t = minutes(defaultSlot); t <= end; t += PRIVATE_TIME_STEP_MINUTES) times.push(hhmm(t));
+	for (let t = toMinutes(defaultSlot); t <= end; t += PRIVATE_TIME_STEP_MINUTES) times.push(toTime(t));
 	if (times.length && times[times.length - 1] !== latest) times.push(latest);
 	return times;
 }

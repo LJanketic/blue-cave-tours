@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTourBySlug } from '../tours';
+import { offersPrivateFlow } from '../booking';
 import type { TourDetail } from '../../types/tour';
 import {
 	applyAdminAction,
@@ -111,6 +112,11 @@ describe('createPendingBooking', () => {
 		expect(await createPendingBooking(tour, today, new Date('2027-07-15T05:30:00Z'))).toEqual({ ok: false, error: 'past' });
 	});
 
+	it('refuses a phone number that is not one, and takes none at all', async () => {
+		expect(await createPendingBooking(tour, { ...input, phone: 'not a number' }, NOW)).toEqual({ ok: false, error: 'phone' });
+		expect((await createPendingBooking(tour, { ...input, phone: '' }, NOW)).ok).toBe(true);
+	});
+
 	it('refuses quote-only tours', async () => {
 		const quoteOnly = getTourBySlug('create-perfect-day-private') as TourDetail;
 		expect((await createPendingBooking(quoteOnly, input, NOW)).ok).toBe(false);
@@ -148,6 +154,10 @@ describe('private experience (pay now)', () => {
 		expect(check({ date: '2027-11-15' })).toBe('season');
 		expect(check({ date: '2027-05-31' })).toBe('past');
 		expect(check({ email: 'nope' })).toBe('email');
+		// Phone: optional, but digits (+, spaces, brackets, dashes) when given.
+		expect(check({ phone: '' })).toBeNull();
+		expect(check({ phone: '+385 91 234 5678' })).toBeNull();
+		expect(check({ phone: 'call me maybe' })).toBe('phone');
 		expect(check({ lastName: null })).toBe('name');
 	});
 
@@ -160,6 +170,14 @@ describe('private experience (pay now)', () => {
 		expect(check({ slot: '08:45' })).toBe('slot');
 		expect(check({ extras: ['test-extra', 'test-extra'] })).toBe('extras');
 		expect(check({ extras: ['caviar'] })).toBe('extras');
+	});
+
+	it('falls back to a quote request when a tour loses its boat price (the quoteOnly path)', () => {
+		// Golden Horn with no entry in the lists: the private step stays, but as a request.
+		const golden = getTourBySlug('golden-horn-brac-hvar') as TourDetail;
+		const withdrawn: PrivateLists = { ...lists, tours: {} };
+		expect(offersPrivateFlow(golden)).toBe(true);
+		expect(validatePrivateBookingInput(golden, { ...privateInput, slot: golden.departures[0].time }, NOW, withdrawn)).toBe('private');
 	});
 
 	it('refuses the custom day, which is not sold privately on the site', () => {
@@ -260,7 +278,7 @@ describe('finalizePaidBooking', () => {
 			`Booking ref: ${booking.ref}`,
 			'Departure: 07:20',
 			`Meeting point: Riva promenade, stand 14, Split — ${MEETING_POINT_MAP_URL}`,
-			"As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.",
+			"As you'll be joining a group, please be at the meeting point on time for the 07:20 departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.",
 			'Guests: 2 adults, 1 child',
 			`Total (incl. VAT): €${booking.total} — Paid (demo, no money taken)`,
 			'Bring: Swimsuit and towel, Sunscreen and sunglasses, Hat or cap, Cash or card for lunch and extras, Light jacket for cooler sea breezes',

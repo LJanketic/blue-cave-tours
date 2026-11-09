@@ -207,6 +207,23 @@ test('Blue Lagoon: once the 09:30 boat closes, the day stays open for the 14:30 
 	await expect(page.locator('.summary-card-ui')).toContainText('Blue Lagoon Tour, Drvenik — Afternoon');
 });
 
+test('Blue Lagoon: a saved morning booking whose boat has closed stays the morning, with a notice', async ({ page }) => {
+	// The guest saved 09:30 for 15 Jul 2027 and comes back to edit at 09:20 Split time (UTC+2), after it closed.
+	await page.setExtraHTTPHeaders(ip());
+	expect((await startDraft(page.request, { date: '2027-07-15' })).status()).toBe(200);
+	await page.clock.setFixedTime(new Date('2027-07-15T07:20:00Z'));
+	await page.goto(`/book/${TOUR}/group/`);
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
+	await expect(page.getByRole('radio', { name: /09:30 · Morning/ })).toBeChecked();
+	await expect(page.locator('main')).toContainText('Booking for the 09:30 departure has just closed. Please choose another time.');
+	await expect(page.locator('.summary-card-ui')).toContainText('Blue Lagoon Tour, Drvenik — Morning');
+	await expect(page.locator('main')).toContainText('a departure that is still open');
+	// Picking the afternoon is the guest's own choice.
+	await page.getByRole('radio', { name: /14:30 · Afternoon/ }).check();
+	await expect(page.locator('.summary-card-ui')).toContainText('Blue Lagoon Tour, Drvenik — Afternoon');
+	await expect(page.locator('main')).not.toContainText('has just closed');
+});
+
 test('Blue Lagoon: one booking step for both times, booked as the tour of the time picked (board 04b)', async ({ page }) => {
 	await page.setExtraHTTPHeaders(ip());
 	await page.goto(`/book/${TOUR}/group/`);

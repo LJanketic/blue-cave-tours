@@ -9,7 +9,7 @@ export const prerender = false;
  */
 import { pageTitle } from '../../../config/site';
 import { TERMS_VERSION } from '../../../config/legal';
-import { CANCELLATION_HOURS, CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT, CANCELLATION_SHORT } from '../../../config/cancellation';
+import { CANCELLATION_FULL_PREFIX, CANCELLATION_FULL_SUFFIX, CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT, CANCELLATION_SHORT, CANCELLATION_WINDOW } from '../../../config/cancellation';
 import { PAYMENTS_ARE_DEMO } from '../../../config/payments';
 import { DEFAULT_PICKUP_ID, privatePickup } from '../../../config/private';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
@@ -178,7 +178,7 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 					</p>
 				) : (
 					<p class="review__policy">
-						Free cancellation up to <strong>{CANCELLATION_HOURS} hours</strong> before departure. Cancellations within {CANCELLATION_HOURS} hours are non-refundable. In case of bad weather, you'll receive a full refund or free rescheduling.
+						{CANCELLATION_FULL_PREFIX}<strong>{CANCELLATION_WINDOW}</strong>{CANCELLATION_FULL_SUFFIX}
 					</p>
 				)
 			}

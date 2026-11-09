@@ -11,6 +11,7 @@ import { topicLabel } from '../../lib/contact-validation';
 import { bookings, type Booking } from '../../lib/bookings/store';
 import { quoteExpired, sendCharterQuote } from '../../lib/bookings/service';
 import { QUOTE_ERRORS, parseQuote, validateQuote } from '../../lib/charter';
+import { formatEuro } from '../../lib/price';
 import { CHARTER_DURATIONS, QUOTE_MAX_EUR, QUOTE_NOTE_MAX, QUOTE_VALID_DAYS, durationLabel } from '../../config/charter';
 import { charterRequestRows } from '../../lib/email/templates';
 import { businessDate } from '../../lib/bookings/dates';
@@ -108,9 +109,9 @@ const tomorrow = businessDate(new Date(), 1);
 			const quoteState = !quote
 				? null
 				: quotePaid
-					? { tone: 'sent', label: `Paid €${quote.total}` }
+					? { tone: 'sent', label: `Paid ${formatEuro(quote.total)}` }
 					: quoteOpen
-						? { tone: 'outbox', label: `Quote €${quote.total} sent, awaiting payment` }
+						? { tone: 'outbox', label: `Quote ${formatEuro(quote.total)} sent, awaiting payment` }
 						: { tone: 'failed', label: quote.status === 'cancelled' ? 'Quote cancelled' : 'Quote expired' };
 			return (
 				<article id={`enquiry-${e.id}`} class:list={['a-card enquiry', { 'is-new': e.status === 'new' }]}>

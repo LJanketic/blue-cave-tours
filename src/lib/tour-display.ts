@@ -2,6 +2,7 @@ import { BESTSELLER_EVIDENCE, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL } from 
 import type { TourDetail } from '../types/tour';
 import { offersPrivateFlow, PRIVATE_PLANNER_SLUG, supportsPrivateBook } from './booking';
 import { privateTour } from '../config/private';
+import { formatEuro } from './price';
 
 /*
  * Display rules for tours. No catalog import, so Vue islands can use these
@@ -82,7 +83,7 @@ function privateCta(
 	const label = 'Private experience';
 	const priced = supportsPrivateBook({ ...tour, departures: tour.departures ?? [] });
 	const low = priced ? privateTour(tour.slug)?.boat.low : undefined;
-	return { label, href: links.private(tour.slug), ...(low !== undefined && { price: `€${low.toLocaleString('en-GB')}` }) };
+	return { label, href: links.private(tour.slug), ...(low !== undefined && { price: formatEuro(low) }) };
 }
 
 /**

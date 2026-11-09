@@ -132,5 +132,8 @@ export async function checkGlobalLimit(scope: string, options: RateLimitOptions 
 
 /** The visitor's IP as Netlify reports it. */
 export function clientIp(request: Request): string | null {
-	return request.headers.get('x-nf-client-connection-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
+	// X-Forwarded-For is client-controlled: trusted only by the local dev server, which has no Netlify header.
+	const netlify = request.headers.get('x-nf-client-connection-ip');
+	if (netlify || !import.meta.env.DEV) return netlify;
+	return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
 }

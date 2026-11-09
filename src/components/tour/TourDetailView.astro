@@ -270,7 +270,7 @@ const faqHeading = tour.seoHeadings?.faq ?? `Questions about the ${tour.title}`;
 			{
 				prices && (
 					<p class="tour__child">
-						<i class="ti ti-baby-carriage" aria-hidden="true" /> Children from €{prices.low.child}
+						<i class="ti ti-baby-carriage" aria-hidden="true" /> Children from {formatEuro(prices.low.child)}
 					</p>
 				)
 			}

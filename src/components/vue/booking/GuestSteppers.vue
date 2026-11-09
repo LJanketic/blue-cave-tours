@@ -6,6 +6,7 @@
  */
 import { computed, ref } from 'vue';
 import type { AgeBands } from '../../../types/tour';
+import { formatEuro } from '../../../lib/price';
 
 const props = withDefaults(
 	defineProps<{
@@ -29,8 +30,8 @@ const status = ref('');
 
 type Kind = 'adults' | 'children' | 'infants';
 const ROWS = computed(() => [
-	{ kind: 'adults' as Kind, label: 'Adults', sub: `${props.ageBands.adult}${props.adultPrice !== null ? ` · €${props.adultPrice}` : ''}`, min: 1 },
-	{ kind: 'children' as Kind, label: 'Children', sub: `${props.ageBands.child}${props.childPrice !== null ? ` · €${props.childPrice}` : ''}`, min: 0 },
+	{ kind: 'adults' as Kind, label: 'Adults', sub: `${props.ageBands.adult}${props.adultPrice !== null ? ` · ${formatEuro(props.adultPrice)}` : ''}`, min: 1 },
+	{ kind: 'children' as Kind, label: 'Children', sub: `${props.ageBands.child}${props.childPrice !== null ? ` · ${formatEuro(props.childPrice)}` : ''}`, min: 0 },
 	{ kind: 'infants' as Kind, label: 'Infants', sub: `Under ${props.ageBands.infantMaxAge + 1}${props.infantsFree ? ' · free' : ''}`, min: 0 },
 ]);
 

@@ -461,7 +461,7 @@ onUnmounted(() => clearInterval(clock));
 
 		<section class="flow__card" aria-labelledby="pickup-heading">
 			<h2 id="pickup-heading" class="flow__title"><i class="ti ti-map-pin" aria-hidden="true"></i> Pickup</h2>
-			<p class="flow__sub">Where should we pick you up? Your boat comes to you.</p>
+			<p class="flow__sub">Meet us at the Riva, or choose where we pick you up.</p>
 			<FormField id="private-pickup" v-model="pickup" class="flow__pickup" label="Pickup point" name="pickup" as="select" :options="pickupOptions" :hint="pickupNote" />
 			<div v-if="isOtherPickup" class="flow__other">
 				<FormField

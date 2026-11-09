@@ -318,6 +318,9 @@ function normalized<T extends { id: string }>(inner: Collection<T>, normalize: (
 export const bookings = () => normalized(collection<Booking>('bookings'), normalizeBooking);
 export const enquiries = () => normalized(collection<Enquiry>('enquiries'), normalizeEnquiry);
 export const outbox = () => collection<OutboxEmail>('outbox');
+/** Small bookkeeping values, e.g. the day the retention sweep last ran. */
+export type MetaRecord = { id: string; value: string };
+export const meta = () => collection<MetaRecord>('meta');
 
 type Counter = { id: string; value: number };
 const counters = () => collection<Counter>('counters');

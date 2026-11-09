@@ -31,7 +31,8 @@ const COLUMNS: [header: string, value: (b: Booking) => string | number][] = [
 	['Phone', (b) => b.phone],
 	['Special requests', (b) => b.customerNotes],
 	['Booked at', (b) => b.createdAt],
-	['Type', (b) => (b.kind !== 'private' ? 'Group' : isCharterQuote(b) ? 'Private charter' : 'Private experience')],	// A private experience's pick-up, when it isn't the meeting point (crew and driver plan from this).
+	['Type', (b) => (b.kind !== 'private' ? 'Group' : isCharterQuote(b) ? 'Private charter' : 'Private experience')],
+	// A private experience's pick-up, when it isn't the meeting point (crew and driver plan from this).
 	['Pick-up', (b) => b.pickup ?? ''],
 ];
 

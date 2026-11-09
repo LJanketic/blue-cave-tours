@@ -17,6 +17,7 @@ import Button from '../../components/ui/Button.astro';
 import { getTourBySlug } from '../../lib/tours';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { formatEuro } from '../../lib/price';
+import { arrivalFor, arriveByLabel } from '../../lib/arrival';
 import { isRecordId } from '../../lib/bookings/ids';
 import { bookings } from '../../lib/bookings/store';
 import { BOOKING_COOKIE } from '../../lib/bookings/session';
@@ -37,17 +38,10 @@ function maskEmail(email: string): string {
 }
 
 const tour = getTourBySlug(booking.tourSlug);
-const departure = tour?.departures.find((d) => d.time === booking.slot);
-/** "07:05": 15 minutes before a "07:20" departure. */
-function fifteenEarlier(slot: string): string {
-	const [h, m] = slot.split(':').map(Number);
-	const t = h * 60 + m - 15;
-	return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
-}
-// Board 07: "07:05 (15 min early)". Blue Cave guests come for the departure itself (arriveOnTime, ClickUp 8 Nov 2026);
-// a tour with a check-in uses it.
-const arriveAt = departure?.arriveOnTime ? departure.time : (departure?.checkIn ?? (booking.slot ? fifteenEarlier(booking.slot) : null));
-const arriveBy = arriveAt === null ? '15 minutes before departure' : departure?.arriveOnTime ? arriveAt : `${arriveAt} (15 min early)`;
+// Board 07: "07:05 (15 min early)"; Blue Cave guests come for the departure itself (src/lib/arrival.ts).
+const arrival = arrivalFor(tour?.departures, booking.slot);
+const arriveBy = arriveByLabel(arrival);
+const arriveAt = arrival?.time ?? null;
 const emailSent = booking.confirmationEmail?.delivery === 'sent';
 const bring = tour?.whatToBring.slice(0, 3).join(', ') ?? 'Swimwear, towel, sunscreen';
 ---

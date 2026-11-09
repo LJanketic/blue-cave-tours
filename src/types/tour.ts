@@ -4,8 +4,10 @@ export type ItineraryKind = 'morning' | 'afternoon' | 'full' | 'flexible';
 
 /**
  * A fixed daily departure. `checkIn` is when guests should be at the boat;
- * `arriveOnTime` means be there for the departure itself, not 15 minutes
- * before (Blue Cave, ClickUp "Booking confirmation screen", 8 Nov 2026).
+ * `arriveOnTime` on any of a tour's departures means guests of that tour are
+ * there for the departure itself, not 15 minutes before, at whatever time a
+ * private boat leaves (Blue Cave, ClickUp "Booking confirmation screen", 8 Nov
+ * 2026; src/lib/arrival.ts).
  */
 export type Departure = { time: string; checkIn?: string; label?: string; arriveOnTime?: true };
 

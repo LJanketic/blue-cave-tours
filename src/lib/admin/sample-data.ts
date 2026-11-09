@@ -2,7 +2,7 @@ import { MAX_GUESTS, supportsInstantBook } from '../booking';
 import { businessDate } from '../bookings/dates';
 import { newBookingRef, newId } from '../bookings/ids';
 import { bookings, enquiries, nextCounterValue, outbox, resetCounter, type Booking, type Enquiry } from '../bookings/store';
-import { computeBookingTotal, lineItemsFor } from '../price';
+import { computeBookingTotal, formatEuro, lineItemsFor } from '../price';
 import { TERMS_VERSION } from '../../config/legal';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 import { getAllTours } from '../tours';
@@ -194,8 +194,8 @@ async function loadSampleCharters(now: Date): Promise<number> {
 				invoice: paid ? { number: `${await nextCounterValue('invoice')}/HBC1/1`, jir: newId(), zki: newId().replace(/-/g, ''), issuedAt: paidAt } : null,
 				staffNotes: [],
 				history: [
-					{ at: quotedAt, by: 'demo data', action: `Quote sent: €${price}, valid 3 days` },
-					...(paid ? [{ at: paidAt, by: 'Teya', action: `Paid €${price}` }] : []),
+					{ at: quotedAt, by: 'demo data', action: `Quote sent: ${formatEuro(price)}, valid 3 days` },
+					...(paid ? [{ at: paidAt, by: 'Teya', action: `Paid ${formatEuro(price)}` }] : []),
 				],
 				sample: true,
 			};
@@ -211,12 +211,13 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 	const tours = getAllTours().filter(supportsInstantBook);
 	const store = bookings();
 
-	for (const [offset, tourIndex, guestIndex, adults, children, status, paymentStatus] of PLAN) {
+	for (const [row, [offset, tourIndex, guestIndex, adults, children, status, paymentStatus]] of PLAN.entries()) {
 		const tour = tours[tourIndex % tours.length];
 		const [firstName, lastName, phone] = GUESTS[guestIndex];
 		// Booked a few days to a couple of weeks before the trip, and never in the future.
+		// A minute apart per row, so no two share a time and lists sorted by it keep one order.
 		const leadDays = Math.min(offset + 1 + (guestIndex % 5) * 3, 21);
-		const createdAt = new Date(Math.min(now.getTime(), now.getTime() + (offset - leadDays) * 86_400_000) - guestIndex * 3_600_000).toISOString();
+		const createdAt = new Date(Math.min(now.getTime(), now.getTime() + (offset - leadDays) * 86_400_000) - guestIndex * 3_600_000 - row * 60_000).toISOString();
 		const paid = paymentStatus !== 'unpaid';
 		const slot = tour.departures[0]?.time ?? '';
 		const infants = INFANTS.get(`${offset}|${guestIndex}`) ?? 0;

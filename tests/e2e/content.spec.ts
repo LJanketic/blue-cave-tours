@@ -169,6 +169,9 @@ test('legal pages: the switcher marks the page, the figures match the config', a
 });
 
 test('legal pages: a clicked section is the one marked, the last one too', async ({ page }) => {
+	// No smooth scrolling (base.css turns it off for reduced motion): a click's scroll is done when it returns,
+	// so the wheel below doesn't race it (it did in WebKit and Firefox).
+	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.goto('/legal/terms/');
 	const toc = page.getByRole('navigation', { name: 'On this page' });
 	for (const name of ["Itinerary & captain's authority", 'Pricing & modifications', 'Final provisions']) {
@@ -176,7 +179,10 @@ test('legal pages: a clicked section is the one marked, the last one too', async
 		await expect(toc.locator('a[aria-current]')).toHaveText(name);
 	}
 	// Scrolling takes over again.
-	await page.mouse.wheel(0, -100000);
+	// A small wheel is still the reader's own scroll, so the clicked link lets go; then back to the top.
+	await page.mouse.move(640, 400);
+	await page.mouse.wheel(0, -50);
+	await page.evaluate(() => window.scrollTo(0, 0));
 	await expect(toc.locator('a[aria-current]')).toHaveText('General information');
 });
 

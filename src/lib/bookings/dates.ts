@@ -1,4 +1,5 @@
 import { BOOKING_CUTOFF_MINUTES } from '../../config/booking';
+import { TIME_RE, toMinutes, toTime } from '../time';
 
 /** The business runs on Split time; the server runs on UTC. */
 export const BUSINESS_TIME_ZONE = 'Europe/Zagreb';
@@ -19,7 +20,7 @@ export function businessDate(now: Date = new Date(), offsetDays = 0): string {
 }
 
 /** A fixed departure time, "HH:MM" (24h). */
-const SLOT_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const SLOT_RE = TIME_RE;
 
 /** Wall-clock time ("HH:MM", 24h) in Split for the given moment. */
 export function businessTime(now: Date = new Date()): string {
@@ -42,18 +43,15 @@ export function departureHasLeft(date: string, slot: string, now: Date = new Dat
  * the day before). Null for a departure with no fixed time ("TBC").
  */
 export function bookingCutoff(date: string, slot: string): { date: string; time: string } | null {
-	const match = SLOT_RE.exec(slot);
-	if (!match) return null;
-	let minutes = Number(match[1]) * 60 + Number(match[2]) - BOOKING_CUTOFF_MINUTES;
+	if (!SLOT_RE.test(slot)) return null;
+	let minutes = toMinutes(slot) - BOOKING_CUTOFF_MINUTES;
 	let day = date;
 	if (minutes < 0) {
 		minutes += 24 * 60;
 		const [y, m, d] = date.split('-').map(Number);
 		day = new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
 	}
-	const hh = String(Math.floor(minutes / 60)).padStart(2, '0');
-	const mm = String(minutes % 60).padStart(2, '0');
-	return { date: day, time: `${hh}:${mm}` };
+	return { date: day, time: toTime(minutes) };
 }
 
 /**

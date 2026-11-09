@@ -4,6 +4,17 @@ import { galleryFromDestinations } from './destination-photos';
 import { PHOTO } from './tour-photos';
 import { CHILD_MAX_AGE, INFANT_MAX_AGE, PRICE_BLUE_CAVE, PRICE_BLUE_LAGOON, PRICE_GOLDEN_HORN } from './prices';
 import { MAX_GUESTS } from '../lib/booking';
+import { PRIVATE_TOURS } from '../config/private';
+
+/**
+ * A private-only tour's start, from src/config/private.ts: "09:00, or later
+ * up to 11:00" while a latest departure is set (Mare, 8 Nov 2026), so the
+ * copy follows the placeholder when Vedro confirms the times.
+ */
+function privateStart(slug: string, time: string): string {
+	const latest = PRIVATE_TOURS[slug]?.latestDeparture;
+	return latest && latest !== time ? `${time}, or later up to ${latest}` : time;
+}
 
 /** Tour catalog — Hello Blue Cave. Content sourced from the verified FigJam tour board. */
 const MEETING_POINT =
@@ -295,9 +306,9 @@ export const tours: TourDetail[] = [
 		tagline: 'Private full day · Red Rocks & Pakleni',
 		shortDescription:
 			'A private full day via Milna on Brač to the Red Rocks on Hvar’s south coast, historic Hvar Town, and lunch and a swim in the Pakleni Islands.',
-		availability: 'On request',
-		scheduleLabel: 'Full day: flexible, typically 09:00 – 18:00',
-		departure: 'Flexible, typically 09:00',
+		availability: `Every day, ${seasonMonths()}`,
+		scheduleLabel: 'Full day: 09:00 – 18:00',
+		departure: privateStart('hvar-red-rocks-pakleni', '09:00'),
 		departures: [{ time: '09:00' }] /* Mare, 8 Nov 2026: paid online; the guest may shift it up to 11:00 (src/config/private.ts) */,
 		duration: 'Approx. 9 hours',
 		durationShort: '9 h',
@@ -306,7 +317,7 @@ export const tours: TourDetail[] = [
 		itineraryKind: 'full',
 		itineraryLabel: 'Full-day itinerary',
 		itinerary: [
-			{ timeLabel: '09:00 (flexible)', label: 'Departure — Split Riva, stand number 14 (flexible)', description: 'Hop on board, meet the crew and start your trip.', icon: 'map-pin' },
+			{ time: '09:00', label: 'Departure — Split Riva, stand number 14', description: 'Hop on board, meet the crew and start your trip.', icon: 'map-pin' },
 			{ time: '10:00', label: 'Milna, Brač', description: 'Short coffee stop in the island village.', icon: 'coffee' },
 			{ time: '11:30', label: 'Red Rocks, Hvar Island', description: 'Swim stop below Hvar’s Red Rock Cliffs.', icon: 'swimming' },
 			{ time: '13:00', label: 'Hvar Town & Pakleni Islands', description: 'Free time ashore, have lunch on Pakleni or in Milna, Hvar.', icon: 'building-castle' },
@@ -316,7 +327,7 @@ export const tours: TourDetail[] = [
 		overviewHighlights:
 			'This private full-day speedboat tour takes you to Milna Village on Brač Island, then along Hvar’s scenic south coast to swim at the striking Red Rocks, before exploring historic Hvar Town. The day finishes with lunch and a final swim in the turquoise bays of the Pakleni Islands. Along the way there’s time to jump straight off the boat for a swim, explore beneath the surface with a snorkel, or stretch out on a hidden beach - the choice is entirely yours.',
 		introMore: [
-			`This is a private experience for up to ${MAX_GUESTS} people, so the boat, route and timing are entirely yours. Departure time is flexible, and your skipper can adjust the stops on the day to suit your group. Lunch ashore is at your own cost.`,
+			`This is a private experience for up to ${MAX_GUESTS} people, so the boat, route and timing are entirely yours. You choose the departure time (${privateStart('hvar-red-rocks-pakleni', '09:00')}), and your skipper can adjust the stops on the day to suit your group. Lunch ashore is at your own cost.`,
 		],
 		introCollapsible: true,
 		meetingPoint: MEETING_POINT_PRIVATE,
@@ -325,7 +336,7 @@ export const tours: TourDetail[] = [
 		whatToBring: SHEET_BRING,
 		included: SHEET_INCLUDED,
 		notIncluded: ['Lunch'],
-		// The sheet's boat price (€1,200) is not used yet: it conflicts with the operator's private price doc (see src/config/private.ts).
+		// No per-person prices: the whole boat is sold at the private price in src/config/private.ts.
 		prices: null,
 		priceUnit: 'boat',
 		additionalFees: [],
@@ -451,9 +462,9 @@ export const tours: TourDetail[] = [
 		seoHeadings: { about: 'About the Split to Dubrovnik one-way tour', faq: 'Questions about the Split to Dubrovnik tour' },
 		tagline: 'Private one-way · Split to Dubrovnik',
 		shortDescription: 'A private one-way speedboat journey from Split to Dubrovnik, calling at Hvar Town and Korčula along the way.',
-		availability: 'On request',
-		scheduleLabel: 'One-way: flexible, typically 08:00 – 17:00',
-		departure: 'Flexible, typically 08:00',
+		availability: `Every day, ${seasonMonths()}`,
+		scheduleLabel: 'One-way: 08:00 – 17:00',
+		departure: privateStart('dubrovnik-one-way', '08:00'),
 		departures: [{ time: '08:00' }] /* Mare, 8 Nov 2026: paid online; the guest may shift it up to 11:00 (src/config/private.ts) */,
 		duration: 'Approx. 9 hours',
 		durationShort: '9 h',
@@ -462,7 +473,7 @@ export const tours: TourDetail[] = [
 		itineraryKind: 'full',
 		itineraryLabel: 'One-way itinerary',
 		itinerary: [
-			{ timeLabel: '08:00 (flexible)', label: 'Departure — Split Riva, stand number 14 (flexible)', description: 'Hop on board, meet the crew and start your trip.', icon: 'map-pin' },
+			{ time: '08:00', label: 'Departure — Split Riva, stand number 14', description: 'Hop on board, meet the crew and start your trip.', icon: 'map-pin' },
 			{ time: '09:30', label: 'Hvar Town, Hvar Island', description: 'Short stop for coffee and a walk.', icon: 'coffee' },
 			{ time: '11:00', label: 'Swim stop, secluded bay', description: 'Swim stop en route to Korčula Town.', icon: 'swimming' },
 			{ time: '12:30', label: 'Korčula Town', description: 'Free time off board for a lunch break in the walled old town.', icon: 'building-castle' },
@@ -472,7 +483,7 @@ export const tours: TourDetail[] = [
 		overviewHighlights:
 			'This private one-way speedboat journey takes you from Split to historic Hvar Old Town, with a stop for a swim in a secluded bay, before exploring the walled town of Korčula with time for lunch. From there it’s a second swim or some snorkelling among the islands as you continue toward Dubrovnik, arriving by early evening.',
 		introMore: [
-			`This is a private, one-way experience for up to ${MAX_GUESTS} people. Departure time is flexible, and your skipper can adjust stops along the way to suit your group. Lunch in Korčula is at your own cost, and we’ll confirm your exact drop-off point in Dubrovnik before departure.`,
+			`This is a private, one-way experience for up to ${MAX_GUESTS} people. You choose the departure time (${privateStart('dubrovnik-one-way', '08:00')}), and your skipper can adjust stops along the way to suit your group. Lunch in Korčula is at your own cost, and we’ll confirm your exact drop-off point in Dubrovnik before departure.`,
 		],
 		introCollapsible: true,
 		meetingPoint: MEETING_POINT_PRIVATE,
@@ -481,7 +492,7 @@ export const tours: TourDetail[] = [
 		whatToBring: SHEET_BRING,
 		included: [...SHEET_INCLUDED, 'Luggage on board'],
 		notIncluded: ['Lunch', 'Return to Split'],
-		// The sheet's boat price (€1,200) is not used yet: it conflicts with the operator's private price doc (see src/config/private.ts).
+		// No per-person prices: the whole boat is sold at the private price in src/config/private.ts.
 		prices: null,
 		priceUnit: 'boat',
 		additionalFees: [],
@@ -564,8 +575,8 @@ export const tours: TourDetail[] = [
  * FigJam tour board exactly: 'three-islands', 'blue-cave-open-boat',
  * 'blue-cave-luxury-cabin', 'blue-cave-6-islands', 'blue-lagoon-half-day'.
  * 'golden-horn-brac-hvar' and 'hvar-red-rocks-pakleni' were previously removed
- * for lacking real photography and have been re-added above per FigJam, now
- * shipping with placeholder color-block imagery until real photos are sourced.
+ * for lacking real photography and have been re-added above per FigJam; they
+ * now use the operator's photos (PHOTO.goldenHorn, PHOTO.hvar).
  */
 export const REMOVED_TOUR_SLUGS = [
 	'three-islands',

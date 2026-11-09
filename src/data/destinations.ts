@@ -292,7 +292,7 @@ export const destinations: Destination[] = [
 		shortDescription:
 			'Shallow turquoise lagoon near Drvenik Veli, the centrepiece of our half-day tours and a swim stop on selected full-day routes.',
 		intro:
-			'The Blue Lagoon at Budikovac is exactly what the name promises: shallow, luminous water over white sand, ringed by small islets. It’s close enough to Split for a relaxed half-day but feels worlds away from the city. Our morning and afternoon slots maximise swim time without the long open-sea legs of a full island-hopping day.',
+			'The Blue Lagoon near Drvenik Veli is exactly what the name promises: shallow, luminous water over white sand, ringed by small islets. It’s close enough to Split for a relaxed half-day but feels worlds away from the city. Our morning and afternoon slots maximise swim time without the long open-sea legs of a full island-hopping day.',
 		tags: ['Swimming', 'Half-day', 'Snorkelling'],
 		tipTag: { icon: 'clock', label: 'Great for a relaxed half-day' },
 		attrs: [
@@ -313,7 +313,7 @@ export const destinations: Destination[] = [
 		geo: [
 			{ label: 'Distance from Split', value: '~15 km by sea' },
 			{ label: 'Travel time by boat', value: '~45 min' },
-			{ label: 'Area', value: 'Drvenik Veli · Budikovac' },
+			{ label: 'Area', value: 'Drvenik Veli' },
 			{ label: 'How we get there', value: 'Coastal run from Split harbour' },
 		],
 		nearby: [

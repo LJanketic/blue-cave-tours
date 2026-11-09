@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { destinations } from '../data/destinations';
 import { bestSeasonLabel, getAllDestinations, getDestinationBySlug, getToursForDestination } from './destinations';
@@ -12,6 +13,10 @@ describe('bestSeasonLabel', () => {
 
 	it('gives every destination a best season', () => {
 		for (const d of destinations) expect(bestSeasonLabel(d.bestTimeMonths), d.slug).not.toBeNull();
+	});
+
+	it('stays off the destination pages until the operator gives the months', () => {
+		expect(readFileSync('src/pages/destinations/[slug].astro', 'utf8')).toContain('const SHOW_BEST_SEASON = false;');
 	});
 });
 

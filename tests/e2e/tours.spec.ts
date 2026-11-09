@@ -67,12 +67,15 @@ test('a click anywhere on a dropdown pill lands on its select', async ({ page })
 
 test('sort by price puts the cheapest first and quote-only tours last', async ({ page }) => {
 	await page.goto('/tours/');
+	// The sort is the island's: choosing before it hydrates (WebKit is slower) changes nothing.
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
 	await page.getByLabel('Sort tours').selectOption('price-asc');
-	const prices = await page.locator('.tour-card-ui__amount').allInnerTexts();
 	// "€1,200" is grouped en-GB: drop the comma, or Number() gives NaN and the order check passes by luck.
-	const numbers = prices.map((p) => (p.startsWith('€') ? Number(p.slice(1).replace(/,/g, '')) : Infinity));
-	expect(numbers.some(Number.isNaN)).toBe(false);
-	expect(numbers).toEqual([...numbers].sort((a, b) => a - b));
+	const amounts = async () =>
+		(await page.locator('.tour-card-ui__amount').allInnerTexts()).map((p) => (p.startsWith('€') ? Number(p.slice(1).replace(/,/g, '')) : Infinity));
+	// The list re-renders after the change: wait for it rather than read it mid-update.
+	await expect.poll(async () => { const n = await amounts(); return n.every((x, i) => i === 0 || n[i - 1] <= x); }).toBe(true);
+	expect((await amounts()).some(Number.isNaN)).toBe(false);
 });
 
 test('without JavaScript every tour is listed', async ({ browser }) => {

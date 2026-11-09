@@ -1,5 +1,6 @@
 import type { Departure, TourDetail } from '../types/tour';
-import type { ContactTopic } from './contact-validation';
+import { CONTACT_LIMITS, type ContactTopic } from './contact-validation';
+import { TIME_RE } from './time';
 import { privateTour } from '../config/private';
 
 /** Guests per departure, enforced both client-side (GroupBookingFlow) and here. */
@@ -12,8 +13,9 @@ export function isGroupTour(tour: Pick<TourDetail, 'types'>): boolean {
 
 /**
  * Instant book (the group booking flow) needs a group departure with a real
- * per-person price. Private-only charters and tours priced "on request" (e.g.
- * hvar-red-rocks-pakleni until its price is confirmed) go to the contact form.
+ * per-person price. Private-only tours (Red Rocks, Dubrovnik) book their own
+ * private step instead (offersPrivateFlow); a group tour without a price would
+ * go to the contact form.
  */
 export function supportsInstantBook(tour: Pick<TourDetail, 'types' | 'prices'>): boolean {
 	return isGroupTour(tour) && tour.prices !== null;
@@ -85,18 +87,6 @@ export type GroupBookingDetails = {
 	notes: string | null;
 };
 
-export function hasRequiredBookingDetails(details: GroupBookingDetails): boolean {
-	const adults = details.adults ?? 0;
-	return Boolean(
-		details.date &&
-			details.firstName &&
-			details.lastName &&
-			details.email &&
-			adults >= 1 &&
-			seatCount({ adults, children: details.children, infants: details.infants }) <= MAX_GUESTS,
-	);
-}
-
 function clip(value: string | null, max = 200): string | null {
 	if (!value) return null;
 	const trimmed = value.trim();
@@ -120,7 +110,7 @@ export function parseGroupBookingParams(params: URLSearchParams): GroupBookingDe
 	const dateRaw = clip(params.get('date'), 10);
 	const date = dateRaw && parseIsoDate(dateRaw) ? dateRaw : null;
 	const slotRaw = clip(params.get('slot'), 8);
-	const slot = slotRaw && /^\d{2}:\d{2}$/.test(slotRaw) ? slotRaw : null;
+	const slot = slotRaw && TIME_RE.test(slotRaw) ? slotRaw : null;
 	const adults = parseCount(params.get('adults'));
 	const children = parseCount(params.get('children')) ?? 0;
 	const infants = parseCount(params.get('infants')) ?? 0;
@@ -133,7 +123,8 @@ export function parseGroupBookingParams(params: URLSearchParams): GroupBookingDe
 		infants,
 		firstName: clip(params.get('firstName'), 80),
 		lastName: clip(params.get('lastName'), 80),
-		email: clip(params.get('email'), 120),
+		// An address longer than the limit is refused (empty), never cut: a cut one could still look valid.
+		email: (params.get('email') ?? '').trim().length > CONTACT_LIMITS.email ? '' : clip(params.get('email'), CONTACT_LIMITS.email),
 		phone: clip(params.get('phone'), 40),
 		notes: clip(params.get('notes'), 500),
 	};
@@ -152,11 +143,6 @@ export function parseIsoDate(iso: string): Date | null {
 	if (!match) return null;
 	const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
 	return toIsoDate(date) === iso ? date : null;
-}
-
-/** Local midnight of the given moment, for day-level comparisons. */
-export function startOfDay(date: Date): Date {
-	return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 export function formatBookingDate(iso: string): string {

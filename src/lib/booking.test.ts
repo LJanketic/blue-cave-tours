@@ -3,11 +3,9 @@ import {
 	contactHrefForTour,
 	departureLabel,
 	groupBookHref,
-	hasRequiredBookingDetails,
 	meetingPointShort,
 	parseGroupBookingParams,
 	parseIsoDate,
-	startOfDay,
 	supportsInstantBook,
 	toIsoDate,
 	tourPriceUnit,
@@ -27,10 +25,6 @@ describe('ISO dates', () => {
 		expect(parseIsoDate('2026-2-3')).toBeNull();
 		expect(parseIsoDate('not a date')).toBeNull();
 	});
-
-	it('startOfDay drops the time of day', () => {
-		expect(startOfDay(new Date(2026, 4, 1, 17, 30)).getTime()).toBe(new Date(2026, 4, 1).getTime());
-	});
 });
 
 describe('parseGroupBookingParams', () => {
@@ -48,25 +42,6 @@ describe('parseGroupBookingParams', () => {
 	it('keeps guest counts above the per-departure cap, so validation can refuse them', () => {
 		expect(parseGroupBookingParams(new URLSearchParams('adults=99')).adults).toBe(99);
 		expect(parseGroupBookingParams(new URLSearchParams('children=99999999999999999999')).children).toBe(999);
-		expect(hasRequiredBookingDetails(parseGroupBookingParams(new URLSearchParams('date=2027-07-15&adults=99&firstName=J&lastName=S&email=j@example.com')))).toBe(false);
-	});
-});
-
-describe('hasRequiredBookingDetails', () => {
-	const base = parseGroupBookingParams(
-		new URLSearchParams('date=2027-07-15&adults=2&firstName=Jane&lastName=Smith&email=jane@example.com'),
-	);
-
-	it('accepts a complete booking', () => {
-		expect(hasRequiredBookingDetails(base)).toBe(true);
-	});
-
-	it('rejects a booking over the combined guest cap', () => {
-		expect(hasRequiredBookingDetails({ ...base, adults: 8, children: 8 })).toBe(false);
-	});
-
-	it('rejects a booking without a date', () => {
-		expect(hasRequiredBookingDetails({ ...base, date: null })).toBe(false);
 	});
 });
 

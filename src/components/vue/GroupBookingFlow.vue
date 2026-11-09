@@ -54,6 +54,20 @@ const NOTES_MAX = 500;
 
 const date = ref<string | null>(null);
 const slot = ref(activeDepartures.value[0]?.time ?? '');
+/**
+ * The guest picked the time themselves (a time card), or it came back with
+ * their saved booking. Then a closed time stays chosen with a notice, rather
+ * than being swapped for another one, or for the other Blue Lagoon tour.
+ */
+const timePicked = ref(false);
+function pickTour(slug: string) {
+	bookedSlug.value = slug;
+	timePicked.value = true;
+}
+function pickSlot(time: string) {
+	slot.value = time;
+	timePicked.value = true;
+}
 const adults = ref(2);
 const children = ref(0);
 const infants = ref(0);
@@ -110,8 +124,8 @@ const summaryRows = computed(() => {
 		{ label: 'Guests', value: guestSummaryFromCounts(adults.value, children.value, infants.value) },
 	];
 	if (dateSeason.value) rows.push({ label: 'Price', value: seasonPriceLabel(dateSeason.value) });
-	if (unitPrice.value) rows.push({ label: 'Adults', value: `${adults.value} × €${unitPrice.value.adult}` });
-	if (children.value > 0 && unitPrice.value) rows.push({ label: 'Children', value: `${children.value} × €${unitPrice.value.child}` });
+	if (unitPrice.value) rows.push({ label: 'Adults', value: `${adults.value} × ${formatEuro(unitPrice.value.adult)}` });
+	if (children.value > 0 && unitPrice.value) rows.push({ label: 'Children', value: `${children.value} × ${formatEuro(unitPrice.value.child)}` });
 	if (infants.value > 0) rows.push({ label: 'Infants', value: `${infants.value} × free` });
 	return rows;
 });
@@ -136,10 +150,11 @@ const slotOptions = computed(() =>
 
 /*
  * Keep the choice bookable as time passes. A new date pre-selects its first
- * open departure. If the clock closes the departure already chosen, it stays
- * chosen (submit is blocked) and the notice says so: switching it silently
- * could book a time the visitor didn't pick. When every departure that day
- * has closed, the date is dropped (the calendar greys it out).
+ * open departure, unless the guest picked the time or it was restored from
+ * their saved booking (timePicked). If the departure chosen is closed, it
+ * stays chosen (submit is blocked) and the notice says so: switching it
+ * silently could book a time, or a tour, the visitor didn't pick. When every
+ * departure that day has closed, the date is dropped (the calendar greys it out).
  */
 watch([date, now, slot], ([day], [previousDay]) => {
 	if (!day || !now.value) return;
@@ -148,7 +163,7 @@ watch([date, now, slot], ([day], [previousDay]) => {
 		dateNotice.value = 'Booking for that day has closed. Please choose another date.';
 		return;
 	}
-	if (day !== previousDay && isClosed(slot.value)) {
+	if (day !== previousDay && !timePicked.value && isClosed(slot.value)) {
 		const open = choices.value.find((c) => !isClosed(c.time));
 		if (open) bookedSlug.value = open.tourSlug;
 		else slot.value = departureTimes.value.find((t) => !isClosed(t)) ?? '';
@@ -224,6 +239,8 @@ async function restore() {
 		const d = (await res.json()) as Record<string, string | number> & { tourSlug?: string };
 		if (d.tourSlug !== props.tourSlug && !choices.value.some((c) => c.tourSlug === d.tourSlug)) return;
 		if (typeof d.tourSlug === 'string' && d.tourSlug !== props.tourSlug) bookedSlug.value = d.tourSlug;
+		// The saved time is the guest's own pick: keep it even if it has closed since.
+		timePicked.value = true;
 		const today = businessDate();
 		if (typeof d.date === 'string' && d.date >= today && isInSeason(d.date)) {
 			date.value = d.date;
@@ -275,10 +292,10 @@ onUnmounted(() => clearInterval(clock));
 			<p class="flow__status" role="status">{{ dateNotice }}</p>
 
 			<div class="flow__departure">
-				<ChoiceCards v-if="choices.length > 1" v-model="bookedSlug" name="tourChoice" legend="Departure time" :options="choiceOptions" />
+				<ChoiceCards v-if="choices.length > 1" :model-value="bookedSlug" name="tourChoice" @update:model-value="pickTour" legend="Departure time" :options="choiceOptions" />
 				<p v-else-if="departures.length === 0" class="flow__line"><i class="ti ti-clock" aria-hidden="true"></i> Departure time confirmed at booking</p>
 				<!-- One fixed departure: nothing to choose, and the summary shows its time and check-in. -->
-				<ChoiceCards v-else-if="departures.length > 1" v-model="slot" name="slot" legend="Departure time" :options="slotOptions" />
+				<ChoiceCards v-else-if="departures.length > 1" :model-value="slot" name="slot" @update:model-value="pickSlot" legend="Departure time" :options="slotOptions" />
 			</div>
 		</section>
 
@@ -306,7 +323,7 @@ onUnmounted(() => clearInterval(clock));
 				<FormField id="book-first" v-model="firstName" label="First name" name="firstName" autocomplete="given-name" placeholder="Ivan" required :error="fieldErrors.firstName" />
 				<FormField id="book-last" v-model="lastName" label="Last name" name="lastName" autocomplete="family-name" placeholder="Kovač" required />
 				<FormField id="book-email" v-model="email" label="Email" name="email" type="email" autocomplete="email" placeholder="ivan@example.com" required :error="fieldErrors.email" />
-				<FormField id="book-phone" v-model="phone" label="Phone" name="phone" type="tel" autocomplete="tel" placeholder="+385 91 234 5678" />
+				<FormField id="book-phone" v-model="phone" label="Phone" name="phone" type="tel" autocomplete="tel" placeholder="+385 91 234 5678" :error="fieldErrors.phone" />
 				<FormField
 					id="book-notes"
 					v-model="notes"

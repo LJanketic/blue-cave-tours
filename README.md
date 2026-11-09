@@ -36,7 +36,7 @@ CI (`.github/workflows/ci.yml`) runs check, test and build on every pull request
 
 1. Tour page → **Book group tour** → `/book/<tour>/group/`: pick a date, guests and contact details.
 2. `/book/<tour>/review/` shows the summary; **Continue to payment** goes to `/booking/success/` (a demo confirmation, nothing is charged). `/booking/error/` is the failed-payment page.
-3. Tours without a fixed per-person price (private charters, "price on request") go to the contact form instead (`/contact/?tour=<tour>`). `supportsInstantBook` in `src/lib/booking.ts` decides this from the tour's `types` and `adultPrice`.
+3. **Private experience** → `/book/<tour>/private/`: the whole boat at the price in `src/config/private.ts`, with extras, a pick-up point and a departure time, then the same review and payment. A tour missing from that file falls back to a quote request; Create Your Perfect Day goes to `/private-charter/`. `supportsInstantBook` and `offersPrivateFlow` in `src/lib/booking.ts` decide which steps a tour has.
 
 **Contact form:** honeypot + minimum submit time, then Cloudflare Turnstile and a per-IP rate limit (5 requests / 10 min, Netlify Blobs). It returns success but **does not send email yet**. Turnstile turns on once `PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are both set in Netlify (see `.env.example`); redeploy after adding them, because the page reads the site key at build time.
 

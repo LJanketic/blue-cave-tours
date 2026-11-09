@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
+import { arrivalFor, arriveByLabel } from './arrival';
 import { describe, expect, it } from 'vitest';
 import { tours } from '../data/tour-catalog';
+import { FAQ_ITEMS } from '../data/faq';
 import { PRIVATE_TOURS, privateDepartureTimes } from '../config/private';
 import { LOWEST_PRIVATE_PRICE } from '../data/marketing';
 import { supportsPrivateBook } from './booking';
@@ -56,7 +58,31 @@ describe('ClickUp 8 Nov 2026: booking confirmation screen', () => {
 		for (const t of tours.filter((x) => x.slug !== 'blue-cave-hvar-5-islands')) {
 			for (const d of t.departures) expect(d.arriveOnTime, t.slug).toBeUndefined();
 		}
-		expect(readFileSync('src/pages/booking/success.astro', 'utf8')).toContain('departure?.arriveOnTime');
+	});
+
+	it('gives the Blue Cave exception in the FAQ too, at the catalog departure', () => {
+		const late = FAQ_ITEMS.find((item) => item.question === 'What if I’m running late?');
+		expect(late?.answer).toContain('at least 15 minutes before departure');
+		expect(late?.answer).toContain(`for the Blue Cave tour, on time for the ${tour('blue-cave-hvar-5-islands').departures[0].time} departure`);
+	});
+
+	it('computes the arrival time the same way for the page and the email (src/lib/arrival.ts)', () => {
+		const blueCave = tour('blue-cave-hvar-5-islands').departures;
+		const goldenHorn = tour('golden-horn-brac-hvar').departures;
+		// Blue Cave: the departure itself, also for a private boat moved to 07:35.
+		expect(arrivalFor(blueCave, '07:20')).toEqual({ time: '07:20', minutesEarly: 0 });
+		expect(arrivalFor(blueCave, '07:35')).toEqual({ time: '07:35', minutesEarly: 0 });
+		expect(arriveByLabel(arrivalFor(blueCave, '07:35'))).toBe('07:35');
+		// A check-in, labelled with its real offset.
+		expect(arriveByLabel(arrivalFor(goldenHorn, '09:00'))).toBe('08:45 (15 min early)');
+		expect(arriveByLabel(arrivalFor([{ time: '09:00', checkIn: '08:30' }], '09:00'))).toBe('08:30 (30 min early)');
+		// A private boat moved off the check-in's slot: 15 minutes before.
+		expect(arriveByLabel(arrivalFor(goldenHorn, '10:15'))).toBe('10:00 (15 min early)');
+		// No usable time.
+		expect(arrivalFor(goldenHorn, '00:10')).toBeNull();
+		expect(arrivalFor(goldenHorn, 'Flexible')).toBeNull();
+		expect(arrivalFor(goldenHorn, '')).toBeNull();
+		expect(arriveByLabel(null)).toBe('15 minutes before departure');
 	});
 
 	it('groups the total paid like every other price ("€1,200")', () => {

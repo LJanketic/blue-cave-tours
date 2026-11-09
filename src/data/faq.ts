@@ -56,7 +56,7 @@ export function privateBoatSentence(tours: typeof PRIVATE_TOURS = PRIVATE_TOURS)
 export function pricingAnswer(): string {
 	const lines = PRICE_LIST.map(
 		({ label, prices }) =>
-			`${label}: €${prices.low.adult} per adult and €${prices.low.child} per child in low season, €${prices.peak.adult} and €${prices.peak.child} in peak season.`,
+			`${label}: ${euros(prices.low.adult)} per adult and ${euros(prices.low.child)} per child in low season, ${euros(prices.peak.adult)} and ${euros(prices.peak.child)} in peak season.`,
 	);
 	return [
 		`Group tour prices are per person (children up to ${CHILD_MAX_AGE} pay the child price; infants up to ${INFANT_MAX_AGE} travel free) and depend on the season of your tour date, not the day you book.`,
@@ -118,7 +118,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 		category: 'changes',
 		question: 'What if I’m running late?',
 		answer:
-			'Please be at the meeting point at least 15 minutes before departure. The boat can’t wait, and a late arrival counts as a no-show, without a refund. If you’re delayed, contact us right away.',
+			'Please be at the meeting point at least 15 minutes before departure (for the Blue Cave tour, on time for the 07:20 departure). The boat can’t wait, and a late arrival counts as a no-show, without a refund. If you’re delayed, contact us right away.',
 		link: { href: '/contact/', label: 'Contact us' },
 	},
 	{
