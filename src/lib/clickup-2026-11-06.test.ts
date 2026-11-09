@@ -10,7 +10,7 @@ import { MAX_GUESTS } from './booking';
 describe('Weather update', () => {
 	it("is Mare's sentence, on the success page and in the confirmation email", () => {
 		expect(WEATHER_UPDATE_NOTE).toBe("We'll contact you before departure if conditions change. If cancelled, you get a full refund or free rescheduling.");
-		expect(readFileSync('src/pages/booking/success.astro', 'utf8')).toContain('<strong>Weather update.</strong> {WEATHER_UPDATE_NOTE}');
+		expect(readFileSync('src/pages/booking/success.astro', 'utf8')).toContain('<strong>Weather update</strong> {WEATHER_UPDATE_NOTE}'); // Board 07 (8 Nov 2026): the title on its own line
 		expect(readFileSync('src/lib/email/templates.ts', 'utf8')).toContain('const weatherNote = WEATHER_UPDATE_NOTE;');
 	});
 

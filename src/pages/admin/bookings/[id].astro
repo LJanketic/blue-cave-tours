@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { formatEuro } from '../../../lib/price';
 import { formatBookingDate, guestSummaryFromCounts, seatCount } from '../../../lib/booking';
 import { departureHasLeft, formatTimestamp } from '../../../lib/bookings/dates';
 import { isRecordId } from '../../../lib/bookings/ids';
@@ -246,7 +247,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 							<hr class="a-divider" />
 							<dl class="a-rows">
 								{charges.map((item) => (
-									<div><dt>{item.label}</dt><dd class="a-tnum">€{item.amount}</dd></div>
+									<div><dt>{item.label}</dt><dd class="a-tnum">{formatEuro(item.amount)}</dd></div>
 								))}
 							</dl>
 						</>
@@ -255,7 +256,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 				<hr class="a-divider" />
 				<div class="total-row">
 					<span class="total-label">Total</span>
-					<span class="total-amount a-tnum">€{booking.total}</span>
+					<span class="total-amount a-tnum">{formatEuro(booking.total)}</span>
 				</div>
 			</section>
 		</div>
@@ -349,7 +350,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 									</summary>
 									<div class="a-danger-box">
 										<p>
-											<strong>Mark €{booking.total} as refunded?</strong> This only records the refund. In this demo no money goes back to the customer.
+											<strong>Mark {formatEuro(booking.total)} as refunded?</strong> This only records the refund. In this demo no money goes back to the customer.
 										</p>
 										<form method="post">
 											<input type="hidden" name="action" value="refund" />

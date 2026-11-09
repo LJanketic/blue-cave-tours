@@ -28,8 +28,9 @@ export const CANCELLATION_FULL_PREFIX = 'Free cancellation up to ';
 export const CANCELLATION_FULL_SUFFIX = ` before departure. Cancellations within ${CANCELLATION_HOURS} hours are non-refundable. If we cancel for bad weather, technical issues or force majeure, you choose: free rescheduling, an alternative tour, or a full refund (paid within ${WEATHER_REFUND_DAYS} days).`;
 
 /**
- * The full policy as plain text, built from PREFIX/WINDOW/SUFFIX. The FAQ,
- * booking review page and emails all render this one string.
+ * The full policy as plain text, built from PREFIX/WINDOW/SUFFIX. The FAQ and
+ * emails render this string; the booking review page renders the same three
+ * parts with the window in bold (board 06a).
  */
 export const CANCELLATION_FULL = `${CANCELLATION_FULL_PREFIX}${CANCELLATION_WINDOW}${CANCELLATION_FULL_SUFFIX}`;
 

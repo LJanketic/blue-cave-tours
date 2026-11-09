@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTourBySlug } from '../tours';
+import { offersPrivateFlow } from '../booking';
 import type { TourDetail } from '../../types/tour';
 import {
 	applyAdminAction,
@@ -111,6 +112,11 @@ describe('createPendingBooking', () => {
 		expect(await createPendingBooking(tour, today, new Date('2027-07-15T05:30:00Z'))).toEqual({ ok: false, error: 'past' });
 	});
 
+	it('refuses a phone number that is not one, and takes none at all', async () => {
+		expect(await createPendingBooking(tour, { ...input, phone: 'not a number' }, NOW)).toEqual({ ok: false, error: 'phone' });
+		expect((await createPendingBooking(tour, { ...input, phone: '' }, NOW)).ok).toBe(true);
+	});
+
 	it('refuses quote-only tours', async () => {
 		const quoteOnly = getTourBySlug('create-perfect-day-private') as TourDetail;
 		expect((await createPendingBooking(quoteOnly, input, NOW)).ok).toBe(false);
@@ -118,7 +124,7 @@ describe('createPendingBooking', () => {
 });
 
 describe('private experience (pay now)', () => {
-	// Blue Cave: departs 07:20 (check-in 07:05), no latest departure yet, boat €1,500 low / €2,000 peak.
+	// Blue Cave: departs 07:20, latest 11:00, boat €1,200 in any season (Mare, 8 Nov 2026).
 	const privateInput: PrivateBookingInput = { ...input, slot: '07:20', kind: 'private', extras: [], pickup: 'riva' };
 	// A made-up list, for tests only: the site has no latest departures, extras or priced pick-ups yet.
 	const lists: PrivateLists = {
@@ -127,12 +133,14 @@ describe('private experience (pay now)', () => {
 		pickups: [{ id: 'riva', label: 'Riva', price: 0 }, { id: 'test-pickup', label: 'Test pick-up', price: 25 }],
 	};
 
-	it('takes only the usual departure, and only listed extras and pick-ups, as the config stands', () => {
+	it('takes the usual departure and 15-minute steps up to 11:00, and only listed extras and pick-ups, as the config stands', () => {
 		const check = (over: Partial<PrivateBookingInput>) => validatePrivateBookingInput(tour, { ...privateInput, ...over }, NOW);
 		expect(check({})).toBeNull();
-		// No latest departure from the operator yet: any other time is refused.
-		expect(check({ slot: '07:35' })).toBe('slot');
+		// 15-minute steps from 07:20 up to the 11:00 latest; off the steps, before 07:20 or after 11:00 is refused.
+		expect(check({ slot: '07:35' })).toBeNull();
+		expect(check({ slot: '11:00' })).toBeNull();
 		expect(check({ slot: '08:30' })).toBe('slot');
+		expect(check({ slot: '11:15' })).toBe('slot');
 		expect(check({ slot: '07:05' })).toBe('slot');
 		expect(check({ slot: null })).toBe('slot');
 		// Extras and pick-ups from the lists (ClickUp 6 Nov 2026); anything else is refused.
@@ -146,6 +154,10 @@ describe('private experience (pay now)', () => {
 		expect(check({ date: '2027-11-15' })).toBe('season');
 		expect(check({ date: '2027-05-31' })).toBe('past');
 		expect(check({ email: 'nope' })).toBe('email');
+		// Phone: optional, but digits (+, spaces, brackets, dashes) when given.
+		expect(check({ phone: '' })).toBeNull();
+		expect(check({ phone: '+385 91 234 5678' })).toBeNull();
+		expect(check({ phone: 'call me maybe' })).toBe('phone');
 		expect(check({ lastName: null })).toBe('name');
 	});
 
@@ -160,8 +172,16 @@ describe('private experience (pay now)', () => {
 		expect(check({ extras: ['caviar'] })).toBe('extras');
 	});
 
-	it('refuses tours that are not sold privately on the site', () => {
-		for (const slug of ['golden-horn-brac-hvar', 'blue-lagoon-morning', 'dubrovnik-one-way', 'create-perfect-day-private']) {
+	it('falls back to a quote request when a tour loses its boat price (the quoteOnly path)', () => {
+		// Golden Horn with no entry in the lists: the private step stays, but as a request.
+		const golden = getTourBySlug('golden-horn-brac-hvar') as TourDetail;
+		const withdrawn: PrivateLists = { ...lists, tours: {} };
+		expect(offersPrivateFlow(golden)).toBe(true);
+		expect(validatePrivateBookingInput(golden, { ...privateInput, slot: golden.departures[0].time }, NOW, withdrawn)).toBe('private');
+	});
+
+	it('refuses the custom day, which is not sold privately on the site', () => {
+		for (const slug of ['create-perfect-day-private']) {
 			const other = getTourBySlug(slug) as TourDetail;
 			expect(validatePrivateBookingInput(other, { ...privateInput, slot: other.departures[0]?.time ?? '' }, NOW), slug).toBe('private');
 		}
@@ -185,13 +205,13 @@ describe('private experience (pay now)', () => {
 			tourTitle: `Private experience: ${tour.title}`,
 			slot: '07:20',
 			durationHours: tour.durationHours,
-			total: 2000,
+			total: 1200,
 			termsAcceptedAt: NOW.toISOString(),
 		});
 		expect(booking.quoteExpiresAt).toBeUndefined();
 		expect(booking.enquiryId).toBeUndefined();
 		expect(booking.pickup).toBeUndefined();
-		expect(booking.lineItems).toEqual([{ label: 'Private boat with skipper', unit: 2000, qty: 1, amount: 2000 }]);
+		expect(booking.lineItems).toEqual([{ label: 'Private boat with skipper', unit: 1200, qty: 1, amount: 1200 }]);
 		expect(isPayable(booking, NOW)).toBe(true);
 		expect(termsDueOnPayment(booking)).toBe(false);
 		// Cancelled before paying, it's still a booking in the admin, not a dead quote.
@@ -213,7 +233,7 @@ describe('private experience (pay now)', () => {
 		const admin = adminBookingEmail(result.booking, 'boss@example.com', 'https://example.test/admin/');
 		expect(admin.subject).toMatch(/^New private experience /);
 		expect(admin.text).not.toMatch(/quote/i);
-		expect(admin.text).toContain('Private boat with skipper (1 × €2,000)');
+		expect(admin.text).toContain('Private boat with skipper (1 × €1,200)');
 		expect(bookingConfirmationEmail(result.booking, 'https://example.test').text).toContain('Meeting point:');
 		// Pick-ups come from a quoted "Other location" request today.
 		const pickedUp = { ...result.booking, pickup: 'Villa Sunce, Podstrana' };
@@ -258,7 +278,7 @@ describe('finalizePaidBooking', () => {
 			`Booking ref: ${booking.ref}`,
 			'Departure: 07:20',
 			`Meeting point: Riva promenade, stand 14, Split — ${MEETING_POINT_MAP_URL}`,
-			"As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.",
+			"As you'll be joining a group, please be at the meeting point on time for the 07:20 departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.",
 			'Guests: 2 adults, 1 child',
 			`Total (incl. VAT): €${booking.total} — Paid (demo, no money taken)`,
 			'Bring: Swimsuit and towel, Sunscreen and sunglasses, Hat or cap, Cash or card for lunch and extras, Light jacket for cooler sea breezes',

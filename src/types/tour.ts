@@ -2,8 +2,14 @@ import type { PhotoRef } from '../data/tour-photos';
 
 export type ItineraryKind = 'morning' | 'afternoon' | 'full' | 'flexible';
 
-/** A fixed daily departure. `checkIn` is when guests should be at the boat. */
-export type Departure = { time: string; checkIn?: string; label?: string };
+/**
+ * A fixed daily departure. `checkIn` is when guests should be at the boat;
+ * `arriveOnTime` on any of a tour's departures means guests of that tour are
+ * there for the departure itself, not 15 minutes before, at whatever time a
+ * private boat leaves (Blue Cave, ClickUp "Booking confirmation screen", 8 Nov
+ * 2026; src/lib/arrival.ts).
+ */
+export type Departure = { time: string; checkIn?: string; label?: string; arriveOnTime?: true };
 
 /** One itinerary stop. `time` only where the operator gives one (C-19). */
 export type ItineraryStep = {

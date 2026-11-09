@@ -3,9 +3,9 @@ import { MAX_GUESTS, parseIsoDate, seatCount, supportsInstantBook } from '../boo
 import { isInSeason, seasonLabel } from '../../config/season';
 import { TERMS_VERSION } from '../../config/legal';
 import { BOOKING_CUTOFF_NOTE } from '../../config/booking';
-import { computeBookingTotal, lineItemsFor, lineItemsTotal, privateLineItems } from '../price';
+import { computeBookingTotal, formatEuro, lineItemsFor, lineItemsTotal, privateLineItems } from '../price';
 import { DEFAULT_PICKUP_ID, PRIVATE_LISTS, privateDepartureTimes, privateExtra, privatePickup, privateTour, type PrivateLists } from '../../config/private';
-import { EMAIL_RE, asciiEmail } from '../contact-validation';
+import { EMAIL_RE, PHONE_RE, asciiEmail } from '../contact-validation';
 import { adminEmail, sendEmail, type EmailMessage } from '../email/send';
 import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail, charterQuoteEmail } from '../email/templates';
 import { charterTourSlug, durationLabel, routeById } from '../../config/charter';
@@ -17,6 +17,7 @@ import {
 	bookings,
 	enquiries,
 	isCharterQuote,
+	meta,
 	nextCounterValue,
 	outbox,
 	type Booking,
@@ -59,6 +60,7 @@ export const BOOKING_ERRORS = {
 	slot: 'Choose one of the departure times.',
 	name: 'Enter your first and last name.',
 	email: 'Enter a valid email address.',
+	phone: 'Enter a phone number with digits only (+ and spaces are fine).',
 	notes: `Keep notes to ${NOTES_MAX} characters.`,
 	private: 'This tour can\'t be booked as a private experience online. Please send us a request instead.',
 	extras: 'Choose extras from the list.',
@@ -93,6 +95,8 @@ export function validateBookingInput(tour: TourDetail, input: NewBookingInput, n
 	if (bookingClosed(input.date, slot, now)) return 'past';
 	if (!input.firstName || !input.lastName) return 'name';
 	if (!input.email || !EMAIL_RE.test(input.email)) return 'email';
+	// Optional, but a number the crew can call when given.
+	if (input.phone && !PHONE_RE.test(input.phone.trim())) return 'phone';
 	if ((input.notes ?? '').length > NOTES_MAX) return 'notes';
 	return null;
 }
@@ -127,6 +131,8 @@ export function validatePrivateBookingInput(
 	if (!privatePickup(input.pickup, lists)) return 'pickup';
 	if (!input.firstName || !input.lastName) return 'name';
 	if (!input.email || !EMAIL_RE.test(input.email)) return 'email';
+	// Optional, but a number the crew can call when given.
+	if (input.phone && !PHONE_RE.test(input.phone.trim())) return 'phone';
 	if ((input.notes ?? '').length > NOTES_MAX) return 'notes';
 	return null;
 }
@@ -328,21 +334,40 @@ export async function finalizePaidBooking(
 		booking.paymentRef = paymentRef;
 		booking.paidAt = at;
 		booking.updatedAt = at;
-		booking.history.push({ at, by: providerName(provider), action: `Paid €${booking.total}` });
+		booking.history.push({ at, by: providerName(provider), action: `Paid ${formatEuro(booking.total)}` });
 		return booking;
 	});
 	if (!paid.written || !paid.record) return paid.record;
 
-	const invoice = await issueDemoInvoice(now);
-	const { record } = await bookings().update(id, (booking) => {
-		booking.invoice = invoice;
-		booking.history.push({ at, by: 'System', action: `Invoice ${invoice.number} issued` });
-		return booking;
-	});
-	const booking = record ?? { ...paid.record, invoice };
-
-	await sendBookingEmail(booking.id, bookingConfirmationEmail(booking, siteOrigin), at);
-	await sendBookingEmail(booking.id, adminBookingEmail(booking, adminEmail(), `${siteOrigin}/admin/bookings/${booking.id}/`), at);
+	/*
+	 * The booking is paid from here on. The invoice and the emails come after,
+	 * and a failure in either is logged, not thrown: the guest still lands on
+	 * the success page, and the admin detail shows the booking without an
+	 * invoice or with an unsent email.
+	 */
+	let booking: Booking = paid.record;
+	try {
+		const invoice = await issueDemoInvoice(now);
+		const { record } = await bookings().update(id, (b) => {
+			b.invoice = invoice;
+			b.history.push({ at, by: 'System', action: `Invoice ${invoice.number} issued` });
+			return b;
+		});
+		booking = record ?? { ...booking, invoice };
+	} catch (err) {
+		console.error(`[booking ${id}] invoice not issued after payment`, err);
+	}
+	const emails: [string, () => EmailMessage][] = [
+		['confirmation', () => bookingConfirmationEmail(booking, siteOrigin)],
+		['admin', () => adminBookingEmail(booking, adminEmail(), `${siteOrigin}/admin/bookings/${booking.id}/`)],
+	];
+	for (const [name, message] of emails) {
+		try {
+			await sendBookingEmail(booking.id, message(), at);
+		} catch (err) {
+			console.error(`[booking ${id}] ${name} email failed after payment`, err);
+		}
+	}
 	return booking;
 }
 
@@ -420,7 +445,7 @@ export async function applyAdminAction(
 			case 'refund':
 				if (!paid) return null;
 				booking.paymentStatus = 'refunded';
-				booking.history.push({ at, by, action: `Marked €${booking.total} as refunded (demo, no money moved)` });
+				booking.history.push({ at, by, action: `Marked ${formatEuro(booking.total)} as refunded (demo, no money moved)` });
 				break;
 			case 'note': {
 				const text = action.text.trim().slice(0, 1000);
@@ -535,7 +560,7 @@ export async function sendCharterQuote(
 				? [{ at, by: 'System', text: `Extras asked for: ${request.extras.map((id) => privateExtra(id)?.label ?? id).join(', ')}` }]
 				: []),
 		],
-		history: [{ at, by, action: `Quote sent: €${quote.price}, valid ${quote.validDays} day${quote.validDays === 1 ? '' : 's'}` }],
+		history: [{ at, by, action: `Quote sent: ${formatEuro(quote.price)}, valid ${quote.validDays} day${quote.validDays === 1 ? '' : 's'}` }],
 		...(enquiry.sample ? { sample: true } : {}),
 	};
 
@@ -583,7 +608,8 @@ export function takesSeats(booking: Booking): boolean {
  * - bookings that were never paid (no invoice, so no accounting record) 30 days after the trip
  * - contact enquiries 12 months after they came in, with the notification email about them
  * - the text and reply-to address of sent emails after 90 days (who, when and what kind stay)
- * Runs when the admin dashboard loads. Returns what it changed.
+ * Runs once a day, from the first admin dashboard load of the day
+ * (sweepPersonalDataDaily). Returns what it changed.
  */
 export const RETENTION_DAYS = { notes: 30, phone: 90, unpaidBooking: 30, enquiry: 365, emailBody: 90 } as const;
 
@@ -649,4 +675,21 @@ export async function sweepPersonalData(now: Date = new Date()): Promise<{ booki
 		}
 	}
 	return { bookings: changedBookings, enquiries: removedEnquiries, emails: trimmedEmails };
+}
+
+const SWEEP_META_ID = 'retention-sweep';
+
+/**
+ * sweepPersonalData at most once per Split day. The retention periods are in
+ * days, so a second run the same day finds nothing new, and skipping it saves
+ * reading every booking, enquiry and email on each dashboard load (Netlify
+ * credits). Null when it already ran today.
+ */
+export async function sweepPersonalDataDaily(now: Date = new Date()): Promise<Awaited<ReturnType<typeof sweepPersonalData>> | null> {
+	const today = businessDate(now);
+	const last = await meta().get(SWEEP_META_ID);
+	if (last?.value === today) return null;
+	const result = await sweepPersonalData(now);
+	await meta().put({ id: SWEEP_META_ID, value: today });
+	return result;
 }

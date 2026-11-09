@@ -36,12 +36,38 @@ const props = defineProps<{
 	renderedOn: string;
 	seasonStart: string;
 	seasonEnd: string;
+	/**
+	 * Same route at other times of day, each its own tour (src/config/departure-choices.ts):
+	 * the guest picks the time, and the booking goes to that tour. Empty for a tour booked on its own.
+	 */
+	timeChoices?: { tourSlug: string; tourTitle: string; time: string; checkIn?: string; label: string; sub: string; icon: string }[];
 }>();
+
+const choices = computed(() => props.timeChoices ?? []);
+/** The tour the booking is for: this page's, or the time the guest picked. */
+const bookedSlug = ref(props.tourSlug);
+const choice = computed(() => choices.value.find((c) => c.tourSlug === bookedSlug.value) ?? null);
+/** The departures of the tour being booked. */
+const activeDepartures = computed<Departure[]>(() => (choice.value ? [{ time: choice.value.time, checkIn: choice.value.checkIn }] : props.departures));
 
 const NOTES_MAX = 500;
 
 const date = ref<string | null>(null);
-const slot = ref(props.departures[0]?.time ?? '');
+const slot = ref(activeDepartures.value[0]?.time ?? '');
+/**
+ * The guest picked the time themselves (a time card), or it came back with
+ * their saved booking. Then a closed time stays chosen with a notice, rather
+ * than being swapped for another one, or for the other Blue Lagoon tour.
+ */
+const timePicked = ref(false);
+function pickTour(slug: string) {
+	bookedSlug.value = slug;
+	timePicked.value = true;
+}
+function pickSlot(time: string) {
+	slot.value = time;
+	timePicked.value = true;
+}
 const adults = ref(2);
 const children = ref(0);
 const infants = ref(0);
@@ -60,7 +86,8 @@ const calendar = ref<InstanceType<typeof BookingCalendar> | null>(null);
  */
 const now = ref<Date | null>(null);
 let clock: ReturnType<typeof setInterval> | undefined;
-const departureTimes = computed(() => props.departures.map((d) => d.time));
+/** Every time the calendar should know about: a day closes only once all of them have. */
+const departureTimes = computed(() => (choices.value.length ? choices.value.map((c) => c.time) : props.departures.map((d) => d.time)));
 /** Booking has closed for this departure on the chosen date. */
 const isClosed = (time: string) => now.value !== null && date.value !== null && bookingClosed(date.value, time, now.value);
 const dateNotice = ref('');
@@ -83,20 +110,35 @@ const seasonNote = computed(() => (dateSeason.value ? `${seasonPriceLabel(dateSe
 const priceSummary = computed(() => (props.prices ? seasonalPriceSummary(props.prices) : ''));
 
 /** The summary is the one place the time shows (handoff B1), and guests need the check-in. */
-const departureLabel = computed(() => formatDeparture(props.departures, slot.value));
+const departureLabel = computed(() => {
+	const label = formatDeparture(activeDepartures.value, slot.value);
+	return choice.value ? label.replace(choice.value.time, choice.value.label) : label;
+});
+const bookedTitle = computed(() => choice.value?.tourTitle ?? props.tourTitle);
 
 const summaryRows = computed(() => {
 	const rows = [
-		{ label: 'Tour', value: props.tourTitle },
+		{ label: 'Tour', value: bookedTitle.value },
 		{ label: 'Date', value: dateLabel.value },
 		{ label: 'Departure', value: departureLabel.value },
 		{ label: 'Guests', value: guestSummaryFromCounts(adults.value, children.value, infants.value) },
 	];
 	if (dateSeason.value) rows.push({ label: 'Price', value: seasonPriceLabel(dateSeason.value) });
-	if (unitPrice.value) rows.push({ label: 'Adults', value: `${adults.value} × €${unitPrice.value.adult}` });
-	if (children.value > 0 && unitPrice.value) rows.push({ label: 'Children', value: `${children.value} × €${unitPrice.value.child}` });
+	if (unitPrice.value) rows.push({ label: 'Adults', value: `${adults.value} × ${formatEuro(unitPrice.value.adult)}` });
+	if (children.value > 0 && unitPrice.value) rows.push({ label: 'Children', value: `${children.value} × ${formatEuro(unitPrice.value.child)}` });
 	if (infants.value > 0) rows.push({ label: 'Infants', value: `${infants.value} × free` });
 	return rows;
+});
+
+/** The design's time cards (board 04b): "09:30 · Morning", "Back in Split at 14:00". */
+const choiceOptions = computed(() =>
+	choices.value.map((c) => {
+		const closed = isClosed(c.time);
+		return { value: c.tourSlug, label: c.label, sub: closed ? 'Booking closed' : c.sub, icon: c.icon, disabled: closed };
+	}),
+);
+watch(bookedSlug, () => {
+	slot.value = activeDepartures.value[0]?.time ?? '';
 });
 
 const slotOptions = computed(() =>
@@ -108,10 +150,11 @@ const slotOptions = computed(() =>
 
 /*
  * Keep the choice bookable as time passes. A new date pre-selects its first
- * open departure. If the clock closes the departure already chosen, it stays
- * chosen (submit is blocked) and the notice says so: switching it silently
- * could book a time the visitor didn't pick. When every departure that day
- * has closed, the date is dropped (the calendar greys it out).
+ * open departure, unless the guest picked the time or it was restored from
+ * their saved booking (timePicked). If the departure chosen is closed, it
+ * stays chosen (submit is blocked) and the notice says so: switching it
+ * silently could book a time, or a tour, the visitor didn't pick. When every
+ * departure that day has closed, the date is dropped (the calendar greys it out).
  */
 watch([date, now, slot], ([day], [previousDay]) => {
 	if (!day || !now.value) return;
@@ -120,8 +163,10 @@ watch([date, now, slot], ([day], [previousDay]) => {
 		dateNotice.value = 'Booking for that day has closed. Please choose another date.';
 		return;
 	}
-	if (day !== previousDay && isClosed(slot.value)) {
-		slot.value = departureTimes.value.find((t) => !isClosed(t)) ?? '';
+	if (day !== previousDay && !timePicked.value && isClosed(slot.value)) {
+		const open = choices.value.find((c) => !isClosed(c.time));
+		if (open) bookedSlug.value = open.tourSlug;
+		else slot.value = departureTimes.value.find((t) => !isClosed(t)) ?? '';
 	}
 	dateNotice.value = isClosed(slot.value) ? `Booking for the ${slot.value} departure has just closed. Please choose another time.` : '';
 });
@@ -157,7 +202,7 @@ async function review() {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 			body: JSON.stringify({
-				tourId: props.tourSlug,
+				tourId: bookedSlug.value,
 				date: date.value,
 				slot: slot.value,
 				adults: adults.value,
@@ -192,13 +237,16 @@ async function restore() {
 		const res = await fetch('/api/bookings/draft', { headers: { Accept: 'application/json' } });
 		if (res.status !== 200) return;
 		const d = (await res.json()) as Record<string, string | number> & { tourSlug?: string };
-		if (d.tourSlug !== props.tourSlug) return;
+		if (d.tourSlug !== props.tourSlug && !choices.value.some((c) => c.tourSlug === d.tourSlug)) return;
+		if (typeof d.tourSlug === 'string' && d.tourSlug !== props.tourSlug) bookedSlug.value = d.tourSlug;
+		// The saved time is the guest's own pick: keep it even if it has closed since.
+		timePicked.value = true;
 		const today = businessDate();
 		if (typeof d.date === 'string' && d.date >= today && isInSeason(d.date)) {
 			date.value = d.date;
 			calendar.value?.showSelected();
 		}
-		if (typeof d.slot === 'string' && (props.departures.length === 0 || props.departures.some((x) => x.time === d.slot))) slot.value = d.slot;
+		if (typeof d.slot === 'string' && (activeDepartures.value.length === 0 || activeDepartures.value.some((x) => x.time === d.slot))) slot.value = d.slot;
 		const a = Number(d.adults);
 		const c = Number(d.children) || 0;
 		const i = Number(d.infants) || 0;
@@ -229,8 +277,8 @@ onUnmounted(() => clearInterval(clock));
 <template>
 	<form class="flow" method="post" action="/api/bookings/draft" novalidate @submit.prevent="review">
 		<section class="flow__card" aria-labelledby="date-heading">
-			<h2 id="date-heading" class="flow__title"><i class="ti ti-calendar" aria-hidden="true"></i> Choose a date</h2>
-			<p class="flow__sub">Tours run every day. Pick your day.</p>
+			<h2 id="date-heading" class="flow__title"><i class="ti ti-calendar" aria-hidden="true"></i> {{ choices.length > 1 ? 'Choose a date & departure' : 'Choose a date' }}</h2>
+			<p class="flow__sub">{{ choices.length > 1 ? 'Runs daily, twice a day. Pick your day and a morning or afternoon trip.' : 'Tours run every day. Pick your day.' }}</p>
 			<BookingCalendar
 				ref="calendar"
 				v-model="date"
@@ -244,9 +292,10 @@ onUnmounted(() => clearInterval(clock));
 			<p class="flow__status" role="status">{{ dateNotice }}</p>
 
 			<div class="flow__departure">
-				<p v-if="departures.length === 0" class="flow__line"><i class="ti ti-clock" aria-hidden="true"></i> Departure time confirmed at booking</p>
+				<ChoiceCards v-if="choices.length > 1" :model-value="bookedSlug" name="tourChoice" @update:model-value="pickTour" legend="Departure time" :options="choiceOptions" />
+				<p v-else-if="departures.length === 0" class="flow__line"><i class="ti ti-clock" aria-hidden="true"></i> Departure time confirmed at booking</p>
 				<!-- One fixed departure: nothing to choose, and the summary shows its time and check-in. -->
-				<ChoiceCards v-else-if="departures.length > 1" v-model="slot" name="slot" legend="Departure time" :options="slotOptions" />
+				<ChoiceCards v-else-if="departures.length > 1" :model-value="slot" name="slot" @update:model-value="pickSlot" legend="Departure time" :options="slotOptions" />
 			</div>
 		</section>
 
@@ -274,7 +323,7 @@ onUnmounted(() => clearInterval(clock));
 				<FormField id="book-first" v-model="firstName" label="First name" name="firstName" autocomplete="given-name" placeholder="Ivan" required :error="fieldErrors.firstName" />
 				<FormField id="book-last" v-model="lastName" label="Last name" name="lastName" autocomplete="family-name" placeholder="Kovač" required />
 				<FormField id="book-email" v-model="email" label="Email" name="email" type="email" autocomplete="email" placeholder="ivan@example.com" required :error="fieldErrors.email" />
-				<FormField id="book-phone" v-model="phone" label="Phone" name="phone" type="tel" autocomplete="tel" placeholder="+385 91 234 5678" />
+				<FormField id="book-phone" v-model="phone" label="Phone" name="phone" type="tel" autocomplete="tel" placeholder="+385 91 234 5678" :error="fieldErrors.phone" />
 				<FormField
 					id="book-notes"
 					v-model="notes"
@@ -302,7 +351,7 @@ onUnmounted(() => clearInterval(clock));
 				<template v-if="missing.length">To continue, add {{ missing.join(', ') }}.</template>
 			</p>
 			<p v-if="submitError" class="flow__error" role="alert">{{ submitError }}</p>
-			<Button :href="`/tours/${tourSlug}/`" variant="secondary" block>← Back to tour</Button>
+			<Button :href="`/tours/${bookedSlug}/`" variant="secondary" block>← Back to tour</Button>
 			<p class="flow__policy"><i class="ti ti-shield-check" aria-hidden="true"></i> {{ CANCELLATION_SHORT }}</p>
 		</div>
 	</form>

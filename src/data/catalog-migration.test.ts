@@ -74,7 +74,10 @@ describe('catalog migration (PR 1b)', () => {
 
 			it('departures equal the old fixed-time parse', () => {
 				const old = parseDepartureTime(tour.departure);
-				expect(tour.departures.map((d) => d.time)).toEqual(old ? [old] : []);
+				// Mare, 8 Nov 2026: the two private-only tours are paid online, so their "typically" time became the fixed start.
+				const PAID_PRIVATE_START: Record<string, string> = { 'hvar-red-rocks-pakleni': '09:00', 'dubrovnik-one-way': '08:00' };
+				const start = PAID_PRIVATE_START[tour.slug];
+				expect(tour.departures.map((d) => d.time)).toEqual(start ? [start] : old ? [old] : []);
 			});
 
 			it('duration hours and the half-day and sunset filters match', () => {

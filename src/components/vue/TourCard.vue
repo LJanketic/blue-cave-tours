@@ -12,7 +12,7 @@ import { computed } from 'vue';
 import type { TourCardDTO } from '../../lib/cards';
 import Badge from '../ui/Badge.vue';
 import { cardPhotoSrc } from '../../lib/cards';
-import { formatFromPrice } from '../../lib/price';
+import { formatEuro, formatFromPrice } from '../../lib/price';
 
 const props = withDefaults(
 	defineProps<{
@@ -58,7 +58,7 @@ const requestLabel = computed(() => (props.tour ? formatFromPrice(null, props.to
 				<span class="tour-card-ui__price">
 					<template v-if="tour.fromPrice">
 						<span class="tour-card-ui__from">From</span>
-						<span class="tour-card-ui__amount">€{{ tour.fromPrice }}</span>
+						<span class="tour-card-ui__amount">{{ formatEuro(tour.fromPrice) }}</span>
 						<span class="tour-card-ui__per">{{ ` ${unit}` }}</span>
 					</template>
 					<span v-else class="tour-card-ui__amount tour-card-ui__amount--request">{{ requestLabel }}</span>

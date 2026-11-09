@@ -22,7 +22,7 @@ export function formatEuro(amount: number): string {
 
 /** "€169", or the on-request label: "Price on request" for group tours, "On request" for private charters. */
 export function formatFromPrice(adultPrice: number | null, priceUnit: TourDetail['priceUnit']): string {
-	if (adultPrice !== null) return `€${adultPrice}`;
+	if (adultPrice !== null) return formatEuro(adultPrice);
 	return priceUnit === 'person' ? 'Price on request' : 'On request';
 }
 
@@ -99,6 +99,6 @@ export function seasonPriceLabel(season: Season): string {
  */
 export function seasonalPriceSummary(prices: SeasonalPrices): string {
 	const part = (season: Season, name: string) =>
-		`${name} (${priceSeasonDates(season, true)}): €${prices[season].adult} per adult, €${prices[season].child} per child.`;
+		`${name} (${priceSeasonDates(season, true)}): ${formatEuro(prices[season].adult)} per adult, ${formatEuro(prices[season].child)} per child.`;
 	return `${part('low', 'Low season')} ${part('peak', 'Peak season')}`;
 }

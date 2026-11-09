@@ -44,7 +44,8 @@ describe('Tour sheet, 4 Nov 2026', () => {
 	});
 
 	it('uses the sheet departure times and durations', () => {
-		expect(tour('blue-cave-hvar-5-islands').departures).toEqual([{ time: '07:20' }]);
+		// 8 Nov 2026: Blue Cave guests arrive by the departure itself (Booking confirmation screen).
+		expect(tour('blue-cave-hvar-5-islands').departures).toEqual([{ time: '07:20', arriveOnTime: true }]);
 		expect(tour('golden-horn-brac-hvar').departures).toEqual([{ time: '09:00', checkIn: '08:45' }]);
 		expect(tour('golden-horn-brac-hvar').durationHours).toBe(8);
 		expect(tour('blue-lagoon-morning').departures).toEqual([{ time: '09:30', checkIn: '09:15' }]);
@@ -62,19 +63,19 @@ describe('Tour sheet, 4 Nov 2026', () => {
 		expect(JSON.stringify(t)).not.toMatch(/15 minutes early|07:05/);
 	});
 
-	it('makes Red Rocks and Dubrovnik private only, booked through their own private step as a quote request', () => {
+	it('makes Red Rocks and Dubrovnik private only, booked and paid through their own private step (Mare, 8 Nov 2026)', () => {
 		for (const slug of ['hvar-red-rocks-pakleni', 'dubrovnik-one-way']) {
 			const t = tour(slug);
 			expect(t.types, slug).toEqual(['private']);
 			expect(offersPrivateFlow(t), slug).toBe(true);
-			expect(supportsPrivateBook(t), slug).toBe(false);
+			expect(supportsPrivateBook(t), slug).toBe(true);
 			const links = { book: () => '', contact: () => '/contact/', charter: () => '/private-charter/', private: (s: string) => `/book/${s}/private/` };
 			expect(tourCtas(t, links).primary).toEqual({ label: 'Plan your private tour', href: `/book/${slug}/private/` });
 		}
 		expect(offersPrivateFlow(tour('create-perfect-day-private'))).toBe(false);
 	});
 
-	it('does not use the sheet’s €1,200 boat price: private prices stay as configured', () => {
+	it('keeps the private boat price in src/config/private.ts, not as a per-person price on the tour', () => {
 		for (const slug of ['hvar-red-rocks-pakleni', 'dubrovnik-one-way']) expect(tour(slug).prices, slug).toBeNull();
 		expect(supportsPrivateBook(tour('blue-cave-hvar-5-islands'))).toBe(true);
 	});

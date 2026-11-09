@@ -91,6 +91,9 @@ const jsonLd = siteUrl
 		]
 	: undefined;
 const titleSegment = `${destination.name} boat trips from Split`;
+// Hidden: the best-season months are placeholders, not the operator's (review 9 Nov 2026).
+// Turn on once Mare gives the months for each place.
+const SHOW_BEST_SEASON = false;
 ---
 
 <SiteLayout
@@ -156,7 +159,7 @@ const titleSegment = `${destination.name} boat trips from Split`;
 				name={destination.name}
 				slug={destination.slug}
 				tourCount={tours.length}
-				bestSeason={bestSeasonLabel(destination.bestTimeMonths)}
+				bestSeason={SHOW_BEST_SEASON ? bestSeasonLabel(destination.bestTimeMonths) : null}
 				fromSplit={travel ? { label: 'From Split', value: travel.value } : undefined}
 			/>
 		</div>

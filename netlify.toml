@@ -25,7 +25,10 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # No includeSubDomains or preload: after the move to hellobluecave.com the
+    # cPanel subdomains (mail, webmail, cpanel) must all serve HTTPS first, and
+    # a preload listing is very hard to undo.
+    Strict-Transport-Security = "max-age=31536000"
     # 'unsafe-inline' on script-src/style-src is required, and none of it is
     # nonced: Astro inlines small page scripts (Header menu, contact form, about
     # and destination pages) and the island hydration bootstrap, and pages set

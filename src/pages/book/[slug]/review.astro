@@ -9,7 +9,8 @@ export const prerender = false;
  */
 import { pageTitle } from '../../../config/site';
 import { TERMS_VERSION } from '../../../config/legal';
-import { CANCELLATION_FULL, CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT, CANCELLATION_SHORT } from '../../../config/cancellation';
+import { CANCELLATION_FULL_PREFIX, CANCELLATION_FULL_SUFFIX, CANCELLATION_PRIVATE_HREF, CANCELLATION_PRIVATE_SHORT, CANCELLATION_SHORT, CANCELLATION_WINDOW } from '../../../config/cancellation';
+import { PAYMENTS_ARE_DEMO } from '../../../config/payments';
 import { DEFAULT_PICKUP_ID, privatePickup } from '../../../config/private';
 import SiteLayout from '../../../layouts/SiteLayout.astro';
 import BookingShell from '../../../components/booking/BookingShell.astro';
@@ -21,7 +22,6 @@ import { thumbImage } from '../../../data/destination-photos';
 import { feeLabel } from '../../../lib/cards';
 import {
 	contactHrefForTour,
-	departureLabel,
 	formatBookingDate,
 	guestSummaryFromCounts,
 	meetingPointShort,
@@ -29,8 +29,7 @@ import {
 	supportsInstantBook,
 	supportsPrivateBook,
 } from '../../../lib/booking';
-import { computeBookingTotal, formatEuro, lineItemsFor, lineItemsTotal, privateLineItems, seasonPriceLabel, seasonalPriceSummary } from '../../../lib/price';
-import { seasonFor } from '../../../config/season';
+import { computeBookingTotal, formatEuro, lineItemsFor, lineItemsTotal, privateLineItems } from '../../../lib/price';
 import { BOOKING_ERRORS, isBookingError } from '../../../lib/bookings/service';
 import { BOOKING_COOKIE, openDraft } from '../../../lib/bookings/session';
 
@@ -68,9 +67,13 @@ if (isPrivate && !priced) return Astro.redirect(`${editHref}?error=${privatePick
 const privateItems = priced ?? [];
 const total = isPrivate ? lineItemsTotal(privateItems) : computeBookingTotal(tour, draft.date, draft.adults, draft.children);
 const items = isPrivate ? privateItems : (lineItemsFor(tour, draft.date, draft.adults, draft.children, draft.infants) ?? []);
-const seasonNote = seasonPriceLabel(seasonFor(draft.date));
-const seasonSummary = !isPrivate && tour.prices ? seasonalPriceSummary(tour.prices) : '';
 const fee = feeLabel(tour);
+// Board 06a: the departure with its return ("07:20 (back 18:00)"); a private boat can leave later, so just its time.
+const back = tour.returnTime.replace(/^Approx\.\s*/, '').replace(/^\d{2}:\d{2}[–-]/, '');
+const departure = isPrivate ? draft.slot : `${draft.slot} (back ${back})`;
+// Board 06a: "Includes all taxes and fees · Blue Cave ticket paid on site".
+const includes = ['Includes all taxes and fees', ...(fee ? [fee.replace(/^\+\s*/, '')] : [])].join(' · ');
+const notes = draft.notes?.trim() ?? '';
 const pickup = isPrivate && draft.pickup && draft.pickup !== DEFAULT_PICKUP_ID ? privatePickup(draft.pickup)?.label : undefined;
 const thumb = thumbImage(getTourCardPhoto(tour));
 ---
@@ -101,7 +104,7 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 			</div>
 			<dl class="review__rows">
 				<div><dt><i class="ti ti-calendar" aria-hidden="true"></i> Date</dt><dd>{formatBookingDate(draft.date)}</dd></div>
-				<div><dt><i class="ti ti-clock" aria-hidden="true"></i> Departure</dt><dd>{isPrivate ? draft.slot : departureLabel(tour.departures, draft.slot)}</dd></div>
+				<div><dt><i class="ti ti-clock" aria-hidden="true"></i> Departure</dt><dd>{departure}</dd></div>
 				<div><dt><i class="ti ti-hourglass" aria-hidden="true"></i> Duration</dt><dd>{tour.duration}</dd></div>
 				{
 					pickup ? (
@@ -118,7 +121,17 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 				<h2 id="guests-heading"><i class="ti ti-users" aria-hidden="true"></i> Guests</h2>
 				<a href={editHref} aria-label="Edit guests">Edit</a>
 			</div>
-			<p class="review__line">{guestSummaryFromCounts(draft.adults, draft.children, draft.infants)}</p>
+			{
+				isPrivate ? (
+					<p class="review__line">{guestSummaryFromCounts(draft.adults, draft.children, draft.infants)}</p>
+				) : (
+					<dl class="review__rows">
+						{items.map((item) => (
+							<div><dt>{item.label.replace(' (free)', '')}</dt><dd>{item.unit ? `${item.qty} × ${formatEuro(item.unit)}` : `${item.qty} × free`}</dd></div>
+						))}
+					</dl>
+				)
+			}
 		</section>
 
 		<section class="review__card" aria-labelledby="details-heading">
@@ -130,15 +143,15 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 				<div><dt>Name</dt><dd>{draft.firstName} {draft.lastName}</dd></div>
 				<div><dt>Email</dt><dd>{draft.email}</dd></div>
 				<div><dt>Phone</dt><dd>{draft.phone || 'Not given'}</dd></div>
-				<div><dt>Notes</dt><dd class="review__wrap">{draft.notes || 'None'}</dd></div>
+				<div><dt>Special requests</dt><dd>{notes ? 'Yes' : 'None'}</dd></div>
 			</dl>
+			{notes && <p class="review__quote"><i class="ti ti-message" aria-hidden="true"></i> <q>{notes}</q></p>}
 		</section>
 
 		<section class="review__card" aria-labelledby="price-heading">
 			<div class="review__head">
-				<h2 id="price-heading"><i class="ti ti-receipt" aria-hidden="true"></i> Price</h2>
+				<h2 id="price-heading">Price breakdown</h2>
 			</div>
-			<p class="review__season">{seasonNote} for {formatBookingDate(draft.date)}</p>
 			<dl class="review__rows">
 				{
 					items.map((item) => (
@@ -149,10 +162,9 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 					))
 				}
 			</dl>
-			<p class="review__total"><span>Total (incl. VAT)</span><span>{total !== null ? formatEuro(total) : 'On request'}</span></p>
-			{isPrivate && <p class="review__fee">The price is for the whole boat with skipper, whatever the number of guests.</p>}
-			{fee && <p class="review__fee">{fee}</p>}
-			{seasonSummary && <p class="review__fee">{seasonSummary}</p>}
+			<p class="review__total"><span>Total</span><span>{total !== null ? formatEuro(total) : 'On request'}</span></p>
+			<p class="review__fee review__fee--end">{includes}</p>
+			{isPrivate && <p class="review__fee review__fee--end">The price is for the whole boat with skipper, whatever the number of guests.</p>}
 		</section>
 
 		<section class="review__card" aria-labelledby="policy-heading">
@@ -165,7 +177,9 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 						{CANCELLATION_PRIVATE_SHORT}: see <a href={CANCELLATION_PRIVATE_HREF}>section 3 of our cancellation policy</a>.
 					</p>
 				) : (
-					<p class="review__policy">{CANCELLATION_FULL}</p>
+					<p class="review__policy">
+						{CANCELLATION_FULL_PREFIX}<strong>{CANCELLATION_WINDOW}</strong>{CANCELLATION_FULL_SUFFIX}
+					</p>
 				)
 			}
 		</section>
@@ -184,6 +198,8 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 				<a href="/legal/privacy/">Privacy policy</a>.
 			</p>
 			<Button type="submit" size="lg" block iconEnd="arrow-right">Continue to payment</Button>
+			{/* Board 06a; while payments are a demo nothing goes to Teya, and the checkout strip says so instead. */}
+			{!PAYMENTS_ARE_DEMO && <p class="review__secure"><i class="ti ti-lock" aria-hidden="true"></i> Secure payment handled by Teya</p>}
 		</form>
 	</BookingShell>
 </SiteLayout>
@@ -295,8 +311,38 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 			overflow-wrap: anywhere;
 		}
 
-		.review__wrap {
+		.review__quote {
+			display: flex;
+			gap: var(--space-2);
+			margin: var(--space-2) 0 0;
+			padding: var(--space-2) var(--space-3);
+			border-radius: var(--radius-md);
+			background: var(--color-background-secondary);
+			font-size: var(--font-size-sm);
+			font-style: italic;
 			white-space: pre-line;
+			overflow-wrap: anywhere;
+		}
+
+		.review__quote .ti {
+			flex-shrink: 0;
+			margin-top: 2px;
+			font-style: normal;
+			color: var(--color-text-tertiary);
+		}
+
+		.review__fee--end {
+			text-align: right;
+		}
+
+		.review__secure {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 6px;
+			margin: var(--space-2) 0 0;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
 		}
 
 		.review__line {
@@ -311,12 +357,6 @@ const thumb = thumbImage(getTourCardPhoto(tour));
 			border-top: 0.5px solid var(--color-border-tertiary);
 			font-size: var(--font-size-xl);
 			font-weight: var(--font-weight-medium);
-		}
-
-		.review__season {
-			margin: 0 0 var(--space-2);
-			font-size: var(--font-size-sm);
-			color: var(--color-text-secondary);
 		}
 
 		.review__fee {

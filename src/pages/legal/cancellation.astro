@@ -10,9 +10,10 @@ import { SITE_EMAIL, SITE_NAME, SITE_PHONE_DISPLAY } from '../../config/site';
 
 // OPERATOR: the private charter section below (30% non-refundable deposit, staged
 // refunds of the balance) conflicts with the Terms of 19.10.2026, which say "A booking
-// is confirmed only after full payment" and mention no deposit. Private tours are
-// booked on request today (contact form, quote), with no online payment. Decide
-// whether the deposit applies, then update or remove this section and its summary line.
+// is confirmed only after full payment" and mention no deposit. Since 8 Nov 2026 every
+// fixed-route private tour is paid in full online (src/config/private.ts), and Mare said
+// on 5 Nov that private cancellation is 48 h like group. Decide whether the deposit
+// applies, then update or remove this section and its summary line.
 
 const SECTIONS = [
 	{ id: 'overview', title: 'Overview' },

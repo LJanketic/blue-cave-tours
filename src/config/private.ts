@@ -1,4 +1,5 @@
 import type { SeasonAmount } from './season';
+import { TIME_RE, toMinutes, toTime } from '../lib/time';
 
 /*
  * Private experience, paid on the site (operator doc "Booking tipovi i
@@ -6,11 +7,11 @@ import type { SeasonAmount } from './season';
  * price season, plus priced extras and a pick-up point. No catalog import,
  * so the booking island can use this.
  *
- * Being in PRIVATE_TOURS is what makes a tour "book private and pay now".
- * Boat prices are only what the operator's doc states. Every other group + private
- * tour uses the same private step (/book/<slug>/private/, offersPrivateFlow in
- * src/lib/booking.ts) as a quote request until the operator gives its boat
- * price; private-only tours stay on request at /private-charter/.
+ * Being in PRIVATE_TOURS is what makes a tour "book private and pay now":
+ * since 8 Nov 2026 that is every fixed-route tour (Mare's placeholder price
+ * below). A tour taken out of this list falls back to the same private step
+ * (/book/<slug>/private/, offersPrivateFlow in src/lib/booking.ts) as a quote
+ * request; Create Your Perfect Day is always a request at /private-charter/.
  * Adding a tour, an extra or a pick-up point is a change to this file only.
  */
 
@@ -26,16 +27,27 @@ export type PrivateTour = {
 };
 
 /**
- * Boat prices from the operator's doc: Blue Cave €1,500 low / €2,000 peak.
- * The doc says the departure may shift in 15-minute steps up to each tour's
- * latest departure, but gives no latest departures yet: pending from the
- * operator (Vedro). Until then Blue Cave leaves at its usual time.
+ * Mare, 8 Nov 2026: every private tour is €1,200 a boat for now, and the
+ * latest departure is 11:00, until Vedro confirms the price list and the
+ * times. This replaces the doc's Blue Cave €1,500 low / €2,000 peak.
+ * The guest may shift the departure in 15-minute steps from the tour's own
+ * time up to the latest. The Blue Lagoon afternoon leaves at 14:30, after
+ * 11:00, so it keeps its usual time only.
  */
+const PRIVATE_BOAT_PRICE = 1200;
+const PRIVATE_LATEST_DEPARTURE = '11:00';
+const boat = { low: PRIVATE_BOAT_PRICE, peak: PRIVATE_BOAT_PRICE };
+
 export const PRIVATE_TOURS: Readonly<Record<string, PrivateTour>> = {
-	'blue-cave-hvar-5-islands': { boat: { low: 1500, peak: 2000 } },
+	'blue-cave-hvar-5-islands': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
+	'golden-horn-brac-hvar': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
+	'hvar-red-rocks-pakleni': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
+	'blue-lagoon-morning': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
+	'blue-lagoon-afternoon': { boat },
+	'dubrovnik-one-way': { boat, latestDeparture: PRIVATE_LATEST_DEPARTURE },
 };
 
-export type PrivateExtra = { id: string; label: string; desc: string; price: number };
+export type PrivateExtra = { id: string; label: string; desc: string; price: number; icon?: string };
 
 /**
  * Extras the guest can add and pay for, per booking (not per guest).
@@ -46,9 +58,9 @@ export type PrivateExtra = { id: string; label: string; desc: string; price: num
  * refuses any.
  */
 export const PRIVATE_EXTRAS: readonly PrivateExtra[] = [
-	{ id: 'champagne', label: 'Champagne welcome', desc: 'Chilled on ice, ready when you board', price: 40 },
-	{ id: 'sup', label: 'SUP', desc: 'Stand-up paddleboard, ready to use at any stop', price: 35 },
-	{ id: 'seabob', label: 'Seabob', desc: 'Underwater sea scooter for extra fun at sea', price: 150 },
+	{ id: 'champagne', label: 'Champagne welcome', desc: 'Chilled on ice, ready when you board', price: 40, icon: 'glass-full' },
+	{ id: 'sup', label: 'SUP', desc: 'Stand-up paddleboard, ready to use at any stop', price: 35, icon: 'swimming' },
+	{ id: 'seabob', label: 'Seabob', desc: 'Underwater sea scooter for extra fun at sea', price: 150, icon: 'ripple' },
 ];
 
 export type PrivatePickup = { id: string; label: string; price: number; desc?: string; icon?: string };
@@ -112,9 +124,6 @@ export function privatePickup(id: string, lists: PrivateLists = PRIVATE_LISTS): 
 	return lists.pickups.find((pickup) => pickup.id === id) ?? null;
 }
 
-const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
-const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
-const hhmm = (total: number) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 
 /**
  * The departure times a private boat can leave at: the tour's own departure,
@@ -127,9 +136,9 @@ export function privateDepartureTimes(defaultSlot: string, latest?: string): str
 	if (!TIME_RE.test(defaultSlot)) return [];
 	if (latest === undefined) return [defaultSlot];
 	if (!TIME_RE.test(latest)) return [];
-	const end = minutes(latest);
+	const end = toMinutes(latest);
 	const times: string[] = [];
-	for (let t = minutes(defaultSlot); t <= end; t += PRIVATE_TIME_STEP_MINUTES) times.push(hhmm(t));
+	for (let t = toMinutes(defaultSlot); t <= end; t += PRIVATE_TIME_STEP_MINUTES) times.push(toTime(t));
 	if (times.length && times[times.length - 1] !== latest) times.push(latest);
 	return times;
 }

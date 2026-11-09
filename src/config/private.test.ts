@@ -47,24 +47,31 @@ describe('PRIVATE_TOURS', () => {
 		}
 	});
 
-	it('sells only the Blue Cave boat, at the operator doc\'s prices, at its usual departure', () => {
-		expect(PRIVATE_TOURS).toEqual({ 'blue-cave-hvar-5-islands': { boat: { low: 1500, peak: 2000 } } });
+	it('sells every fixed-route private tour at €1,200 a boat, up to an 11:00 departure (Mare, 8 Nov 2026)', () => {
+		const boat = { low: 1200, peak: 1200 };
+		expect(PRIVATE_TOURS).toEqual({
+			'blue-cave-hvar-5-islands': { boat, latestDeparture: '11:00' },
+			'golden-horn-brac-hvar': { boat, latestDeparture: '11:00' },
+			'hvar-red-rocks-pakleni': { boat, latestDeparture: '11:00' },
+			'blue-lagoon-morning': { boat, latestDeparture: '11:00' },
+			// Leaves at 14:30, after the 11:00 latest: its usual time only.
+			'blue-lagoon-afternoon': { boat },
+			'dubrovnik-one-way': { boat, latestDeparture: '11:00' },
+		});
 	});
 
-	it('leaves the tours without an operator boat price on request (a quote, not pay now)', () => {
-		for (const slug of ['golden-horn-brac-hvar', 'blue-lagoon-morning', 'blue-lagoon-afternoon', 'hvar-red-rocks-pakleni', 'dubrovnik-one-way', 'create-perfect-day-private']) {
-			expect(privateTour(slug), slug).toBeNull();
-		}
+	it('leaves the custom day on request (a quote, not pay now)', () => {
+		expect(privateTour('create-perfect-day-private')).toBeNull();
 		// Not fooled by Object.prototype.
 		expect(privateTour('constructor')).toBeNull();
 	});
 });
 
 describe('the private booking step', () => {
-	it('is offered on every tour with a fixed private route, paid now only where there is a boat price', () => {
+	it('is offered on every tour with a fixed private route, and every one of them pays now', () => {
 		const offered = tours.filter(offersPrivateFlow).map((t) => t.slug).sort();
 		expect(offered).toEqual(['blue-cave-hvar-5-islands', 'blue-lagoon-afternoon', 'blue-lagoon-morning', 'dubrovnik-one-way', 'golden-horn-brac-hvar', 'hvar-red-rocks-pakleni']);
-		expect(tours.filter(supportsPrivateBook).map((t) => t.slug)).toEqual(['blue-cave-hvar-5-islands']);
+		expect(tours.filter(supportsPrivateBook).map((t) => t.slug).sort()).toEqual(offered);
 		// Pay now is a subset of the step.
 		for (const tour of tours.filter(supportsPrivateBook)) expect(offersPrivateFlow(tour), tour.slug).toBe(true);
 	});

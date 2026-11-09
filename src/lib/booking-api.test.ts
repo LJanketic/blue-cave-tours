@@ -105,7 +105,7 @@ describe('private experience endpoints', () => {
 		process.env = { ...saved };
 	});
 
-	// Blue Cave: departs 07:20, no latest departure yet; boat €1,500 low (operator doc). 15 May is low season.
+	// Blue Cave: departs 07:20, latest 11:00; boat €1,200 in any season (Mare, 8 Nov 2026).
 	const privateBody = (overrides: Record<string, unknown> = {}) =>
 		draftBody({ kind: 'private', tourId: 'blue-cave-hvar-5-islands', slot: '07:20', extras: [], pickup: 'riva', ...overrides });
 
@@ -120,15 +120,15 @@ describe('private experience endpoints', () => {
 		expect(res.status).toBe(303);
 		const id = new URL(res.headers.get('location') as string, 'http://localhost').searchParams.get('id') as string;
 		const booking = await bookings().get(id);
-		expect(booking).toMatchObject({ kind: 'private', slot: '07:20', total: 1500 });
+		expect(booking).toMatchObject({ kind: 'private', slot: '07:20', total: 1200 });
 		expect(booking?.pickup).toBeUndefined();
 		expect(booking?.termsAcceptedAt).toBeTruthy();
 		expect(booking?.quoteExpiresAt).toBeUndefined();
 	});
 
 	it.each([
-		['a time other than the usual departure', { slot: '07:35' }, 'slot', 'slot'],
-		['a later time, with no latest departure set', { slot: '08:30' }, 'slot', 'slot'],
+		['a time off the 15-minute steps', { slot: '07:30' }, 'slot', 'slot'],
+		['a time after the 11:00 latest departure', { slot: '11:15' }, 'slot', 'slot'],
 		['an extra off the list', { extras: ['helicopter'] }, 'extras', 'extras'],
 		['an "other" pick-up', { pickup: 'other' }, 'pickup', 'pickup'],
 		['a pick-up off the list', { pickup: 'hotel' }, 'pickup', 'pickup'],
@@ -181,28 +181,26 @@ describe('private experience endpoints', () => {
 		expect(stale.headers.get('location')).toBe('/book/blue-cave-hvar-5-islands/review/?flow=private&error=draft-changed');
 	});
 
-	it('refuses a private booking of a tour that is only planned on request', async () => {
-		for (const tourId of ['dubrovnik-one-way', 'blue-lagoon-morning']) {
-			const res = await call(postDraft, '/api/bookings/draft', privateBody({ tourId, slot: '09:30' }), 'application/json', fakeCookies());
-			expect(res.status, tourId).toBe(400);
-			expect((await res.json()).code, tourId).toBe('private');
-		}
-	});
-
-	// C5 (ClickUp 31 Oct 2026): every group + private tour now has a private step, but only Blue Cave has a boat price.
-	it.each([
-		['golden-horn-brac-hvar', '09:00'],
-		['blue-lagoon-morning', '09:30'],
-		['blue-lagoon-afternoon', '14:30'],
-		['hvar-red-rocks-pakleni', '10:00'],
-		['dubrovnik-one-way', '10:00'],
-	])('refuses a pay-now private draft of %s at %s (its step only sends a quote request), JSON and plain form', async (tourId, slot) => {
-		const res = await call(postDraft, '/api/bookings/draft', privateBody({ tourId, slot }), 'application/json', fakeCookies());
+	it('refuses a private booking of the custom day, which is only planned on request', async () => {
+		const res = await call(postDraft, '/api/bookings/draft', privateBody({ tourId: 'create-perfect-day-private', slot: '09:30' }), 'application/json', fakeCookies());
 		expect(res.status).toBe(400);
 		expect((await res.json()).code).toBe('private');
-		const form = { ...JSON.parse(privateBody({ tourId, slot })), extras: '', adults: '2', children: '0', infants: '0' };
-		const plain = await call(postDraft, '/api/bookings/draft', new URLSearchParams(form).toString(), 'application/x-www-form-urlencoded', fakeCookies());
-		expect(plain.status).toBe(303);
-		expect(plain.headers.get('location')).toBe(`/book/${tourId}/private/?error=private`);
+	});
+
+	// Mare, 8 Nov 2026: every fixed-route private tour pays now, €1,200, from its usual time up to 11:00.
+	it.each([
+		['golden-horn-brac-hvar', '09:00', '11:00'],
+		['blue-lagoon-morning', '09:30', '11:00'],
+		['blue-lagoon-afternoon', '14:30', null],
+		['hvar-red-rocks-pakleni', '09:00', '11:00'],
+		['dubrovnik-one-way', '08:00', '11:00'],
+	])('takes a pay-now private draft of %s at %s and its latest departure, and nothing later', async (tourId, slot, latest) => {
+		for (const time of [slot, latest].filter((t): t is string => t !== null)) {
+			const res = await call(postDraft, '/api/bookings/draft', privateBody({ tourId, slot: time }), 'application/json', fakeCookies());
+			expect(res.status, `${tourId} ${time}`).toBe(200);
+		}
+		const late = await call(postDraft, '/api/bookings/draft', privateBody({ tourId, slot: latest ? '11:15' : '14:45' }), 'application/json', fakeCookies());
+		expect(late.status).toBe(400);
+		expect((await late.json()).code).toBe('slot');
 	});
 });

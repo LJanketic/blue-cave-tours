@@ -11,6 +11,7 @@ import { formatTimestamp } from '../bookings/dates';
 import { IMPRINT, TERMS_VERSION } from '../../config/legal';
 import { privateExtra } from '../../config/private';
 import { formatEuro } from '../price';
+import { arrivalFor, DEFAULT_MINUTES_EARLY } from '../arrival';
 
 export function escapeHtml(value: string): string {
 	return value
@@ -190,11 +191,16 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 	const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 	const total = `${formatEuro(booking.total)} — ${PAYMENT_STATUS_TEXT[booking.paymentStatus]}`;
 	const website = siteOrigin.replace(/^https?:\/\//, '');
+	// Same rule as the confirmation page (src/lib/arrival.ts): Blue Cave guests come for the departure itself.
+	const arrival = arrivalFor(tour?.departures, booking.slot);
+	const onTimeAt = arrival?.minutesEarly === 0 ? arrival.time : null;
+	// The owner's "15 minutes before" wording stays; a check-in at another offset is spelled out, as on the page.
+	const early = arrival && arrival.minutesEarly > 0 && arrival.minutesEarly !== DEFAULT_MINUTES_EARLY ? `by ${arrival.time}, ${arrival.minutesEarly} minutes before departure` : null;
 	const groupNote = booking.pickup
 		? `The boat and skipper are yours for the day. We pick you up at ${booking.pickup}, and confirm the pick-up time with you before your departure.`
 		: booking.kind === 'private'
-			? 'The boat and skipper are yours for the day. Please be at the meeting point 15 minutes before departure, so you get every minute of your day.'
-			: "As you'll be joining a group, please be at the meeting point at least 15 minutes before departure. The boat can't wait, and we don't want to keep your fellow travelers waiting.";
+			? `The boat and skipper are yours for the day. Please be at the meeting point ${onTimeAt ? `on time for your ${onTimeAt} departure` : early ?? '15 minutes before departure'}, so you get every minute of your day.`
+			: `As you'll be joining a group, please be at the meeting point ${onTimeAt ? `on time for the ${onTimeAt} departure` : early ?? 'at least 15 minutes before departure'}. The boat can't wait, and we don't want to keep your fellow travelers waiting.`;
 	const weatherNote = WEATHER_UPDATE_NOTE;
 	const terms = bookingTermsLines(booking, siteOrigin);
 

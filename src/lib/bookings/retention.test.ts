@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { RETENTION_DAYS, sweepPersonalData } from './service';
+import { RETENTION_DAYS, sweepPersonalData, sweepPersonalDataDaily } from './service';
 import { bookings, enquiries, outbox, resetMemoryStore, type Booking } from './store';
 
 const base = {
@@ -67,5 +67,16 @@ describe('retention sweep (S-13)', () => {
 		const trimmed = await outbox().get('m-booking');
 		expect(trimmed).toMatchObject({ html: '', text: '', replyTo: null, subject: 'New booking' });
 		expect(trimmed?.deliveryError).toBeUndefined();
+	});
+
+	it('runs once per Split day from the dashboard, then again the next day', async () => {
+		await bookings().put({ ...base, id: 'old', date: '2027-05-01' } as unknown as Booking);
+		expect(await sweepPersonalDataDaily(new Date('2027-07-01T08:00:00Z'))).toEqual({ bookings: 1, enquiries: 0, emails: 0 });
+		await bookings().put({ ...base, id: 'old-2', date: '2027-05-01' } as unknown as Booking);
+		// Same day in Split: skipped, the new record waits for tomorrow.
+		expect(await sweepPersonalDataDaily(new Date('2027-07-01T21:00:00Z'))).toBeNull();
+		expect((await bookings().get('old-2'))?.customerNotes).toBe('allergy');
+		// 22:30 UTC is already 2 July in Split (UTC+2).
+		expect(await sweepPersonalDataDaily(new Date('2027-07-01T22:30:00Z'))).toEqual({ bookings: 1, enquiries: 0, emails: 0 });
 	});
 });

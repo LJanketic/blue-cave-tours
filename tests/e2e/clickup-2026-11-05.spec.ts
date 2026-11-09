@@ -48,14 +48,15 @@ test('private pay-now: extras and a listed pick-up are added to the boat price, 
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
 	const total = page.locator('.summary-card-ui__total');
 	const boat = euros(await total.innerText());
-	expect([1500, 2000]).toContain(boat);
+	expect(boat).toBe(1200);
 
 	await expect(page.getByRole('checkbox', { name: /Champagne welcome/ })).toBeVisible();
 	await expect(page.getByRole('checkbox', { name: /Seabob/ })).toBeVisible();
 	await page.getByRole('checkbox', { name: /Champagne welcome/ }).check();
 	await page.getByRole('checkbox', { name: /SUP/ }).check();
-	await page.getByRole('radio', { name: /Old Town Waterfront, Trogir/ }).check();
-	await expect(page.getByRole('radio', { name: /Hvar Town Waterfront/ })).toBeVisible();
+	// Board 05: one dropdown with every point and its fee.
+	await page.locator('#private-pickup').selectOption('trogir');
+	await expect(page.locator('#private-pickup option', { hasText: 'Hvar Town Waterfront, Hvar Island · +€150' })).toHaveCount(1);
 	await expect(total).toContainText(`€${(boat + 40 + 35 + 80).toLocaleString('en-GB')}`);
 
 	await page.locator('#private-first').fill('Test');
@@ -70,28 +71,21 @@ test('private pay-now: extras and a listed pick-up are added to the boat price, 
 	await expect(page.locator('.review__total')).toContainText(`€${(boat + 155).toLocaleString('en-GB')}`);
 });
 
-test('private quote request: a listed pick-up and the extras reach the enquiry by name', async ({ page }) => {
+test('Golden Horn private pay-now (Mare, 8 Nov 2026): Seabob and Milna are added to the €1,200 boat, and the review charges the same', async ({ page }) => {
 	await page.setExtraHTTPHeaders(privateIp());
 	await page.goto('/book/golden-horn-brac-hvar/private/');
 	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
 	await page.locator('.cal__day:not([aria-disabled])').last().click();
 	await page.getByRole('checkbox', { name: /Seabob/ }).check();
-	await page.getByRole('radio', { name: /Milna Marina, Brač/ }).check();
-	const surname = `Milna${Date.now().toString(36)}`;
+	await page.locator('#private-pickup').selectOption('milna');
+	await expect(page.locator('.summary-card-ui__total')).toContainText('€1,470');
 	await page.locator('#private-first').fill('Test');
-	await page.locator('#private-last').fill(surname);
+	await page.locator('#private-last').fill('Guest');
 	await page.locator('#private-email').fill('guest@example.com');
-	await page.locator('#private-phone').fill('+385 91 000 0000');
-	await page.waitForTimeout(2100); // the request form refuses anything sent within 2 seconds of loading
-	await page.getByRole('button', { name: /Send request/ }).click();
-	await expect(page).toHaveURL(/\/private-charter\/sent\/$/);
-
-	await page.goto('/admin/login/');
-	await page.locator('#password').fill('demo');
-	await page.getByRole('button', { name: 'Log in' }).click();
-	await expect(page).toHaveURL(/\/admin\/$/);
-	await page.goto('/admin/enquiries/');
-	const card = page.locator('article.enquiry').filter({ hasText: surname });
-	await expect(card).toContainText('Milna Marina, Brač Island');
-	await expect(card).toContainText('Seabob');
+	await page.getByRole('button', { name: /Review booking/ }).click();
+	await expect(page).toHaveURL(/\/book\/golden-horn-brac-hvar\/review\/\?flow=private$/);
+	const main = page.locator('main');
+	await expect(main).toContainText('Seabob');
+	await expect(main).toContainText('Milna Marina, Brač Island');
+	await expect(page.locator('.review__total')).toContainText('€1,470');
 });

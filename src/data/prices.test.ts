@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { tours } from './tour-catalog';
 import { PRICE_LIST } from './prices';
 import { FAQ_ITEMS, pricingAnswer, privateBoatSentence } from './faq';
-import { PRIVATE_TOURS } from '../config/private';
 import { supportsInstantBook } from '../lib/booking';
 
 describe('price list (FAQ)', () => {
@@ -47,13 +46,20 @@ describe('FAQ pricing answer', () => {
 });
 
 describe('FAQ private boat sentence', () => {
-	it('names every pay-now private tour at its config price, and quotes the rest', () => {
-		const sentence = privateBoatSentence();
-		for (const { boat } of Object.values(PRIVATE_TOURS)) {
-			expect(sentence).toContain(`€${boat.low.toLocaleString('en-GB')} (low season)`);
-			expect(sentence).toContain(`€${boat.peak.toLocaleString('en-GB')} (peak)`);
-		}
-		expect(sentence).toMatch(/other private experiences are quoted on request\.$/);
+	it('gives the one flat price when every private tour shares it (Mare, 8 Nov 2026: €1,200)', () => {
+		expect(privateBoatSentence()).toBe(
+			'A private boat is €1,200 on every fixed-route tour, in any season; Create Your Perfect Day is quoted on request.',
+		);
+	});
+
+	it('names each tour when the prices differ', () => {
+		const sentence = privateBoatSentence({
+			'blue-cave-hvar-5-islands': { boat: { low: 1500, peak: 2000 } },
+			'golden-horn-brac-hvar': { boat: { low: 1200, peak: 1200 } },
+		});
+		expect(sentence).toBe(
+			'A private Blue Cave boat is €1,500 (low season) or €2,000 (peak); a private Golden Horn boat is €1,200; other private experiences are quoted on request.',
+		);
 	});
 
 	it('falls back to "on request" with no pay-now tour, and refuses a tour it has no name for', () => {

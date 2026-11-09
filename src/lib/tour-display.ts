@@ -2,6 +2,7 @@ import { BESTSELLER_EVIDENCE, MEETING_POINT_LABEL, MEETING_POINT_MAP_URL } from 
 import type { TourDetail } from '../types/tour';
 import { offersPrivateFlow, PRIVATE_PLANNER_SLUG, supportsPrivateBook } from './booking';
 import { privateTour } from '../config/private';
+import { formatEuro } from './price';
 
 /*
  * Display rules for tours. No catalog import, so Vue islands can use these
@@ -63,6 +64,16 @@ export function tourCtas(
 	return { primary, secondary: privateCta(tour, links) };
 }
 
+/**
+ * A private-only tour's "From" price: its boat's low-season price when it is
+ * paid online (src/config/private.ts), else null ("On request"). Group tours
+ * show the adult price instead, and their private price on the second button.
+ */
+export function privateOnlyFromPrice(tour: Pick<TourDetail, 'slug' | 'types' | 'departures'>): number | null {
+	if (tour.types.includes('group') || !supportsPrivateBook(tour)) return null;
+	return privateTour(tour.slug)?.boat.low ?? null;
+}
+
 /** The "Private experience" button of a group + private tour (see tourCtas), or null. */
 function privateCta(
 	tour: Pick<TourDetail, 'slug' | 'types'> & Partial<Pick<TourDetail, 'departures'>>,
@@ -72,7 +83,7 @@ function privateCta(
 	const label = 'Private experience';
 	const priced = supportsPrivateBook({ ...tour, departures: tour.departures ?? [] });
 	const low = priced ? privateTour(tour.slug)?.boat.low : undefined;
-	return { label, href: links.private(tour.slug), ...(low !== undefined && { price: `€${low.toLocaleString('en-GB')}` }) };
+	return { label, href: links.private(tour.slug), ...(low !== undefined && { price: formatEuro(low) }) };
 }
 
 /**

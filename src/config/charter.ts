@@ -8,6 +8,8 @@
  * you a quote", and no extras, so the extras card isn't shown.
  */
 
+import { TIME_RE } from '../lib/time';
+
 export type CharterRoute = {
 	/** Stored on the request; also the `?tour=` value that preselects it. */
 	id: string;
@@ -38,7 +40,7 @@ export type CharterDuration = (typeof CHARTER_DURATIONS)[number];
 export const CHARTER_DEFAULT_TIME = '10:00';
 export const CHARTER_DEFAULT_HOURS = 4;
 /** "HH:MM", 24h. */
-export const CHARTER_TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+export const CHARTER_TIME_RE = TIME_RE;
 /** Earliest and latest preferred departure we accept. */
 export const CHARTER_EARLIEST_TIME = '06:00';
 export const CHARTER_LATEST_TIME = '20:00';

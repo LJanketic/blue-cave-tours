@@ -176,10 +176,10 @@ test('step 2 in the browser: pick a day, fill in, review', async ({ page }) => {
 });
 
 test("step 2 closes today's departure 15 minutes before it leaves (Split time)", async ({ page }) => {
-	// 15 Jul 2027 in Split (UTC+2): booking for the 09:30 boat closes at 09:15.
-	for (const [utc, closed] of [['2027-07-15T07:14:00Z', false], ['2027-07-15T07:15:00Z', true]] as const) {
+	// 15 Jul 2027 in Split (UTC+2): booking for Golden Horn's 09:00 boat (its only one) closes at 08:45.
+	for (const [utc, closed] of [['2027-07-15T06:44:00Z', false], ['2027-07-15T06:45:00Z', true]] as const) {
 		await page.clock.setFixedTime(new Date(utc));
-		await page.goto(`/book/${TOUR}/group/`);
+		await page.goto('/book/golden-horn-brac-hvar/group/');
 		await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
 		await expect(page.getByRole('paragraph').filter({ hasText: 'July 2027' })).toBeVisible();
 		const today = page.locator('.cal__day[aria-current="date"]');
@@ -192,6 +192,52 @@ test("step 2 closes today's departure 15 minutes before it leaves (Split time)",
 		}
 		await expect(page.locator('.cal__day[aria-label*="14 July 2027"]')).toHaveAttribute('aria-disabled', 'true');
 	}
+});
+
+test('Blue Lagoon: once the 09:30 boat closes, the day stays open for the 14:30 one (board 04b)', async ({ page }) => {
+	// 15 Jul 2027 in Split (UTC+2), 09:15: the morning boat has closed, the afternoon one hasn't.
+	await page.clock.setFixedTime(new Date('2027-07-15T07:15:00Z'));
+	await page.goto(`/book/${TOUR}/group/`);
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
+	const today = page.locator('.cal__day[aria-current="date"]');
+	await expect(today).not.toHaveAttribute('aria-disabled', 'true');
+	await today.click();
+	await expect(page.getByRole('radio', { name: /09:30 · Morning/ })).toBeDisabled();
+	await expect(page.getByRole('radio', { name: /14:30 · Afternoon/ })).toBeChecked();
+	await expect(page.locator('.summary-card-ui')).toContainText('Blue Lagoon Tour, Drvenik — Afternoon');
+});
+
+test('Blue Lagoon: a saved morning booking whose boat has closed stays the morning, with a notice', async ({ page }) => {
+	// The guest saved 09:30 for 15 Jul 2027 and comes back to edit at 09:20 Split time (UTC+2), after it closed.
+	await page.setExtraHTTPHeaders(ip());
+	expect((await startDraft(page.request, { date: '2027-07-15' })).status()).toBe(200);
+	await page.clock.setFixedTime(new Date('2027-07-15T07:20:00Z'));
+	await page.goto(`/book/${TOUR}/group/`);
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
+	await expect(page.getByRole('radio', { name: /09:30 · Morning/ })).toBeChecked();
+	await expect(page.locator('main')).toContainText('Booking for the 09:30 departure has just closed. Please choose another time.');
+	await expect(page.locator('.summary-card-ui')).toContainText('Blue Lagoon Tour, Drvenik — Morning');
+	await expect(page.locator('main')).toContainText('a departure that is still open');
+	// Picking the afternoon is the guest's own choice.
+	await page.getByRole('radio', { name: /14:30 · Afternoon/ }).check();
+	await expect(page.locator('.summary-card-ui')).toContainText('Blue Lagoon Tour, Drvenik — Afternoon');
+	await expect(page.locator('main')).not.toContainText('has just closed');
+});
+
+test('Blue Lagoon: one booking step for both times, booked as the tour of the time picked (board 04b)', async ({ page }) => {
+	await page.setExtraHTTPHeaders(ip());
+	await page.goto(`/book/${TOUR}/group/`);
+	await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
+	await expect(page.getByRole('heading', { level: 1 })).toContainText('Morning / Afternoon');
+	await page.locator('.cal__day:not([aria-disabled])').last().click();
+	await expect(page.getByRole('radio', { name: /09:30 · Morning.*Back in Split at 14:00/ })).toBeChecked();
+	await page.getByRole('radio', { name: /14:30 · Afternoon.*Back in Split at 19:00/ }).check();
+	await page.locator('#book-first').fill('Test');
+	await page.locator('#book-last').fill('Guest');
+	await page.locator('#book-email').fill('guest@example.com');
+	await page.getByRole('button', { name: /Review booking/ }).click();
+	await expect(page).toHaveURL(/\/book\/blue-lagoon-afternoon\/review\/$/);
+	await expect(page.locator('main')).toContainText('14:30 (back 19:00)');
 });
 
 test('out of season, step 2 opens the calendar on March, the first month with bookable days', async ({ page }) => {
