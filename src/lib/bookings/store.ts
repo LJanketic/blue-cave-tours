@@ -83,6 +83,14 @@ export type Booking = {
 	durationHours?: number;
 	/** Private experience paid on the site: the pick-up point, when it isn't the meeting point. */
 	pickup?: string;
+	/** When the admin was told the guest couldn't pay online yet (notifyPaymentNotOpen): set once, so it's told once. */
+	paymentNotOpenNotifiedAt?: string;
+	/**
+	 * Set when the payment went through although its departure (or the day's
+	 * private boats) had just been sold out by another payment (capacity.ts).
+	 * The payment is kept; staff move the guest or refund them.
+	 */
+	overbookedAtPayment?: string;
 };
 
 /**
@@ -321,6 +329,13 @@ export const outbox = () => collection<OutboxEmail>('outbox');
 /** Small bookkeeping values, e.g. the day the retention sweep last ran. */
 export type MetaRecord = { id: string; value: string };
 export const meta = () => collection<MetaRecord>('meta');
+/**
+ * Booking ref (HBC-7K3QXM) → booking id, written with each booking, so a
+ * contact message quoting a ref is checked with one read instead of a list.
+ * Holds nothing personal. Bookings made before it existed have no entry.
+ */
+export type BookingRefRecord = { id: string; bookingId: string };
+export const bookingRefs = () => collection<BookingRefRecord>('booking-refs');
 
 type Counter = { id: string; value: number };
 const counters = () => collection<Counter>('counters');
@@ -364,6 +379,66 @@ async function createIfMissing(name: string): Promise<boolean> {
 	}
 	const { modified } = await blobs.setJSON(name, initial, { onlyIfNew: true });
 	return modified;
+}
+
+/**
+ * The seats and boats taken, per departure or per day
+ * (src/lib/bookings/capacity.ts), keyed by booking id: the paid bookings that
+ * hold them (`paid`, kept until staff cancel or refund), plus payments in
+ * flight, which a payment writes before it marks its booking paid, so two
+ * payments for the last seat can't both see it free. In-flight claims expire;
+ * the writer prunes them.
+ */
+export type CapacityClaim = { seats: number; at: string; paid?: true };
+export type CapacityLedger = { id: string; claims: Record<string, CapacityClaim> };
+const ledgers = () => collection<CapacityLedger>('capacity');
+
+export function readLedger(id: string): Promise<CapacityLedger | null> {
+	return ledgers().get(id);
+}
+
+/**
+ * Read-modify-write of one ledger, created on first use: compare-and-swap on
+ * the blob's etag (onlyIfMatch, or onlyIfNew for the first write), so of two
+ * concurrent writers the second re-reads and sees the first's claim. `mutate`
+ * runs again on every retry. Returns the ledger as written (or as read, when
+ * `mutate` returns null).
+ */
+export function updateLedger(id: string, mutate: Mutation<CapacityLedger>): Promise<CapacityLedger> {
+	return withLock(`capacity:${id}`, async () => {
+		const blobs = (() => {
+			try {
+				return getStore({ name: scopedName('capacity'), consistency: 'strong' });
+			} catch {
+				return null;
+			}
+		})();
+		const empty = (): CapacityLedger => ({ id, claims: {} });
+		if (!blobs) {
+			const store = ledgers();
+			const current = (await store.get(id)) ?? empty();
+			const next = mutate(structuredClone(current));
+			if (next) await store.put(next);
+			return next ?? current;
+		}
+		for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
+			const existing = await blobs.getWithMetadata(id, { type: 'json' });
+			const current = existing ? (existing.data as CapacityLedger) : empty();
+			const next = mutate(structuredClone(current));
+			if (!next) return current;
+			const { modified } = existing
+				? await blobs.setJSON(id, next, { onlyIfMatch: existing.etag })
+				: await blobs.setJSON(id, next, { onlyIfNew: true });
+			if (modified) return next;
+		}
+		throw new Error(`[store] capacity ${id}: too many concurrent writes`);
+	});
+}
+
+/** Deletes every ledger: with the bookings, for the showcase's "Delete everything". */
+export async function clearLedgers(): Promise<void> {
+	const store = ledgers();
+	await Promise.all((await store.list()).map((ledger) => store.delete(ledger.id)));
 }
 
 export async function resetCounter(name: string): Promise<void> {

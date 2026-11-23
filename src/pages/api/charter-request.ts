@@ -14,6 +14,7 @@ import { readFormOrJson } from '../../lib/request-body';
 import { checkGlobalLimit, checkRateLimit, clientIp as getClientIp } from '../../lib/rate-limit';
 import { verifyTurnstileToken } from '../../lib/turnstile';
 import { recordEnquiry } from '../../lib/bookings/service';
+import { confirmFormResponse } from '../../lib/form-confirm';
 
 export const prerender = false;
 
@@ -64,10 +65,12 @@ export const POST: APIRoute = async ({ request }) => {
 	const input = parseCharterRequest(fields, HONEYPOT_FIELD);
 	const bot = botCheck(input, asForm);
 	if (bot === 'silent') return reply(asForm, 200, { ok: true });
-	if (bot !== 'ok') return reply(asForm, bot === 'too-fast' ? 429 : 400, { code: bot });
+	if (bot !== 'ok' && bot !== 'confirm') return reply(asForm, bot === 'too-fast' ? 429 : 400, { code: bot });
 
 	const error = validateCharterRequest(input);
 	if (error) return reply(asForm, 400, { code: error });
+	// A plain form post without a start time: one confirm click first, then the time check applies (S5).
+	if (bot === 'confirm') return confirmFormResponse({ action: '/api/charter-request', fields });
 
 	// Enforced once both Turnstile keys are set (src/lib/turnstile.ts). Required before go-live (S-6).
 	const token = typeof (fields.turnstileToken ?? fields['cf-turnstile-response']) === 'string' ? String(fields.turnstileToken ?? fields['cf-turnstile-response']).slice(0, 2048) : '';

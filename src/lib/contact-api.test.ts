@@ -2,10 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Netlify Blobs isn't available in tests; the limiter is covered by its own
 // behaviour in production. Here it always allows unless a test says otherwise.
-const rateLimit = vi.hoisted(() => ({ ok: true }));
-vi.mock('./rate-limit', () => ({ checkRateLimit: async () => rateLimit, clientIp: () => '203.0.113.1' }));
+const rateLimit = vi.hoisted(() => ({ ok: true, global: true, globalMax: 0 }));
+vi.mock('./rate-limit', () => ({
+	checkRateLimit: async () => ({ ok: rateLimit.ok }),
+	checkGlobalLimit: async (_scope: string, options: { max: number }) => {
+		rateLimit.globalMax = options.max;
+		return { ok: rateLimit.global };
+	},
+	clientIp: () => '203.0.113.1',
+}));
 
 const { POST } = await import('../pages/api/contact');
+const { enquiries, outbox, resetMemoryStore } = await import('./bookings/store');
 
 function post(body: string, headers: Record<string, string> = {}) {
 	const request = new Request('http://localhost/api/contact', {
@@ -29,6 +37,8 @@ const validBody = (overrides: Record<string, unknown> = {}) =>
 describe('POST /api/contact', () => {
 	beforeEach(() => {
 		rateLimit.ok = true;
+		rateLimit.global = true;
+		delete process.env.CONTACT_HOURLY_CAP;
 	});
 
 	it('accepts a valid submission', async () => {
@@ -86,6 +96,8 @@ describe('POST /api/contact', () => {
 describe('POST /api/contact without JavaScript (form posts)', () => {
 	beforeEach(() => {
 		rateLimit.ok = true;
+		rateLimit.global = true;
+		delete process.env.CONTACT_HOURLY_CAP;
 	});
 
 	function postForm(fields: Record<string, string>) {
@@ -127,10 +139,49 @@ describe('POST /api/contact without JavaScript (form posts)', () => {
 		expect((await postForm(form({ topic: 'change', bookingRef: 'hbc-7k3qxm' }))).headers.get('location')).toBe('/contact/sent/');
 	});
 
-	it('accepts a plain form post without a start time (no JavaScript sets one)', async () => {
+	it('sends a plain form post without a start time to a confirm step, then accepts the click (S5)', async () => {
 		const { _startedAt, ...rest } = form();
 		expect(_startedAt).toBeTruthy();
-		expect((await postForm(rest)).headers.get('location')).toBe('/contact/sent/');
+		const page = await postForm({ ...rest, _startedAt: '' });
+		expect(page.status).toBe(200);
+		const html = await page.text();
+		expect(html).toContain('One more step');
+		const decode = (v: string) => v.replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(Number(code)));
+		const hidden = Object.fromEntries([...html.matchAll(/<input type="hidden" name="([^"]*)" value="([^"]*)">/g)].map(([, name, value]) => [decode(name), decode(value)]));
+		expect(hidden).toMatchObject({ firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', topic: 'group' });
+		// Clicked straight away: refused, like a form filled in too fast.
+		expect((await postForm(hidden)).headers.get('location')).toBe('/contact/problem/?error=too-fast');
+		vi.useFakeTimers({ toFake: ['Date'], now: Date.now() + 3000 });
+		try {
+			expect((await postForm(hidden)).headers.get('location')).toBe('/contact/sent/');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('still checks the fields before the confirm step', async () => {
+		const { _startedAt: _unused, ...rest } = form({ email: 'not-an-email' });
+		expect((await postForm(rest)).headers.get('location')).toBe('/contact/problem/?error=email');
+	});
+
+	it('past the hourly cap on everyone together (S5) still takes the message, without emailing the admin; 60 unless CONTACT_HOURLY_CAP says otherwise', async () => {
+		resetMemoryStore();
+		rateLimit.global = false;
+		expect((await postForm(form({ message: 'Sent during a flood' }))).headers.get('location')).toBe('/contact/sent/');
+		const stored = (await enquiries().list()).find((e) => e.message === 'Sent during a flood');
+		expect(stored).toMatchObject({ notified: false });
+		expect((await outbox().list()).filter((m) => m.relatedId === stored?.id)).toEqual([]);
+		expect(rateLimit.globalMax).toBe(60);
+		process.env.CONTACT_HOURLY_CAP = '200';
+		await postForm(form());
+		expect(rateLimit.globalMax).toBe(200);
+		process.env.CONTACT_HOURLY_CAP = 'lots';
+		await postForm(form());
+		expect(rateLimit.globalMax).toBe(60);
+		// Under the cap, the admin is emailed as before.
+		rateLimit.global = true;
+		await postForm(form({ message: 'Sent on a quiet day' }));
+		expect((await enquiries().list()).find((e) => e.message === 'Sent on a quiet day')).toMatchObject({ notified: true });
 	});
 
 	it('still drops honeypot posts silently', async () => {

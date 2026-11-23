@@ -17,19 +17,36 @@ import { secretKey } from './secrets';
  * can't all read the same count. `astro dev`'s Blobs emulator isn't atomic,
  * so that's only guaranteed against the real Netlify backend.
  *
- * Failure: by default it fails open (the contact form and admin login have
- * other gates). Booking endpoints pass `failClosed`: if the limiter can't run,
- * they refuse rather than run unlimited.
+ * Failure: by default it fails open (the contact form has other gates).
+ * `failClosed` means something different for the two kinds of limit:
+ * - Per IP (checkRateLimit): it refuses when the limiter can't run, and when
+ *   it loses every compare-and-swap race. Lost races on one IP's bucket mean
+ *   that IP is sending a burst, so refusing it costs nobody else anything.
+ * - Everyone together (checkGlobalLimit, peekGlobalLimit): it refuses only
+ *   when the limiter can't run. A lost race on the shared bucket is just many
+ *   real guests at once, so it lets the request through: the per-IP limits
+ *   still hold each of them, and a busy hour must never refuse real bookings.
  */
 
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_REQUESTS = 5;
-const MAX_CAS_ATTEMPTS = 3;
+const MAX_CAS_ATTEMPTS = 6;
+/** Before each retry, a short random wait, so racing writers stop colliding in step. */
+const RETRY_JITTER_MS = 25;
 /** One write in this many also deletes earlier days' buckets. */
 const SWEEP_ONE_IN = 25;
 
 type Bucket = { count: number; windowStart: number };
-export type RateLimitOptions = { max?: number; windowMs?: number; failClosed?: boolean };
+export type LimitOptions = { max?: number; windowMs?: number };
+/** Per IP: `failClosed` refuses when the limiter can't run or loses every race on the bucket. */
+export type RateLimitOptions = LimitOptions & { failClosed?: boolean };
+/** Everyone together: `failClosed` refuses only when the limiter can't run; a lost race lets the request through. */
+export type GlobalLimitOptions = LimitOptions & { failClosed?: boolean };
+
+/** What one count did: counted, over the limit, lost every race, or couldn't reach the store. */
+type Outcome = 'counted' | 'over' | 'contended' | 'unavailable';
+
+const pause = () => new Promise((resolve) => setTimeout(resolve, 1 + Math.random() * RETRY_JITTER_MS));
 
 /** The /64 network for IPv6, the address for IPv4. */
 export function ipNetwork(ip: string): string {
@@ -64,31 +81,44 @@ function openStore() {
 	}
 }
 
-async function count(key: string, max: number, windowMs: number, now: number): Promise<boolean | null> {
+async function count(key: string, max: number, windowMs: number, now: number): Promise<Outcome> {
 	const store = openStore();
-	if (!store) return null;
+	if (!store) return 'unavailable';
 	try {
 		for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
+			if (attempt > 0) await pause();
 			const existing = await store.getWithMetadata(key, { type: 'json' });
 			if (!existing || now - (existing.data as Bucket).windowStart > windowMs) {
 				const fresh: Bucket = { count: 1, windowStart: now };
 				const result = existing
 					? await store.setJSON(key, fresh, { onlyIfMatch: existing.etag })
 					: await store.setJSON(key, fresh, { onlyIfNew: true });
-				if (result.modified) return true;
+				if (result.modified) return 'counted';
 				continue;
 			}
 			const bucket = existing.data as Bucket;
-			if (bucket.count >= max) return false;
+			if (bucket.count >= max) return 'over';
 			const result = await store.setJSON(key, { count: bucket.count + 1, windowStart: bucket.windowStart } satisfies Bucket, {
 				onlyIfMatch: existing.etag,
 			});
-			if (result.modified) return true;
+			if (result.modified) return 'counted';
 		}
-		// Lost every race: let it through rather than fail a real visitor.
-		return true;
+		return 'contended';
 	} catch {
-		return null;
+		return 'unavailable';
+	}
+}
+
+/** Whether the bucket has room left, without counting anything. */
+async function peek(key: string, max: number, windowMs: number, now: number): Promise<Outcome> {
+	const store = openStore();
+	if (!store) return 'unavailable';
+	try {
+		const existing = await store.get(key, { type: 'json' });
+		if (!existing || now - (existing as Bucket).windowStart > windowMs) return 'counted';
+		return (existing as Bucket).count >= max ? 'over' : 'counted';
+	} catch {
+		return 'unavailable';
 	}
 }
 
@@ -107,27 +137,46 @@ async function sweep(scope: string, now: number): Promise<void> {
 
 /**
  * Counts one request from `ip` in `scope` (e.g. 'contact', 'draft'). ok:false
- * when over the limit, or when the limiter can't run and `failClosed` is set.
+ * when over the limit, or, with `failClosed`, when the limiter can't run or
+ * loses every compare-and-swap race on this IP's bucket.
  */
 export async function checkRateLimit(scope: string, ip: string | null, options: RateLimitOptions = {}): Promise<{ ok: boolean }> {
 	const { max = MAX_REQUESTS, windowMs = WINDOW_MS, failClosed = false } = options;
 	const now = Date.now();
 	const client = hashClient(ip ?? 'unknown');
 	if (!client) return { ok: !failClosed };
-	const allowed = await count(`${scope}:${day(now)}:${client}`, max, windowMs, now);
-	if (allowed === null) return { ok: !failClosed };
+	const outcome = await count(`${scope}:${day(now)}:${client}`, max, windowMs, now);
+	if (outcome === 'unavailable' || outcome === 'contended') return { ok: !failClosed };
 	void sweep(scope, now);
-	return { ok: allowed };
+	return { ok: outcome === 'counted' };
 }
 
-/** A cap on everyone together (e.g. 300 drafts per 10 minutes), against floods from many IPs. */
-export async function checkGlobalLimit(scope: string, options: RateLimitOptions = {}): Promise<{ ok: boolean }> {
+/**
+ * A cap on everyone together (e.g. 1000 bookings per 10 minutes), against
+ * floods from many IPs. Counts one request. A lost race lets it through, even
+ * with `failClosed` (which then only covers a limiter that can't run): the
+ * shared bucket is contended by real guests too.
+ */
+export async function checkGlobalLimit(scope: string, options: GlobalLimitOptions = {}): Promise<{ ok: boolean }> {
 	const { max = MAX_REQUESTS, windowMs = WINDOW_MS, failClosed = false } = options;
 	const now = Date.now();
-	const allowed = await count(`${scope}:${day(now)}:all`, max, windowMs, now);
-	if (allowed === null) return { ok: !failClosed };
+	const outcome = await count(`${scope}:${day(now)}:all`, max, windowMs, now);
+	if (outcome === 'unavailable') return { ok: !failClosed };
+	if (outcome === 'contended') return { ok: true };
 	void sweep(scope, now);
-	return { ok: allowed };
+	return { ok: outcome === 'counted' };
+}
+
+/**
+ * Whether the global cap for `scope` still has room, counting nothing. With
+ * checkGlobalLimit to count only some requests, e.g. failed admin logins.
+ */
+export async function peekGlobalLimit(scope: string, options: GlobalLimitOptions = {}): Promise<{ ok: boolean }> {
+	const { max = MAX_REQUESTS, windowMs = WINDOW_MS, failClosed = false } = options;
+	const now = Date.now();
+	const outcome = await peek(`${scope}:${day(now)}:all`, max, windowMs, now);
+	if (outcome === 'unavailable') return { ok: !failClosed };
+	return { ok: outcome === 'counted' };
 }
 
 /** The visitor's IP as Netlify reports it. */

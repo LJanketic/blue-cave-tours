@@ -56,11 +56,17 @@ const todos: Todo[] = [];
 for (const { date, departure: d } of overbookedDepartures(all, today)) {
 	const culprits = d.overbookings.map((o) => `${o.booking.firstName} ${o.booking.lastName}`).join(', ');
 	const only = d.overbookings.length === 1 ? d.overbookings[0].booking : null;
+	// A private booking paid once the day's private boats were all taken: no boat, rather than too few seats.
+	const boats = d.overbookings[0]?.boats;
 	todos.push({
 		danger: true,
 		icon: 'ti-alert-triangle',
-		title: `Overbooked by ${d.overBy}: ${dayName(date) ?? formatShortDate(date)} ${d.slot || '(time TBC)'}`,
-		sub: `${d.tourTitle} · ${d.seatsTaken}/${d.capacity} · pushed over by ${culprits}`,
+		title: boats
+			? `No private boat: ${dayName(date) ?? formatShortDate(date)} ${d.slot || '(time TBC)'}`
+			: `Overbooked by ${d.overBy}: ${dayName(date) ?? formatShortDate(date)} ${d.slot || '(time TBC)'}`,
+		sub: boats
+			? `${d.tourTitle} · ${boats.takenBefore} of ${boats.perDay} private boats already taken · paid by ${culprits}`
+			: `${d.tourTitle} · ${d.seatsTaken}/${d.capacity} · pushed over by ${culprits}`,
 		href: only ? `/admin/bookings/${only.id}/` : `/admin/?from=${date}#day`,
 	});
 }

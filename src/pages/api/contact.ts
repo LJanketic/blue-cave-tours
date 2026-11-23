@@ -13,9 +13,10 @@ import {
 import { getTourBySlug } from '../../lib/tours';
 import { jsonResponse } from '../../lib/json-response';
 import { MAX_BODY_BYTES, readBodyWithLimit } from '../../lib/request-body';
-import { checkRateLimit, clientIp as getClientIp } from '../../lib/rate-limit';
+import { checkGlobalLimit, checkRateLimit, clientIp as getClientIp } from '../../lib/rate-limit';
 import { verifyTurnstileToken } from '../../lib/turnstile';
 import { recordEnquiry } from '../../lib/bookings/service';
+import { confirmFormResponse } from '../../lib/form-confirm';
 
 export const prerender = false;
 
@@ -24,6 +25,18 @@ const MAX_TURNSTILE_TOKEN_LEN = 2048;
 /** Where a form post without JavaScript lands (static pages; §3.5). */
 const SENT_PAGE = '/contact/sent/';
 const PROBLEM_PAGE = '/contact/problem/';
+
+/**
+ * Contact messages per hour from everyone together (S5), against a flood from
+ * many IPs that the per-IP limit can't see. Past it messages are still stored
+ * (the admin lists them) but not emailed. CONTACT_HOURLY_CAP changes it
+ * (playwright.config.ts raises it, since many test runs share one store).
+ */
+const DEFAULT_HOURLY_CAP = 60;
+function contactHourlyCap(): number {
+	const cap = Number.parseInt(process.env.CONTACT_HOURLY_CAP ?? '', 10);
+	return Number.isInteger(cap) && cap > 0 ? cap : DEFAULT_HOURLY_CAP;
+}
 
 /**
  * One reply, in the shape the request asked for: JSON for the page script,
@@ -105,6 +118,8 @@ export const POST: APIRoute = async ({ request }) => {
 	};
 	const turnstileToken = trimField(body.turnstileToken ?? body['cf-turnstile-response'], MAX_TURNSTILE_TOKEN_LEN);
 
+	// A plain form post may arrive without a start time (only the page script sets one); it is
+	// checked here, then sent to the confirm step below instead of skipping the time check (S5).
 	const result = validateContactSubmission(fields, { startedAtOptional: asForm });
 	if (!result.ok) {
 		const code = result.fields?.length ? (ERROR_CODES[result.fields[0]] ?? 'invalid') : result.status === 429 ? 'too-fast' : 'invalid';
@@ -118,10 +133,19 @@ export const POST: APIRoute = async ({ request }) => {
 		return reply(asForm, 400, { error: 'Invalid tour selection', code: 'tour', fields: ['tourSlug'] });
 	}
 
+	if (fields.startedAt === null) {
+		return confirmFormResponse({ action: '/api/contact', fields: body });
+	}
+
 	const turnstile = await verifyTurnstileToken(turnstileToken, clientIp);
 	if (!turnstile.ok) {
 		return reply(asForm, 400, { error: turnstile.error, code: 'check' });
 	}
+
+	// Counts only messages that passed every check, so junk posts can't use it up. Past it the message is
+	// still stored, only the admin isn't emailed: a flood from many IPs mustn't turn real guests away.
+	const overCap = !(await checkGlobalLimit('contact', { max: contactHourlyCap(), windowMs: 3_600_000 })).ok;
+	if (overCap) console.warn('[contact] hourly cap on everyone together reached: message stored, admin not emailed');
 
 	try {
 		await recordEnquiry(
@@ -135,6 +159,8 @@ export const POST: APIRoute = async ({ request }) => {
 				...(fields.bookingRef ? { bookingRef: fields.bookingRef } : {}),
 			},
 			new URL(request.url).origin,
+			new Date(),
+			{ notify: !overCap },
 		);
 	} catch (error) {
 		console.error('[contact] could not store enquiry', error);

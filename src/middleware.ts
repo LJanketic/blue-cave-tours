@@ -35,9 +35,20 @@ function noStore(response: Response, robots: boolean): Response {
  * Guards every /admin page behind the session cookie, keeps private pages out
  * of caches and search engines, and gives server-rendered responses the
  * security headers that netlify.toml gives prerendered pages.
+ *
+ * Not-found pages (P2-1): every unknown URL (/wp-login.php and the like) is
+ * answered by the server function, where netlify.toml's header rules don't
+ * reach. The 404 page is server-rendered for that reason (src/pages/404.astro),
+ * so it passes through here; a prerendered 404 would be sent by the Netlify
+ * adapter straight from the function without running middleware. A 404 is
+ * given the headers here even when Astro marks it prerendered, so the page
+ * can't lose them again by going back to static.
  */
 export const onRequest = defineMiddleware(async (context, next) => {
-	if (context.isPrerendered) return next();
+	if (context.isPrerendered) {
+		const response = await next();
+		return response.status === 404 ? setHeaders(response, securityHeadersFor(context.url.pathname)) : response;
+	}
 	return setHeaders(await guard(context, next), securityHeadersFor(context.url.pathname));
 });
 

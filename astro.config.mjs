@@ -96,7 +96,7 @@ export default defineConfig({
 	// through Netlify's metered on-demand Image CDN — even on fully prerendered
 	// pages. Disabling it restores Astro's own Sharp-based image service, which
 	// optimizes images once at build time (free, uses the direct `sharp`
-	// dependency, pinned to the major Astro 6 supports) instead of paying per
+	// dependency, pinned to the major Astro 7 supports) instead of paying per
 	// transformed image forever.
 	// sharp never runs in the function (see below), so its native binaries
 	// (~16 MB) stay out of it: a smaller bundle starts faster.
@@ -117,7 +117,22 @@ export default defineConfig({
 		ssr: {
 			external: ['sharp'],
 		},
+		// Vite 8 minifies CSS with lightningcss by default, which drops the
+		// unprefixed `backdrop-filter` wherever the -webkit- one sits next to it,
+		// so Firefox would lose every blur. esbuild keeps both
+		// (src/lib/built-css.test.ts checks the built CSS).
+		// cssTarget: Vite 7's default browser targets. Vite 8's newer ones write media
+		// queries as `(width<=768px)`, which Safari before 16.4 ignores, so older
+		// iPhones would get the desktop layout. These keep `(max-width:768px)`.
+		build: { cssMinify: 'esbuild', cssTarget: ['chrome107', 'edge107', 'firefox104', 'safari16'] },
 	},
+	// Astro 7's default ('jsx') drops whitespace between inline elements
+	// ("4 hours · Small group" became "4 hours·Small group"); keep the
+	// HTML-style collapsing the pages were written for.
+	compressHTML: true,
+	// No page uses Astro.session: without this, the Netlify adapter turns on
+	// Blobs-backed sessions and bundles the session runtime into the function.
+	session: false,
 	integrations: [
 		requireSiteUrlOnBuild,
 		loadDotenvInDev,

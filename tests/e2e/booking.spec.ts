@@ -118,7 +118,10 @@ test('the draft endpoint refuses bad input with a code only, and other content t
 	const winter = await startDraft(request, { date: `${nextYear}-01-15` });
 	expect(winter.status()).toBe(400);
 	expect((await winter.json()).errors).toHaveProperty('date');
-	const march = await startDraft(request, { date: `${nextYear}-03-15` });
+	// The coming 15 March: a later one may be past the booking horizon (bookableUntil) in January or February.
+	const thisYear = nextYear - 1;
+	const marchYear = new Date().toISOString().slice(0, 10) < `${thisYear}-03-15` ? thisYear : nextYear;
+	const march = await startDraft(request, { date: `${marchYear}-03-15` });
 	expect(march.status()).toBe(200);
 
 	const text = await request.post('/api/bookings/draft', { data: 'hello', headers: { 'Content-Type': 'text/plain', ...ip() } });

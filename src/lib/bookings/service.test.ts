@@ -258,7 +258,7 @@ describe('finalizePaidBooking', () => {
 		const paid = await finalizePaidBooking(booking.id, 'teya', 'T-1', 'https://example.test', NOW);
 		expect(paid?.status).toBe('confirmed');
 		expect(paid?.paymentStatus).toBe('paid');
-		expect(paid?.invoice?.number).toBe('1/HBC1/1');
+		expect(paid?.invoice?.number).toBe('DEMO-1/HBC1/1');
 
 		const emails = await outbox().list();
 		expect(emails.map((e) => e.kind).sort()).toEqual(['admin_booking', 'booking_confirmation']);
@@ -306,7 +306,7 @@ describe('finalizePaidBooking', () => {
 		const b = await pending();
 		await finalizePaidBooking(a.id, 'teya', 'T-1', 'https://example.test', NOW);
 		const second = await finalizePaidBooking(b.id, 'teya', 'T-2', 'https://example.test', NOW);
-		expect(second?.invoice?.number).toBe('2/HBC1/1');
+		expect(second?.invoice?.number).toBe('DEMO-2/HBC1/1');
 	});
 
 	it('pays once when requests race, and numbers invoices without gaps', async () => {
@@ -318,7 +318,7 @@ describe('finalizePaidBooking', () => {
 		expect(await outbox().list()).toHaveLength(2);
 		const other = await pending();
 		const second = await finalizePaidBooking(other.id, 'teya', 'T-9', 'https://example.test', NOW);
-		expect(second?.invoice?.number).toBe('2/HBC1/1');
+		expect(second?.invoice?.number).toBe('DEMO-2/HBC1/1');
 	});
 
 	it('never takes payment for a cancelled, refunded or past booking', async () => {
@@ -334,7 +334,7 @@ describe('finalizePaidBooking', () => {
 		await applyAdminAction(refunded.id, { type: 'refund' }, 'Admin', NOW);
 		const again = await finalizePaidBooking(refunded.id, 'teya', 'T2', 'https://example.test', NOW);
 		expect(again?.paymentStatus).toBe('refunded');
-		expect(again?.invoice?.number).toBe('1/HBC1/1');
+		expect(again?.invoice?.number).toBe('DEMO-1/HBC1/1');
 
 		const upcoming = await pending();
 		expect(isPayable(upcoming, NOW)).toBe(true);

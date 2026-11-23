@@ -152,6 +152,10 @@ test.describe('without JavaScript', () => {
 		await form.locator('input[name="email"]').fill('plain@example.com');
 		await form.locator('input[name="phone"]').fill('+385 91 000 0001');
 		await form.getByRole('button', { name: 'Send request' }).click();
+		// Without JavaScript there's no start time, so one confirm click first (S5); the button counts after a second.
+		await expect(page.getByRole('heading', { name: 'One more step' })).toBeVisible();
+		await page.waitForTimeout(1200);
+		await page.getByRole('button', { name: 'Send', exact: true }).click();
 		await expect(page).toHaveURL(/\/private-charter\/sent\/$/);
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Request received');
 	});

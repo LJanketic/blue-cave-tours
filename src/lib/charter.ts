@@ -1,5 +1,5 @@
 import { MAX_GUESTS, parseIsoDate, seatCount } from './booking';
-import { isInSeason, seasonLabel } from '../config/season';
+import { isInSeason, seasonLabel, withinHorizon } from '../config/season';
 import {
 	CHARTER_DURATIONS,
 	CHARTER_EARLIEST_TIME,
@@ -29,6 +29,7 @@ export const CHARTER_ERRORS = {
 	date: 'Choose a date for your private experience.',
 	past: 'Choose a date from tomorrow on: private experiences are booked at least a day ahead. For a trip today, please call us.',
 	season: `We sail ${seasonLabel()}. Please choose a date in the season.`,
+	horizon: 'That date is too far ahead to request online yet. Please choose an earlier date, or email us.',
 	time: `Choose a departure time between ${CHARTER_EARLIEST_TIME} and ${CHARTER_LATEST_TIME}.`,
 	duration: 'Choose how long you want the boat.',
 	guests: `Choose up to ${MAX_GUESTS} persons in total (infants included), with at least one adult.`,
@@ -55,6 +56,7 @@ export const CHARTER_ERROR_FIELDS: Partial<Record<CharterError, string>> = {
 	date: 'date',
 	past: 'date',
 	season: 'date',
+	horizon: 'date',
 	time: 'time',
 	duration: 'duration',
 	guests: 'adults',
@@ -121,6 +123,8 @@ export function validateCharterRequest(input: CharterRequestInput, now: Date = n
 	if (!input.date || !parseIsoDate(input.date)) return 'date';
 	if (input.date <= businessDate(now)) return 'past';
 	if (!isInSeason(input.date)) return 'season';
+	// The same booking horizon as the booking flows (bookableUntil): the end of the running or next season.
+	if (!withinHorizon(input.date, businessDate(now))) return 'horizon';
 	if (!CHARTER_TIME_RE.test(input.time) || input.time < CHARTER_EARLIEST_TIME || input.time > CHARTER_LATEST_TIME) return 'time';
 	if (!(CHARTER_DURATIONS as readonly number[]).includes(input.durationHours)) return 'duration';
 	const { adults, children, infants } = input;
@@ -137,12 +141,15 @@ export function validateCharterRequest(input: CharterRequestInput, now: Date = n
 
 /**
  * Bot checks, as on the contact form: a filled honeypot is accepted silently
- * (and dropped); a script-sent form must have taken a human amount of time.
- * A plain form post has no start time and fails open (§3.5).
+ * (and dropped); every request must have taken a human amount of time. A
+ * plain form post (§3.5) has no start time, since the page is prerendered and
+ * only its script sets one: it gets 'confirm', a confirm step that carries a
+ * server-written start time (src/lib/form-confirm.ts), instead of skipping
+ * the check (S5).
  */
-export function botCheck(input: Pick<CharterRequestInput, 'honeypot' | 'startedAt'>, asForm: boolean, now = Date.now()): 'ok' | 'silent' | CharterError {
+export function botCheck(input: Pick<CharterRequestInput, 'honeypot' | 'startedAt'>, asForm: boolean, now = Date.now()): 'ok' | 'silent' | 'confirm' | CharterError {
 	if (input.honeypot) return 'silent';
-	if (input.startedAt === null) return asForm ? 'ok' : 'invalid';
+	if (input.startedAt === null) return asForm ? 'confirm' : 'invalid';
 	if (input.startedAt > now || now - input.startedAt > CONTACT_MAX_FORM_AGE_MS) return 'invalid';
 	if (now - input.startedAt < CONTACT_MIN_SUBMIT_MS) return 'too-fast';
 	return 'ok';

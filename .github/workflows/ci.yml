@@ -21,7 +21,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - run: pnpm test
+      # Build before the tests: some tests check the built pages and CSS
+      # (built-css, island-size) and skip without dist/.
       - run: pnpm build
         env:
           PUBLIC_SITE_URL: https://hello-blue-cave.netlify.app
+      - run: pnpm test

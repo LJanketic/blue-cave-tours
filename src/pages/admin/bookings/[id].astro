@@ -144,7 +144,20 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 	}
 
 	{
-		overbooking && (
+		overbooking?.boats && (
+			<div class="a-danger-box" role="note">
+				<i class="ti ti-alert-triangle" aria-hidden="true" />
+				<p>
+					<strong>No private boat is left for this booking.</strong> {overbooking.boats.takenBefore} of {overbooking.boats.perDay} private{' '}
+					{overbooking.boats.perDay === 1 ? 'boat' : 'boats'} that day {overbooking.boats.takenBefore === 1 ? 'was' : 'were'} already taken when it{' '}
+					{booking.seatsSince ? 'was put back' : 'was paid'}. Move it to another day or contact the guest.{' '}
+					<a href={`/admin/?from=${booking.date}#day`}>See the day</a>
+				</p>
+			</div>
+		)
+	}
+	{
+		overbooking && !overbooking.boats && (
 			<div class="a-danger-box" role="note">
 				<i class="ti ti-alert-triangle" aria-hidden="true" />
 				<p>

@@ -1,3 +1,23 @@
 allowBuilds:
   esbuild: true
   sharp: true
+# Security floors for transitive dependencies (pnpm audit, Oct-Nov 2026).
+# source-map-js: an old @vue/compiler-sfc under @netlify/vite-plugin (dev
+# tooling) pins 1.2.1. zod: @astrojs/sitemap's copy (memory exhaustion < 4.6.6).
+# undici: astro > unifont (TLS validation bypass, cache poisoning, DoS
+# < 8.12.2). fast-uri: netlify edge-bundler > ajv (< 3.1.9). vite: one Vite
+# for the build and Vitest, at the patched 8.3 line.
+# @emnapi/*: Vite 8.3.7's rolldown wasm fallback brings emnapi 2.0.0-beta,
+# and pnpm then hands that beta to @astrojs/check's wasm-only astro2tsx,
+# which crashes with "bridge.deleteEnv is not a function": hold the 1.x line.
+overrides:
+  source-map-js: ^1.2.2
+  zod: ^4.6.7
+  undici: ^8.12.4
+  fast-uri: ^3.1.9
+  vite: ^8.3.7
+  '@emnapi/runtime': ^1.11.3
+  '@emnapi/core': ^1.11.3
+  # One playwright-core for @playwright/test and @axe-core/playwright (its peer would take 1.65, whose
+  # browsers aren't installed, and two copies break the Page type in the a11y and e2e specs).
+  playwright-core: 1.64.0

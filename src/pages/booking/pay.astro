@@ -8,13 +8,15 @@ import BookingShell from '../../components/booking/BookingShell.astro';
 import SummaryCard from '../../components/booking/SummaryCard.astro';
 import Notice from '../../components/ui/Notice.astro';
 import Button from '../../components/ui/Button.astro';
-import { PAYMENTS_ARE_DEMO } from '../../config/payments';
+import { DEMO_CHECKOUT_OPEN, PAYMENTS_ARE_DEMO, PAYMENTS_MODE, demoCheckoutAllowed } from '../../config/payments';
+import { DEMO_ACCESS_COOKIE, testHeaderClosesGate, verifyDemoAccessToken } from '../../lib/demo-access';
 import { getTourBySlug } from '../../lib/tours';
 import { feeLabel } from '../../lib/cards';
 import { formatEuro } from '../../lib/price';
 import { formatBookingDate, guestSummaryFromCounts } from '../../lib/booking';
 import { isRecordId } from '../../lib/bookings/ids';
-import { finalizePaidBooking, isPayable, quoteExpired, recordFailedPayment, termsDueOnPayment } from '../../lib/bookings/service';
+import { BOOKING_ERRORS, finalizePaidBooking, isPayable, notifyPaymentNotOpen, quoteExpired, recordFailedPayment, termsDueOnPayment } from '../../lib/bookings/service';
+import { capacityChecked, capacityError } from '../../lib/bookings/capacity';
 import { formatTimestamp } from '../../lib/bookings/dates';
 import { durationLabel } from '../../config/charter';
 import { CANCELLATION_PRIVATE_HREF } from '../../config/cancellation';
@@ -27,6 +29,12 @@ import { bookings, isCharterQuote, type PaymentProvider } from '../../lib/bookin
  * (plan Phases 2 and 6): the customer picks a method and the payment
  * "succeeds" or "declines" on a button press. No money moves. Everything
  * after the payment (račun, emails, admin) is the real flow.
+ *
+ * The buttons are gated (demoCheckoutAllowed): they only work where the build
+ * opened the demo checkout to everyone (dev, deploy previews) or for a browser
+ * an admin enabled from /admin/tools. Everyone else is told online payment
+ * isn't open yet, the booking stays awaiting payment, and the admin is emailed
+ * once to confirm it by hand. Once payments are live the buttons never work.
  */
 
 const id = Astro.url.searchParams.get('id');
@@ -42,11 +50,45 @@ const isQuote = isPrivate && isCharterQuote(booking);
 // A charter quote has no review step: its terms are accepted here (S-4). Bookings made
 // on the site (group, or a private experience) accepted them on the review page.
 const askTerms = termsDueOnPayment(booking);
+const demoCheckout = demoCheckoutAllowed({
+	mode: PAYMENTS_MODE,
+	openFlag: DEMO_CHECKOUT_OPEN && !testHeaderClosesGate(Astro.request.headers),
+	cookieValid: verifyDemoAccessToken(Astro.cookies.get(DEMO_ACCESS_COOKIE)?.value),
+});
+
+// The buttons below only stand in for a gateway: without demo access, and always
+// once payments are live, a POST here must never mark a booking paid. Real
+// payments will confirm through their own return and webhook routes.
+if (Astro.request.method === 'POST' && !demoCheckout) {
+	return new Response('Online payment is not open yet.', { status: 403, headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/plain; charset=utf-8' } });
+}
+
+// The departure may have sold out since this booking was made: check again, leaving out its own claim, before
+// offering or taking a payment. Not for a charter quote (staff chose the boat). If the check can't run, payment goes
+// ahead and finalizePaidBooking notes it; two payments racing for the last seat are still caught there.
+const soldOut =
+	payable && capacityChecked(booking)
+		? await capacityError(booking, new Date(), booking.id).catch((err) => {
+				console.error(`[booking ${booking.id}] capacity not checked on the pay page`, err);
+				return null;
+			})
+		: null;
+
+if (Astro.request.method === 'POST' && payable && soldOut) {
+	// Nothing is paid: the page shows why.
+	return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
+}
 
 if (Astro.request.method === 'POST' && payable) {
 	const ip = clientIp(Astro.request);
 	if (!(await checkRateLimit('pay', ip, { max: 20, failClosed: true })).ok) return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
-	const form = await Astro.request.formData();
+	let form: FormData;
+	try {
+		form = await Astro.request.formData();
+	} catch {
+		// Not a form post (or a broken one): show the page again, nothing is paid.
+		return Astro.redirect(`/booking/pay/?id=${booking.id}`, 303);
+	}
 	// The demo's "simulate a declined payment" needs no terms: nothing is booked.
 	if (askTerms && form.get('outcome') !== 'decline' && (form.get('terms') !== 'yes' || form.get('termsVersion') !== TERMS_VERSION)) {
 		return Astro.redirect(`/booking/pay/?id=${booking.id}&terms=1`, 303);
@@ -74,6 +116,15 @@ const closedReason =
 			: 'This booking can no longer be paid, because booking for this departure has closed.';
 const termsMissing = Astro.url.searchParams.get('terms') === '1';
 
+// Online payment isn't open to this guest: tell the admin once, so they confirm it by email (not for a sold-out departure).
+if (payable && !soldOut && !demoCheckout) {
+	try {
+		await notifyPaymentNotOpen(booking.id, Astro.url.origin);
+	} catch (err) {
+		console.error(`[booking ${booking.id}] admin not told about a booking awaiting payment`, err);
+	}
+}
+
 const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 const tour = getTourBySlug(booking.tourSlug);
 const fee = tour ? feeLabel(tour) : undefined;
@@ -83,7 +134,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 <SiteLayout title={pageTitle('Payment')} description="Complete your booking payment." checkout robots="noindex, nofollow">
 	<BookingShell step={isQuote ? undefined : 4} exitHref={`/tours/${booking.tourSlug}/`} heading={isQuote ? 'Your private experience quote' : 'Payment'} headingVisible>
 		{
-			PAYMENTS_ARE_DEMO && (
+			PAYMENTS_ARE_DEMO && demoCheckout && payable && !soldOut && (
 				<Notice tone="info" icon="info-circle" class="pay__demo">
 					<strong>Demo checkout.</strong> No real payment is taken. When real payments are switched on, you'll pay here
 					on Teya's payment page or with PayPal.
@@ -116,6 +167,28 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 						Questions? <a href="/contact/">Contact us</a> and quote <strong>{booking.ref}</strong>.
 					</p>
 					<Button href="/tours/">Browse tours</Button>
+				</div>
+			) : soldOut ? (
+				<div class="pay__closed" role="status" id="pay-sold-out">
+					<p>{BOOKING_ERRORS[soldOut]} Nothing has been charged.</p>
+					<p>
+						Questions? <a href="/contact/">Contact us</a> and quote <strong>{booking.ref}</strong>.
+					</p>
+					<Button href={soldOut === 'boat' ? '/private-charter/' : `/tours/${booking.tourSlug}/`}>
+						{soldOut === 'boat' ? 'Send a request' : 'Choose another time'}
+					</Button>
+				</div>
+			) : !demoCheckout ? (
+				<div class="pay__closed" role="status" id="pay-not-open">
+					<p>
+						<strong>Online payment isn't open yet.</strong>{' '}
+						{isQuote
+							? "Nothing has been charged. We'll contact you by email to confirm your private experience."
+							: "We've received your booking and will confirm it by email. Nothing has been charged."}
+					</p>
+					<p>
+						Questions? <a href="/contact/">Contact us</a> and quote <strong>{booking.ref}</strong>.
+					</p>
 				</div>
 			) : (
 				<form method="post" class="pay__form">

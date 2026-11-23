@@ -12,6 +12,7 @@ import { SITE_EMAIL, SITE_NAME } from '../../config/site';
 import { RETENTION_DAYS } from '../../lib/bookings/service';
 import { BOOKING_COOKIE, BOOKING_COOKIE_MAX_AGE } from '../../lib/bookings/session';
 import { ADMIN_COOKIE, SESSION_HOURS } from '../../lib/admin/auth';
+import { DEMO_ACCESS_COOKIE, DEMO_ACCESS_DAYS } from '../../lib/demo-access';
 
 // OPERATOR: the operator's text mentions analytics (Google Analytics) and
 // marketing/advertising cookies. The site has none today: no analytics, no
@@ -72,6 +73,13 @@ const COOKIES = [
 		provider: `${SITE_NAME} (first party)`,
 		purpose: 'Staff login only; never set for visitors',
 		duration: `${SESSION_HOURS} hours`,
+		type: 'Strictly necessary',
+	},
+	{
+		name: DEMO_ACCESS_COOKIE,
+		provider: `${SITE_NAME} (first party)`,
+		purpose: 'Staff only, to try the demo checkout; never set for visitors',
+		duration: `${DEMO_ACCESS_DAYS} days`,
 		type: 'Strictly necessary',
 	},
 ];

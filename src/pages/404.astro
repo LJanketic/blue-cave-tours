@@ -1,5 +1,10 @@
 ---
-export const prerender = true;
+// Server-rendered, not prerendered (P2-1): the Netlify adapter answers unknown
+// URLs with a prerendered 404.html straight from the function, without
+// middleware, so that 404 had no CSP or X-Frame-Options. Rendered here it gets
+// them from src/middleware.ts. Every unknown URL already runs the function, so
+// this costs no extra invocations.
+export const prerender = false;
 
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Button from '../components/ui/Button.astro';

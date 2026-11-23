@@ -1,7 +1,9 @@
 import { MAX_GUESTS, supportsInstantBook } from '../booking';
 import { businessDate } from '../bookings/dates';
 import { newBookingRef, newId } from '../bookings/ids';
-import { bookings, enquiries, nextCounterValue, outbox, resetCounter, type Booking, type Enquiry } from '../bookings/store';
+import { bookingRefs, bookings, clearLedgers, enquiries, outbox, resetCounter, type Booking, type Enquiry } from '../bookings/store';
+import { resetCapacityBackfill } from '../bookings/capacity';
+import { DEMO_INVOICE_COUNTER, INVOICE_COUNTER, issueDemoInvoice } from '../bookings/service';
 import { computeBookingTotal, formatEuro, lineItemsFor } from '../price';
 import { TERMS_VERSION } from '../../config/legal';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
@@ -191,7 +193,7 @@ async function loadSampleCharters(now: Date): Promise<number> {
 				email,
 				phone,
 				customerNotes: notes,
-				invoice: paid ? { number: `${await nextCounterValue('invoice')}/HBC1/1`, jir: newId(), zki: newId().replace(/-/g, ''), issuedAt: paidAt } : null,
+				invoice: paid ? await issueDemoInvoice(new Date(paidAt)) : null,
 				staffNotes: [],
 				history: [
 					{ at: quotedAt, by: 'demo data', action: `Quote sent: ${formatEuro(price)}, valid 3 days` },
@@ -201,6 +203,7 @@ async function loadSampleCharters(now: Date): Promise<number> {
 			};
 			enquiry.quoteBookingId = booking.id;
 			await bookings().put(booking);
+			await bookingRefs().put({ id: booking.ref, bookingId: booking.id });
 		}
 		await enquiries().put(enquiry);
 	}
@@ -208,6 +211,8 @@ async function loadSampleCharters(now: Date): Promise<number> {
 }
 
 export async function loadSampleData(now: Date = new Date()): Promise<{ bookings: number; enquiries: number }> {
+	// Sample bookings would land among real ones and in the accounts: refuse once payments are live.
+	if (!PAYMENTS_ARE_DEMO) throw new Error('loadSampleData is for the payment showcase only');
 	const tours = getAllTours().filter(supportsInstantBook);
 	const store = bookings();
 
@@ -250,19 +255,14 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 			email: `${firstName}.${lastName}`.toLowerCase().normalize('NFD').replace(/[^\w.]/g, '') + '@example.com',
 			phone,
 			customerNotes: guestIndex === 2 && offset === 0 ? 'One child is 4 years old, do you have a small life jacket?' : '',
-			invoice: paid
-				? {
-						number: `${await nextCounterValue('invoice')}/HBC1/1`,
-						jir: newId(),
-						zki: newId().replace(/-/g, ''),
-						issuedAt: createdAt,
-					}
-				: null,
+			// The demo's own DEMO- series: sample data never uses a real invoice number.
+			invoice: paid ? await issueDemoInvoice(new Date(createdAt)) : null,
 			staffNotes: [],
 			history: [{ at: createdAt, by: 'demo data', action: 'Sample booking created' }],
 			sample: true,
 		};
 		await store.put(booking);
+		await bookingRefs().put({ id: booking.ref, bookingId: booking.id });
 	}
 
 	for (const [index, enquiry] of ENQUIRIES.entries()) {
@@ -275,16 +275,22 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 		});
 	}
 	const charters = await loadSampleCharters(now);
+	// Written straight to the store, not paid through the checkout: the capacity ledgers take them in on the next check.
+	await resetCapacityBackfill();
 	return { bookings: PLAN.length + CHARTERS.filter((c) => c[10] !== 'new').length, enquiries: ENQUIRIES.length + charters };
 }
 
-/** Deletes everything: bookings, enquiries, the outbox and the invoice counter. Showcase only. */
+/** Deletes everything: bookings, enquiries, the outbox, the invoice counters and the seat ledgers. Showcase only. */
 export async function clearAllData(): Promise<void> {
 	// Real bookings and invoice numbers must survive: refuse once payments are live.
 	if (!PAYMENTS_ARE_DEMO) throw new Error('clearAllData is for the payment showcase only');
-	await resetCounter('invoice');
-	for (const collection of [bookings(), enquiries(), outbox()]) {
+	await resetCounter(DEMO_INVOICE_COUNTER);
+	// Demo payments took numbers from the real series until November 2026; while payments are a demo, start it again too.
+	await resetCounter(INVOICE_COUNTER);
+	for (const collection of [bookings(), enquiries(), outbox(), bookingRefs()]) {
 		const records = await collection.list();
 		await Promise.all(records.map((record) => collection.delete(record.id)));
 	}
+	await clearLedgers();
+	await resetCapacityBackfill();
 }

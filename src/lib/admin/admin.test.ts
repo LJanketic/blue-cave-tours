@@ -31,9 +31,7 @@ describe('admin session', () => {
 		expect(verifySessionToken(token, now + 13 * 3_600_000)).toBe(false);
 		expect(verifySessionToken(`9${token}`, now)).toBe(false);
 		expect(verifySessionToken(undefined, now)).toBe(false);
-		// The password never signs: changing it alone keeps sessions; rotating the secret ends them.
-		process.env.ADMIN_PASSWORD = 'new-password';
-		expect(verifySessionToken(token, now + 60_000)).toBe(true);
+		// Rotating the secret ends every session (so does changing the password: auth-hardening.test.ts).
 		process.env.ADMIN_SESSION_SECRET = 'b'.repeat(44);
 		expect(verifySessionToken(token, now + 60_000)).toBe(false);
 		delete process.env.ADMIN_SESSION_SECRET;

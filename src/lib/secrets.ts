@@ -5,6 +5,7 @@ const SECRET_ENV = {
 	'admin-session': 'ADMIN_SESSION_SECRET',
 	'booking-cookie': 'BOOKING_COOKIE_SECRET',
 	'rate-limit': 'RATE_LIMIT_SALT',
+	'demo-access': 'DEMO_ACCESS_SECRET',
 } as const;
 
 export type SecretPurpose = keyof typeof SECRET_ENV;

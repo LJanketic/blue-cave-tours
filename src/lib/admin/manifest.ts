@@ -1,6 +1,7 @@
-import { MAX_GUESTS, seatCount } from '../booking';
+import { seatCount } from '../booking';
 import { isDeadQuote, takesSeats } from '../bookings/service';
-import type { Booking } from '../bookings/store';
+import { PRIVATE_BOATS_PER_DAY, SEATS_PER_DEPARTURE } from '../../config/booking';
+import { isCharterQuote, type Booking } from '../bookings/store';
 
 export type Departure = {
 	key: string;
@@ -33,6 +34,11 @@ export type Overbooking = {
 	seatsBefore: number;
 	seatsAfter: number;
 	capacity: number;
+	/**
+	 * A private booking paid when the day's private boats (PRIVATE_BOATS_PER_DAY)
+	 * were already taken: it has no boat at all, rather than too few seats.
+	 */
+	boats?: { takenBefore: number; perDay: number };
 };
 
 /**
@@ -41,7 +47,9 @@ export type Overbooking = {
  */
 function seatOrder(a: Booking, b: Booking): number {
 	const at = (x: Booking) => x.seatsSince ?? x.paidAt ?? x.createdAt;
-	return at(a).localeCompare(at(b)) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
+	// A booking paid when the boat had just sold out (capacity.ts) lost that race: it goes last, so it's the one named.
+	const late = (x: Booking) => (x.overbookedAtPayment && !x.seatsSince ? 1 : 0);
+	return late(a) - late(b) || at(a).localeCompare(at(b)) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
 }
 
 /**
@@ -62,6 +70,26 @@ function findOverbookings(passengers: Booking[], capacity: number): Overbooking[
 	return result;
 }
 
+/**
+ * The day's private boats (PRIVATE_BOATS_PER_DAY), handed out in the order the
+ * private bookings took them: a booking paid on the site once they were all
+ * taken has no boat, and is named like an overbooking. Charter quotes take a
+ * boat but are never flagged: staff quoted them knowing the fleet.
+ */
+function findBoatlessPrivate(departures: Departure[]): void {
+	const perDay = PRIVATE_BOATS_PER_DAY;
+	const held = departures.filter((d) => d.private).flatMap((d) => d.passengers.map((booking) => ({ booking, departure: d })));
+	let takenBefore = 0;
+	for (const { booking, departure } of held.sort((a, b) => seatOrder(a.booking, b.booking))) {
+		if (takenBefore >= perDay && !isCharterQuote(booking)) {
+			const seats = seatCount(booking);
+			departure.overBy = seats;
+			departure.overbookings = [{ booking, seatsOver: seats, seatsBefore: 0, seatsAfter: seats, capacity: 0, boats: { takenBefore, perDay } }];
+		}
+		takenBefore++;
+	}
+}
+
 /** One card per tour + departure time on the given date, earliest first. */
 export function departuresOn(date: string, all: Booking[]): Departure[] {
 	const byKey = new Map<string, Departure>();
@@ -79,7 +107,8 @@ export function departuresOn(date: string, all: Booking[]): Departure[] {
 				tourTitle: booking.tourTitle,
 				slot: booking.slot,
 				private: isPrivate,
-				capacity: MAX_GUESTS,
+				// Seats sold online per departure, pending the operator (Q15, src/config/booking.ts).
+				capacity: SEATS_PER_DEPARTURE,
 				seatsTaken: 0,
 				adults: 0,
 				children: 0,
@@ -107,8 +136,9 @@ export function departuresOn(date: string, all: Booking[]): Departure[] {
 		if (d.private) d.capacity = d.seatsTaken || seatCount(d.unpaid[0] ?? { adults: 0, children: 0 });
 		d.overBy = Math.max(0, d.seatsTaken - d.capacity);
 		d.overbookings = findOverbookings(d.passengers, d.capacity);
-		d.passengers.sort((a, b) => a.lastName.localeCompare(b.lastName));
 	}
+	findBoatlessPrivate(departures);
+	for (const d of departures) d.passengers.sort((a, b) => a.lastName.localeCompare(b.lastName));
 	return departures.sort((a, b) => (a.slot || '99').localeCompare(b.slot || '99') || a.tourTitle.localeCompare(b.tourTitle));
 }
 

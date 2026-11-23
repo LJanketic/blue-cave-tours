@@ -173,7 +173,8 @@ function bookingTermsLines(booking: Booking, siteOrigin: string): { rows: Row[];
  */
 function publicOrigin(requestOrigin: string): string {
 	const site = import.meta.env.SITE;
-	return site ? new URL(site).origin : requestOrigin;
+	// Vitest 5 hands an unset SITE over as the string "undefined": only a real URL counts.
+	return site && URL.canParse(site) ? new URL(site).origin : requestOrigin;
 }
 
 /**
@@ -313,6 +314,50 @@ export function adminBookingEmail(booking: Booking, to: string, adminUrl: string
 		rowsText(customerRows),
 		'',
 		rowsText(paymentRows(booking, 'admin')),
+		'',
+		`Admin: ${adminUrl}`,
+	].join('\n');
+
+	return { kind: 'admin_booking', to, replyTo: booking.email, subject, html, text, relatedId: booking.id };
+}
+
+/**
+ * A guest reached the pay page, but online payment isn't open to them yet
+ * (src/pages/booking/pay.astro): nothing was paid, and the pay page told
+ * them we'd confirm by email. Sent once per booking (notifyPaymentNotOpen).
+ */
+export function adminPaymentNotOpenEmail(booking: Booking, to: string, adminUrl: string): EmailMessage {
+	const quote = booking.kind === 'private' && isCharterQuote(booking);
+	const lede = quote
+		? 'A customer opened the payment link for their private charter quote, but online payment isn\'t open yet, so nothing was paid. Contact them by email to confirm it'
+		: 'A customer booked on the website, but online payment isn\'t open yet, so nothing was paid. The booking is waiting for payment: contact them by email to confirm it';
+	const charges = booking.kind === 'private' && !quote ? lineItemRows(booking) : [];
+	const customerRows: Row[] = [
+		['Name', `${booking.firstName} ${booking.lastName}`],
+		['Email', booking.email],
+		['Phone', booking.phone || '—'],
+		// Notes can hold health details (GDPR Art. 9): they stay in the admin, never in an email (S-5).
+		['Notes', booking.customerNotes ? 'Has notes, see admin' : 'None'],
+	];
+	const totalRows: Row[] = [['Total (incl. VAT)', `${formatEuro(booking.total)} (not paid)`]];
+	const subject = `Not paid yet ${booking.ref}: ${charterRoute(booking)}, ${formatBookingDate(booking.date)}, ${guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}`;
+	const html = layout(
+		'Booking waiting for payment',
+		`${lede}. <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">Open it in the admin</a>.`,
+		section('Booking', bookingRows(booking)) +
+			(charges.length ? section('Charges', charges) : '') +
+			section('Customer', customerRows) +
+			section('Payment', totalRows),
+	);
+	const text = [
+		`${lede}.`,
+		'',
+		rowsText(bookingRows(booking)),
+		'',
+		...(charges.length ? [rowsText(charges), ''] : []),
+		rowsText(customerRows),
+		'',
+		rowsText(totalRows),
 		'',
 		`Admin: ${adminUrl}`,
 	].join('\n');

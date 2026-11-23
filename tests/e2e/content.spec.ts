@@ -109,6 +109,10 @@ test('contact form works without JavaScript', async ({ browser }) => {
 	await expect(page.locator('#bookingRef')).toBeVisible();
 	await fillContact(page);
 	await page.getByRole('button', { name: /Send message/ }).click();
+	// Without JavaScript there's no start time, so one confirm click first (S5); the button counts after a second.
+	await expect(page.getByRole('heading', { name: 'One more step' })).toBeVisible();
+	await page.waitForTimeout(1200);
+	await page.getByRole('button', { name: 'Send', exact: true }).click();
 	await expect(page).toHaveURL(/\/contact\/sent\/$/);
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(/message is on its way/);
 
@@ -189,6 +193,9 @@ test('legal pages: a clicked section is the one marked, the last one too', async
 test('404 offers a way on', async ({ page }) => {
 	const response = await page.goto('/no-such-page/');
 	expect(response?.status()).toBe(404);
+	// Server-rendered, so it has the security headers too (P2-1).
+	expect(response?.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
+	expect(response?.headers()['x-frame-options']).toBe('DENY');
 	await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Browse all tours' })).toBeVisible();
 });

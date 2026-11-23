@@ -9,7 +9,7 @@ import {
 	SITE_NAME,
 	SITE_THEME_COLOR,
 } from '../config/site';
-import { DEFAULT_OG_IMAGE } from '../lib/seo';
+import { DEFAULT_OG_IMAGE, safeJsonLd } from '../lib/seo';
 
 type Props = {
 	title: string;
@@ -91,7 +91,7 @@ const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
 		{
 			jsonLdBlocks.map((block) => (
-				<script is:inline type="application/ld+json" set:html={JSON.stringify(block)} />
+				<script is:inline type="application/ld+json" set:html={safeJsonLd(block)} />
 			))
 		}
 

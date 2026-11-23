@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getDestinationBySlug } from './destinations';
-import { DEFAULT_OG_IMAGE, breadcrumbJsonLd, destinationJsonLd, socialImageFor, tourJsonLd, touristType } from './seo';
+import { DEFAULT_OG_IMAGE, breadcrumbJsonLd, destinationJsonLd, safeJsonLd, socialImageFor, tourJsonLd, touristType } from './seo';
 import { getTourBySlug } from './tours';
 
 const SITE = 'https://hello-blue-cave.netlify.app';
@@ -56,5 +56,21 @@ describe('tourJsonLd', () => {
 		expect(redRocks.touristType).toBe('Private tour');
 		expect(redRocks.offers).toBeUndefined();
 		expect(tourJsonLd(getTourBySlug('create-perfect-day-private')!, `${SITE}/`).touristType).toBe('Private tour');
+	});
+});
+
+describe('safeJsonLd (P2-4)', () => {
+	it('cannot close the script tag or open a comment, and parses back to the same value', () => {
+		const value = { name: '</script><script>alert(1)</script>', note: '<!-- & -->', lines: 'a\u2028b\u2029c' };
+		const out = safeJsonLd(value);
+		expect(out).not.toMatch(/[<>&\u2028\u2029]/);
+		expect(out).toContain('\\u003c/script\\u003e');
+		expect(out).toContain('a\\u2028b\\u2029c');
+		expect(JSON.parse(out)).toEqual(value);
+	});
+
+	it('leaves ordinary JSON-LD as JSON.stringify writes it', () => {
+		const block = breadcrumbJsonLd([{ name: 'Tours', url: `${SITE}/tours/` }]);
+		expect(safeJsonLd(block)).toBe(JSON.stringify(block));
 	});
 });

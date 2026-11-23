@@ -4,13 +4,34 @@ export const prerender = false;
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { clearAllData, loadSampleData } from '../../lib/admin/sample-data';
 import { adminEmail, emailSender, emailSendingOn } from '../../lib/email/send';
-import { PAYMENTS_ARE_DEMO } from '../../config/payments';
+import { DEMO_CHECKOUT_OPEN, PAYMENTS_ARE_DEMO } from '../../config/payments';
+import { createDemoAccessToken, DEMO_ACCESS_COOKIE, DEMO_ACCESS_DAYS, demoAccessConfigured, demoAccessCookieOptions, demoAccessExpiry } from '../../lib/demo-access';
+import { formatTimestamp } from '../../lib/bookings/dates';
 
+// Every /admin page needs the admin login (src/middleware.ts), so only staff reach these actions.
 if (Astro.request.method === 'POST') {
-	const form = await Astro.request.formData();
-	if (form.get('action') === 'load-sample') {
+	let form: FormData;
+	try {
+		form = await Astro.request.formData();
+	} catch {
+		return Astro.redirect('/admin/tools/', 303);
+	}
+	const action = form.get('action');
+	// Showcase only, like clear-all: sample bookings must never mix with real ones.
+	if (action === 'load-sample' && PAYMENTS_ARE_DEMO) {
 		await loadSampleData();
 		return Astro.redirect('/admin/?flash=loaded', 303);
+	}
+	// Lets this browser use the demo checkout where it isn't open to everyone (production).
+	if (action === 'demo-checkout-on' && PAYMENTS_ARE_DEMO) {
+		const token = createDemoAccessToken();
+		if (!token) return Astro.redirect('/admin/tools/?flash=demo-no-secret', 303);
+		Astro.cookies.set(DEMO_ACCESS_COOKIE, token, demoAccessCookieOptions());
+		return Astro.redirect('/admin/tools/?flash=demo-on', 303);
+	}
+	if (action === 'demo-checkout-off') {
+		Astro.cookies.delete(DEMO_ACCESS_COOKIE, { path: '/' });
+		return Astro.redirect('/admin/tools/?flash=demo-off', 303);
 	}
 	// Showcase only: once payments are real, the bookings and the invoice counter are accounting records.
 	if (form.get('action') === 'clear-all' && form.get('confirm') === 'yes' && PAYMENTS_ARE_DEMO) {
@@ -20,7 +41,15 @@ if (Astro.request.method === 'POST') {
 	return Astro.redirect('/admin/tools/', 303);
 }
 
-const flash = Astro.url.searchParams.get('flash') === 'cleared' ? 'All bookings, enquiries and emails deleted.' : '';
+const FLASHES: Record<string, string> = {
+	cleared: 'All bookings, enquiries and emails deleted.',
+	'demo-on': 'Demo checkout is on in this browser.',
+	'demo-off': 'Demo checkout is off in this browser.',
+	'demo-no-secret': 'Demo checkout could not be switched on: DEMO_ACCESS_SECRET is not set in Netlify.',
+};
+const flash = FLASHES[Astro.url.searchParams.get('flash') ?? ''] ?? '';
+const demoAccessUntil = demoAccessExpiry(Astro.cookies.get(DEMO_ACCESS_COOKIE)?.value);
+const canIssueDemoAccess = demoAccessConfigured();
 const sendingOn = emailSendingOn();
 const sender = emailSender();
 ---
@@ -82,29 +111,60 @@ const sender = emailSender();
 		</dl>
 	</section>
 
-	<p class="section-label"><span>Demo data</span></p>
-	<section class="a-tile demo" aria-label="Demo data">
-		<p>Fills the admin with about three weeks of example bookings and enquiries, so you can show it to someone. Demo data sends no emails.</p>
-		<form method="post">
-			<input type="hidden" name="action" value="load-sample" />
-			<button class="btn-primary a-block" type="submit"><i class="ti ti-database" aria-hidden="true"></i> Load demo data</button>
-		</form>
-		{
-			PAYMENTS_ARE_DEMO && (
-				<details class="a-confirm">
-					<summary class="btn-secondary a-danger a-block">Delete everything…</summary>
-					<div class="a-danger-box">
-						<p><strong>Delete every booking, enquiry and email?</strong> This can't be undone.</p>
+	{
+		PAYMENTS_ARE_DEMO && (
+			<>
+				<p class="section-label"><span>Demo checkout</span></p>
+				<section class="a-tile demo" aria-label="Demo checkout">
+					{DEMO_CHECKOUT_OPEN ? (
+						<p>On this deploy the demo checkout is open to everyone (DEMO_CHECKOUT=open). No money is taken.</p>
+					) : (
+						<p>
+							Guests can't use the demo checkout: they see that online payment isn't open yet, and you get an admin
+							notification to confirm their booking by email. Switch it on in this browser to show the whole booking flow, for{' '}
+							{DEMO_ACCESS_DAYS} days. No money is taken.
+						</p>
+					)}
+					<p class="demo-state" id="demo-checkout-state">
+						{demoAccessUntil ? `On in this browser until ${formatTimestamp(new Date(demoAccessUntil).toISOString())}.` : 'Off in this browser.'}
+					</p>
+					{demoAccessUntil ? (
 						<form method="post">
-							<input type="hidden" name="action" value="clear-all" />
-							<input type="hidden" name="confirm" value="yes" />
-							<button class="btn-primary a-danger" type="submit">Yes, delete everything</button>
+							<input type="hidden" name="action" value="demo-checkout-off" />
+							<button class="btn-secondary a-block" type="submit"><i class="ti ti-lock" aria-hidden="true" /> Disable demo checkout in this browser</button>
 						</form>
-					</div>
-				</details>
-			)
-		}
-	</section>
+					) : canIssueDemoAccess ? (
+						<form method="post">
+							<input type="hidden" name="action" value="demo-checkout-on" />
+							<button class="btn-primary a-block" type="submit"><i class="ti ti-credit-card" aria-hidden="true" /> Enable demo checkout in this browser</button>
+						</form>
+					) : (
+						<p>To switch it on, set DEMO_ACCESS_SECRET in Netlify (openssl rand -base64 32) and redeploy.</p>
+					)}
+				</section>
+
+				<p class="section-label"><span>Demo data</span></p>
+				<section class="a-tile demo" aria-label="Demo data">
+					<p>Fills the admin with about three weeks of example bookings and enquiries, so you can show it to someone. Demo data sends no emails.</p>
+					<form method="post">
+						<input type="hidden" name="action" value="load-sample" />
+						<button class="btn-primary a-block" type="submit"><i class="ti ti-database" aria-hidden="true" /> Load demo data</button>
+					</form>
+					<details class="a-confirm">
+						<summary class="btn-secondary a-danger a-block">Delete everything…</summary>
+						<div class="a-danger-box">
+							<p><strong>Delete every booking, enquiry and email?</strong> This can't be undone.</p>
+							<form method="post">
+								<input type="hidden" name="action" value="clear-all" />
+								<input type="hidden" name="confirm" value="yes" />
+								<button class="btn-primary a-danger" type="submit">Yes, delete everything</button>
+							</form>
+						</div>
+					</details>
+				</section>
+			</>
+		)
+	}
 
 	<p class="section-label"><span>Account</span></p>
 	<form method="post" action="/admin/logout/">
@@ -130,6 +190,11 @@ const sender = emailSender();
 		margin: 0 0 4px;
 		font-size: 13px;
 		color: var(--a-text-secondary);
+	}
+
+	.demo p.demo-state {
+		font-weight: 500;
+		color: var(--a-text-primary);
 	}
 
 	.a-confirm .btn-primary {

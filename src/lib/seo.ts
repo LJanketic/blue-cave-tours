@@ -8,6 +8,16 @@ import { APPLE_TOUCH_ICON_PATH, SITE_NAME, SITE_EMAIL, SITE_PHONE, SITE_DEFAULT_
 /** Riva stand 14, the group tours' meeting point (MEETING_POINT_MAP_URL). */
 const MEETING_POINT_GEO = { latitude: 43.5072282, longitude: 16.4391746 };
 
+/**
+ * JSON for a `<script type="application/ld+json">` body (P2-4). Plain
+ * JSON.stringify would let a `</script>` in any string end the script early;
+ * `<`, `>` and `&` become \u escapes (the same value once parsed), and so do
+ * U+2028/U+2029, which some older JavaScript parsers treat as line breaks.
+ */
+export function safeJsonLd(value: unknown): string {
+	return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (ch) => `\\u${ch.charCodeAt(0).toString(16).padStart(4, '0')}`);
+}
+
 /** 1200×630 JPG: social platforms don't render SVG previews. */
 export const DEFAULT_OG_IMAGE = '/og-default.jpg';
 

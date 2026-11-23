@@ -2,8 +2,8 @@
 export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { ADMIN_COOKIE, SESSION_HOURS, adminConfigured, checkAdminPassword, createSessionToken } from '../../lib/admin/auth';
-import { checkRateLimit, clientIp } from '../../lib/rate-limit';
+import { ADMIN_COOKIE, SESSION_HOURS, adminConfigured, checkAdminPassword, checkLoginAllowed, createSessionToken, recordFailedLogin } from '../../lib/admin/auth';
+import { clientIp } from '../../lib/rate-limit';
 
 const configured = adminConfigured();
 
@@ -16,12 +16,16 @@ const next =
 let error = '';
 
 if (Astro.request.method === 'POST' && configured) {
-	// Fails closed: without the limiter there is no cap on password guesses.
-	const limit = await checkRateLimit('admin-login', clientIp(Astro.request), { failClosed: true });
-	const form = await Astro.request.formData();
-	const password = String(form.get('password') ?? '');
+	// Per IP and for everyone together; both fail closed. Only wrong passwords count globally (checkLoginAllowed).
+	const limit = await checkLoginAllowed(clientIp(Astro.request));
+	// A malformed body is a wrong password, not a server error.
+	const form = await Astro.request.formData().catch(() => null);
+	const password = String(form?.get('password') ?? '');
 	if (!limit.ok) {
-		error = 'Too many attempts. Wait 10 minutes and try again.';
+		error =
+			limit.reason === 'global'
+				? 'Too many login attempts on the site. Wait an hour and try again.'
+				: 'Too many attempts. Wait 10 minutes and try again.';
 	} else if (checkAdminPassword(password)) {
 		const token = createSessionToken();
 		if (token) {
@@ -38,6 +42,7 @@ if (Astro.request.method === 'POST' && configured) {
 			return Astro.redirect(next, 303);
 		}
 	} else {
+		await recordFailedLogin();
 		error = 'Wrong password.';
 	}
 }

@@ -12,7 +12,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { MAX_GUESTS, departureLabel as formatDeparture, guestSummaryFromCounts, parseIsoDate } from '../../lib/booking';
 import { bookingClosed, businessDate, dayClosed } from '../../lib/bookings/dates';
 import { computeBookingTotal, formatEuro, seasonPriceLabel, seasonalPriceSummary, seasonalPrices } from '../../lib/price';
-import { isInSeason, seasonFor } from '../../config/season';
+import { isInSeason, seasonFor, withinHorizon } from '../../config/season';
 import type { AgeBands, Departure, SeasonalPrices } from '../../types/tour';
 import { CANCELLATION_SHORT } from '../../config/cancellation';
 import BookingCalendar from './booking/BookingCalendar.vue';
@@ -242,7 +242,7 @@ async function restore() {
 		// The saved time is the guest's own pick: keep it even if it has closed since.
 		timePicked.value = true;
 		const today = businessDate();
-		if (typeof d.date === 'string' && d.date >= today && isInSeason(d.date)) {
+		if (typeof d.date === 'string' && d.date >= today && isInSeason(d.date) && withinHorizon(d.date, today)) {
 			date.value = d.date;
 			calendar.value?.showSelected();
 		}

@@ -2,7 +2,8 @@
 /*
  * Date picker for the booking flow (spec §8.1.2). Monday-first; each day is a
  * button with its full date as its name. Days in the past or outside the
- * season (D-15) are aria-disabled, with the reason in their names. "Today"
+ * season (D-15) or past the booking horizon (bookableUntil: the end of the
+ * latest season open for booking) are aria-disabled, with the reason in their names. "Today"
  * is Split's today (Europe/Zagreb), worked out in the browser: the page is
  * prerendered, so `renderedOn` is only the build date. Today is blocked too
  * once booking has closed for every departure (dayClosed).
@@ -14,6 +15,7 @@
 import { computed, ref, watch } from 'vue';
 import { parseIsoDate, toIsoDate } from '../../../lib/booking';
 import { businessDate, dayClosed } from '../../../lib/bookings/dates';
+import { bookableUntil } from '../../../config/season';
 
 const props = defineProps<{
 	/** YYYY-MM-DD the page was built, so the first client render matches the HTML. */
@@ -31,6 +33,8 @@ const selected = defineModel<string | null>({ default: null });
 
 const today = computed(() => (props.now ? businessDate(props.now) : props.renderedOn));
 /** Booking has closed for every one of today's departures. */
+/** The last day that can be booked online; the server refuses later ones ('horizon'). */
+const lastDay = computed(() => bookableUntil(today.value, props.seasonStart, props.seasonEnd));
 const todayClosed = computed(() => props.now !== null && dayClosed(today.value, props.departures, props.now));
 const start = parseIsoDate(props.renderedOn) ?? new Date();
 const viewYear = ref(start.getFullYear());
@@ -46,6 +50,11 @@ const canGoBack = computed(() => {
 	const t = parseIsoDate(today.value);
 	return !t || viewYear.value > t.getFullYear() || (viewYear.value === t.getFullYear() && viewMonth.value > t.getMonth());
 });
+/** No paging past the month of the last bookable day. */
+const canGoForward = computed(() => {
+	const last = parseIsoDate(lastDay.value);
+	return !last || viewYear.value < last.getFullYear() || (viewYear.value === last.getFullYear() && viewMonth.value < last.getMonth());
+});
 
 type Cell = { key: string; iso: string | null; day: number | null; label: string; blocked: boolean; reason: string; today: boolean };
 
@@ -60,13 +69,14 @@ const cells = computed<Cell[]>(() => {
 		const past = iso < today.value;
 		const closed = iso === today.value && todayClosed.value;
 		const off = !inSeason(iso);
+		const ahead = iso > lastDay.value;
 		out.push({
 			key: iso,
 			iso,
 			day: d,
 			label: date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-			blocked: past || closed || off,
-			reason: past ? ', in the past' : closed ? ', booking closed for today' : off ? ', outside the season' : '',
+			blocked: past || closed || off || ahead,
+			reason: past ? ', in the past' : closed ? ', booking closed for today' : off ? ', outside the season' : ahead ? ', too far ahead to book online' : '',
 			today: iso === today.value,
 		});
 	}
@@ -75,6 +85,7 @@ const cells = computed<Cell[]>(() => {
 
 function move(delta: number) {
 	if (delta < 0 && !canGoBack.value) return;
+	if (delta > 0 && !canGoForward.value) return;
 	const next = new Date(viewYear.value, viewMonth.value + delta, 1);
 	viewYear.value = next.getFullYear();
 	viewMonth.value = next.getMonth();
@@ -121,7 +132,7 @@ watch(
 				<i class="ti ti-chevron-left" aria-hidden="true"></i>
 			</button>
 			<p id="cal-month" class="cal__month" aria-live="polite">{{ monthLabel }}</p>
-			<button type="button" class="cal__nav" aria-label="Next month" @click="move(1)">
+			<button type="button" class="cal__nav" aria-label="Next month" :aria-disabled="!canGoForward" @click="move(1)">
 				<i class="ti ti-chevron-right" aria-hidden="true"></i>
 			</button>
 		</div>

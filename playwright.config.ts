@@ -39,7 +39,25 @@ export default defineConfig({
 		url: `http://localhost:${PORT}/`,
 		reuseExistingServer: false,
 		timeout: 120_000,
-		// Every run sends charter requests into the same store: lift the hourly cap on everyone together for tests.
-		env: { CONTEXT: 'playwright', RESEND_API_KEY: '', EMAIL_SENDING: '', ADMIN_EMAIL: '', ADMIN_PASSWORD: '', CHARTER_HOURLY_CAP: '10000' },
+		// Every run sends charter requests, contact messages and admin logins into the same store: lift the hourly caps
+		// on everyone together for tests. DEMO_CHECKOUT=open lets the booking flows pay with the demo checkout;
+		// tests/e2e/demo-checkout-gate.spec.ts closes it per request (a dev-only header) to test what guests on production see.
+		// ASTRO_DEV_BACKGROUND=0: Astro 7 sends `astro dev` to the background when it detects an AI agent,
+		// and Playwright would take the early exit as a crash. Every run also books and pays the same departures:
+		// CAPACITY_CHECKS=off (dev only) skips the "sold out" refusals (src/lib/bookings/capacity.ts).
+		env: {
+			ASTRO_DEV_BACKGROUND: '0',
+			CONTEXT: 'playwright',
+			RESEND_API_KEY: '',
+			EMAIL_SENDING: '',
+			ADMIN_EMAIL: '',
+			ADMIN_PASSWORD: '',
+			CHARTER_HOURLY_CAP: '10000',
+			CONTACT_HOURLY_CAP: '10000',
+			ADMIN_LOGIN_HOURLY_CAP: '10000',
+			PAYMENTS_MODE: '',
+			DEMO_CHECKOUT: 'open',
+			CAPACITY_CHECKS: 'off',
+		},
 	},
 });

@@ -25,6 +25,24 @@ const { POST } = await import('../pages/api/charter-request');
 const asForm = (overrides: Record<string, unknown> = {}) =>
 	new URLSearchParams(Object.entries({ ...fields(overrides), _startedAt: '' }).map(([k, v]) => [k, String(v)])).toString();
 
+/**
+ * A plain form post without a start time gets the confirm page (S5); this
+ * clicks its button a few seconds later, as a person would.
+ */
+async function confirm(res: Response): Promise<Response> {
+	expect(res.status).toBe(200);
+	const html = await res.text();
+	expect(html).toContain('One more step');
+	const decode = (s: string) => s.replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(Number(code)));
+	const hidden = [...html.matchAll(/<input type="hidden" name="([^"]*)" value="([^"]*)">/g)].map(([, name, value]) => [decode(name), decode(value)]);
+	vi.useFakeTimers({ toFake: ['Date'], now: Date.now() + 3000 });
+	try {
+		return await post(new URLSearchParams(hidden).toString(), 'application/x-www-form-urlencoded');
+	} finally {
+		vi.useRealTimers();
+	}
+}
+
 function post(body: string, type = 'application/json') {
 	const request = new Request('http://localhost/api/charter-request', { method: 'POST', headers: { 'content-type': type }, body });
 	return POST({ request } as Parameters<typeof POST>[0]);
@@ -99,11 +117,31 @@ describe('POST /api/charter-request', () => {
 	});
 
 	it('answers a plain form post with a redirect, and errors carry only a code', async () => {
-		const ok = await post(asForm(), 'application/x-www-form-urlencoded');
+		const ok = await confirm(await post(asForm(), 'application/x-www-form-urlencoded'));
 		expect(ok.status).toBe(303);
 		expect(ok.headers.get('location')).toBe('/private-charter/sent/');
 		const bad = await post(asForm({ email: 'jane@' }), 'application/x-www-form-urlencoded');
 		expect(bad.headers.get('location')).toBe('/private-charter/problem/?error=email');
+	});
+
+	it('stores nothing from a plain form post without a start time until the confirm click (S5)', async () => {
+		const first = await post(asForm(), 'application/x-www-form-urlencoded');
+		expect(first.headers.get('content-type')).toContain('text/html');
+		expect(await enquiries().list()).toHaveLength(0);
+		expect((await confirm(first)).headers.get('location')).toBe('/private-charter/sent/');
+		expect(await enquiries().list()).toHaveLength(1);
+	});
+
+	it('refuses a confirm click within a second, and a script post without a start time', async () => {
+		const page = await post(asForm(), 'application/x-www-form-urlencoded');
+		const html = await page.text();
+		const hidden = [...html.matchAll(/<input type="hidden" name="([^"]*)" value="([^"]*)">/g)].map(([, name, value]) => [name, value]);
+		const fast = await post(new URLSearchParams(hidden).toString(), 'application/x-www-form-urlencoded');
+		expect(fast.headers.get('location')).toBe('/private-charter/problem/?error=too-fast');
+		const { _startedAt, ...noTime } = fields();
+		expect(_startedAt).toBeTruthy();
+		expect((await post(JSON.stringify(noTime))).status).toBe(400);
+		expect(await enquiries().list()).toHaveLength(0);
 	});
 
 	it('points the page script at the field that is wrong', async () => {
@@ -213,7 +251,7 @@ describe('POST /api/charter-request: the tour a private step request comes from'
 	});
 
 	it('takes the tour slug from a plain form post too', async () => {
-		const res = await post(asForm({ route: 'blue-lagoon', tourSlug: 'blue-lagoon-afternoon', time: '14:30' }), 'application/x-www-form-urlencoded');
+		const res = await confirm(await post(asForm({ route: 'blue-lagoon', tourSlug: 'blue-lagoon-afternoon', time: '14:30' }), 'application/x-www-form-urlencoded'));
 		expect(res.status).toBe(303);
 		expect((await stored()).tourSlug).toBe('blue-lagoon-afternoon');
 	});

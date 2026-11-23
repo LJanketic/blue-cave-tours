@@ -29,9 +29,10 @@ describe('robots.txt and sitemap rules', () => {
 		expect(routes.length).toBeGreaterThan(0);
 	});
 
-	// Every crawl of a server-rendered route is a paid function invocation.
+	// Every crawl of a server-rendered route is a paid function invocation. Not the 404 page:
+	// it answers unknown URLs, which run the function whether it is prerendered or not (P2-1).
 	it('disallows every server-rendered route in robots.txt', () => {
-		for (const route of routes) {
+		for (const route of routes.filter((r) => r !== '/404')) {
 			const path = route.replace(/\[[^\]]+\]/g, 'x');
 			expect(
 				ROBOTS_DISALLOW.some((rule) => ruleMatches(rule, path)),

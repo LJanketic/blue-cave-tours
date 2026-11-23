@@ -19,7 +19,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { MAX_GUESTS, departureLabel as formatDeparture, guestSummaryFromCounts, parseIsoDate } from '../../lib/booking';
 import { bookingClosed, businessDate, dayClosed } from '../../lib/bookings/dates';
 import { formatEuro, lineItemsTotal, privateLineItems, seasonPriceLabel } from '../../lib/price';
-import { isInSeason, seasonFor } from '../../config/season';
+import { isInSeason, seasonFor, withinHorizon } from '../../config/season';
 import { CHARTER_DEFAULT_TIME, CHARTER_EARLIEST_TIME, CHARTER_LATEST_TIME, CHARTER_TIME_RE } from '../../config/charter';
 import { DEFAULT_PICKUP_ID, OTHER_PICKUP_ID, OTHER_PICKUP_MAX, PRIVATE_EXTRAS, PRIVATE_PICKUPS, privatePickup } from '../../config/private';
 import { EMAIL_RE, HONEYPOT_FIELD, PHONE_RE } from '../../lib/contact-validation';
@@ -337,7 +337,7 @@ async function restore() {
 		if (res.status !== 200) return;
 		const d = (await res.json()) as Record<string, unknown>;
 		if (d.tourSlug !== props.tourSlug || d.kind !== 'private') return;
-		if (typeof d.date === 'string' && d.date >= businessDate() && isInSeason(d.date)) {
+		if (typeof d.date === 'string' && d.date >= businessDate() && isInSeason(d.date) && withinHorizon(d.date, businessDate())) {
 			date.value = d.date;
 			calendar.value?.showSelected();
 		}

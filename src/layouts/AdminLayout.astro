@@ -4,6 +4,7 @@ import '../styles/admin.css';
 import BaseLayout from './BaseLayout.astro';
 import { SITE_NAME } from '../config/site';
 import { enquiries } from '../lib/bookings/store';
+import { adminPasswordTooShort } from '../lib/admin/auth';
 
 type Section = 'today' | 'bookings' | 'enquiries' | 'emails' | 'more';
 
@@ -32,6 +33,9 @@ if (!bare) {
 		// The badge is a nicety; never break the page over it.
 	}
 }
+
+// A short password is weak but never locks staff out: every admin page says so instead.
+const shortPassword = !bare && adminPasswordTooShort();
 
 const nav: { id: Section; label: string; href: string; icon: string; badge?: number }[] = [
 	{ id: 'today', label: 'Dashboard', href: '/admin/', icon: 'ti-calendar' },
@@ -88,6 +92,13 @@ const nav: { id: Section; label: string; href: string; icon: string; badge?: num
 		}
 
 		<main id="main" class="admin-main" tabindex="-1">
+			{
+				shortPassword && (
+					<div class="warn-box" role="note">
+						<p>Admin password is short — set a longer ADMIN_PASSWORD in Netlify.</p>
+					</div>
+				)
+			}
 			{!bare && <h1 class="admin-title">{heading}</h1>}
 			<slot />
 		</main>

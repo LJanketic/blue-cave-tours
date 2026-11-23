@@ -1,6 +1,7 @@
 /**
  * The sailing season (D-15): tours run daily between these dates, inclusive.
- * MM-DD, so the same rule holds every year. Calendar days outside it are disabled.
+ * MM-DD, so the same rule holds every year. Calendar days outside it are disabled,
+ * and so are days past the booking horizon (bookableUntil).
  * Operator, Oct 2026: the boats are out of the water from 1 November to the end
  * of February, so group bookings and private requests are closed then.
  */
@@ -32,6 +33,37 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 export function isInSeason(isoDate: string): boolean {
 	const monthDay = isoDate.slice(5, 10);
 	return monthDay >= SEASON_START && monthDay <= SEASON_END;
+}
+
+/**
+ * Booking horizon: a season opens for online booking this many months before
+ * its first day (SEASON_START). With 12, the 2027 season (1 March to 31
+ * October 2027) has been open since 1 March 2026, and the 2028 season opens on
+ * 1 March 2027. Prices are by MM-DD, not by year (src/data/prices.ts), so a
+ * season opened early sells at today's prices: lower this if next year's
+ * prices may change before they're entered.
+ */
+export const SEASON_OPENS_MONTHS_AHEAD = 12;
+
+/**
+ * The last day that can be booked online, given Split's today (YYYY-MM-DD):
+ * the end of the latest season that has opened (SEASON_OPENS_MONTHS_AHEAD).
+ * On 23 November 2026 that's 31 October 2027, so 2028 dates are refused.
+ */
+export function bookableUntil(today: string, seasonStart: string = SEASON_START, seasonEnd: string = SEASON_END): string {
+	const [year, month] = today.split('-').map(Number);
+	const monthsAhead = month - 1 + SEASON_OPENS_MONTHS_AHEAD;
+	const opensYear = year + Math.floor(monthsAhead / 12);
+	// Today plus the lead time, as YYYY-MM-DD (the day may not exist, e.g. 02-30: it only has to sort right).
+	const opensBy = `${opensYear}-${String((monthsAhead % 12) + 1).padStart(2, '0')}-${today.slice(8, 10)}`;
+	let season = opensYear;
+	while (`${season}-${seasonStart}` > opensBy) season--;
+	return `${season}-${seasonEnd}`;
+}
+
+/** True when an ISO date is no later than the booking horizon (bookableUntil). */
+export function withinHorizon(isoDate: string, today: string): boolean {
+	return isoDate <= bookableUntil(today);
 }
 
 /**
