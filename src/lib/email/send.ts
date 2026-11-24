@@ -1,9 +1,9 @@
 import { SITE_NAME } from '../../config/site';
 import { newId } from '../bookings/ids';
-import { outbox, type OutboxEmail } from '../bookings/store';
+import { deployContext, outbox, type OutboxEmail } from '../bookings/store';
 import { PAYMENTS_ARE_DEMO } from '../../config/payments';
 
-export type EmailMessage = Pick<OutboxEmail, 'kind' | 'to' | 'replyTo' | 'subject' | 'html' | 'text' | 'relatedId'>;
+export type EmailMessage = Pick<OutboxEmail, 'kind' | 'to' | 'replyTo' | 'subject' | 'html' | 'text' | 'relatedId' | 'relatedIds'>;
 
 /**
  * Where admin notifications go: ADMIN_EMAIL, and nothing else. With it unset,
@@ -42,8 +42,15 @@ export const RESEND_TEST_SENDER = 'onboarding@resend.dev';
  * Real sending is opt-in per Netlify deploy: it needs the Resend key AND
  * EMAIL_SENDING=on. Without both, emails are only saved in the admin outbox,
  * quietly; nothing warns about it.
+ *
+ * Never on a deploy preview (W0 review S3): previews open the demo checkout to
+ * everyone, so anyone could use up the shared Resend quota. netlify.toml sets
+ * EMAIL_SENDING=off for previews, but [context] variables there only reach the
+ * build, not the function at runtime, so the deploy context inlined at build
+ * time is what actually switches it off here.
  */
 export function emailSendingOn(): boolean {
+	if (deployContext() === 'deploy-preview') return false;
 	return Boolean(process.env.RESEND_API_KEY) && process.env.EMAIL_SENDING?.trim().toLowerCase() === 'on';
 }
 

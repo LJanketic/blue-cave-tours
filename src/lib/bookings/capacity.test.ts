@@ -1,14 +1,28 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTourBySlug } from '../tours';
 import type { TourDetail } from '../../types/tour';
 import { PRIVATE_BOATS_PER_DAY, SEATS_PER_DEPARTURE } from '../../config/booking';
 import { MAX_GUESTS } from '../booking';
 import { bookableUntil, SEASON_OPENS_MONTHS_AHEAD, withinHorizon } from '../../config/season';
 import { validateCharterRequest, type CharterRequestInput } from '../charter';
-import { departuresOn, overbookingsById } from '../admin/manifest';
+import { departuresOn, outdatedDeployPayments, overbookingsById } from '../admin/manifest';
+import { clearAllData, demoDataAllowed, loadSampleData } from '../admin/sample-data';
+import { LEDGER_KEEP_DAYS, runNightly } from '../nightly';
 import { applyAdminAction, createPendingBooking, finalizePaidBooking, validateBookingInput, validatePrivateBookingInput, type NewBookingInput, type PrivateBookingInput } from './service';
-import { capacityError, claimCapacity, resetCapacityBackfill } from './capacity';
-import { bookings, readLedger, resetMemoryStore, type Booking } from './store';
+import {
+	capacityError,
+	claimCapacity,
+	demoPaymentHoldsNoSeats,
+	GATE_CUTOVER,
+	onBoard,
+	paidThroughOutdatedDeploy,
+	PAYMENT_GATE,
+	pruneLedgers,
+	rebuildLedgers,
+	resetCapacityBackfill,
+	takesSeats,
+} from './capacity';
+import { bookings, ledgerIds, readLedger, resetMemoryStore, updateLedger, type Booking } from './store';
 
 /*
  * W0-B: oversell protection and the booking horizon. The capacity figures are
@@ -303,5 +317,229 @@ describe('booking horizon', () => {
 
 	it('refuses it when the booking is stored, not only at the draft', async () => {
 		expect(await createPendingBooking(tour, group({ date: '2028-07-15' }), today)).toEqual({ ok: false, error: 'horizon' });
+	});
+});
+
+describe('demo data and demo payments hold no seats (B2)', () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	it('demo data claims nothing: the ledgers stay empty and a real private booking on a demo charter`s day is accepted', async () => {
+		const now = new Date('2027-07-01T08:00:00Z');
+		await loadSampleData(now);
+		const all = await bookings().list();
+		const charter = all.find((b) => b.kind === 'private' && b.paymentStatus === 'paid');
+		expect(charter?.sample).toBe(true);
+		for (const id of await ledgerIds()) expect((await readLedger(id))?.claims, id).toEqual({});
+		expect(await createPendingBooking(tour, privately({ date: charter?.date }), now)).toMatchObject({ ok: true });
+		// The manifest still shows the demo passengers: they're on the boat for the showcase, just not for sale.
+		expect(all.filter((b) => b.sample && onBoard(b)).length).toBeGreaterThan(0);
+		expect(all.some(takesSeats)).toBe(false);
+	});
+
+	it('staff reinstating a demo booking claims nothing either', async () => {
+		const booking = await create(privately());
+		await bookings().put({ ...booking, sample: true, paymentStatus: 'paid', status: 'confirmed', paidAt: NOW.toISOString() });
+		await applyAdminAction(booking.id, { type: 'status', status: 'cancelled' }, 'Staff', NOW);
+		await applyAdminAction(booking.id, { type: 'status', status: 'confirmed' }, 'Staff', NOW);
+		expect((await readLedger(`boats:${DATE}`))?.claims ?? {}).toEqual({});
+	});
+
+	it('on production a DEMO- payment is recorded and stamped but takes no boat; a real payment does', async () => {
+		vi.stubEnv('CONTEXT', 'production');
+		const demo = await create(privately());
+		const done = await finalizePaidBooking(demo.id, 'teya', 'DEMO-TEYA-1A2B3C4D', ORIGIN, NOW);
+		expect(done).toMatchObject({ paymentStatus: 'paid', status: 'confirmed', paymentGate: PAYMENT_GATE });
+		expect(takesSeats(done as Booking)).toBe(false);
+		expect((await readLedger(`boats:${DATE}`))?.claims ?? {}).toEqual({});
+		// The day's boat is still for sale, and a real payment takes it.
+		const real = await paid(privately({ firstName: 'Real', slot: '08:20' }));
+		expect(real.overbookedAtPayment).toBeUndefined();
+		expect(takesSeats(real)).toBe(true);
+		expect(await createPendingBooking(tour, privately({ firstName: 'Third' }), NOW)).toEqual({ ok: false, error: 'boat' });
+	});
+
+	it('the admin replays only seats the ledger holds: a 12-seat DEMO- payment and a real 4-seat offline booking are not an overbooking (round 2, N2)', async () => {
+		vi.stubEnv('CONTEXT', 'production');
+		const demo = await create(group({ adults: 12, firstName: 'Demo' }));
+		await finalizePaidBooking(demo.id, 'teya', 'DEMO-TEYA-12SEATS0', ORIGIN, NOW);
+		const real = await create(group({ adults: 4, firstName: 'Real', lastName: 'Guest' }));
+		const confirmed = await applyAdminAction(real.id, { type: 'confirm_offline', siteOrigin: ORIGIN }, 'Staff', NOW);
+		expect(confirmed.record?.paymentStatus).toBe('offline');
+		// The ledger holds the real 4 seats only, so confirming wasn't over capacity either.
+		expect(confirmed.record?.staffNotes ?? []).toEqual([]);
+
+		const all = await bookings().list();
+		const [departure] = departuresOn(DATE, all);
+		// Both sail on the list (head count 16), but only 4 seats are held: 10 are still for sale.
+		expect(departure.passengers.map((b) => b.id).sort()).toEqual([demo.id, real.id].sort());
+		expect(departure.seatsTaken).toBe(16);
+		expect(departure.seatsHeld).toBe(4);
+		expect(departure.overBy).toBe(0);
+		expect(departure.overbookings).toEqual([]);
+		expect(overbookingsById(all).size).toBe(0);
+		// The admin marks the demo payment so staff don't count its seats.
+		expect(demoPaymentHoldsNoSeats((await bookings().get(demo.id)) as Booking)).toBe(true);
+		expect(demoPaymentHoldsNoSeats((await bookings().get(real.id)) as Booking)).toBe(false);
+	});
+
+	it('a DEMO- private payment on production takes no boat on the admin either: the real private booking that day is not flagged boatless (round 2, N2)', async () => {
+		vi.stubEnv('CONTEXT', 'production');
+		const demo = await create(privately({ firstName: 'Demo' }));
+		await finalizePaidBooking(demo.id, 'paypal', 'DEMO-PP-BOAT0001', ORIGIN, NOW);
+		const real = await paid(privately({ firstName: 'Real', slot: '08:20' }));
+		expect(real.overbookedAtPayment).toBeUndefined();
+		const all = await bookings().list();
+		expect(overbookingsById(all).size).toBe(0);
+		expect(departuresOn(DATE, all).every((d) => d.overBy === 0)).toBe(true);
+		// Elsewhere (a deploy preview) the same demo payment does take the boat, so one of the two is named.
+		vi.stubEnv('CONTEXT', 'deploy-preview');
+		expect([...overbookingsById(all).values()].map((o) => o.boats)).toEqual([{ takenBefore: 1, perDay: PRIVATE_BOATS_PER_DAY }]);
+		expect(demoPaymentHoldsNoSeats((await bookings().get(demo.id)) as Booking)).toBe(false);
+	});
+
+	it.each([['deploy-preview'], ['branch-deploy'], ['']])('on "%s" (empty: astro dev) a DEMO- payment takes the boat, so the checks can be tried end to end', async (context) => {
+		vi.stubEnv('CONTEXT', context);
+		const demo = await create(privately());
+		await finalizePaidBooking(demo.id, 'paypal', 'DEMO-PP-1A2B3C4D', ORIGIN, NOW);
+		expect((await readLedger(`boats:${DATE}`))?.claims[demo.id]).toMatchObject({ paid: true });
+		expect(await createPendingBooking(tour, privately({ firstName: 'Other' }), NOW)).toEqual({ ok: false, error: 'boat' });
+	});
+
+	it('refuses Load demo data and Delete everything on production, and keeps them on previews and astro dev', async () => {
+		vi.stubEnv('CONTEXT', 'production');
+		expect(demoDataAllowed()).toBe(false);
+		const real = await create(group());
+		await expect(loadSampleData(NOW)).rejects.toThrow(/refused on production/);
+		await expect(clearAllData()).rejects.toThrow(/refused on production/);
+		expect(await bookings().get(real.id)).not.toBeNull();
+		for (const context of ['deploy-preview', 'branch-deploy', 'playwright', '']) {
+			vi.stubEnv('CONTEXT', context);
+			expect(demoDataAllowed(), context).toBe(true);
+		}
+	});
+});
+
+describe('payments through an outdated deploy (B3)', () => {
+	const groupNeed = (seats: number) => ({ kind: 'group' as const, tourSlug: tour.slug, date: DATE, slot: '07:20', adults: seats, children: 0, infants: 0 });
+
+	it('stamps every payment this code records', async () => {
+		expect((await paid(group())).paymentGate).toBe(PAYMENT_GATE);
+		expect(GATE_CUTOVER).toBe('2026-11-24T00:00:00Z');
+	});
+
+	it('flags an unstamped card payment made after the cut-over: no seats (not even through the backfill), on the manifest, in Needs attention', async () => {
+		const outdated = await create(group({ adults: 14 }));
+		await bookings().put({ ...outdated, paymentStatus: 'paid', status: 'confirmed', paymentProvider: 'teya', paymentRef: 'DEMO-TEYA-OLD00001', paidAt: '2026-11-25T09:00:00.000Z' });
+		// Unstamped but paid before the cut-over: an ordinary old payment, which the backfill takes in.
+		const older = await create(group({ adults: 2, firstName: 'Older', date: '2027-07-16' }));
+		await bookings().put({ ...older, paymentStatus: 'paid', status: 'confirmed', paymentProvider: 'paypal', paymentRef: 'DEMO-PP-OLD00002', paidAt: '2026-11-20T09:00:00.000Z' });
+		await resetCapacityBackfill();
+
+		expect(await capacityError(groupNeed(14), NOW)).toBeNull();
+		expect((await readLedger(`seats:${tour.slug}|${DATE}|07:20`))?.claims ?? {}).toEqual({});
+		expect((await readLedger(`seats:${tour.slug}|2027-07-16|07:20`))?.claims[older.id]).toMatchObject({ seats: 2, paid: true });
+
+		const all = await bookings().list();
+		expect(all.map((b) => [b.id, paidThroughOutdatedDeploy(b)])).toEqual(expect.arrayContaining([[outdated.id, true], [older.id, false]]));
+		expect(outdatedDeployPayments(all).map((b) => b.id)).toEqual([outdated.id]);
+		expect(departuresOn(DATE, all)[0].passengers.map((b) => b.id)).toEqual([outdated.id]);
+		// Staff cancelling it takes it off the list.
+		await applyAdminAction(outdated.id, { type: 'status', status: 'cancelled' }, 'Staff', NOW);
+		expect(outdatedDeployPayments(await bookings().list())).toEqual([]);
+	});
+
+	it('leaves stamped payments, demo data, unpaid bookings and other providers alone', () => {
+		const base = { paymentStatus: 'paid' as const, paymentProvider: 'teya' as const, paymentRef: 'X', paidAt: '2026-12-01T00:00:00.000Z' };
+		expect(paidThroughOutdatedDeploy(base)).toBe(true);
+		expect(paidThroughOutdatedDeploy({ ...base, paymentGate: PAYMENT_GATE })).toBe(false);
+		expect(paidThroughOutdatedDeploy({ ...base, sample: true })).toBe(false);
+		expect(paidThroughOutdatedDeploy({ ...base, paymentStatus: 'unpaid', paidAt: null })).toBe(false);
+		expect(paidThroughOutdatedDeploy({ ...base, paymentProvider: null })).toBe(false);
+		expect(paidThroughOutdatedDeploy({ ...base, paidAt: GATE_CUTOVER })).toBe(false);
+	});
+});
+
+describe('rebuild capacity from bookings (S5)', () => {
+	const LEDGER = `seats:${tour.slug}|${DATE}|07:20`;
+	const at = NOW.toISOString();
+	const groupNeed = (seats: number) => ({ kind: 'group' as const, tourSlug: tour.slug, date: DATE, slot: '07:20', adults: seats, children: 0, infants: 0 });
+
+	it('replaces drifted ledgers: adds missing paid claims, drops demo, cancelled and unknown ones, keeps payments in flight', async () => {
+		const kept = await paid(group({ adults: 4 }));
+		// Paid, but its claim is missing (written straight to the store, as after a rollback).
+		const missing = await create(group({ adults: 3, firstName: 'Missing' }));
+		await bookings().put({ ...missing, paymentStatus: 'paid', status: 'confirmed', paidAt: at });
+		// Claims that shouldn't be there: demo data, a cancelled booking and a booking that no longer exists.
+		const sample = await create(group({ adults: 5, firstName: 'Sample' }));
+		await bookings().put({ ...sample, sample: true, paymentStatus: 'paid', status: 'confirmed', paidAt: at });
+		const cancelled = await paid(group({ adults: 1, firstName: 'Cancelled' }));
+		await bookings().put({ ...cancelled, status: 'cancelled' });
+		await updateLedger(LEDGER, (ledger) => ({ ...ledger, claims: { ...ledger.claims, [sample.id]: { seats: 5, at, paid: true }, gone: { seats: 2, at, paid: true } } }));
+		await updateLedger('boats:2027-07-20', (ledger) => ({ ...ledger, claims: { old: { seats: 2, at, paid: true } } }));
+		// A payment in progress right now.
+		const flying = await create(group({ adults: 1, firstName: 'Flying' }));
+		await claimCapacity(flying, NOW);
+
+		const result = await rebuildLedgers(NOW);
+		const claims = (await readLedger(LEDGER))?.claims ?? {};
+		expect(Object.keys(claims).sort()).toEqual([kept.id, missing.id, flying.id].sort());
+		expect(claims[missing.id]).toEqual({ seats: 3, at, paid: true });
+		expect(claims[flying.id].paid).toBeUndefined();
+		expect((await readLedger('boats:2027-07-20'))?.claims).toEqual({});
+		expect(result).toEqual({ ledgers: 2, claims: 3, removed: 4 });
+		// 4 + 3 paid and 1 in flight, of 14: 6 more fit, 7 don't.
+		expect(await capacityError(groupNeed(6), NOW)).toBeNull();
+		expect(await capacityError(groupNeed(7), NOW)).toBe('full');
+		// Nothing left to fix: a second run removes nothing.
+		expect((await rebuildLedgers(NOW)).removed).toBe(0);
+	});
+
+	it('drops an in-flight claim whose payment never finished, once it has expired', async () => {
+		const abandoned = await create(group({ adults: 7 }));
+		await claimCapacity(abandoned, NOW);
+		expect(Object.keys((await readLedger(LEDGER))?.claims ?? {})).toEqual([abandoned.id]);
+		await rebuildLedgers(new Date(NOW.getTime() + 20 * 60_000));
+		expect((await readLedger(LEDGER))?.claims).toEqual({});
+	});
+
+	it('leaves the ledgers of departures before today (Split) alone (round 2, N5)', async () => {
+		// NOW is 1 June 2027, 12:00 in Split: 31 May has sailed, 1 June hasn't.
+		const pastId = `seats:${tour.slug}|2027-05-31|07:20`;
+		const todayId = `seats:${tour.slug}|2027-06-01|07:20`;
+		for (const id of [pastId, todayId]) await updateLedger(id, (ledger) => ({ ...ledger, claims: { gone: { seats: 2, at, paid: true } } }));
+		// A paid booking on the past date whose claim is missing: not added back either.
+		const past = await create(group({ firstName: 'Past' }));
+		await bookings().put({ ...past, date: '2027-05-31', paymentStatus: 'paid', status: 'confirmed', paidAt: at, paymentGate: PAYMENT_GATE });
+
+		const result = await rebuildLedgers(NOW);
+		expect((await readLedger(pastId))?.claims).toEqual({ gone: { seats: 2, at, paid: true } });
+		expect((await readLedger(todayId))?.claims).toEqual({});
+		expect(result).toEqual({ ledgers: 1, claims: 0, removed: 1 });
+	});
+});
+
+describe('ledger pruning (nightly)', () => {
+	const claim = { seats: 1, at: NOW.toISOString(), paid: true as const };
+	const ids = ['boats:2027-06-30', `seats:${tour.slug}|2027-06-30|07:20`, 'boats:2027-07-01', `seats:${tour.slug}|2027-07-08|07:20`];
+
+	it('deletes the ledgers of departures before the given date, and nothing else', async () => {
+		for (const id of ids) await updateLedger(id, (ledger) => ({ ...ledger, claims: { a: claim } }));
+		expect(await pruneLedgers('2027-07-01')).toBe(2);
+		expect((await ledgerIds()).sort()).toEqual([ids[2], ids[3]].sort());
+	});
+
+	it(`runs nightly, keeping the last ${LEDGER_KEEP_DAYS} days`, async () => {
+		for (const id of ids) await updateLedger(id, (ledger) => ({ ...ledger, claims: { a: claim } }));
+		const backups = new Map<string, unknown>();
+		const open = () => ({
+			list: async () => ({ blobs: [...backups.keys()].map((key) => ({ key })) }),
+			get: async (key: string) => backups.get(key) ?? null,
+			setJSON: async (key: string, value: unknown) => backups.set(key, value),
+			delete: async (key: string) => void backups.delete(key),
+		});
+		// 8 July in Split: the ledgers of 30 June and before go.
+		const result = await runNightly(new Date('2027-07-08T10:00:00Z'), open);
+		expect(result.ledgersPruned).toBe(2);
+		expect((await ledgerIds()).sort()).toEqual([ids[2], ids[3]].sort());
 	});
 });

@@ -32,7 +32,8 @@ export function summarizeDay(date: string, all: Booking[]): DaySummary {
 		guests: departures.reduce((sum, d) => sum + d.seatsTaken, 0),
 		capacity: departures.reduce((sum, d) => sum + (d.passengers.length ? d.capacity : 0), 0),
 		unpaid: departures.reduce((sum, d) => sum + d.unpaid.length, 0),
-		free: departures.reduce((sum, d) => sum + (d.passengers.length ? Math.max(0, d.capacity - d.seatsTaken) : 0), 0),
+		// Still for sale: what the ledger holds counts, not demo payments on production.
+		free: departures.reduce((sum, d) => sum + (d.passengers.length ? Math.max(0, d.capacity - d.seatsHeld) : 0), 0),
 		overbooked: departures.filter((d) => d.overBy > 0).length,
 	};
 }

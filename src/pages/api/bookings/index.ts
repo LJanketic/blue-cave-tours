@@ -39,7 +39,8 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
 	// A second submit (double click, back button) goes to the booking already made.
 	if (draft.bookingId) {
 		const existing = await bookings().get(draft.bookingId);
-		if (existing?.status === 'pending_payment') return see(`/booking/pay/?id=${existing.id}`);
+		// Waiting for payment, or confirmed by staff to be paid offline: the pay page says which.
+		if (existing?.status === 'pending_payment' || existing?.paymentStatus === 'offline') return see(`/booking/pay/?id=${existing.id}`);
 		if (existing?.paymentStatus === 'paid') return see(`/booking/success/?id=${existing.id}`);
 	}
 

@@ -5,10 +5,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import DepartureCard from '../../components/admin/DepartureCard.astro';
 import { formatBookingDate } from '../../lib/booking';
 import { businessDate, formatShortDate, formatTimestamp } from '../../lib/bookings/dates';
-import { isDeadQuote, STATUS_LABELS, sweepPersonalDataDaily } from '../../lib/bookings/service';
+import { isDeadQuote, STATUS_LABELS, sweepPersonalDataDaily, waitingForConfirmation } from '../../lib/bookings/service';
 import { bookings, byCreatedDesc, enquiries } from '../../lib/bookings/store';
 import { addDays, isIsoDate, summarizeDay, weekFrom } from '../../lib/admin/schedule';
-import { overbookedDepartures } from '../../lib/admin/manifest';
+import { outdatedDeployPayments, overbookedDepartures } from '../../lib/admin/manifest';
+import { demoDataAllowed } from '../../lib/admin/sample-data';
 
 const FLASH: Record<string, string> = {
 	loaded: 'Demo bookings and enquiries loaded.',
@@ -31,6 +32,12 @@ const all = await bookings().list();
 const week = weekFrom(from, all);
 const selected = week.find((d) => d.date === day) ?? summarizeDay(day, all);
 const isEmpty = all.length === 0;
+// Never on production: demo data would sit among real bookings (sample-data.ts).
+const canLoadDemoData = demoDataAllowed();
+
+// Guests who couldn't pay online (payment not open to them), waiting for staff to confirm or cancel: shown here
+// whether or not the hourly digest email went out (review S1).
+const waitingCount = all.filter((b) => waitingForConfirmation(b)).length;
 
 const dayName = (iso: string) => (iso === today ? 'Today' : iso === tomorrow ? 'Tomorrow' : null);
 const weekLink = (start: string) => (start === today ? '/admin/' : `/admin/?from=${start}`);
@@ -66,8 +73,28 @@ for (const { date, departure: d } of overbookedDepartures(all, today)) {
 			: `Overbooked by ${d.overBy}: ${dayName(date) ?? formatShortDate(date)} ${d.slot || '(time TBC)'}`,
 		sub: boats
 			? `${d.tourTitle} · ${boats.takenBefore} of ${boats.perDay} private boats already taken · paid by ${culprits}`
-			: `${d.tourTitle} · ${d.seatsTaken}/${d.capacity} · pushed over by ${culprits}`,
+			: `${d.tourTitle} · ${d.seatsHeld}/${d.capacity} · pushed over by ${culprits}`,
 		href: only ? `/admin/bookings/${only.id}/` : `/admin/?from=${date}#day`,
+	});
+}
+// Paid through an outdated deploy (old deploy URLs still run the ungated checkout): no seats held, staff check the payment.
+const outdated = outdatedDeployPayments(all);
+if (outdated.length === 1) {
+	const b = outdated[0];
+	todos.push({
+		danger: true,
+		icon: 'ti-alert-triangle',
+		title: `Paid through an outdated deploy: ${b.firstName} ${b.lastName}`,
+		sub: `${dayName(b.date) ?? formatShortDate(b.date)} ${b.slot || '(time TBC)'} · ${b.tourTitle} · check the payment before the trip`,
+		href: `/admin/bookings/${b.id}/`,
+	});
+} else if (outdated.length > 1) {
+	todos.push({
+		danger: true,
+		icon: 'ti-alert-triangle',
+		title: `${outdated.length} bookings paid through an outdated deploy`,
+		sub: `Check each payment before the trip. Their seats aren’t held. First: ${outdated[0].ref}`,
+		href: `/admin/bookings/${outdated[0].id}/`,
 	});
 }
 if (unpaidSoon.length === 1) {
@@ -122,19 +149,38 @@ const latest = all.filter((b) => !isDeadQuote(b)).sort(byCreatedDesc).slice(0, 5
 	}
 
 	{
+		waitingCount > 0 && (
+			<a class="warn-box waiting-banner" href="/admin/bookings/?show=waiting" id="waiting-banner">
+				<i class="ti ti-alert-circle" aria-hidden="true" />
+				<p>
+					<strong>{plural(waitingCount, 'booking', 'bookings')} waiting for confirmation.</strong> The {waitingCount === 1 ? 'guest' : 'guests'}{' '}
+					couldn't pay online. Contact {waitingCount === 1 ? 'them' : 'each one'}, then confirm or cancel.
+				</p>
+				<i class="ti ti-chevron-right a-chevron" aria-hidden="true" />
+			</a>
+		)
+	}
+
+	{
 		isEmpty ? (
 			<div class="a-tile a-empty">
 				<div class="nf-icon">
 					<i class="ti ti-sailboat" aria-hidden="true" />
 				</div>
 				<h2>No bookings yet</h2>
-				<p>New bookings from the website appear here. Load demo data to see how the admin works.</p>
-				<form method="post" action="/admin/tools/">
-					<input type="hidden" name="action" value="load-sample" />
-					<button class="btn-primary" type="submit">
-						<i class="ti ti-database" aria-hidden="true" /> Load demo data
-					</button>
-				</form>
+				{canLoadDemoData ? (
+					<>
+						<p>New bookings from the website appear here. Load demo data to see how the admin works.</p>
+						<form method="post" action="/admin/tools/">
+							<input type="hidden" name="action" value="load-sample" />
+							<button class="btn-primary" type="submit">
+								<i class="ti ti-database" aria-hidden="true" /> Load demo data
+							</button>
+						</form>
+					</>
+				) : (
+					<p>New bookings from the website appear here.</p>
+				)}
 			</div>
 		) : (
 			<div class="dash">
@@ -264,6 +310,18 @@ const latest = all.filter((b) => !isDeadQuote(b)).sort(byCreatedDesc).slice(0, 5
 </AdminLayout>
 
 <style>
+	/* Bookings waiting for confirmation: the whole callout is the link to the filtered list. */
+	.waiting-banner {
+		align-items: center;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.waiting-banner p {
+		flex: 1;
+		margin: 0;
+	}
+
 	.dash {
 		display: grid;
 		gap: 28px;

@@ -104,12 +104,12 @@ const tomorrow = businessDate(new Date(), 1);
 			const next = NEXT[e.status];
 			const charter = e.kind === 'charter' ? e.charter : undefined;
 			const quote = quotes.get(e.id);
-			const quotePaid = quote?.paymentStatus === 'paid' || quote?.paymentStatus === 'refunded';
+			const quotePaid = quote?.paymentStatus === 'paid' || quote?.paymentStatus === 'refunded' || quote?.paymentStatus === 'offline';
 			const quoteOpen = quote && !quotePaid && quote.status === 'pending_payment' && !quoteExpired(quote);
 			const quoteState = !quote
 				? null
 				: quotePaid
-					? { tone: 'sent', label: `Paid ${formatEuro(quote.total)}` }
+					? { tone: 'sent', label: quote.paymentStatus === 'offline' ? `Confirmed ${formatEuro(quote.total)}, pay offline` : `Paid ${formatEuro(quote.total)}` }
 					: quoteOpen
 						? { tone: 'outbox', label: `Quote ${formatEuro(quote.total)} sent, awaiting payment` }
 						: { tone: 'failed', label: quote.status === 'cancelled' ? 'Quote cancelled' : 'Quote expired' };

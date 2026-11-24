@@ -2,7 +2,18 @@
 export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { ADMIN_COOKIE, SESSION_HOURS, adminConfigured, checkAdminPassword, checkLoginAllowed, createSessionToken, recordFailedLogin } from '../../lib/admin/auth';
+import {
+	ADMIN_COOKIE,
+	KNOWN_DEVICE_COOKIE,
+	SESSION_HOURS,
+	adminConfigured,
+	checkAdminPassword,
+	createKnownDeviceToken,
+	createSessionToken,
+	knownDeviceCookieOptions,
+	knownDeviceId,
+} from '../../lib/admin/auth';
+import { checkLoginAllowed } from '../../lib/admin/auth-limits';
 import { clientIp } from '../../lib/rate-limit';
 
 const configured = adminConfigured();
@@ -16,17 +27,21 @@ const next =
 let error = '';
 
 if (Astro.request.method === 'POST' && configured) {
-	// Per IP and for everyone together; both fail closed. Only wrong passwords count globally (checkLoginAllowed).
-	const limit = await checkLoginAllowed(clientIp(Astro.request));
+	// Per IP and for everyone together, counted before the password is compared; both fail closed.
+	// A browser that logged in before (known-device cookie) can still log in past the global cap.
+	const deviceId = knownDeviceId(Astro.cookies.get(KNOWN_DEVICE_COOKIE)?.value);
+	const limit = await checkLoginAllowed(clientIp(Astro.request), { knownDevice: deviceId !== null });
 	// A malformed body is a wrong password, not a server error.
 	const form = await Astro.request.formData().catch(() => null);
 	const password = String(form?.get('password') ?? '');
 	if (!limit.ok) {
 		error =
 			limit.reason === 'global'
-				? 'Too many login attempts on the site. Wait an hour and try again.'
+				? 'Too many login attempts on the site. Try again in an hour, or from a browser you have logged in with before.'
 				: 'Too many attempts. Wait 10 minutes and try again.';
 	} else if (checkAdminPassword(password)) {
+		// A right password doesn't count against the global cap.
+		await limit.succeeded();
 		const token = createSessionToken();
 		if (token) {
 			Astro.cookies.set(ADMIN_COOKIE, token, {
@@ -39,10 +54,13 @@ if (Astro.request.method === 'POST' && configured) {
 				path: '/',
 				maxAge: SESSION_HOURS * 3600,
 			});
+			// Renewed at every login, keeping the browser's device id.
+			const device = createKnownDeviceToken(deviceId);
+			if (device) Astro.cookies.set(KNOWN_DEVICE_COOKIE, device, knownDeviceCookieOptions());
 			return Astro.redirect(next, 303);
 		}
 	} else {
-		await recordFailedLogin();
+		// Already counted by checkLoginAllowed.
 		error = 'Wrong password.';
 	}
 }

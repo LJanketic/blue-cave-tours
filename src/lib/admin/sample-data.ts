@@ -1,7 +1,7 @@
 import { MAX_GUESTS, supportsInstantBook } from '../booking';
 import { businessDate } from '../bookings/dates';
 import { newBookingRef, newId } from '../bookings/ids';
-import { bookingRefs, bookings, clearLedgers, enquiries, outbox, resetCounter, type Booking, type Enquiry } from '../bookings/store';
+import { bookingRefs, bookings, clearLedgers, deployContext, enquiries, outbox, resetCounter, type Booking, type Enquiry } from '../bookings/store';
 import { resetCapacityBackfill } from '../bookings/capacity';
 import { DEMO_INVOICE_COUNTER, INVOICE_COUNTER, issueDemoInvoice } from '../bookings/service';
 import { computeBookingTotal, formatEuro, lineItemsFor } from '../price';
@@ -14,8 +14,10 @@ import { routeById } from '../../config/charter';
  * "Load demo data" in the admin: a believable spread of bookings around
  * today so the manifest and lists aren't empty when showing the admin.
  * Records are flagged `sample` and no emails are sent for them. Tomorrow has
- * one overbooked boat on purpose (13 of 14 taken, then a booking for 4 adults
- * and an infant), so the overbooking warnings can be shown.
+ * one boat with more guests than seats (13 of 14 taken, then a booking for 4
+ * adults and an infant). Demo data holds no seats (capacity.ts
+ * heldOutOfCapacity) and the overbooking warnings follow the seats held, so
+ * that boat shows its 18 guests but no warning.
  */
 
 const GUESTS: [first: string, last: string, phone: string][] = [
@@ -54,7 +56,7 @@ const PLAN: [number, number, number, number, number, Booking['status'], Booking[
 	[1, 1, 8, 1, 0, 'confirmed', 'paid'],
 	[1, 3, 9, 2, 2, 'confirmed', 'paid'],
 	[1, 0, 1, 2, 0, 'cancelled', 'refunded'],
-	// The overbooked boat: Ferrari and Wagner book early (13 of 14 seats), Smith pays last for 4 adults and an infant.
+	// More guests than seats: Ferrari and Wagner book early (13 of 14 seats), Smith pays last for 4 adults and an infant.
 	[1, 2, 11, 4, 2, 'confirmed', 'paid'],
 	[1, 2, 13, 7, 0, 'confirmed', 'paid'],
 	[1, 2, 15, 4, 0, 'confirmed', 'paid'],
@@ -210,9 +212,22 @@ async function loadSampleCharters(now: Date): Promise<number> {
 	return CHARTERS.length;
 }
 
+/**
+ * Whether "Load demo data" and "Delete everything" may run: only while
+ * payments are a demo, and never on production (B2). There, guests already
+ * book for real (and staff confirm them by email): sample bookings would sit
+ * among them, and "Delete everything" would delete theirs too. Deploy
+ * previews, branch deploys, `astro dev` and the Playwright server have their
+ * own stores (scopedName) and keep both.
+ */
+export function demoDataAllowed(): boolean {
+	return PAYMENTS_ARE_DEMO && deployContext() !== 'production';
+}
+
 export async function loadSampleData(now: Date = new Date()): Promise<{ bookings: number; enquiries: number }> {
 	// Sample bookings would land among real ones and in the accounts: refuse once payments are live.
 	if (!PAYMENTS_ARE_DEMO) throw new Error('loadSampleData is for the payment showcase only');
+	if (!demoDataAllowed()) throw new Error('loadSampleData is refused on production: it would mix with real bookings');
 	const tours = getAllTours().filter(supportsInstantBook);
 	const store = bookings();
 
@@ -275,8 +290,7 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 		});
 	}
 	const charters = await loadSampleCharters(now);
-	// Written straight to the store, not paid through the checkout: the capacity ledgers take them in on the next check.
-	await resetCapacityBackfill();
+	// Demo data holds no seats (capacity.ts heldOutOfCapacity), so the capacity ledgers are left as they are.
 	return { bookings: PLAN.length + CHARTERS.filter((c) => c[10] !== 'new').length, enquiries: ENQUIRIES.length + charters };
 }
 
@@ -284,6 +298,8 @@ export async function loadSampleData(now: Date = new Date()): Promise<{ bookings
 export async function clearAllData(): Promise<void> {
 	// Real bookings and invoice numbers must survive: refuse once payments are live.
 	if (!PAYMENTS_ARE_DEMO) throw new Error('clearAllData is for the payment showcase only');
+	// On production it would delete real guests' bookings too, paid or waiting for staff to confirm.
+	if (!demoDataAllowed()) throw new Error('clearAllData is refused on production: it would delete real bookings');
 	await resetCounter(DEMO_INVOICE_COUNTER);
 	// Demo payments took numbers from the real series until November 2026; while payments are a demo, start it again too.
 	await resetCounter(INVOICE_COUNTER);

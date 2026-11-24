@@ -1,5 +1,6 @@
 import { seatCount } from '../booking';
-import { isDeadQuote, takesSeats } from '../bookings/service';
+import { isDeadQuote } from '../bookings/service';
+import { onBoard, paidThroughOutdatedDeploy, takesSeats } from '../bookings/capacity';
 import { PRIVATE_BOATS_PER_DAY, SEATS_PER_DEPARTURE } from '../../config/booking';
 import { isCharterQuote, type Booking } from '../bookings/store';
 
@@ -11,7 +12,10 @@ export type Departure = {
 	/** A private charter: one booking has the whole boat, so it's never shared with a group. */
 	private: boolean;
 	capacity: number;
+	/** Guests on board, demo payments included: the head count for the crew. */
 	seatsTaken: number;
+	/** Seats the ledger holds (takesSeats): what's no longer for sale. Lower than seatsTaken by demo payments on production and the like. */
+	seatsHeld: number;
 	adults: number;
 	children: number;
 	infants: number;
@@ -60,7 +64,8 @@ function seatOrder(a: Booking, b: Booking): number {
 function findOverbookings(passengers: Booking[], capacity: number): Overbooking[] {
 	const result: Overbooking[] = [];
 	let taken = 0;
-	for (const booking of [...passengers].sort(seatOrder)) {
+	// Only what holds seats in the ledger (takesSeats): a demo payment on production sails on the list but leaves its seats for sale.
+	for (const booking of passengers.filter(takesSeats).sort(seatOrder)) {
 		const seatsBefore = taken;
 		taken += seatCount(booking);
 		if (taken > capacity) {
@@ -78,7 +83,10 @@ function findOverbookings(passengers: Booking[], capacity: number): Overbooking[
  */
 function findBoatlessPrivate(departures: Departure[]): void {
 	const perDay = PRIVATE_BOATS_PER_DAY;
-	const held = departures.filter((d) => d.private).flatMap((d) => d.passengers.map((booking) => ({ booking, departure: d })));
+	// As in the ledger: demo data, demo payments on production and outdated deploys take no boat.
+	const held = departures
+		.filter((d) => d.private)
+		.flatMap((d) => d.passengers.filter(takesSeats).map((booking) => ({ booking, departure: d })));
 	let takenBefore = 0;
 	for (const { booking, departure } of held.sort((a, b) => seatOrder(a.booking, b.booking))) {
 		if (takenBefore >= perDay && !isCharterQuote(booking)) {
@@ -110,6 +118,7 @@ export function departuresOn(date: string, all: Booking[]): Departure[] {
 				// Seats sold online per departure, pending the operator (Q15, src/config/booking.ts).
 				capacity: SEATS_PER_DEPARTURE,
 				seatsTaken: 0,
+				seatsHeld: 0,
 				adults: 0,
 				children: 0,
 				infants: 0,
@@ -120,9 +129,11 @@ export function departuresOn(date: string, all: Booking[]): Departure[] {
 			};
 			byKey.set(key, departure);
 		}
-		if (takesSeats(booking)) {
+		// On the boat, demo data included: the manifest shows who sails, the ledger (capacity.ts) what's for sale.
+		if (onBoard(booking)) {
 			departure.passengers.push(booking);
 			departure.seatsTaken += seatCount(booking);
+			if (takesSeats(booking)) departure.seatsHeld += seatCount(booking);
 			departure.adults += booking.adults;
 			departure.children += booking.children;
 			departure.infants += booking.infants;
@@ -134,7 +145,8 @@ export function departuresOn(date: string, all: Booking[]): Departure[] {
 	for (const d of departures) {
 		// A private boat has no seats to sell: its capacity is its own party, so "seats free" never counts it.
 		if (d.private) d.capacity = d.seatsTaken || seatCount(d.unpaid[0] ?? { adults: 0, children: 0 });
-		d.overBy = Math.max(0, d.seatsTaken - d.capacity);
+		// Over capacity by the seats the ledger holds, not the head count.
+		d.overBy = Math.max(0, d.seatsHeld - d.capacity);
 		d.overbookings = findOverbookings(d.passengers, d.capacity);
 	}
 	findBoatlessPrivate(departures);
@@ -157,6 +169,15 @@ export function overbookingsById(all: Booking[]): Map<string, Overbooking> {
 export function overbookedDepartures(all: Booking[], fromDate: string): { date: string; departure: Departure }[] {
 	const dates = [...new Set(all.map((b) => b.date))].filter((d) => d >= fromDate).sort();
 	return dates.flatMap((date) => departuresOn(date, all).filter((d) => d.overBy > 0).map((departure) => ({ date, departure })));
+}
+
+/**
+ * Paid bookings recorded by an outdated deploy (B3, capacity.ts GATE_CUTOVER)
+ * that haven't been cancelled, soonest trip first. They hold no seats in the
+ * ledger, so staff check each payment before the trip.
+ */
+export function outdatedDeployPayments(all: Booking[]): Booking[] {
+	return all.filter((b) => onBoard(b) && paidThroughOutdatedDeploy(b)).sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
 }
 
 /** Digits-only number for wa.me links, or null when there's nothing dialable. */

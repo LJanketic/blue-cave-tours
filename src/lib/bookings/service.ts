@@ -7,14 +7,15 @@ import { computeBookingTotal, formatEuro, lineItemsFor, lineItemsTotal, privateL
 import { DEFAULT_PICKUP_ID, PRIVATE_LISTS, privateDepartureTimes, privateExtra, privatePickup, privateTour, type PrivateLists } from '../../config/private';
 import { EMAIL_RE, PHONE_RE, asciiEmail } from '../contact-validation';
 import { adminEmail, sendEmail, type EmailMessage } from '../email/send';
-import { adminBookingEmail, adminEnquiryEmail, adminPaymentNotOpenEmail, bookingConfirmationEmail, charterQuoteEmail } from '../email/templates';
+import { adminBookingEmail, adminEnquiryEmail, bookingConfirmationEmail, charterQuoteEmail } from '../email/templates';
 import { charterTourSlug, durationLabel, routeById } from '../../config/charter';
 import type { QuoteError, QuoteInput } from '../charter';
 import type { TourDetail } from '../../types/tour';
-import { bookingClosed, businessDate } from './dates';
+import { bookingClosed, businessDate, departureHasLeft } from './dates';
 import { newBookingRef, newId } from './ids';
 import { neverPaid } from './retention';
-import { capacityChecked, capacityError, claimCapacity, holdCapacity, releaseCapacity, takesSeats, type CapacityClaimResult } from './capacity';
+import { awaitingPayment, markWaitingDigestDue, quoteExpired, sendWaitingDigest } from './waiting';
+import { capacityChecked, capacityError, claimCapacity, heldOutOfCapacity, holdCapacity, PAYMENT_GATE, releaseCapacity, takesSeats, type CapacityClaimResult, type CapacityError } from './capacity';
 import {
 	bookingRefs,
 	bookings,
@@ -276,11 +277,11 @@ async function saveNewBooking(booking: Booking): Promise<void> {
 		.catch((err) => console.error(`[booking ${booking.id}] ref not indexed`, err));
 }
 
-/** Whether `ref` (HBC-7K3QXM) names a booking that exists: one read of the ref index, one of the booking. */
-export async function bookingRefExists(ref: string | undefined): Promise<boolean> {
-	if (!ref || !/^HBC-[A-Z0-9]{6}$/.test(ref)) return false;
+/** The booking `ref` (HBC-7K3QXM) names, if it exists: one read of the ref index, one of the booking. */
+async function bookingByRef(ref: string | undefined): Promise<Booking | null> {
+	if (!ref || !/^HBC-[A-Z0-9]{6}$/.test(ref)) return null;
 	const entry = await bookingRefs().get(ref);
-	return Boolean(entry && (await bookings().get(entry.bookingId)));
+	return entry ? bookings().get(entry.bookingId) : null;
 }
 
 /**
@@ -290,16 +291,6 @@ export async function bookingRefExists(ref: string | undefined): Promise<boolean
  */
 export function termsDueOnPayment(booking: Pick<Booking, 'kind' | 'termsAcceptedAt'>): boolean {
 	return booking.kind === 'private' && !booking.termsAcceptedAt;
-}
-
-/** Still waiting for payment: never paid, cancelled or refunded. */
-function awaitingPayment(booking: Booking): boolean {
-	return booking.status === 'pending_payment' && (booking.paymentStatus === 'unpaid' || booking.paymentStatus === 'failed');
-}
-
-/** A private charter quote past its "valid until". */
-export function quoteExpired(booking: Booking, now: Date = new Date()): boolean {
-	return Boolean(booking.quoteExpiresAt) && now.toISOString() > (booking.quoteExpiresAt as string);
 }
 
 /**
@@ -370,7 +361,9 @@ export async function finalizePaidBooking(
 	let claim: CapacityClaimResult | null = null;
 	// The money is taken by now: if the check itself fails, the payment is still recorded, with a note for staff.
 	let unchecked = false;
-	if (awaitingPayment(before)) {
+	// Demo data, and a demo payment on production, hold no seats (heldOutOfCapacity): nothing to claim.
+	const counted = !heldOutOfCapacity({ ...before, paymentStatus: 'paid', paymentProvider: provider, paymentRef, paidAt: at, paymentGate: PAYMENT_GATE });
+	if (awaitingPayment(before) && counted) {
 		try {
 			claim = await claimCapacity(before, now);
 		} catch (err) {
@@ -396,6 +389,8 @@ export async function finalizePaidBooking(
 			booking.paymentProvider = provider;
 			booking.paymentRef = paymentRef;
 			booking.paidAt = at;
+			// Recorded by the gated code: a paid booking without it came through an outdated deploy (GATE_CUTOVER).
+			booking.paymentGate = PAYMENT_GATE;
 			booking.updatedAt = at;
 			booking.history.push({ at, by: providerName(provider), action: `Paid ${formatEuro(booking.total)}` });
 			if (over) {
@@ -418,7 +413,7 @@ export async function finalizePaidBooking(
 		await releaseCapacity(before, { inFlightOnly: true }).catch((err) => console.error(`[booking ${id}] capacity claim not released`, err));
 	} else if (paid.record && takesSeats(paid.record)) {
 		// Paid: its seats are taken for good. If this fails, capacity.ts finds the expired claim's booking paid and still counts it.
-		await holdCapacity(paid.record, now).catch((err) => console.error(`[booking ${id}] capacity claim not marked paid`, err));
+		await holdCapacity(paid.record, now, claim?.ledger).catch((err) => console.error(`[booking ${id}] capacity claim not marked paid`, err));
 	}
 	if (!paid.written || !paid.record) return paid.record;
 
@@ -469,13 +464,19 @@ async function sendBookingEmail(bookingId: string, message: EmailMessage, at: st
 }
 
 /**
- * Tells the admin, once per booking, that a guest reached the pay page while
- * online payment isn't open to them (src/pages/booking/pay.astro), so staff
- * confirm the booking by email instead. The booking stays awaiting payment.
- * Only the request whose write records the notice sends the email, so a
- * reload or a second tab never sends twice. Capped per UTC day like contact
- * messages (S-6): past the cap the booking is still in the admin list, just
- * not emailed. Returns whether an email was created.
+ * Records, once per booking, that a guest reached the pay page while online
+ * payment isn't open to them (src/pages/booking/pay.astro): the booking is
+ * then "waiting for confirmation" in the admin (waitingForConfirmation) until
+ * staff confirm it with "Confirm, pay offline" or cancel it. The booking
+ * stays awaiting payment. Only the request whose write records it goes on,
+ * so a reload or a second tab does nothing more.
+ *
+ * The admin isn't emailed per booking (a flood of bookings could silence the
+ * emails for the day, review S1): the recording request marks the digest
+ * due and asks for it (sendWaitingDigest), which goes out at most once per
+ * hour; if this hour's has gone, the hourly scheduled function
+ * (netlify/functions/hourly.mts) sends the next. Returns whether a digest
+ * email was created.
  */
 export async function notifyPaymentNotOpen(id: string, siteOrigin: string, now: Date = new Date()): Promise<boolean> {
 	const at = now.toISOString();
@@ -487,13 +488,8 @@ export async function notifyPaymentNotOpen(id: string, siteOrigin: string, now: 
 		return booking;
 	});
 	if (!written || !record) return false;
-	const sentToday = await nextCounterValue(`admin-notify-unpaid:${at.slice(0, 10)}`);
-	if (sentToday > ADMIN_NOTIFY_DAILY_CAP) {
-		console.error(`[booking ${id}] daily cap reached: admin not emailed about a booking awaiting payment`);
-		return false;
-	}
-	await sendBookingEmail(record.id, adminPaymentNotOpenEmail(record, adminEmail(), `${siteOrigin}/admin/bookings/${record.id}/`), at);
-	return true;
+	await markWaitingDigestDue(now);
+	return sendWaitingDigest(siteOrigin, now);
 }
 
 /** A second "Resend confirmation" this soon after the last one is a double click, and is ignored. */
@@ -523,10 +519,33 @@ export type AdminAction =
 	| { type: 'refund' }
 	| { type: 'note'; text: string }
 	/** `siteOrigin`: the website address shown in the email's signature. */
-	| { type: 'resend'; siteOrigin: string };
+	| { type: 'resend'; siteOrigin: string }
+	/**
+	 * Staff confirm a booking the guest couldn't pay online (review B1): it
+	 * takes its seats, the guest gets the confirmation email saying our team
+	 * will contact them about payment, and nothing is charged or invoiced.
+	 */
+	| { type: 'confirm_offline'; siteOrigin: string };
 
-/** Statuses that only make sense for a booking that was paid. */
+/** Statuses that only make sense for a booking that was paid, or confirmed by staff to be paid offline. */
 const PAID_ONLY_STATUSES: BookingStatus[] = ['confirmed', 'completed', 'no_show'];
+
+/**
+ * Paid online, or confirmed by staff with the payment arranged offline: a
+ * booking that stands. Only an online payment can be marked refunded.
+ */
+export function bookingSettled(booking: Pick<Booking, 'paymentStatus'>): boolean {
+	return booking.paymentStatus === 'paid' || booking.paymentStatus === 'offline';
+}
+
+/**
+ * Whether staff may confirm this booking with the payment arranged offline:
+ * still awaiting payment, and its departure hasn't left. A charter quote past
+ * its "valid until" may still be confirmed: staff made it.
+ */
+export function canConfirmOffline(booking: Booking, now: Date = new Date()): boolean {
+	return awaitingPayment(booking) && !departureHasLeft(booking.date, booking.slot, now);
+}
 
 /**
  * Applies one admin action and logs it. The server enforces the same rules
@@ -543,13 +562,25 @@ export async function applyAdminAction(
 ): Promise<UpdateResult<Booking>> {
 	const at = now.toISOString();
 	let heldBefore = false;
+	// Confirming without payment: is the departure (or the day's private boat) already full? Kept and flagged if so, as when reinstating.
+	let full: CapacityError | null = null;
+	if (action.type === 'confirm_offline') {
+		const current = await bookings().get(id);
+		if (current && canConfirmOffline(current, now) && capacityChecked(current)) {
+			full = await capacityError(current, now, current.id).catch((err) => {
+				console.error(`[booking ${id}] capacity not checked when confirming offline`, err);
+				return null;
+			});
+		}
+	}
 	const { record, written } = await bookings().update(id, (booking) => {
 		heldBefore = takesSeats(booking);
 		const paid = booking.paymentStatus === 'paid';
+		const settled = bookingSettled(booking);
 		switch (action.type) {
 			case 'status':
 				if (booking.status === action.status) return null;
-				if (PAID_ONLY_STATUSES.includes(action.status) && !paid) return null;
+				if (PAID_ONLY_STATUSES.includes(action.status) && !settled) return null;
 				booking.history.push({ at, by, action: `Status: ${STATUS_LABELS[booking.status]} → ${STATUS_LABELS[action.status]}` });
 				// Reinstated: it takes its seats now, so it counts as the latest one in when checking for overbooking.
 				if (booking.status === 'cancelled') booking.seatsSince = at;
@@ -567,7 +598,7 @@ export async function applyAdminAction(
 				break;
 			}
 			case 'resend': {
-				if (!paid) return null;
+				if (!settled) return null;
 				// Double clicks and repeated form posts send once: the compare-and-swap lets only one request
 				// record the resend, and another within a minute of the last confirmation is ignored.
 				const last = booking.confirmationEmail ? Date.parse(booking.confirmationEmail.at) : Number.NaN;
@@ -576,12 +607,34 @@ export async function applyAdminAction(
 				booking.history.push({ at, by, action: `Confirmation email created again for ${booking.email}` });
 				break;
 			}
+			case 'confirm_offline': {
+				if (!canConfirmOffline(booking, now)) return null;
+				booking.paymentStatus = 'offline';
+				booking.status = 'confirmed';
+				// It takes its seats from now: the latest one in when checking for overbooking (manifest.ts), as when reinstating.
+				booking.seatsSince = at;
+				booking.history.push({ at, by, action: 'Confirmed without online payment: payment arranged with staff, nothing charged' });
+				if (booking.kind === 'private' && !booking.termsAcceptedAt) {
+					booking.history.push({ at, by: 'System', action: 'Terms not accepted on the website: they are stated in the confirmation email' });
+				}
+				if (full) {
+					const what = full === 'boat' ? "the day's private boats were already taken" : 'the departure was already full';
+					booking.staffNotes.push({ at, by: 'System', text: `Confirmed when ${what}: over capacity. Move the guest or contact them.` });
+				}
+				break;
+			}
 		}
 		booking.updatedAt = at;
 		return booking;
 	});
 	if (written && record) await syncCapacity(record, heldBefore, now);
 	if (written && record && action.type === 'resend') await sendBookingEmail(record.id, bookingConfirmationEmail(record, action.siteOrigin), at);
+	if (written && record && action.type === 'confirm_offline') {
+		// The booking stands even if the email fails: its admin page shows no confirmation sent, and "Resend" tries again.
+		await sendBookingEmail(record.id, bookingConfirmationEmail(record, action.siteOrigin), at).catch((err) =>
+			console.error(`[booking ${id}] confirmation email failed after confirming offline`, err),
+		);
+	}
 	return { record, written };
 }
 
@@ -601,7 +654,7 @@ async function syncCapacity(booking: Booking, heldBefore: boolean, now: Date): P
 		console.error(`[booking ${booking.id}] capacity ledger not updated after a staff change`, err);
 		const at = now.toISOString();
 		const text = heldNow
-			? 'Seats could not be counted again after reinstating (storage error). Check the departure is not overbooked.'
+			? 'Seats could not be counted after confirming or reinstating (storage error). Check the departure is not overbooked.'
 			: 'Seats could not be freed after cancelling or refunding (storage error). The departure may show fewer seats left than it has.';
 		await bookings()
 			.update(booking.id, (current) => ({ ...current, staffNotes: [...current.staffNotes, { at, by: 'System', text }] }))
@@ -618,16 +671,26 @@ async function syncCapacity(booking: Booking, heldBefore: boolean, now: Date): P
  */
 export const ADMIN_NOTIFY_DAILY_CAP = 40;
 
+/** Messages about one booking that use the booking count per UTC day; more go to the contact count (review S2). */
+export const ADMIN_NOTIFY_PER_REF_DAILY_CAP = 3;
+
+/** Email addresses compared the way people type them: trimmed, any case. */
+function sameEmail(a: string | undefined, b: string | undefined): boolean {
+	return Boolean(a && b) && (a as string).trim().toLowerCase() === (b as string).trim().toLowerCase();
+}
+
 /**
  * Which daily notification count a message uses: charter, about a booking,
- * or contact. "About a booking" needs a ref that names a real booking: the
- * topic and the ref are typed by the sender, so a flood choosing them would
- * otherwise use up the booking count too.
+ * or contact. "About a booking" needs a ref that names a real booking, sent
+ * from that booking's email address: the topic, the ref and the address are
+ * typed by the sender, and a ref alone is easy to come by (anyone's own
+ * booking), so a flood quoting it would otherwise use up the booking count.
  */
-export async function notifyCapKind(input: Pick<Enquiry, 'kind' | 'topic' | 'bookingRef'>): Promise<'charter' | 'booking' | 'contact'> {
+export async function notifyCapKind(input: Pick<Enquiry, 'kind' | 'topic' | 'bookingRef' | 'email'>): Promise<'charter' | 'booking' | 'contact'> {
 	if (input.kind === 'charter') return 'charter';
 	try {
-		return (await bookingRefExists(input.bookingRef)) ? 'booking' : 'contact';
+		const booking = await bookingByRef(input.bookingRef);
+		return booking && sameEmail(booking.email, input.email) ? 'booking' : 'contact';
 	} catch (err) {
 		console.error('[enquiry] booking ref not checked', err);
 		return 'contact';
@@ -647,7 +710,11 @@ export async function recordEnquiry(
 ): Promise<Enquiry> {
 	let notified = false;
 	if (notify) {
-		const sentToday = await nextCounterValue(`admin-notify:${await notifyCapKind(input)}:${now.toISOString().slice(0, 10)}`);
+		const day = now.toISOString().slice(0, 10);
+		let kind = await notifyCapKind(input);
+		// One booking's own messages use the booking count a few times a day; past that they count as contact messages.
+		if (kind === 'booking' && (await nextCounterValue(`admin-notify:booking-ref:${input.bookingRef}:${day}`)) > ADMIN_NOTIFY_PER_REF_DAILY_CAP) kind = 'contact';
+		const sentToday = await nextCounterValue(`admin-notify:${kind}:${day}`);
 		notified = sentToday <= ADMIN_NOTIFY_DAILY_CAP;
 	}
 	const enquiry: Enquiry = { ...input, id: newId(), createdAt: now.toISOString(), status: 'new', notified };
@@ -681,7 +748,7 @@ export async function sendCharterQuote(
 	if (!enquiry || enquiry.kind !== 'charter' || !request) return { ok: false, error: 'missing' };
 	if ((enquiry.quoteBookingId ?? '') !== previousQuoteId) return { ok: false, error: 'stale' };
 	const previous = enquiry.quoteBookingId ? await bookings().get(enquiry.quoteBookingId) : null;
-	if (previous?.paymentStatus === 'paid' || previous?.paymentStatus === 'refunded') return { ok: false, error: 'paid' };
+	if (previous && (bookingSettled(previous) || previous.paymentStatus === 'refunded')) return { ok: false, error: 'paid' };
 
 	const route = routeById(request.route);
 	const at = now.toISOString();
@@ -733,7 +800,7 @@ export async function sendCharterQuote(
 	if (previous) {
 		let paidMeanwhile = false;
 		await bookings().update(previous.id, (old) => {
-			if (old.paymentStatus === 'paid' || old.paymentStatus === 'refunded') {
+			if (bookingSettled(old) || old.paymentStatus === 'refunded') {
 				paidMeanwhile = true;
 				return null;
 			}
@@ -761,7 +828,8 @@ export async function sendCharterQuote(
 	return { ok: true, booking: (await bookings().get(booking.id)) ?? booking };
 }
 
-/** Seats counted against a departure: everything paid that hasn't been cancelled (capacity.ts). */
+/** Seats counted against a departure: paid, not cancelled, and not held out of capacity (capacity.ts). */
 export { takesSeats };
 
 export { RETENTION_DAYS, sweepPersonalData, sweepPersonalDataDaily } from './retention';
+export { quoteExpired, sendWaitingDigest, waitingForConfirmation, WAITING_DIGEST_DAILY_CAP } from './waiting';

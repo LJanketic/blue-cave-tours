@@ -9,6 +9,7 @@ import { departureHasLeft, formatShortDate } from '../bookings/dates';
 import { addDays, isIsoDate, summarizeDay, weekFrom } from './schedule';
 import { MAX_GUESTS } from '../booking';
 import { loadSampleData } from './sample-data';
+import { PAYMENT_GATE } from '../bookings/capacity';
 
 describe('admin session', () => {
 	afterEach(() => {
@@ -49,6 +50,8 @@ function booking(overrides: Partial<Booking>): Booking {
 		paymentProvider: 'teya',
 		paymentRef: 'T',
 		paidAt: '2027-07-01T10:00:00Z',
+		// Recorded by the current checkout: an unstamped card payment after the cut-over would hold no seats (capacity.ts).
+		paymentGate: PAYMENT_GATE,
 		tourSlug: 'blue-lagoon-morning',
 		tourTitle: 'Blue Lagoon',
 		date: '2027-07-15',
@@ -352,7 +355,7 @@ describe('formatShortDate', () => {
 describe('demo data', () => {
 	afterEach(() => resetMemoryStore());
 
-	it('covers about three weeks ahead with exactly one overbooked departure, tomorrow', async () => {
+	it('covers about three weeks ahead with exactly one boat over its seats tomorrow, never flagged: demo data holds no seats', async () => {
 		const now = new Date('2027-07-01T08:00:00Z');
 		await loadSampleData(now);
 		const all = await bookings().list();
@@ -364,7 +367,10 @@ describe('demo data', () => {
 		// 13 seats, then Smith: 4 adults and an infant. Infants take seats (D-9).
 		expect(over[0].d.seatsTaken).toBe(18);
 		expect(over[0].d.infants).toBe(1);
-		expect(over[0].d.overbookings.map((o) => [o.booking.lastName, o.seatsOver])).toEqual([['Smith', 4]]);
+		// The ledger never holds demo data (capacity.ts heldOutOfCapacity), and the admin's overbooking flags follow the ledger (round 2, N2).
+		expect(over[0].d.seatsHeld).toBe(0);
+		expect(over[0].d.overBy).toBe(0);
+		expect(over[0].d.overbookings).toEqual([]);
 		// Bookings are never created after "now".
 		expect(all.every((b) => b.createdAt <= now.toISOString())).toBe(true);
 	});

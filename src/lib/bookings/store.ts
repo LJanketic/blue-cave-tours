@@ -14,7 +14,13 @@ import { getStore } from '@netlify/blobs';
  */
 
 export type BookingStatus = 'pending_payment' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
-export type PaymentStatus = 'unpaid' | 'paid' | 'failed' | 'refunded';
+/**
+ * 'offline': staff confirmed the booking without an online payment (the guest
+ * couldn't pay online yet), and the payment is arranged with staff. Nothing
+ * was charged and no invoice is issued; it takes its seats like a paid
+ * booking (capacity.ts takesSeats) and the retention sweep keeps it.
+ */
+export type PaymentStatus = 'unpaid' | 'paid' | 'failed' | 'refunded' | 'offline';
 export type PaymentProvider = 'teya' | 'paypal';
 
 export type HistoryEntry = { at: string; by: string; action: string };
@@ -83,7 +89,11 @@ export type Booking = {
 	durationHours?: number;
 	/** Private experience paid on the site: the pick-up point, when it isn't the meeting point. */
 	pickup?: string;
-	/** When the admin was told the guest couldn't pay online yet (notifyPaymentNotOpen): set once, so it's told once. */
+	/**
+	 * When the guest reached the pay page while online payment wasn't open to
+	 * them (notifyPaymentNotOpen): set once. From then on the booking is "waiting
+	 * for confirmation" in the admin until staff confirm or cancel it.
+	 */
 	paymentNotOpenNotifiedAt?: string;
 	/**
 	 * Set when the payment went through although its departure (or the day's
@@ -91,6 +101,14 @@ export type Booking = {
 	 * The payment is kept; staff move the guest or refund them.
 	 */
 	overbookedAtPayment?: string;
+	/**
+	 * Which payment code recorded the payment (PAYMENT_GATE in capacity.ts).
+	 * Every payment finalizePaidBooking records from W0 on carries it. A paid
+	 * booking without it, paid after GATE_CUTOVER, came through an outdated
+	 * deploy (old deploy URLs still run the ungated checkout): it takes no
+	 * seats, and the admin flags it for staff to check.
+	 */
+	paymentGate?: number;
 };
 
 /**
@@ -160,6 +178,12 @@ export type OutboxEmail = {
 	html: string;
 	text: string;
 	relatedId: string | null;
+	/**
+	 * Every booking whose personal details the email sets out, when that's more
+	 * than one (the waiting-for-confirmation digest): the retention sweep
+	 * deletes the email with any of them, as it does with `relatedId`.
+	 */
+	relatedIds?: string[];
 	/** 'outbox' = recorded only; 'sent'/'failed' = a real provider was configured and tried. */
 	delivery: 'outbox' | 'sent' | 'failed';
 	deliveryError?: string;
@@ -242,7 +266,8 @@ function blobsCollection<T extends { id: string }>(name: string): Collection<T> 
 	} catch (error) {
 		// Outside Netlify (Vitest, a plain Node server) there is no Blobs context.
 		// In a production build that means bookings would silently vanish, so fail loudly.
-		if (import.meta.env.PROD && !process.env.VITEST) throw error;
+		// import.meta.env is undefined in the nightly function's bundle (built without Vite).
+		if (import.meta.env?.PROD && !process.env.VITEST) throw error;
 		return null;
 	}
 	return {
@@ -283,8 +308,23 @@ function blobsCollection<T extends { id: string }>(name: string): Collection<T> 
  * context, inlined at build time.
  */
 export function scopedName(name: string): string {
-	const context = process.env.CONTEXT || import.meta.env.CONTEXT;
+	const context = deployContext();
 	return context && context !== 'production' ? `${name}--${context}` : name;
+}
+
+/**
+ * Netlify's deploy context ('production', 'deploy-preview', ...), or nothing
+ * for `astro dev` and a local build. The same value picks the stores
+ * (scopedName), so 'production' here means exactly "these are production's
+ * bookings". The one place the deploy context is read: demo-access.ts,
+ * email/send.ts and admin/auth-limits.ts use it too. The runtime value comes
+ * first (tests stub it; the scheduled functions set it from their context),
+ * then the value inlined at build time, which is what the site's function
+ * has (Netlify doesn't give functions CONTEXT at runtime). import.meta.env is
+ * undefined in the scheduled functions' bundles, hence the `?.`.
+ */
+export function deployContext(): string | undefined {
+	return process.env.CONTEXT || import.meta.env?.CONTEXT || undefined;
 }
 
 function collection<T extends { id: string }>(name: string): Collection<T> {
@@ -397,48 +437,81 @@ export function readLedger(id: string): Promise<CapacityLedger | null> {
 	return ledgers().get(id);
 }
 
+/** A ledger as read or written, with its etag on Blobs, so the next write to it can skip its read. */
+export type LedgerVersion = { ledger: CapacityLedger | null; etag?: string };
+
+function ledgerBlobs(): ReturnType<typeof getStore> | null {
+	try {
+		return getStore({ name: scopedName('capacity'), consistency: 'strong' });
+	} catch {
+		return null;
+	}
+}
+
+/** One read of a ledger and its etag: pass it to updateLedger as `seed`, and that write needs no read of its own. */
+export async function readLedgerVersion(id: string): Promise<LedgerVersion> {
+	const blobs = ledgerBlobs();
+	if (!blobs) return { ledger: await ledgers().get(id) };
+	const existing = await blobs.getWithMetadata(id, { type: 'json' });
+	return existing ? { ledger: existing.data as CapacityLedger, etag: existing.etag } : { ledger: null };
+}
+
 /**
  * Read-modify-write of one ledger, created on first use: compare-and-swap on
  * the blob's etag (onlyIfMatch, or onlyIfNew for the first write), so of two
  * concurrent writers the second re-reads and sees the first's claim. `mutate`
  * runs again on every retry. Returns the ledger as written (or as read, when
- * `mutate` returns null).
+ * `mutate` returns null) and, on Blobs, its etag.
+ *
+ * `seed` is a version the caller has just read (readLedgerVersion) or
+ * written: the first attempt uses it instead of reading again, if it carries
+ * an etag. If anyone wrote since, its compare-and-swap fails and the next
+ * attempt reads.
  */
-export function updateLedger(id: string, mutate: Mutation<CapacityLedger>): Promise<CapacityLedger> {
+export function updateLedger(id: string, mutate: Mutation<CapacityLedger>, seed?: LedgerVersion): Promise<{ ledger: CapacityLedger; etag?: string }> {
 	return withLock(`capacity:${id}`, async () => {
-		const blobs = (() => {
-			try {
-				return getStore({ name: scopedName('capacity'), consistency: 'strong' });
-			} catch {
-				return null;
-			}
-		})();
+		const blobs = ledgerBlobs();
 		const empty = (): CapacityLedger => ({ id, claims: {} });
 		if (!blobs) {
 			const store = ledgers();
 			const current = (await store.get(id)) ?? empty();
 			const next = mutate(structuredClone(current));
 			if (next) await store.put(next);
-			return next ?? current;
+			return { ledger: next ?? current };
 		}
+		// A seed without an etag isn't trusted, even one that found no ledger: it can't be compared, and a ledger
+		// created since would be missed by a mutation that changes nothing. Read instead.
+		let known = seed?.etag ? seed : undefined;
 		for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
-			const existing = await blobs.getWithMetadata(id, { type: 'json' });
-			const current = existing ? (existing.data as CapacityLedger) : empty();
+			const version = known ?? (await readLedgerVersion(id));
+			known = undefined;
+			const current = version.ledger ?? empty();
 			const next = mutate(structuredClone(current));
-			if (!next) return current;
-			const { modified } = existing
-				? await blobs.setJSON(id, next, { onlyIfMatch: existing.etag })
+			if (!next) return { ledger: current, etag: version.etag };
+			const { modified, etag } = version.ledger
+				? await blobs.setJSON(id, next, { onlyIfMatch: version.etag as string })
 				: await blobs.setJSON(id, next, { onlyIfNew: true });
-			if (modified) return next;
+			if (modified) return { ledger: next, etag };
 		}
 		throw new Error(`[store] capacity ${id}: too many concurrent writes`);
 	});
 }
 
+/** The id of every ledger, without reading them: one list call on Blobs. */
+export async function ledgerIds(): Promise<string[]> {
+	const blobs = ledgerBlobs();
+	if (!blobs) return (await ledgers().list()).map((ledger) => ledger.id);
+	const { blobs: entries } = await blobs.list();
+	return entries.map(({ key }) => key);
+}
+
+export function deleteLedger(id: string): Promise<void> {
+	return ledgers().delete(id);
+}
+
 /** Deletes every ledger: with the bookings, for the showcase's "Delete everything". */
 export async function clearLedgers(): Promise<void> {
-	const store = ledgers();
-	await Promise.all((await store.list()).map((ledger) => store.delete(ledger.id)));
+	await Promise.all((await ledgerIds()).map(deleteLedger));
 }
 
 export async function resetCounter(name: string): Promise<void> {

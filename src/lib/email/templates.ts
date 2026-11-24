@@ -11,47 +11,10 @@ import { formatTimestamp } from '../bookings/dates';
 import { IMPRINT, TERMS_VERSION } from '../../config/legal';
 import { privateExtra } from '../../config/private';
 import { formatEuro } from '../price';
+import { BRAND_COLOR, escapeHtml, layout, LINK_COLOR, paragraph, rowsHtml, rowsText, section, type Row } from './layout';
 import { arrivalFor, DEFAULT_MINUTES_EARLY } from '../arrival';
 
-export function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#39;');
-}
-
-/** A label and value; with a link, the value itself is the link (e.g. the meeting point opens Google Maps). */
-type Row = [label: string, value: string, link?: { href: string; hint: string }];
-
-// Brand blue-900 for links (9.8:1 on white); the brand blue for the name line.
-// Emails can't use CSS variables, so these mirror tokens/design.css (§9.4).
-const LINK_COLOR = '#0c447c';
-const BRAND_COLOR = '#1a6fc4';
-
-function rowValueHtml(value: string, link?: Row[2]): string {
-	if (!link) return escapeHtml(value);
-	// One link: the value, with the hint underneath, so it's a single tap target.
-	return (
-		`<a href="${escapeHtml(link.href)}" target="_blank" rel="noopener" style="color:${LINK_COLOR};text-decoration:underline">${escapeHtml(value)}` +
-		`<br><span style="font-size:13px;font-weight:400">${escapeHtml(link.hint)} &#8599;</span></a>`
-	);
-}
-
-function rowsHtml(rows: Row[]): string {
-	return rows
-		.map(
-			([label, value, link]) =>
-				`<tr><td style="padding:6px 0;color:#555;font-size:14px;vertical-align:top;width:40%">${escapeHtml(label)}</td>` +
-				`<td style="padding:6px 0;color:#111;font-size:14px;font-weight:600;text-align:right">${rowValueHtml(value, link)}</td></tr>`,
-		)
-		.join('');
-}
-
-function rowsText(rows: Row[]): string {
-	return rows.map(([label, value, link]) => `${label}: ${value}${link ? `\n${link.hint}: ${link.href}` : ''}`).join('\n');
-}
+export { escapeHtml } from './layout';
 
 /**
  * Google Maps link for a tour's meeting point. Riva tours use the same link as
@@ -60,32 +23,6 @@ function rowsText(rows: Row[]): string {
 export function meetingPointMapUrl(meetingPoint: string): string {
 	if (/\briva\b/i.test(meetingPoint)) return MEETING_POINT_MAP_URL;
 	return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${meetingPointShort(meetingPoint)}, Split, Croatia`)}`;
-}
-
-/**
- * One shared shell: plain table layout and inline styles, which every mail client renders.
- * Without a heading the email opens straight on the intro; `footer` replaces the default address line.
- */
-function layout(heading: string, intro: string, body: string, options: { title?: string; footer?: string } = {}): string {
-	const footer = options.footer ?? `${escapeHtml(SITE_NAME)} · Riva promenade, stand 14, Split, Croatia<br>${escapeHtml(SITE_PHONE_DISPLAY)} · ${escapeHtml(SITE_EMAIL)}`;
-	return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(options.title ?? heading)}</title></head>
-<body style="margin:0;padding:0;background:#f5f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f4;padding:24px 12px"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;padding:28px">
-<tr><td style="font-size:13px;font-weight:600;color:${BRAND_COLOR};letter-spacing:.04em;text-transform:uppercase;padding-bottom:12px">${escapeHtml(SITE_NAME)}</td></tr>
-${heading ? `<tr><td style="font-size:22px;font-weight:600;color:#111;padding-bottom:8px">${escapeHtml(heading)}</td></tr>\n` : ''}<tr><td style="font-size:15px;line-height:1.5;color:#333;padding-bottom:20px">${intro}</td></tr>
-${body}
-<tr><td style="font-size:12px;line-height:1.5;color:#767676;padding-top:24px;border-top:1px solid #e5e5e3">${footer}</td></tr>
-</table></td></tr></table></body></html>`;
-}
-
-function section(title: string, rows: Row[]): string {
-	return `<tr><td style="padding-bottom:20px"><div style="font-size:13px;font-weight:600;color:#111;padding-bottom:6px;border-bottom:1px solid #e5e5e3">${escapeHtml(title)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rowsHtml(rows)}</table></td></tr>`;
-}
-
-function paragraph(html: string): string {
-	return `<tr><td style="font-size:14px;line-height:1.5;color:#333;padding-bottom:16px">${html}</td></tr>`;
 }
 
 function bookingRows(booking: Booking): Row[] {
@@ -134,7 +71,11 @@ const PAYMENT_STATUS_TEXT: Record<Booking['paymentStatus'], string> = {
 	unpaid: 'Not paid yet',
 	failed: 'Payment declined',
 	refunded: 'Refunded',
+	offline: 'Not paid online',
 };
+
+/** Staff confirmed the booking without an online payment: what the guest is told about paying (no method is promised). */
+const OFFLINE_PAYMENT_NOTE = "We haven't taken a payment online for this booking. Our team will contact you about payment.";
 
 /** A label/value table with no section title, for the confirmation's plain list of details. */
 function detailsTable(rows: Row[]): string {
@@ -148,7 +89,9 @@ function detailsTable(rows: Row[]): string {
 function bookingTermsLines(booking: Booking, siteOrigin: string): { rows: Row[]; paragraphs: string[] } {
 	const tour = getTourBySlug(booking.tourSlug);
 	const rows: Row[] = lineItemRows(booking);
-	rows.push(['Total (incl. VAT)', `${formatEuro(booking.total)}${PAYMENTS_ARE_DEMO ? ' (demo, no money taken)' : ''}`]);
+	// A booking confirmed without online payment isn't a demo: staff arrange a real payment with the guest.
+	const demo = PAYMENTS_ARE_DEMO && booking.paymentStatus !== 'offline';
+	rows.push(['Total (incl. VAT)', `${formatEuro(booking.total)}${demo ? ' (demo, no money taken)' : ''}`]);
 	for (const fee of tour?.additionalFees ?? []) {
 		rows.push([fee.mandatory ? 'Not included' : 'Extra', fee.amountLabel ? `${fee.shortText} (${fee.amountLabel})` : fee.shortText]);
 	}
@@ -204,6 +147,9 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 			: `As you'll be joining a group, please be at the meeting point ${onTimeAt ? `on time for the ${onTimeAt} departure` : early ?? 'at least 15 minutes before departure'}. The boat can't wait, and we don't want to keep your fellow travelers waiting.`;
 	const weatherNote = WEATHER_UPDATE_NOTE;
 	const terms = bookingTermsLines(booking, siteOrigin);
+	const offline = booking.paymentStatus === 'offline';
+	// Never the demo notice on a booking staff confirmed for payment offline: that guest does pay, just not on the site.
+	const demoNotice = PAYMENTS_ARE_DEMO && !offline;
 
 	const tripRows: Row[] = [
 		['Booking ref', booking.ref],
@@ -225,10 +171,11 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 		`<a href="${escapeHtml(siteOrigin)}" style="color:${LINK_COLOR}">${escapeHtml(website)}</a> · ${escapeHtml(SITE_PHONE_DISPLAY)} · ${escapeHtml(SITE_EMAIL)}`;
 	const html = layout(
 		'',
-		`${PAYMENTS_ARE_DEMO ? `<strong>${DEMO_NOTICE}</strong><br><br>` : ''}Dear ${escapeHtml(booking.firstName)},<br><br>Thank you for booking with ${escapeHtml(SITE_NAME)}! Here are your booking details:`,
+		`${demoNotice ? `<strong>${DEMO_NOTICE}</strong><br><br>` : ''}Dear ${escapeHtml(booking.firstName)},<br><br>Thank you for booking with ${escapeHtml(SITE_NAME)}! Here are your booking details:`,
 		detailsTable(tripRows) +
 			paragraph(escapeHtml(groupNote)) +
 			detailsTable(partyRows) +
+			(offline ? paragraph(`<strong>${escapeHtml(OFFLINE_PAYMENT_NOTE)}</strong>`) : '') +
 			paragraph(escapeHtml(weatherNote)) +
 			paragraph('<strong>See you aboard!</strong>') +
 			section('The terms of your booking', terms.rows) +
@@ -236,7 +183,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 		{ title: subject, footer: signature },
 	);
 	const text = [
-		...(PAYMENTS_ARE_DEMO ? [DEMO_NOTICE, ''] : []),
+		...(demoNotice ? [DEMO_NOTICE, ''] : []),
 		`Dear ${booking.firstName},`,
 		'',
 		`Thank you for booking with ${SITE_NAME}! Here are your booking details:`,
@@ -254,6 +201,7 @@ export function bookingConfirmationEmail(booking: Booking, requestOrigin: string
 		`Total (incl. VAT): ${total}`,
 		`Bring: ${EMAIL_BRING_LIST}`,
 		'',
+		...(offline ? [OFFLINE_PAYMENT_NOTE, ''] : []),
 		weatherNote,
 		'',
 		'See you aboard!',
@@ -314,50 +262,6 @@ export function adminBookingEmail(booking: Booking, to: string, adminUrl: string
 		rowsText(customerRows),
 		'',
 		rowsText(paymentRows(booking, 'admin')),
-		'',
-		`Admin: ${adminUrl}`,
-	].join('\n');
-
-	return { kind: 'admin_booking', to, replyTo: booking.email, subject, html, text, relatedId: booking.id };
-}
-
-/**
- * A guest reached the pay page, but online payment isn't open to them yet
- * (src/pages/booking/pay.astro): nothing was paid, and the pay page told
- * them we'd confirm by email. Sent once per booking (notifyPaymentNotOpen).
- */
-export function adminPaymentNotOpenEmail(booking: Booking, to: string, adminUrl: string): EmailMessage {
-	const quote = booking.kind === 'private' && isCharterQuote(booking);
-	const lede = quote
-		? 'A customer opened the payment link for their private charter quote, but online payment isn\'t open yet, so nothing was paid. Contact them by email to confirm it'
-		: 'A customer booked on the website, but online payment isn\'t open yet, so nothing was paid. The booking is waiting for payment: contact them by email to confirm it';
-	const charges = booking.kind === 'private' && !quote ? lineItemRows(booking) : [];
-	const customerRows: Row[] = [
-		['Name', `${booking.firstName} ${booking.lastName}`],
-		['Email', booking.email],
-		['Phone', booking.phone || '—'],
-		// Notes can hold health details (GDPR Art. 9): they stay in the admin, never in an email (S-5).
-		['Notes', booking.customerNotes ? 'Has notes, see admin' : 'None'],
-	];
-	const totalRows: Row[] = [['Total (incl. VAT)', `${formatEuro(booking.total)} (not paid)`]];
-	const subject = `Not paid yet ${booking.ref}: ${charterRoute(booking)}, ${formatBookingDate(booking.date)}, ${guestSummaryFromCounts(booking.adults, booking.children, booking.infants)}`;
-	const html = layout(
-		'Booking waiting for payment',
-		`${lede}. <a href="${escapeHtml(adminUrl)}" style="color:${LINK_COLOR}">Open it in the admin</a>.`,
-		section('Booking', bookingRows(booking)) +
-			(charges.length ? section('Charges', charges) : '') +
-			section('Customer', customerRows) +
-			section('Payment', totalRows),
-	);
-	const text = [
-		`${lede}.`,
-		'',
-		rowsText(bookingRows(booking)),
-		'',
-		...(charges.length ? [rowsText(charges), ''] : []),
-		rowsText(customerRows),
-		'',
-		rowsText(totalRows),
 		'',
 		`Admin: ${adminUrl}`,
 	].join('\n');

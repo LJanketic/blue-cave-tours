@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { BACKUPS_KEPT, BACKUP_STORES, writeBackup, type BackupStore, type OpenStore, type Snapshot } from './backup';
+import { BACKUPS_KEPT, BACKUP_READ_CONCURRENCY, BACKUP_STORES, writeBackup, type BackupStore, type OpenStore, type Snapshot } from './backup';
 import { runNightly } from './nightly';
 import { bookings, meta, resetMemoryStore, type Booking } from './bookings/store';
 
@@ -52,10 +52,71 @@ describe('nightly backup', () => {
 		const result = await writeBackup(open, new Date('2027-06-21T10:00:00Z'));
 		const left = [...backups.keys()].filter((key) => key !== 'notes').sort();
 		expect(left).toHaveLength(BACKUPS_KEPT);
-		expect(left[0]).toBe('2027-06-08');
+		expect(BACKUPS_KEPT).toBe(7);
+		expect(left[0]).toBe('2027-06-15');
 		expect(left.at(-1)).toBe('2027-06-21');
-		expect(result.deleted.sort()).toEqual(['2027-06-01', '2027-06-02', '2027-06-03', '2027-06-04', '2027-06-05', '2027-06-06', '2027-06-07']);
+		expect(result.deleted.sort()).toEqual(Array.from({ length: 14 }, (_, i) => `2027-06-${String(i + 1).padStart(2, '0')}`));
 		expect(backups.get('notes')).toBe('keep me');
+	});
+
+	it('leaves out what is rebuilt from the bookings, and outbox bodies, keeping the email metadata', async () => {
+		const { stores, open } = fakeBlobs();
+		stores.set('capacity', new Map([['tour|2027-07-02', { id: 'tour|2027-07-02', claims: {} }]]));
+		stores.set('booking-refs', new Map([['HBC-1', { id: 'HBC-1', bookingId: 'b1' }]]));
+		stores.set(
+			'meta',
+			new Map<string, unknown>([
+				['capacity-ledgers-backfilled', { id: 'capacity-ledgers-backfilled', value: '2026-11-24' }],
+				['retention-sweep', { id: 'retention-sweep', value: '2027-07-01' }],
+			]),
+		);
+		const email = {
+			id: 'm1',
+			createdAt: '2027-07-01T08:00:00Z',
+			kind: 'booking_confirmation',
+			to: 'a@example.com',
+			replyTo: null,
+			subject: 'Booked',
+			html: '<p>x</p>',
+			text: 'x',
+			relatedId: 'b1',
+			delivery: 'sent',
+		};
+		stores.set('outbox', new Map([['m1', email]]));
+		await writeBackup(open, new Date('2027-07-01T10:00:00Z'));
+		const snapshot = stores.get('backups')?.get('2027-07-01') as Snapshot;
+		expect(snapshot.stores).not.toHaveProperty('capacity');
+		expect(snapshot.stores).not.toHaveProperty('booking-refs');
+		// Without the marker, a restored site runs the capacity backfill and rebuilds its ledgers.
+		expect(Object.keys(snapshot.stores.meta)).toEqual(['retention-sweep']);
+		const { html: _html, text: _text, ...metadata } = email;
+		expect(snapshot.stores.outbox).toEqual({ m1: metadata });
+		// The live outbox keeps its bodies.
+		expect(stores.get('outbox')?.get('m1')).toMatchObject({ html: '<p>x</p>', text: 'x' });
+	});
+
+	it(`reads at most ${BACKUP_READ_CONCURRENCY} records at a time`, async () => {
+		const { stores, open } = fakeBlobs();
+		stores.set('bookings', new Map(Array.from({ length: 200 }, (_, i) => [`b${i}`, { id: `b${i}` }] as [string, unknown])));
+		let inFlight = 0;
+		let peak = 0;
+		const slow: OpenStore = (name) => {
+			const store = open(name);
+			return {
+				...store,
+				async get(key, options) {
+					inFlight++;
+					peak = Math.max(peak, inFlight);
+					await new Promise((resolve) => setTimeout(resolve, 1));
+					inFlight--;
+					return store.get(key, options);
+				},
+			};
+		};
+		const result = await writeBackup(slow, new Date('2027-07-01T10:00:00Z'));
+		expect(result.records).toBe(200);
+		expect(peak).toBe(BACKUP_READ_CONCURRENCY);
+		expect(Object.keys((stores.get('backups')?.get('2027-07-01') as Snapshot).stores.bookings)).toHaveLength(200);
 	});
 
 	it('rewrites the same day’s snapshot when run twice', async () => {

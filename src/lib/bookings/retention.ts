@@ -76,7 +76,8 @@ export async function sweepPersonalData(now: Date = new Date()): Promise<{ booki
 	let trimmedEmails = 0;
 	const emailCutoff = new Date(now.getTime() - RETENTION_DAYS.emailBody * 86_400_000).toISOString();
 	for (const email of await outbox().list()) {
-		if (email.relatedId && deletedIds.has(email.relatedId)) {
+		// A digest names several bookings (relatedIds): it goes with the first of them deleted.
+		if ((email.relatedId && deletedIds.has(email.relatedId)) || email.relatedIds?.some((id) => deletedIds.has(id))) {
 			await outbox().delete(email.id);
 			trimmedEmails++;
 		} else if (email.createdAt < emailCutoff && (email.html || email.text || email.replyTo || email.deliveryError)) {

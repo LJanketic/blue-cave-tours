@@ -21,3 +21,6 @@ overrides:
   # One playwright-core for @playwright/test and @axe-core/playwright (its peer would take 1.65, whose
   # browsers aren't installed, and two copies break the Page type in the a11y and e2e specs).
   playwright-core: 1.64.0
+  # toml: @netlify/zip-it-and-ship-it (under @netlify/vite-plugin's dev
+  # tooling) pins 4.x, which has 4 high audit findings (fixed in 5.0.1).
+  toml: '>=5.0.1'

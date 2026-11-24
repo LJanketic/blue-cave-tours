@@ -22,15 +22,18 @@ import { secretKey } from './secrets';
  * - Per IP (checkRateLimit): it refuses when the limiter can't run, and when
  *   it loses every compare-and-swap race. Lost races on one IP's bucket mean
  *   that IP is sending a burst, so refusing it costs nobody else anything.
- * - Everyone together (checkGlobalLimit, peekGlobalLimit): it refuses only
+ * - Everyone together (checkGlobalLimit): it refuses only
  *   when the limiter can't run. A lost race on the shared bucket is just many
  *   real guests at once, so it lets the request through: the per-IP limits
  *   still hold each of them, and a busy hour must never refuse real bookings.
+ * - A strict global cap (reserveGlobalLimit, for admin logins): a lost race
+ *   counts as a hit and refuses the request, so a parallel burst can't slip
+ *   past the cap uncounted.
  */
 
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_REQUESTS = 5;
-const MAX_CAS_ATTEMPTS = 6;
+const MAX_CAS_ATTEMPTS = 4;
 /** Before each retry, a short random wait, so racing writers stop colliding in step. */
 const RETRY_JITTER_MS = 25;
 /** One write in this many also deletes earlier days' buckets. */
@@ -81,9 +84,12 @@ function openStore() {
 	}
 }
 
-async function count(key: string, max: number, windowMs: number, now: number): Promise<Outcome> {
+/** One count, and the window it landed in when it was counted (so it can be released). */
+type Counted = { outcome: Outcome; windowStart?: number };
+
+async function count(key: string, max: number, windowMs: number, now: number): Promise<Counted> {
 	const store = openStore();
-	if (!store) return 'unavailable';
+	if (!store) return { outcome: 'unavailable' };
 	try {
 		for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
 			if (attempt > 0) await pause();
@@ -93,32 +99,37 @@ async function count(key: string, max: number, windowMs: number, now: number): P
 				const result = existing
 					? await store.setJSON(key, fresh, { onlyIfMatch: existing.etag })
 					: await store.setJSON(key, fresh, { onlyIfNew: true });
-				if (result.modified) return 'counted';
+				if (result.modified) return { outcome: 'counted', windowStart: now };
 				continue;
 			}
 			const bucket = existing.data as Bucket;
-			if (bucket.count >= max) return 'over';
+			if (bucket.count >= max) return { outcome: 'over' };
 			const result = await store.setJSON(key, { count: bucket.count + 1, windowStart: bucket.windowStart } satisfies Bucket, {
 				onlyIfMatch: existing.etag,
 			});
-			if (result.modified) return 'counted';
+			if (result.modified) return { outcome: 'counted', windowStart: bucket.windowStart };
 		}
-		return 'contended';
+		return { outcome: 'contended' };
 	} catch {
-		return 'unavailable';
+		return { outcome: 'unavailable' };
 	}
 }
 
-/** Whether the bucket has room left, without counting anything. */
-async function peek(key: string, max: number, windowMs: number, now: number): Promise<Outcome> {
+/** Takes back one count, if the window it landed in is still the current one. Best effort: a lost race keeps the count. */
+async function uncount(key: string, windowStart: number): Promise<void> {
 	const store = openStore();
-	if (!store) return 'unavailable';
+	if (!store) return;
 	try {
-		const existing = await store.get(key, { type: 'json' });
-		if (!existing || now - (existing as Bucket).windowStart > windowMs) return 'counted';
-		return (existing as Bucket).count >= max ? 'over' : 'counted';
+		for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
+			if (attempt > 0) await pause();
+			const existing = await store.getWithMetadata(key, { type: 'json' });
+			const bucket = existing?.data as Bucket | undefined;
+			if (!existing || !bucket || bucket.windowStart !== windowStart || bucket.count <= 0) return;
+			const result = await store.setJSON(key, { count: bucket.count - 1, windowStart } satisfies Bucket, { onlyIfMatch: existing.etag });
+			if (result.modified) return;
+		}
 	} catch {
-		return 'unavailable';
+		// Kept counted: the safe side.
 	}
 }
 
@@ -145,7 +156,7 @@ export async function checkRateLimit(scope: string, ip: string | null, options: 
 	const now = Date.now();
 	const client = hashClient(ip ?? 'unknown');
 	if (!client) return { ok: !failClosed };
-	const outcome = await count(`${scope}:${day(now)}:${client}`, max, windowMs, now);
+	const { outcome } = await count(`${scope}:${day(now)}:${client}`, max, windowMs, now);
 	if (outcome === 'unavailable' || outcome === 'contended') return { ok: !failClosed };
 	void sweep(scope, now);
 	return { ok: outcome === 'counted' };
@@ -160,23 +171,31 @@ export async function checkRateLimit(scope: string, ip: string | null, options: 
 export async function checkGlobalLimit(scope: string, options: GlobalLimitOptions = {}): Promise<{ ok: boolean }> {
 	const { max = MAX_REQUESTS, windowMs = WINDOW_MS, failClosed = false } = options;
 	const now = Date.now();
-	const outcome = await count(`${scope}:${day(now)}:all`, max, windowMs, now);
+	const { outcome } = await count(`${scope}:${day(now)}:all`, max, windowMs, now);
 	if (outcome === 'unavailable') return { ok: !failClosed };
 	if (outcome === 'contended') return { ok: true };
 	void sweep(scope, now);
 	return { ok: outcome === 'counted' };
 }
 
+export type Reservation = { ok: true; release(): Promise<void> } | { ok: false; reason: 'over' | 'contended' | 'unavailable' };
+
 /**
- * Whether the global cap for `scope` still has room, counting nothing. With
- * checkGlobalLimit to count only some requests, e.g. failed admin logins.
+ * A strict cap on everyone together: counts one request BEFORE the work it
+ * guards (e.g. comparing an admin password), and lets it through only when
+ * the count was written. Over the cap, a lost race (counted as a hit, so a
+ * parallel burst can't run past the cap uncounted) and a limiter that can't
+ * run all refuse. `release()` takes the count back, best effort, for a
+ * request that turned out not to count (a correct password).
  */
-export async function peekGlobalLimit(scope: string, options: GlobalLimitOptions = {}): Promise<{ ok: boolean }> {
-	const { max = MAX_REQUESTS, windowMs = WINDOW_MS, failClosed = false } = options;
+export async function reserveGlobalLimit(scope: string, options: LimitOptions = {}): Promise<Reservation> {
+	const { max = MAX_REQUESTS, windowMs = WINDOW_MS } = options;
 	const now = Date.now();
-	const outcome = await peek(`${scope}:${day(now)}:all`, max, windowMs, now);
-	if (outcome === 'unavailable') return { ok: !failClosed };
-	return { ok: outcome === 'counted' };
+	const key = `${scope}:${day(now)}:all`;
+	const { outcome, windowStart } = await count(key, max, windowMs, now);
+	if (outcome !== 'counted') return { ok: false, reason: outcome };
+	void sweep(scope, now);
+	return { ok: true, release: () => uncount(key, windowStart as number) };
 }
 
 /** The visitor's IP as Netlify reports it. */

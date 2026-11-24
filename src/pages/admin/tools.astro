@@ -2,7 +2,8 @@
 export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { clearAllData, loadSampleData } from '../../lib/admin/sample-data';
+import { clearAllData, demoDataAllowed, loadSampleData } from '../../lib/admin/sample-data';
+import { rebuildLedgers } from '../../lib/bookings/capacity';
 import { adminEmail, emailSender, emailSendingOn } from '../../lib/email/send';
 import { DEMO_CHECKOUT_OPEN, PAYMENTS_ARE_DEMO } from '../../config/payments';
 import { createDemoAccessToken, DEMO_ACCESS_COOKIE, DEMO_ACCESS_DAYS, demoAccessConfigured, demoAccessCookieOptions, demoAccessExpiry } from '../../lib/demo-access';
@@ -17,10 +18,21 @@ if (Astro.request.method === 'POST') {
 		return Astro.redirect('/admin/tools/', 303);
 	}
 	const action = form.get('action');
-	// Showcase only, like clear-all: sample bookings must never mix with real ones.
-	if (action === 'load-sample' && PAYMENTS_ARE_DEMO) {
+	// Showcase only, like clear-all, and never on production: sample bookings must never mix with real ones.
+	if (action === 'load-sample') {
+		if (!demoDataAllowed()) return Astro.redirect('/admin/tools/?flash=demo-data-refused', 303);
 		await loadSampleData();
 		return Astro.redirect('/admin/?flash=loaded', 303);
+	}
+	// Recomputes the seat and boat ledgers from the bookings (capacity.ts): after a rollback or overlapping deploys.
+	if (action === 'rebuild-capacity' && form.get('confirm') === 'yes') {
+		try {
+			const result = await rebuildLedgers();
+			return Astro.redirect(`/admin/tools/?flash=rebuilt&departures=${result.ledgers}&removed=${result.removed}`, 303);
+		} catch (err) {
+			console.error('[admin] capacity rebuild failed', err);
+			return Astro.redirect('/admin/tools/?flash=rebuild-failed', 303);
+		}
 	}
 	// Lets this browser use the demo checkout where it isn't open to everyone (production).
 	if (action === 'demo-checkout-on' && PAYMENTS_ARE_DEMO) {
@@ -34,7 +46,9 @@ if (Astro.request.method === 'POST') {
 		return Astro.redirect('/admin/tools/?flash=demo-off', 303);
 	}
 	// Showcase only: once payments are real, the bookings and the invoice counter are accounting records.
-	if (form.get('action') === 'clear-all' && form.get('confirm') === 'yes' && PAYMENTS_ARE_DEMO) {
+	// Never on production either: it would delete real guests' bookings (sample-data.ts).
+	if (form.get('action') === 'clear-all' && form.get('confirm') === 'yes') {
+		if (!demoDataAllowed()) return Astro.redirect('/admin/tools/?flash=demo-data-refused', 303);
 		await clearAllData();
 		return Astro.redirect('/admin/tools/?flash=cleared', 303);
 	}
@@ -46,8 +60,16 @@ const FLASHES: Record<string, string> = {
 	'demo-on': 'Demo checkout is on in this browser.',
 	'demo-off': 'Demo checkout is off in this browser.',
 	'demo-no-secret': 'Demo checkout could not be switched on: DEMO_ACCESS_SECRET is not set in Netlify.',
+	'demo-data-refused': 'Demo data can’t be loaded or deleted here: this is the live site, with real bookings.',
+	'rebuild-failed': 'Capacity could not be rebuilt (storage error). Nothing was lost; try again.',
 };
-const flash = FLASHES[Astro.url.searchParams.get('flash') ?? ''] ?? '';
+const params = Astro.url.searchParams;
+const count = (name: string) => Math.max(0, Number.parseInt(params.get(name) ?? '', 10) || 0);
+const flash =
+	params.get('flash') === 'rebuilt'
+		? `Capacity rebuilt from the bookings: ${count('departures')} ${count('departures') === 1 ? 'departure' : 'departures'} checked, ${count('removed')} ${count('removed') === 1 ? 'claim' : 'claims'} removed.`
+		: (FLASHES[params.get('flash') ?? ''] ?? '');
+const canUseDemoData = demoDataAllowed();
 const demoAccessUntil = demoAccessExpiry(Astro.cookies.get(DEMO_ACCESS_COOKIE)?.value);
 const canIssueDemoAccess = demoAccessConfigured();
 const sendingOn = emailSendingOn();
@@ -144,27 +166,55 @@ const sender = emailSender();
 				</section>
 
 				<p class="section-label"><span>Demo data</span></p>
-				<section class="a-tile demo" aria-label="Demo data">
-					<p>Fills the admin with about three weeks of example bookings and enquiries, so you can show it to someone. Demo data sends no emails.</p>
-					<form method="post">
-						<input type="hidden" name="action" value="load-sample" />
-						<button class="btn-primary a-block" type="submit"><i class="ti ti-database" aria-hidden="true" /> Load demo data</button>
-					</form>
-					<details class="a-confirm">
-						<summary class="btn-secondary a-danger a-block">Delete everything…</summary>
-						<div class="a-danger-box">
-							<p><strong>Delete every booking, enquiry and email?</strong> This can't be undone.</p>
-							<form method="post">
-								<input type="hidden" name="action" value="clear-all" />
-								<input type="hidden" name="confirm" value="yes" />
-								<button class="btn-primary a-danger" type="submit">Yes, delete everything</button>
-							</form>
-						</div>
-					</details>
-				</section>
+				{canUseDemoData ? (
+					<section class="a-tile demo" aria-label="Demo data">
+						<p>Fills the admin with about three weeks of example bookings and enquiries, so you can show it to someone. Demo data sends no emails and holds no seats.</p>
+						<form method="post">
+							<input type="hidden" name="action" value="load-sample" />
+							<button class="btn-primary a-block" type="submit"><i class="ti ti-database" aria-hidden="true" /> Load demo data</button>
+						</form>
+						<details class="a-confirm">
+							<summary class="btn-secondary a-danger a-block">Delete everything…</summary>
+							<div class="a-danger-box">
+								<p><strong>Delete every booking, enquiry and email?</strong> This can't be undone.</p>
+								<form method="post">
+									<input type="hidden" name="action" value="clear-all" />
+									<input type="hidden" name="confirm" value="yes" />
+									<button class="btn-primary a-danger" type="submit">Yes, delete everything</button>
+								</form>
+							</div>
+						</details>
+					</section>
+				) : (
+					<section class="a-tile demo" aria-label="Demo data">
+						<p>
+							Loading and deleting demo data is off on the live site: guests book here for real, and demo bookings would sit among theirs. Use a deploy
+							preview to show the admin with demo data.
+						</p>
+					</section>
+				)}
 			</>
 		)
 	}
+
+	<p class="section-label"><span>Capacity</span></p>
+	<section class="a-tile demo" aria-label="Capacity">
+		<p>
+			Seats and private boats left are counted from a ledger kept next to the bookings. If a departure shows the wrong number of seats left (after a
+			rollback, for example), rebuild it from the bookings. Payments in progress are kept.
+		</p>
+		<details class="a-confirm">
+			<summary class="btn-secondary a-block">Rebuild capacity from bookings…</summary>
+			<div class="a-danger-box">
+				<p><strong>Recount every departure's seats and boats from the paid bookings?</strong> Demo data and demo payments on the live site hold no seats.</p>
+				<form method="post">
+					<input type="hidden" name="action" value="rebuild-capacity" />
+					<input type="hidden" name="confirm" value="yes" />
+					<button class="btn-primary" type="submit">Yes, rebuild capacity</button>
+				</form>
+			</div>
+		</details>
+	</section>
 
 	<p class="section-label"><span>Account</span></p>
 	<form method="post" action="/admin/logout/">

@@ -4,7 +4,7 @@ import { createDemoAccessToken, demoAccessConfigured, demoAccessCookieOptions, d
 import { createSessionToken } from './admin/auth';
 import { getTourBySlug } from './tours';
 import type { TourDetail } from '../types/tour';
-import { applyAdminAction, createPendingBooking, DEMO_INVOICE_COUNTER, finalizePaidBooking, INVOICE_COUNTER, notifyPaymentNotOpen, ADMIN_NOTIFY_DAILY_CAP } from './bookings/service';
+import { applyAdminAction, createPendingBooking, DEMO_INVOICE_COUNTER, finalizePaidBooking, INVOICE_COUNTER, notifyPaymentNotOpen } from './bookings/service';
 import { bookings, nextCounterValue, outbox, resetMemoryStore } from './bookings/store';
 import { loadSampleData } from './admin/sample-data';
 
@@ -106,10 +106,11 @@ describe('demo-access cookie', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('is valid for 30 days, and not after', () => {
+	it('is valid for 7 days, and not after', () => {
 		process.env.DEMO_ACCESS_SECRET = 'd'.repeat(44);
 		const token = createDemoAccessToken(NOW) as string;
-		expect(token).toMatch(/^v1\.\d+\.[\w-]+$/);
+		expect(DEMO_ACCESS_DAYS).toBe(7);
+		expect(token).toMatch(/^v2\.\d+\.[\w-]+$/);
 		expect(verifyDemoAccessToken(token, NOW + 60_000)).toBe(true);
 		expect(demoAccessExpiry(token, NOW)).toBe(NOW + DEMO_ACCESS_DAYS * 86_400_000);
 		expect(verifyDemoAccessToken(token, NOW + DEMO_ACCESS_DAYS * 86_400_000 + 1)).toBe(false);
@@ -123,12 +124,39 @@ describe('demo-access cookie', () => {
 		expect(verifyDemoAccessToken(`${version}.${Number(expires) + 86_400_000}.${signature}`, NOW)).toBe(false);
 		expect(verifyDemoAccessToken(`${token}x`, NOW)).toBe(false);
 		expect(verifyDemoAccessToken(`${token}.extra`, NOW)).toBe(false);
-		expect(verifyDemoAccessToken(`v2.${expires}.${signature}`, NOW)).toBe(false);
+		expect(verifyDemoAccessToken(`v1.${expires}.${signature}`, NOW)).toBe(false);
+		expect(verifyDemoAccessToken(`v3.${expires}.${signature}`, NOW)).toBe(false);
 		expect(verifyDemoAccessToken('', NOW)).toBe(false);
 		expect(verifyDemoAccessToken(undefined, NOW)).toBe(false);
 		expect(verifyDemoAccessToken('yes', NOW)).toBe(false);
 		process.env.DEMO_ACCESS_SECRET = 'e'.repeat(44);
 		expect(verifyDemoAccessToken(token, NOW)).toBe(false);
+	});
+
+	it('a cookie minted on a deploy preview or branch deploy is refused on production, and the other way round', () => {
+		process.env.DEMO_ACCESS_SECRET = 'd'.repeat(44);
+		vi.stubEnv('CONTEXT', 'deploy-preview');
+		const preview = createDemoAccessToken(NOW) as string;
+		expect(verifyDemoAccessToken(preview, NOW)).toBe(true);
+		vi.stubEnv('CONTEXT', 'branch-deploy');
+		const branch = createDemoAccessToken(NOW) as string;
+		vi.stubEnv('CONTEXT', 'production');
+		expect(verifyDemoAccessToken(preview, NOW)).toBe(false);
+		expect(verifyDemoAccessToken(branch, NOW)).toBe(false);
+		const production = createDemoAccessToken(NOW) as string;
+		expect(verifyDemoAccessToken(production, NOW)).toBe(true);
+		vi.stubEnv('CONTEXT', 'deploy-preview');
+		expect(verifyDemoAccessToken(production, NOW)).toBe(false);
+	});
+
+	it('stops working when ADMIN_PASSWORD changes, like the admin sessions', () => {
+		process.env.DEMO_ACCESS_SECRET = 'd'.repeat(44);
+		process.env.ADMIN_PASSWORD = 'first-long-password';
+		const token = createDemoAccessToken(NOW) as string;
+		expect(verifyDemoAccessToken(token, NOW)).toBe(true);
+		process.env.ADMIN_PASSWORD = 'second-long-password';
+		expect(verifyDemoAccessToken(token, NOW)).toBe(false);
+		expect(verifyDemoAccessToken(createDemoAccessToken(NOW) as string, NOW)).toBe(true);
 	});
 
 	it('is not an admin session, and an admin session is not demo access', () => {
@@ -154,8 +182,8 @@ describe('demo-access cookie', () => {
 		expect(createDemoAccessToken(NOW)).toBeNull();
 	});
 
-	it('is HttpOnly, Lax, site-wide and kept 30 days', () => {
-		expect(demoAccessCookieOptions()).toMatchObject({ httpOnly: true, sameSite: 'lax', path: '/', maxAge: 30 * 86_400 });
+	it('is HttpOnly, Lax, site-wide and kept 7 days', () => {
+		expect(demoAccessCookieOptions()).toMatchObject({ httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 86_400 });
 	});
 
 	it('the dev-only test header can close the gate, and does nothing on a production build', () => {
@@ -206,7 +234,7 @@ describe('demo invoices', () => {
 describe('notifyPaymentNotOpen', () => {
 	beforeEach(() => resetMemoryStore());
 
-	it('emails the admin once per booking, and leaves it awaiting payment', async () => {
+	it('records the booking once, leaves it awaiting payment, and emails the admin the hourly list (review S1)', async () => {
 		const booking = await pending();
 		const results = await Promise.all([1, 2, 3].map(() => notifyPaymentNotOpen(booking.id, 'https://example.test', NOW)));
 		expect(results.filter(Boolean)).toHaveLength(1);
@@ -215,9 +243,11 @@ describe('notifyPaymentNotOpen', () => {
 		const emails = await outbox().list();
 		expect(emails).toHaveLength(1);
 		expect(emails[0].kind).toBe('admin_booking');
-		expect(emails[0].subject).toMatch(/^Not paid yet HBC-/);
-		expect(emails[0].text).toContain("online payment isn't open yet, so nothing was paid");
+		expect(emails[0].subject).toBe('1 booking waiting for confirmation (1 new)');
+		expect(emails[0].text).toContain("Online payment isn't open yet, so this guest booked without paying. Nothing was charged.");
+		expect(emails[0].text).toContain(`${booking.ref} (new)`);
 		expect(emails[0].text).toContain(`https://example.test/admin/bookings/${booking.id}/`);
+		expect(emails[0].text).toContain('https://example.test/admin/bookings/?show=waiting');
 		expect(emails[0].text).not.toMatch(/\bpaid with\b|Invoice/i);
 
 		const stored = await bookings().get(booking.id);
@@ -239,14 +269,18 @@ describe('notifyPaymentNotOpen', () => {
 		expect(await outbox().list()).toHaveLength(before);
 	});
 
-	it('stops emailing past the daily cap, so a flood of bookings cannot burn the email quota', async () => {
-		vi.spyOn(console, 'error').mockImplementation(() => {});
+	it('a flood of bookings gets one email an hour, and every booking is still recorded', async () => {
 		const ids = [];
-		for (let i = 0; i <= ADMIN_NOTIFY_DAILY_CAP; i++) ids.push((await pending()).id);
+		for (let i = 0; i < 45; i++) ids.push((await pending()).id);
 		for (const id of ids) await notifyPaymentNotOpen(id, 'https://example.test', NOW);
-		expect(await outbox().list()).toHaveLength(ADMIN_NOTIFY_DAILY_CAP);
-		// Still recorded on the booking, so it is never emailed later either.
-		expect((await bookings().get(ids.at(-1) as string))?.paymentNotOpenNotifiedAt).toBe(NOW.toISOString());
-		vi.restoreAllMocks();
+		expect(await outbox().list()).toHaveLength(1);
+		for (const id of ids) expect((await bookings().get(id))?.paymentNotOpenNotifiedAt).toBe(NOW.toISOString());
+
+		// The hour's email listed the first booking only; the next hour's first booking sends a list of all 46, 45 of them new.
+		const later = await pending();
+		expect(await notifyPaymentNotOpen(later.id, 'https://example.test', new Date(NOW.getTime() + 3_600_000))).toBe(true);
+		const subjects = (await outbox().list()).map((email) => email.subject);
+		expect(subjects).toHaveLength(2);
+		expect(subjects).toContain('46 bookings waiting for confirmation (45 new)');
 	});
 });

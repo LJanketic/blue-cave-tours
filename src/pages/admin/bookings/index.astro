@@ -5,7 +5,8 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { formatEuro } from '../../../lib/price';
 import { formatBookingDate, guestSummaryFromCounts, seatCount } from '../../../lib/booking';
 import { businessDate, formatShortDate } from '../../../lib/bookings/dates';
-import { isDeadQuote, STATUS_LABELS, takesSeats } from '../../../lib/bookings/service';
+import { isDeadQuote, STATUS_LABELS, waitingForConfirmation } from '../../../lib/bookings/service';
+import { demoPaymentHoldsNoSeats, onBoard } from '../../../lib/bookings/capacity';
 import { bookings, type Booking, type BookingStatus } from '../../../lib/bookings/store';
 import { addDays } from '../../../lib/admin/schedule';
 import { overbookingsById } from '../../../lib/admin/manifest';
@@ -17,8 +18,10 @@ type When = keyof typeof WHEN;
 const statusParam = params.get('status') ?? '';
 const status = (Object.keys(STATUS_LABELS) as BookingStatus[]).find((s) => s === statusParam) ?? '';
 const q = (params.get('q') ?? '').trim().slice(0, 100);
+// ?show=waiting: only bookings whose guest couldn't pay online, waiting for staff to confirm (the dashboard banner links here).
+const waitingOnly = params.get('show') === 'waiting';
 // A search or a status filter looks across all dates unless a date range was picked explicitly.
-const when = (Object.keys(WHEN) as When[]).find((w) => w === params.get('when')) ?? (q || status ? 'all' : 'week');
+const when = (Object.keys(WHEN) as When[]).find((w) => w === params.get('when')) ?? (q || status || waitingOnly ? 'all' : 'week');
 const defaultWhen = (search: string, s: string): When => (search || s ? 'all' : 'week');
 
 /** Link to this page with one filter changed and the others kept. */
@@ -49,7 +52,9 @@ const matches = (b: Booking) =>
 const all = await bookings().list();
 const overbooked = overbookingsById(all);
 const rows = all
-	.filter((b) => inRange(b.date))
+	.filter((b) => !waitingOnly || waitingForConfirmation(b))
+	// The waiting list looks across all upcoming dates: waitingForConfirmation already leaves out past days.
+	.filter((b) => waitingOnly || inRange(b.date))
 	.filter((b) => !status || b.status === status)
 	// Replaced, withdrawn or expired charter quotes were never bookings: shown only under "Cancelled" or a search.
 	.filter((b) => status === 'cancelled' || needle || !isDeadQuote(b))
@@ -72,12 +77,12 @@ for (const row of rows) {
 }
 const dayLabel = (iso: string) =>
 	iso === today ? `Today · ${formatShortDate(iso)}` : iso === tomorrow ? `Tomorrow · ${formatShortDate(iso)}` : formatShortDate(iso);
-/** "3 bookings · 9 guests": guests count only bookings that still take seats. */
+/** "3 bookings · 9 guests": guests count only bookings still on the boat (demo data included). */
 const daySummary = (items: Booking[]) => {
-	const guests = items.filter(takesSeats).reduce((sum, b) => sum + seatCount(b), 0);
+	const guests = items.filter(onBoard).reduce((sum, b) => sum + seatCount(b), 0);
 	return `${items.length} ${items.length === 1 ? 'booking' : 'bookings'} · ${guests} ${guests === 1 ? 'guest' : 'guests'}`;
 };
-const filtered = Boolean(q || status || when !== 'week');
+const filtered = Boolean(q || status || when !== 'week' || waitingOnly);
 const rangeNote =
 	when === 'week' ? ` from ${formatShortDate(today, false)} to ${formatShortDate(weekEnd, false)}` : when === 'later' ? ` after ${formatShortDate(weekEnd, false)}` : '';
 ---
@@ -115,7 +120,11 @@ const rangeNote =
 	</details>
 
 	<p class="count" role="status">
-		<span>{rows.length} {rows.length === 1 ? 'booking' : 'bookings'}{rangeNote}{q && <> matching “{q}”</>}</span>
+		<span>
+			{rows.length} {rows.length === 1 ? 'booking' : 'bookings'}
+			{waitingOnly ? ' waiting for confirmation' : rangeNote}
+			{q && <> matching “{q}”</>}
+		</span>
 		{filtered && <a href="/admin/bookings/">Reset</a>}
 	</p>
 
@@ -127,13 +136,15 @@ const rangeNote =
 				</div>
 				<h2>No bookings found</h2>
 				<p>
-					{q || status
+					{waitingOnly
+						? 'No booking is waiting for confirmation.'
+						: q || status
 						? 'Try another search or reset the filters.'
 						: when === 'week'
 							? 'Nothing booked for the next 7 days yet.'
 							: 'Nothing here yet.'}
 				</p>
-				{when === 'week' && !q && !status ? (
+				{when === 'week' && !q && !status && !waitingOnly ? (
 					<a class="btn-secondary" href={href({ when: 'later' })}>See later dates</a>
 				) : (
 					filtered && <a class="btn-secondary" href="/admin/bookings/">Reset filters</a>
@@ -159,7 +170,10 @@ const rangeNote =
 										<span class="a-item-title name">{b.firstName} {b.lastName}</span>
 										<span class={`a-badge a-badge--${b.status}`}>{STATUS_LABELS[b.status]}</span>
 										{b.kind === 'private' && <span class="a-badge a-badge--private">Private</span>}
+										{waitingForConfirmation(b) && <span class="a-badge a-badge--pending_payment">Waiting for confirmation</span>}
+										{b.paymentStatus === 'offline' && b.status !== 'cancelled' && <span class="a-badge a-badge--offline">Pay offline</span>}
 										{overbooked.has(b.id) && <span class="a-badge a-badge--full">Overbooked +{overbooked.get(b.id)?.seatsOver}</span>}
+										{demoPaymentHoldsNoSeats(b) && <span class="a-badge a-badge--demo">Demo payment — holds no seats</span>}
 									</span>
 									<span class="line">
 										<span class="a-item-sub tour">{b.tourTitle}</span>

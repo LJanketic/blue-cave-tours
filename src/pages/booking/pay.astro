@@ -33,8 +33,8 @@ import { bookings, isCharterQuote, type PaymentProvider } from '../../lib/bookin
  * The buttons are gated (demoCheckoutAllowed): they only work where the build
  * opened the demo checkout to everyone (dev, deploy previews) or for a browser
  * an admin enabled from /admin/tools. Everyone else is told online payment
- * isn't open yet, the booking stays awaiting payment, and the admin is emailed
- * once to confirm it by hand. Once payments are live the buttons never work.
+ * isn't open yet, the booking stays awaiting payment and waits in the admin for
+ * staff to confirm it ("Confirm, pay offline"). Once payments are live the buttons never work.
  */
 
 const id = Astro.url.searchParams.get('id');
@@ -116,14 +116,20 @@ const closedReason =
 			: 'This booking can no longer be paid, because booking for this departure has closed.';
 const termsMissing = Astro.url.searchParams.get('terms') === '1';
 
-// Online payment isn't open to this guest: tell the admin once, so they confirm it by email (not for a sold-out departure).
-if (payable && !soldOut && !demoCheckout) {
-	try {
-		await notifyPaymentNotOpen(booking.id, Astro.url.origin);
-	} catch (err) {
+// Online payment isn't open to this guest: record it once, so it waits for staff to confirm it (not for a sold-out
+// departure). A reload of an already recorded booking does nothing. The write and the hourly admin digest run after
+// the response where Netlify can keep the function alive (waitUntil), so the guest never waits on the email provider.
+if (payable && !soldOut && !demoCheckout && !booking.paymentNotOpenNotifiedAt) {
+	const notice = notifyPaymentNotOpen(booking.id, Astro.url.origin).catch((err) => {
 		console.error(`[booking ${booking.id}] admin not told about a booking awaiting payment`, err);
-	}
+	});
+	// @astrojs/netlify sets locals.netlify.context (a no-op waitUntil under astro dev, where the process keeps running).
+	const netlify = (Astro.locals as { netlify?: { context?: { waitUntil?: (promise: Promise<unknown>) => void } } }).netlify;
+	if (typeof netlify?.context?.waitUntil === 'function') netlify.context.waitUntil(notice);
+	else await notice;
 }
+// Staff confirmed it without an online payment (the admin's "Confirm, pay offline"): nothing to pay here.
+const confirmedOffline = booking.paymentStatus === 'offline' && booking.status !== 'cancelled';
 
 const guests = guestSummaryFromCounts(booking.adults, booking.children, booking.infants);
 const tour = getTourBySlug(booking.tourSlug);
@@ -160,7 +166,17 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 		/>
 
 		{
-			!payable ? (
+			confirmedOffline ? (
+				<div class="pay__closed" role="status" id="pay-confirmed-offline">
+					<p>
+						<strong>Your booking is confirmed.</strong> We haven't taken a payment online for it. Our team will contact you
+						about payment.
+					</p>
+					<p>
+						Questions? <a href="/contact/">Contact us</a> and quote <strong>{booking.ref}</strong>.
+					</p>
+				</div>
+			) : !payable ? (
 				<div class="pay__closed" role="status">
 					<p>{closedReason}</p>
 					<p>

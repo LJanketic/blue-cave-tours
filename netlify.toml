@@ -10,7 +10,7 @@
 	# equal, so the test fails and the command exits non-zero. An empty
 	# CACHED_COMMIT_REF also builds: `git diff <one ref>` would otherwise compare
 	# against the clean checkout and wrongly report "no changes".
-	# `netlify` is the scheduled function (netlify/functions/nightly.mts).
+	# `netlify` holds the scheduled functions (netlify/functions/nightly.mts, hourly.mts).
 	ignore = "[ -n \"$CACHED_COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- src netlify public scripts package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc .nvmrc astro.config.mjs tsconfig.json netlify.toml"
 
 [build.environment]
@@ -22,8 +22,17 @@
 # tested end to end without the admin's demo-access cookie. Production never
 # does (src/config/payments.ts ignores DEMO_CHECKOUT there): guests see that
 # online payment isn't open yet. Read at build time.
+#
+# Because anyone can then book on a preview, previews never send real email
+# (W0 review S3): the shared Resend quota is 100 a day. Variables in this file
+# only reach the BUILD, not the server function at runtime, and the email code
+# reads EMAIL_SENDING at runtime; so src/lib/email/send.ts also refuses to send
+# when the inlined deploy context is deploy-preview. This line keeps the build
+# itself in step. Best of all, scope RESEND_API_KEY to Production in the
+# Netlify UI, where scoped variables do reach functions.
 [context.deploy-preview.environment]
 	DEMO_CHECKOUT = "open"
+	EMAIL_SENDING = "off"
 
 [[headers]]
   for = "/*"

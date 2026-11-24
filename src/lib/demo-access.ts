@@ -1,5 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { adminPasswordFingerprint } from './admin/auth';
 import { secretKey } from './secrets';
+import { deployContext } from './bookings/store';
 
 /**
  * The demo-access cookie: lets one browser use the demo checkout on a build
@@ -10,14 +12,20 @@ import { secretKey } from './secrets';
  * cookie is valid and the admin button says so. Rotating the secret switches
  * demo checkout off in every browser.
  *
- * The value is `v1.<expiry ms>.<HMAC of "demo-access:v1:<expiry>">`, and
- * holds nothing about the person.
+ * The value is `v2.<expiry ms>.<HMAC>`, and holds nothing about the person.
+ * The HMAC also covers two things the cookie doesn't carry (W0 review S7):
+ * - the deploy context inlined at build time, so a cookie minted on a deploy
+ *   preview or branch deploy (which share DEMO_ACCESS_SECRET with production)
+ *   is refused on production, and the other way round;
+ * - a fingerprint of ADMIN_PASSWORD, so changing the admin password switches
+ *   demo checkout off in every browser, like it signs every admin out.
  */
 
 export const DEMO_ACCESS_COOKIE = 'hbc_demo';
-export const DEMO_ACCESS_DAYS = 30;
+export const DEMO_ACCESS_DAYS = 7;
 
-const VERSION = 'v1';
+const VERSION = 'v2';
+
 
 function signingKey(): Buffer | null {
 	return secretKey('demo-access');
@@ -29,7 +37,9 @@ export function demoAccessConfigured(): boolean {
 }
 
 function sign(expires: string, key: Buffer): string {
-	return createHmac('sha256', key).update(`demo-access:${VERSION}:${expires}`).digest('base64url');
+	return createHmac('sha256', key)
+		.update(`demo-access:${VERSION}:${deployContext() ?? ''}:${adminPasswordFingerprint()}:${expires}`)
+		.digest('base64url');
 }
 
 function sameText(a: string, b: string): boolean {

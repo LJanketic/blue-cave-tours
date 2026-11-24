@@ -96,7 +96,7 @@ test('an admin can switch the demo checkout on for this browser, pay with it, an
 	const cookie = (await context.cookies()).find((c) => c.name === 'hbc_demo');
 	expect(cookie?.httpOnly).toBe(true);
 	expect(cookie?.sameSite).toBe('Lax');
-	expect(cookie?.value).toMatch(/^v1\.\d+\./);
+	expect(cookie?.value).toMatch(/^v2\.\d+\./);
 
 	// With the cookie, the demo checkout works even though the gate is closed for everyone else.
 	const payPath = await book(page.request, extra);
@@ -116,7 +116,7 @@ test('an admin can switch the demo checkout on for this browser, pay with it, an
 	await expect(page.locator('#pay-not-open')).toBeVisible();
 
 	// A forged cookie is worth nothing.
-	await context.addCookies([{ name: 'hbc_demo', value: `v1.${Date.now() + 86_400_000}.forged`, url: ORIGIN }]);
+	await context.addCookies([{ name: 'hbc_demo', value: `v2.${Date.now() + 86_400_000}.forged`, url: ORIGIN }]);
 	const forged = await book(page.request, extra);
 	const refused = await page.request.post(forged, { form: { provider: 'teya', outcome: 'success' }, maxRedirects: 0, headers: { Origin: ORIGIN, ...extra } });
 	expect(refused.status()).toBe(403);

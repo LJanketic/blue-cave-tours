@@ -13,7 +13,9 @@ export function paymentsMode(raw: string | undefined): PaymentsMode {
 	return raw?.trim() === 'live' ? 'live' : 'demo';
 }
 
-export const PAYMENTS_MODE: PaymentsMode = paymentsMode(import.meta.env.PAYMENTS_MODE);
+// `?.`: import.meta.env is undefined in the hourly function's bundle (built without Vite), which reads this through
+// src/lib/email/send.ts; unset there means demo, so delivery stays limited to the admin and the allowlist.
+export const PAYMENTS_MODE: PaymentsMode = paymentsMode(import.meta.env?.PAYMENTS_MODE);
 
 /**
  * True while checkout is the showcase mock (src/pages/booking/pay.astro): no
@@ -41,7 +43,7 @@ export function demoCheckoutFlag(raw: string | undefined, context: string | unde
 	return dev || DEMO_OPEN_CONTEXTS.includes(context ?? '');
 }
 
-export const DEMO_CHECKOUT_OPEN = demoCheckoutFlag(import.meta.env.DEMO_CHECKOUT, import.meta.env.CONTEXT, import.meta.env.DEV);
+export const DEMO_CHECKOUT_OPEN = demoCheckoutFlag(import.meta.env?.DEMO_CHECKOUT, import.meta.env?.CONTEXT, Boolean(import.meta.env?.DEV));
 
 /**
  * Whether this request may use the demo checkout (the Pay buttons and their

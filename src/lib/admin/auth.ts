@@ -1,6 +1,5 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { secretKey } from '../secrets';
-import { checkGlobalLimit, checkRateLimit, peekGlobalLimit } from '../rate-limit';
 
 /**
  * Showcase login for /admin: one shared password from `ADMIN_PASSWORD`, and a
@@ -10,6 +9,10 @@ import { checkGlobalLimit, checkRateLimit, peekGlobalLimit } from '../rate-limit
  *
  * Changing ADMIN_PASSWORD (and redeploying) signs everyone out: each session
  * is signed over a fingerprint of the password it was issued under.
+ *
+ * The login limits live in auth-limits.ts: they need Netlify Blobs, and this
+ * module is imported by the middleware on every request, so it stays free of
+ * Blobs.
  */
 
 export const ADMIN_COOKIE = 'hbc_admin';
@@ -33,46 +36,6 @@ export function adminPasswordTooShort(): boolean {
 		console.warn(`[admin] ADMIN_PASSWORD is shorter than ${MIN_ADMIN_PASSWORD_LENGTH} characters. Set a longer one in Netlify.`);
 	}
 	return short;
-}
-
-/** Per IP: 5 tries every 10 minutes. */
-export const LOGIN_LIMIT_PER_IP = { max: 5, windowMs: 10 * 60_000 } as const;
-/**
- * Everyone together: 200 wrong passwords an hour, against guessing spread over
- * many IPs. Only failed attempts count, so staff logging in never use it up.
- * While it's reached nobody can log in, staff included, until the hour's
- * window ends: the price of a cap that holds against many IPs.
- */
-export const LOGIN_LIMIT_GLOBAL = { max: 200, windowMs: 60 * 60_000 } as const;
-const GLOBAL_SCOPE = 'admin-login-all';
-
-/**
- * ADMIN_LOGIN_HOURLY_CAP raises the global cap only where many test runs share
- * one store (playwright.config.ts), like CHARTER_HOURLY_CAP; never on production.
- */
-function globalLoginCap(): number {
-	if ((process.env.CONTEXT || import.meta.env.CONTEXT) === 'production') return LOGIN_LIMIT_GLOBAL.max;
-	const cap = Number.parseInt(process.env.ADMIN_LOGIN_HOURLY_CAP ?? '', 10);
-	return Number.isInteger(cap) && cap > 0 ? cap : LOGIN_LIMIT_GLOBAL.max;
-}
-
-/**
- * Before the password check: counts the attempt per IP, and checks (without
- * counting) that the hour's failed attempts haven't reached the global cap.
- * Both fail closed: without the limiter there's no cap on password guesses.
- * A wrong password then counts against the global cap (recordFailedLogin).
- */
-export async function checkLoginAllowed(ip: string | null): Promise<{ ok: true } | { ok: false; reason: 'ip' | 'global' }> {
-	const perIp = await checkRateLimit('admin-login', ip, { ...LOGIN_LIMIT_PER_IP, failClosed: true });
-	if (!perIp.ok) return { ok: false, reason: 'ip' };
-	const global = await peekGlobalLimit(GLOBAL_SCOPE, { ...LOGIN_LIMIT_GLOBAL, max: globalLoginCap(), failClosed: true });
-	if (!global.ok) return { ok: false, reason: 'global' };
-	return { ok: true };
-}
-
-/** A wrong password: one more against the hour's global cap. */
-export async function recordFailedLogin(): Promise<void> {
-	await checkGlobalLimit(GLOBAL_SCOPE, { ...LOGIN_LIMIT_GLOBAL, max: globalLoginCap() });
 }
 
 /**
@@ -103,12 +66,12 @@ export function checkAdminPassword(input: string): boolean {
  * Signed with each session, never stored in it: when ADMIN_PASSWORD changes,
  * every existing cookie stops verifying.
  */
-function passwordFingerprint(): string {
+export function adminPasswordFingerprint(): string {
 	return createHash('sha256').update(`hbc-admin-password:${adminPassword() ?? ''}`).digest('base64url').slice(0, 16);
 }
 
 function sign(expires: string, key: Buffer): string {
-	return createHmac('sha256', key).update(`${expires}.${passwordFingerprint()}`).digest('base64url');
+	return createHmac('sha256', key).update(`${expires}.${adminPasswordFingerprint()}`).digest('base64url');
 }
 
 export function createSessionToken(now: number = Date.now()): string | null {
@@ -125,4 +88,54 @@ export function verifySessionToken(token: string | undefined, now: number = Date
 	if (!expires || !signature || !/^\d+$/.test(expires)) return false;
 	if (Number(expires) < now) return false;
 	return sameText(signature, sign(expires, key));
+}
+
+/**
+ * The "known device" cookie (W0 review B4): set at every successful login,
+ * so a browser that has logged in before can still log in while the global
+ * cap on failed logins is reached (someone guessing from many IPs). It never
+ * replaces the password, and the per-IP limit still applies to it.
+ *
+ * The value is `v1.<device id>.<expiry ms>.<HMAC>`: a random id, nothing
+ * about the person. The HMAC (ADMIN_SESSION_SECRET) also covers the admin
+ * password's fingerprint, so a password change retires every known device,
+ * like it signs every session out. HttpOnly, Secure outside `astro dev`,
+ * SameSite=Strict (the login form posts from this site) and only sent to
+ * /admin/.
+ */
+export const KNOWN_DEVICE_COOKIE = 'hbc_admin_device';
+export const KNOWN_DEVICE_DAYS = 90;
+const DEVICE_VERSION = 'v1';
+
+function signDevice(id: string, expires: string, key: Buffer): string {
+	return createHmac('sha256', key).update(`known-device:${DEVICE_VERSION}:${id}:${expires}:${adminPasswordFingerprint()}`).digest('base64url');
+}
+
+/** The device id of a genuine, unexpired known-device cookie issued under the current password, otherwise null. */
+export function knownDeviceId(token: string | undefined, now: number = Date.now()): string | null {
+	const key = signingKey();
+	if (!key || !token) return null;
+	const [version, id, expires, signature, extra] = token.split('.');
+	if (version !== DEVICE_VERSION || !id || !expires || !signature || extra !== undefined) return null;
+	if (!/^[\w-]{22}$/.test(id) || !/^\d+$/.test(expires) || Number(expires) < now) return null;
+	return sameText(signature, signDevice(id, expires, key)) ? id : null;
+}
+
+/** A fresh cookie value for 90 days, keeping the device id when the browser already had one. */
+export function createKnownDeviceToken(existingId: string | null = null, now: number = Date.now()): string | null {
+	const key = signingKey();
+	if (!key) return null;
+	const id = existingId ?? randomBytes(16).toString('base64url');
+	const expires = String(now + KNOWN_DEVICE_DAYS * 86_400_000);
+	return `${DEVICE_VERSION}.${id}.${expires}.${signDevice(id, expires, key)}`;
+}
+
+export function knownDeviceCookieOptions() {
+	return {
+		httpOnly: true,
+		secure: import.meta.env.PROD,
+		sameSite: 'strict' as const,
+		path: '/admin/',
+		maxAge: KNOWN_DEVICE_DAYS * 86_400,
+	};
 }

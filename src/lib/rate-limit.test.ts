@@ -25,7 +25,7 @@ vi.mock('@netlify/blobs', () => ({
 	}),
 }));
 
-import { checkGlobalLimit, checkRateLimit, hashClient, ipNetwork, peekGlobalLimit } from './rate-limit';
+import { checkGlobalLimit, checkRateLimit, hashClient, ipNetwork, reserveGlobalLimit } from './rate-limit';
 
 describe('rate-limit keys (S-11)', () => {
 	it('cuts IPv6 to its /64, keeps IPv4 whole', () => {
@@ -83,18 +83,18 @@ describe('rate limit when every compare-and-swap is lost (S2)', () => {
 		expect(await checkGlobalLimit('booking', { max: 1000, failClosed: true })).toEqual({ ok: false });
 	});
 
-	it('peeks at a global cap without counting', async () => {
-		contended.bucket = { count: 199, windowStart: Date.now() };
-		expect(await peekGlobalLimit('admin-login-all', { max: 200, windowMs: 3_600_000, failClosed: true })).toEqual({ ok: true });
-		contended.bucket = { count: 200, windowStart: Date.now() };
-		expect(await peekGlobalLimit('admin-login-all', { max: 200, windowMs: 3_600_000, failClosed: true })).toEqual({ ok: false });
-		// An expired window has room again.
-		contended.bucket = { count: 200, windowStart: Date.now() - 3_600_001 };
-		expect(await peekGlobalLimit('admin-login-all', { max: 200, windowMs: 3_600_000, failClosed: true })).toEqual({ ok: true });
-		expect(contended.writes).toBe(0);
+	it.each([
+		['an existing bucket under the limit', { count: 1, windowStart: Date.now() }],
+		['a key that is not there yet', null],
+	])('a strict global reservation counts a lost race as a hit and refuses, after 4 tries (%s)', async (_label, bucket) => {
+		contended.bucket = bucket;
+		expect(await reserveGlobalLimit('admin-login-all', { max: 200, windowMs: 3_600_000 })).toEqual({ ok: false, reason: 'contended' });
+		expect(contended.writes).toBe(4);
 		contended.down = true;
-		expect(await peekGlobalLimit('admin-login-all', { max: 200, failClosed: true })).toEqual({ ok: false });
-		expect(await peekGlobalLimit('admin-login-all', { max: 200 })).toEqual({ ok: true });
+		expect(await reserveGlobalLimit('admin-login-all', { max: 200 })).toEqual({ ok: false, reason: 'unavailable' });
+		contended.down = false;
+		contended.bucket = { count: 200, windowStart: Date.now() };
+		expect(await reserveGlobalLimit('admin-login-all', { max: 200, windowMs: 3_600_000 })).toEqual({ ok: false, reason: 'over' });
 	});
 
 	it('still lets a normal scope through, as before', async () => {

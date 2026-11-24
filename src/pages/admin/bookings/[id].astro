@@ -6,10 +6,11 @@ import { formatEuro } from '../../../lib/price';
 import { formatBookingDate, guestSummaryFromCounts, seatCount } from '../../../lib/booking';
 import { departureHasLeft, formatTimestamp } from '../../../lib/bookings/dates';
 import { isRecordId } from '../../../lib/bookings/ids';
-import { applyAdminAction, quoteExpired, STATUS_LABELS, type AdminAction } from '../../../lib/bookings/service';
+import { applyAdminAction, bookingSettled, canConfirmOffline, quoteExpired, STATUS_LABELS, waitingForConfirmation, type AdminAction } from '../../../lib/bookings/service';
 import { durationLabel } from '../../../config/charter';
 import { byCreatedDesc, isCharterQuote, outbox, bookings, type BookingStatus, type OutboxEmail, type PaymentStatus } from '../../../lib/bookings/store';
 import { overbookingsById, whatsappNumber } from '../../../lib/admin/manifest';
+import { demoPaymentHoldsNoSeats, paidThroughOutdatedDeploy } from '../../../lib/bookings/capacity';
 import { DELIVERY_LABELS } from '../../../lib/email/send';
 import TourThumb from '../../../components/admin/TourThumb.astro';
 
@@ -22,6 +23,7 @@ const PAYMENT_LABELS: Record<PaymentStatus, string> = {
 	paid: 'Paid',
 	failed: 'Payment declined',
 	refunded: 'Refunded',
+	offline: 'Pay offline',
 };
 const FLASH: Record<string, string> = {
 	status: 'Status updated.',
@@ -29,6 +31,8 @@ const FLASH: Record<string, string> = {
 	note: 'Note added.',
 	resend: 'Confirmation email created again. Check Emails to see whether it was sent.',
 	'resend-skipped': 'Not sent again: a confirmation went out less than a minute ago.',
+	confirm_offline: 'Confirmed. The guest was sent the booking confirmation, saying our team will contact them about payment. Check Emails to see whether it was sent.',
+	'confirm_offline-skipped': 'Not confirmed: the booking is no longer waiting for payment, or its departure has left.',
 };
 
 if (Astro.request.method === 'POST') {
@@ -40,14 +44,14 @@ if (Astro.request.method === 'POST') {
 		if (Object.hasOwn(STATUS_LABELS, status)) action = { type: 'status', status };
 	} else if (type === 'refund') {
 		action = { type };
-	} else if (type === 'resend') {
+	} else if (type === 'resend' || type === 'confirm_offline') {
 		action = { type, siteOrigin: Astro.url.origin };
 	} else if (type === 'note') {
 		action = { type: 'note', text: String(form.get('text') ?? '') };
 	}
 	const result = action ? await applyAdminAction(id, action, STAFF) : null;
-	// A resend that the double-click guard ignored says so, instead of claiming an email was created.
-	const done = type === 'resend' && !result?.written ? 'resend-skipped' : type;
+	// A resend that the double-click guard ignored, or a confirmation that came too late, says so instead of claiming it was done.
+	const done = (type === 'resend' || type === 'confirm_offline') && !result?.written ? `${type}-skipped` : type;
 	return Astro.redirect(`/admin/bookings/${id}/?done=${encodeURIComponent(done)}`, 303);
 }
 
@@ -56,12 +60,17 @@ if (!booking) return Astro.redirect('/admin/bookings/', 303);
 
 const flash = FLASH[Astro.url.searchParams.get('done') ?? ''] ?? '';
 const overbooking = overbookingsById((await bookings().list()).filter((b) => b.date === booking.date)).get(booking.id);
+// Paid through an outdated deploy (capacity.ts GATE_CUTOVER): its seats aren't held, staff check the payment.
+const outdatedDeploy = booking.status !== 'cancelled' && paidThroughOutdatedDeploy(booking);
 // Only this booking's emails, by id: never a scan of the whole outbox.
 const emails = (await Promise.all((booking.emailIds ?? []).map((emailId) => outbox().get(emailId))))
 	.filter((email): email is OutboxEmail => email !== null)
 	.sort(byCreatedDesc);
 const wa = whatsappNumber(booking.phone);
 const paid = booking.paymentStatus === 'paid';
+// Paid online, or confirmed by staff with the payment arranged offline: the booking stands.
+const settled = bookingSettled(booking);
+const offline = booking.paymentStatus === 'offline';
 const tripStarted = departureHasLeft(booking.date, booking.slot);
 
 // Same allowed moves as before (the server re-checks them); ordered so the likeliest next step comes first.
@@ -70,14 +79,17 @@ const STATUS_ACTIONS: { status: BookingStatus; label: string; icon: string }[] =
 	{ status: 'no_show', label: 'Mark no-show', icon: 'ti-user-check' },
 	{ status: 'confirmed', label: 'Set back to confirmed', icon: 'ti-refresh' },
 ];
-const statusActions = STATUS_ACTIONS.filter((a) => paid && a.status !== booking.status);
+const statusActions = STATUS_ACTIONS.filter((a) => settled && a.status !== booking.status);
 // Completed/no-show only make sense once the trip day has come.
 const visibleStatusActions = statusActions.filter((a) => a.status === 'confirmed' || tripStarted);
 // The trip has happened and nobody has said how it went: ask that first, in plain view.
-const askOutcome = paid && booking.status === 'confirmed' && tripStarted;
+const askOutcome = settled && booking.status === 'confirmed' && tripStarted;
 const outcomeActions = askOutcome ? visibleStatusActions.filter((a) => a.status !== 'confirmed') : [];
 const otherStatusActions = visibleStatusActions.filter((a) => !outcomeActions.includes(a));
 const awaitingPayment = booking.status === 'pending_payment' && !paid;
+// The guest couldn't pay online (payment not open to them): staff confirm it here, the guest pays offline.
+const canOffline = canConfirmOffline(booking);
+const waiting = waitingForConfirmation(booking);
 const isPrivate = booking.kind === 'private';
 // A charter quote staff sent, vs a private experience the customer booked on the site.
 const isQuote = isPrivate && isCharterQuote(booking);
@@ -87,7 +99,7 @@ const payLink = isQuote && awaitingPayment && !expired ? `${Astro.url.origin}/bo
 // A private experience booked on the site: its boat, extras and pick-up, as charged.
 const charges = isPrivate && !isQuote ? (booking.lineItems ?? []) : [];
 const canCancel = booking.status !== 'cancelled';
-const hasManage = otherStatusActions.length > 0 || paid || canCancel;
+const hasManage = otherStatusActions.length > 0 || settled || canCancel;
 ---
 
 <AdminLayout
@@ -100,6 +112,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 	<p class="admin-lede ref">
 		<span class="a-tnum">{booking.ref}</span>
 		{booking.sample && <span class="a-badge a-badge--demo">Demo data</span>}
+		{demoPaymentHoldsNoSeats(booking) && <span class="a-badge a-badge--demo">Demo payment — holds no seats</span>}
 	</p>
 
 	{
@@ -112,7 +125,31 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 	}
 
 	{
-		awaitingPayment && !isQuote && (
+		waiting && (
+			<div class="warn-box" role="note" id="waiting-confirmation">
+				<i class="ti ti-alert-circle" aria-hidden="true" />
+				<p>
+					<strong>Waiting for confirmation.</strong> The guest couldn't pay online (online payment isn't open yet) and was told we'd
+					confirm by email. Contact them, then use “Confirm, pay offline” below, or cancel the booking.
+				</p>
+			</div>
+		)
+	}
+
+	{
+		offline && booking.status !== 'cancelled' && (
+			<div class="highlight-box" role="note" id="confirmed-offline">
+				<i class="ti ti-info-circle" aria-hidden="true" />
+				<p>
+					<strong>Confirmed without online payment.</strong> Nothing was charged and no invoice was issued. Payment is arranged with the
+					guest offline.
+				</p>
+			</div>
+		)
+	}
+
+	{
+		awaitingPayment && !isQuote && !waiting && (
 			<div class="warn-box" role="note">
 				<i class="ti ti-alert-circle" aria-hidden="true" />
 				<p>
@@ -124,7 +161,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 	}
 
 	{
-		awaitingPayment && isQuote && (
+		awaitingPayment && isQuote && !waiting && (
 			<div class="warn-box" role="note">
 				<i class="ti ti-alert-circle" aria-hidden="true" />
 				<p>
@@ -150,8 +187,32 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 				<p>
 					<strong>No private boat is left for this booking.</strong> {overbooking.boats.takenBefore} of {overbooking.boats.perDay} private{' '}
 					{overbooking.boats.perDay === 1 ? 'boat' : 'boats'} that day {overbooking.boats.takenBefore === 1 ? 'was' : 'were'} already taken when it{' '}
-					{booking.seatsSince ? 'was put back' : 'was paid'}. Move it to another day or contact the guest.{' '}
+					{offline ? 'was confirmed' : booking.seatsSince ? 'was put back' : 'was paid'}. Move it to another day or contact the guest.{' '}
 					<a href={`/admin/?from=${booking.date}#day`}>See the day</a>
+				</p>
+			</div>
+		)
+	}
+	{
+		demoPaymentHoldsNoSeats(booking) && (
+			<div class="highlight-box" role="note">
+				<i class="ti ti-info-circle" aria-hidden="true" />
+				<p>
+					<strong>Demo payment — holds no seats.</strong> It was paid through the demo checkout ({booking.paymentRef}), which only staff can
+					open on the live site. No money was taken and its {booking.kind === 'private' ? 'boat is' : 'seats are'} still for sale, though it
+					shows on the passenger list.
+				</p>
+			</div>
+		)
+	}
+	{
+		outdatedDeploy && (
+			<div class="a-danger-box" role="note">
+				<i class="ti ti-alert-triangle" aria-hidden="true" />
+				<p>
+					<strong>Paid through an outdated deploy — check the payment before the trip.</strong> This payment came through an old version of the site, not
+					the current checkout, so its {booking.kind === 'private' ? 'boat is' : 'seats are'} not held and the departure may be sold again. Check the
+					payment ({booking.paymentRef ?? 'no reference'}) with the provider, then contact the guest or cancel the booking.
 				</p>
 			</div>
 		)
@@ -162,7 +223,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 				<i class="ti ti-alert-triangle" aria-hidden="true" />
 				<p>
 					<strong>This booking overbooked the boat by {overbooking.seatsOver}.</strong> {overbooking.seatsBefore} of{' '}
-					{overbooking.capacity} seats were taken when it {booking.seatsSince ? 'was put back' : 'was paid'}; its{' '}
+					{overbooking.capacity} seats were taken when it {offline ? 'was confirmed' : booking.seatsSince ? 'was put back' : 'was paid'}; its{' '}
 					{seatCount(booking)} guests made it {overbooking.seatsAfter}. Move it to another departure or
 					contact the guest. <a href={`/admin/?from=${booking.date}#day`}>See the departure</a>
 				</p>
@@ -249,6 +310,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 				<h2 class="a-card-title" id="pay-title">Payment</h2>
 				<dl class="a-rows">
 					<div><dt>Status</dt><dd>{PAYMENT_LABELS[booking.paymentStatus]}</dd></div>
+					{offline && <div><dt>Payment</dt><dd>Arranged with staff, not taken online</dd></div>}
 					{booking.paymentProvider && <div><dt>Paid with</dt><dd>{booking.paymentProvider === 'paypal' ? 'PayPal' : 'Card (Teya)'}</dd></div>}
 					{booking.paidAt && <div><dt>Paid at</dt><dd>{formatTimestamp(booking.paidAt)}</dd></div>}
 					{booking.paymentRef && <div><dt>Payment ref</dt><dd class="mono">{booking.paymentRef}</dd></div>}
@@ -339,6 +401,24 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 					<section class="manage" aria-labelledby="manage-title">
 						<p class="section-label" id="manage-title"><span>Change this booking</span></p>
 						<div class="manage-actions">
+							{canOffline && (
+								<details class="a-confirm">
+									<summary class="btn-secondary a-block">
+										<i class="ti ti-circle-check" aria-hidden="true" /> Confirm, pay offline…
+									</summary>
+									<div class="warn-box">
+										<p>
+											<strong>Confirm without online payment?</strong> Nothing is charged and no invoice is issued. The booking takes its{' '}
+											{isPrivate ? 'boat' : 'seats'} now, and shows as overbooked if the departure is already full. The guest gets the booking
+											confirmation email, saying our team will contact them about payment. Agree the payment with them yourself.
+										</p>
+										<form method="post">
+											<input type="hidden" name="action" value="confirm_offline" />
+											<button class="btn-primary" type="submit">Yes, confirm booking</button>
+										</form>
+									</div>
+								</details>
+							)}
 							{otherStatusActions.map((a) => (
 								<form method="post">
 									<input type="hidden" name="action" value="status" />
@@ -348,7 +428,7 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 									</button>
 								</form>
 							))}
-							{paid && (
+							{settled && (
 								<form method="post">
 									<input type="hidden" name="action" value="resend" />
 									<button class="btn-secondary a-block" type="submit">
@@ -398,6 +478,17 @@ const hasManage = otherStatusActions.length > 0 || paid || canCancel;
 </AdminLayout>
 
 <style>
+	/* "Confirm, pay offline": the question and its button stacked, like the danger confirms. */
+	.a-confirm .warn-box {
+		display: grid;
+		gap: 10px;
+		margin: 0;
+	}
+
+	.a-confirm .warn-box p {
+		margin: 0;
+	}
+
 	@media (min-width: 1024px) {
 		.detail {
 			display: grid;

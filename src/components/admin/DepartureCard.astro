@@ -6,12 +6,14 @@
  */
 import { guestSummaryFromCounts, seatCount } from '../../lib/booking';
 import { whatsappNumber, type Departure } from '../../lib/admin/manifest';
+import { demoPaymentHoldsNoSeats } from '../../lib/bookings/capacity';
 import TourThumb from './TourThumb.astro';
 
 type Props = { departure: Departure };
 const { departure: d } = Astro.props;
 
-const left = Math.max(0, d.capacity - d.seatsTaken);
+// Seats still for sale: what the ledger holds, so a demo payment on production doesn't make the boat look full.
+const left = Math.max(0, d.capacity - d.seatsHeld);
 const fill = d.capacity ? Math.min(100, Math.round((d.seatsTaken / d.capacity) * 100)) : 0;
 const overById = new Map(d.overbookings.map((o) => [o.booking.id, o]));
 // A private booking paid when the day's private boats were all taken (manifest.ts findBoatlessPrivate).
@@ -66,6 +68,7 @@ const boatless = d.overbookings.find((o) => o.boats);
 										<span class={`a-badge a-badge--${b.status}`}>{b.status === 'no_show' ? 'No-show' : 'Completed'}</span>
 									)}
 									{over && <span class="a-badge a-badge--full">Overbooked +{over.seatsOver}</span>}
+									{demoPaymentHoldsNoSeats(b) && <span class="a-badge a-badge--demo">Demo payment — holds no seats</span>}
 								</span>
 								<span class="pax-sub">
 									<span class="a-tnum">{seatCount(b)}</span> {seatCount(b) === 1 ? 'guest' : 'guests'}
@@ -121,7 +124,7 @@ const boatless = d.overbookings.find((o) => o.boats);
 			<p class="overbooked">
 				<i class="ti ti-alert-triangle" aria-hidden="true" />
 				<span>
-					<strong>{d.overBy} over capacity ({d.seatsTaken}/{d.capacity}).</strong>{' '}
+					<strong>{d.overBy} over capacity ({d.seatsHeld}/{d.capacity}).</strong>{' '}
 					{d.overbookings.map((o, i) => (
 						// Kept on one line: Astro keeps the whitespace around fragment children.
 						<>{i > 0 && ' '}<a href={`/admin/bookings/${o.booking.id}/`}>{`${o.booking.firstName} ${o.booking.lastName}`}</a>{` (${o.booking.adults + o.booking.children}) took it from ${o.seatsBefore} to ${o.seatsAfter}.`}</>
